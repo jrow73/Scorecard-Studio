@@ -51,7 +51,7 @@ initialize();
 async function initialize() {
   const today = getLocalDateString();
   elements.todayDate.textContent = formatDisplayDate(today);
-  elements.favoriteTeamForm.addEventListener("submit", saveFavoriteTeam);
+  elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(today));
 
   await initializeFavoriteTeamSetting();
@@ -82,8 +82,7 @@ async function initializeFavoriteTeamSetting() {
   }
 }
 
-async function saveFavoriteTeam(event) {
-  event.preventDefault();
+async function saveFavoriteTeam() {
   const option = elements.favoriteTeamSelect.selectedOptions[0];
   if (!option) return;
 
