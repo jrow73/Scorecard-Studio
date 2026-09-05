@@ -2,14 +2,14 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.1.0-web-dev
- * Build: 005
+ * Build: 006
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=005";
+import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=006";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=005";
+} from "./storage.js?v=006";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -23,7 +23,11 @@ const state = {
   pdfRecord: null,
   layouts: [],
   selectedLayoutId: null,
-  pendingLayoutPdf: null
+  pendingLayoutPdf: null,
+  designerPdfDocument: null,
+  designerPageNumber: 1,
+  designerPlacing: false,
+  designerRenderToken: 0
 };
 
 const elements = {
@@ -77,6 +81,22 @@ const elements = {
   pdfPageLabel: document.querySelector("#pdf-page-label"),
   pdfPrevButton: document.querySelector("#pdf-prev-btn"),
   pdfNextButton: document.querySelector("#pdf-next-btn"),
+  navDesigner: document.querySelector("#nav-designer"),
+  openDesignerButton: document.querySelector("#open-designer-btn"),
+  designerBackButton: document.querySelector("#designer-back-btn"),
+  designerLayoutMeta: document.querySelector("#designer-layout-meta"),
+  designerFieldSelect: document.querySelector("#designer-field-select"),
+  designerFontSize: document.querySelector("#designer-font-size"),
+  designerPlaceButton: document.querySelector("#designer-place-btn"),
+  designerMessage: document.querySelector("#designer-message"),
+  designerMappingCount: document.querySelector("#designer-mapping-count"),
+  designerMappingList: document.querySelector("#designer-mapping-list"),
+  designerPrevButton: document.querySelector("#designer-prev-btn"),
+  designerNextButton: document.querySelector("#designer-next-btn"),
+  designerPageLabel: document.querySelector("#designer-page-label"),
+  designerStage: document.querySelector("#designer-stage"),
+  designerPdfCanvas: document.querySelector("#designer-pdf-canvas"),
+  designerOverlay: document.querySelector("#designer-overlay"),
   appStatusText: document.querySelector("#app-status-text"),
   appStatusDot: document.querySelector("#app-status-dot")
 };
@@ -90,6 +110,10 @@ async function initialize() {
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(today));
   elements.navHome.addEventListener("click", () => showView("home"));
   elements.navLayouts.addEventListener("click", () => showView("layouts"));
+  elements.navDesigner.addEventListener("click", () => {
+    if (selectedLayout()) openDesigner();
+    else { showView("layouts"); setLayoutMessage("Open a layout before using the Designer.", true); }
+  });
   elements.layoutPdfInput.addEventListener("change", handleLayoutPdfSelection);
   elements.createLayoutButton.addEventListener("click", createLayout);
   elements.saveLayoutMetadataButton.addEventListener("click", saveSelectedLayoutMetadata);
@@ -97,6 +121,15 @@ async function initialize() {
   elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
   elements.pdfPrevButton.addEventListener("click", () => changePdfPage(-1));
   elements.pdfNextButton.addEventListener("click", () => changePdfPage(1));
+  elements.openDesignerButton.addEventListener("click", openDesigner);
+  elements.designerBackButton.addEventListener("click", () => showView("layouts"));
+  elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
+  elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
+  elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
+  elements.designerStage.addEventListener("click", handleDesignerStageClick);
+  window.addEventListener("resize", debounce(() => {
+    if (!document.querySelector('[data-view="designer"]').hidden && state.designerPdfDocument) renderDesignerPage();
+  }, 150));
 
   await initializeFavoriteTeamSetting();
   await refreshLayouts();
@@ -580,14 +613,15 @@ function showView(view) {
   document.querySelectorAll("[data-view]").forEach((node) => {
     node.hidden = node.dataset.view !== view;
   });
-  const isHome = view === "home";
-  elements.navHome.classList.toggle("active", isHome);
-  elements.navLayouts.classList.toggle("active", !isHome);
-  elements.navHome.toggleAttribute("aria-current", isHome);
-  elements.navLayouts.toggleAttribute("aria-current", !isHome);
-  elements.refreshButton.hidden = !isHome;
-  elements.pageTitle.textContent = isHome ? "Home" : "Layouts";
-  elements.pageEyebrow.textContent = isHome ? "Scorecard Studio • Pregame" : "Scorecard Studio • Layout Management";
+  elements.navHome.classList.toggle("active", view === "home");
+  elements.navLayouts.classList.toggle("active", view === "layouts");
+  elements.navDesigner.classList.toggle("active", view === "designer");
+  elements.navHome.toggleAttribute("aria-current", view === "home");
+  elements.navLayouts.toggleAttribute("aria-current", view === "layouts");
+  elements.navDesigner.toggleAttribute("aria-current", view === "designer");
+  elements.pageTitle.textContent = view === "home" ? "Home" : view === "layouts" ? "Layouts" : "Layout Designer";
+  elements.pageEyebrow.textContent = view === "home" ? "Scorecard Studio • Pregame" : view === "layouts" ? "Scorecard Studio • Layout Management" : "Scorecard Studio • Field Mapping";
+  elements.refreshButton.hidden = view !== "home";
 }
 
 function handleLayoutPdfSelection(event) {
@@ -612,7 +646,8 @@ async function createLayout() {
     await savePdfTemplate(id, file);
     const layout = {
       id,
-      schemaVersion: 1,
+      schemaVersion: 2,
+      mappings: [],
       name,
       description,
       pdfTemplateId: id,
@@ -687,6 +722,7 @@ function renderLayoutList() {
 
 async function openLayout(id) {
   const layout = state.layouts.find((item) => item.id === id);
+  if (layout && !Array.isArray(layout.mappings)) layout.mappings = [];
   if (!layout) return;
   state.selectedLayoutId = id;
   renderLayoutList();
@@ -773,6 +809,218 @@ async function deleteSelectedLayout() {
   } finally {
     setLayoutBusy(false);
   }
+}
+
+
+async function openDesigner() {
+  const layout = selectedLayout();
+  if (!layout) return;
+  showView("designer");
+  elements.designerLayoutMeta.textContent = `${layout.name} • ${layout.pdfFileName} • ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
+  setDesignerMessage("Loading layout PDF…");
+  try {
+    const record = await getPdfTemplate(layout.pdfTemplateId);
+    if (!record?.blob) throw new Error("This layout's PDF template is missing.");
+    state.designerPdfDocument = await loadPdfDocument(record.blob);
+    state.designerPageNumber = 1;
+    state.designerPlacing = false;
+    await renderDesignerPage();
+    renderDesignerMappingList();
+    setDesignerMessage("Choose a field, select Place Field, then click the PDF.");
+  } catch (error) {
+    console.error("Unable to open Designer:", error);
+    setDesignerMessage(errorMessage(error, "The Designer could not open this layout."), true);
+  }
+}
+
+function beginDesignerPlacement() {
+  if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
+  const size = Number(elements.designerFontSize.value);
+  if (!Number.isFinite(size) || size < 6 || size > 36) return setDesignerMessage("Font size must be between 6 and 36 points.", true);
+  state.designerPlacing = true;
+  elements.designerStage.classList.add("placing");
+  setDesignerMessage(`Click the PDF to place ${designerFieldLabel(elements.designerFieldSelect.value)}.`);
+}
+
+async function handleDesignerStageClick(event) {
+  if (!state.designerPlacing || !state.designerPdfDocument) return;
+  const canvasRect = elements.designerPdfCanvas.getBoundingClientRect();
+  if (event.clientX < canvasRect.left || event.clientX > canvasRect.right || event.clientY < canvasRect.top || event.clientY > canvasRect.bottom) return;
+  const xPercent = clamp((event.clientX - canvasRect.left) / canvasRect.width, 0, 1);
+  const yPercent = clamp((event.clientY - canvasRect.top) / canvasRect.height, 0, 1);
+  const layout = selectedLayout();
+  if (!layout) return;
+
+  const field = elements.designerFieldSelect.value;
+  const mapping = {
+    id: makeMappingId(),
+    field,
+    pageIndex: state.designerPageNumber - 1,
+    xPercent,
+    yPercent,
+    fontSize: Number(elements.designerFontSize.value),
+    alignment: "left"
+  };
+  layout.mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
+  layout.mappings.push(mapping);
+  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 2);
+  layout.updatedAt = new Date().toISOString();
+
+  try {
+    await saveLayout(layout);
+    state.designerPlacing = false;
+    elements.designerStage.classList.remove("placing");
+    renderDesignerOverlay();
+    renderDesignerMappingList();
+    setDesignerMessage(`Placed ${designerFieldLabel(field)} on page ${state.designerPageNumber}.`);
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The mapping could not be saved."), true);
+  }
+}
+
+async function renderDesignerPage() {
+  if (!state.designerPdfDocument) return;
+  const token = ++state.designerRenderToken;
+  const page = await state.designerPdfDocument.getPage(state.designerPageNumber);
+  const baseViewport = page.getViewport({ scale: 1 });
+  const availableWidth = Math.max(260, Math.min(elements.designerStage.parentElement.clientWidth - 8, 1100));
+  const scale = availableWidth / baseViewport.width;
+  const viewport = page.getViewport({ scale });
+  const outputScale = window.devicePixelRatio || 1;
+  const canvas = elements.designerPdfCanvas;
+  const context = canvas.getContext("2d");
+  canvas.width = Math.floor(viewport.width * outputScale);
+  canvas.height = Math.floor(viewport.height * outputScale);
+  canvas.style.width = `${viewport.width}px`;
+  canvas.style.height = `${viewport.height}px`;
+  elements.designerStage.style.width = `${viewport.width}px`;
+  elements.designerStage.style.height = `${viewport.height}px`;
+  await page.render({ canvasContext: context, viewport, transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0] }).promise;
+  if (token !== state.designerRenderToken) return;
+  elements.designerPageLabel.textContent = `Page ${state.designerPageNumber} of ${state.designerPdfDocument.numPages}`;
+  updateDesignerNavButtons();
+  renderDesignerOverlay();
+}
+
+function renderDesignerOverlay() {
+  elements.designerOverlay.replaceChildren();
+  const layout = selectedLayout();
+  if (!layout) return;
+  const mappings = (layout.mappings || []).filter((mapping) => mapping.pageIndex === state.designerPageNumber - 1);
+  mappings.forEach((mapping) => {
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = "mapping-marker";
+    marker.style.left = `${mapping.xPercent * 100}%`;
+    marker.style.top = `${mapping.yPercent * 100}%`;
+    marker.style.fontSize = `${Math.max(9, mapping.fontSize)}px`;
+    marker.textContent = designerFieldPreview(mapping.field);
+    marker.title = `${designerFieldLabel(mapping.field)} • click to delete`;
+    marker.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (!window.confirm(`Delete mapping "${designerFieldLabel(mapping.field)}"?`)) return;
+      await deleteDesignerMapping(mapping.id);
+    });
+    elements.designerOverlay.append(marker);
+  });
+}
+
+function renderDesignerMappingList() {
+  const layout = selectedLayout();
+  const mappings = layout?.mappings || [];
+  elements.designerMappingCount.textContent = String(mappings.length);
+  elements.designerMappingList.replaceChildren();
+  if (!mappings.length) {
+    const empty = document.createElement("p");
+    empty.className = "subtle";
+    empty.textContent = "No fields mapped yet.";
+    elements.designerMappingList.append(empty);
+    return;
+  }
+  mappings.forEach((mapping) => {
+    const row = document.createElement("div");
+    row.className = "designer-mapping-row";
+    const copy = document.createElement("div");
+    const strong = document.createElement("strong");
+    strong.textContent = designerFieldLabel(mapping.field);
+    const meta = document.createElement("span");
+    meta.textContent = `Page ${mapping.pageIndex + 1} • ${(mapping.xPercent * 100).toFixed(1)}%, ${(mapping.yPercent * 100).toFixed(1)}% • ${mapping.fontSize} pt`;
+    copy.append(strong, meta);
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "secondary-button compact-button";
+    go.textContent = "Show";
+    go.addEventListener("click", async () => {
+      state.designerPageNumber = mapping.pageIndex + 1;
+      await renderDesignerPage();
+    });
+    row.append(copy, go);
+    elements.designerMappingList.append(row);
+  });
+}
+
+async function deleteDesignerMapping(id) {
+  const layout = selectedLayout();
+  if (!layout) return;
+  layout.mappings = (layout.mappings || []).filter((mapping) => mapping.id !== id);
+  layout.updatedAt = new Date().toISOString();
+  try {
+    await saveLayout(layout);
+    renderDesignerOverlay();
+    renderDesignerMappingList();
+    setDesignerMessage("Mapping deleted.");
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The mapping could not be deleted."), true);
+  }
+}
+
+async function changeDesignerPage(delta) {
+  if (!state.designerPdfDocument) return;
+  const next = state.designerPageNumber + delta;
+  if (next < 1 || next > state.designerPdfDocument.numPages) return;
+  state.designerPageNumber = next;
+  state.designerPlacing = false;
+  elements.designerStage.classList.remove("placing");
+  try { await renderDesignerPage(); }
+  catch (error) { setDesignerMessage("That PDF page could not be rendered.", true); }
+}
+
+function updateDesignerNavButtons() {
+  elements.designerPrevButton.disabled = !state.designerPdfDocument || state.designerPageNumber <= 1;
+  elements.designerNextButton.disabled = !state.designerPdfDocument || state.designerPageNumber >= state.designerPdfDocument.numPages;
+}
+
+function setDesignerMessage(message, isError = false) {
+  elements.designerMessage.textContent = message;
+  elements.designerMessage.classList.toggle("error", isError);
+}
+
+function designerFieldLabel(field) {
+  return field === "away.teamName" ? "Away Team Name" : field === "home.teamName" ? "Home Team Name" : field;
+}
+
+function designerFieldPreview(field) {
+  return field === "away.teamName" ? "Away Team" : field === "home.teamName" ? "Home Team" : field;
+}
+
+function makeMappingId() {
+  return globalThis.crypto?.randomUUID?.() || `mapping-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => fn(...args), delay);
+  };
 }
 
 function selectedLayout() {

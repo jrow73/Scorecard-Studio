@@ -777,3 +777,120 @@ button { font: inherit; }
 .danger-button:hover { background: rgba(255,110,110,.17); }
 .danger-button:disabled { cursor: not-allowed; opacity: .55; }
 @media (max-width: 760px) { .layout-form-grid, .layout-upload-row { grid-template-columns: 1fr; } .layout-list-item { align-items: stretch; flex-direction: column; } }
+
+
+/* Build 006: interactive field-mapping proof */
+.designer-grid {
+  display: grid;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.designer-controls {
+  display: grid;
+  gap: 14px;
+}
+
+.designer-controls label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.designer-controls select,
+.designer-controls input {
+  width: 100%;
+}
+
+.designer-help {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.designer-stage-panel {
+  min-width: 0;
+}
+
+.designer-stage {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.designer-stage.placing {
+  cursor: crosshair;
+  outline: 2px solid var(--accent, #6ea8fe);
+  outline-offset: 3px;
+}
+
+#designer-pdf-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.designer-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mapping-marker {
+  position: absolute;
+  transform: translate(0, -50%);
+  pointer-events: auto;
+  border: 1px solid rgba(37, 99, 235, .75);
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: rgba(219, 234, 254, .92);
+  color: #172033;
+  font-family: Arial, sans-serif;
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.designer-mapping-panel {
+  border-top: 1px solid var(--border, rgba(255,255,255,.12));
+  padding-top: 12px;
+}
+
+.designer-mapping-list {
+  display: grid;
+  gap: 8px;
+}
+
+.designer-mapping-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.08));
+}
+
+.designer-mapping-row > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.designer-mapping-row span {
+  font-size: .8rem;
+  opacity: .72;
+}
+
+.compact-button {
+  padding: 6px 9px;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .designer-grid {
+    grid-template-columns: 1fr;
+  }
+}
