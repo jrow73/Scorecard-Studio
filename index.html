@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  Scorecard Studio
+  Web Foundation
+  Version: 0.1.0-web-dev
+  Build: 001
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
+  <title>Scorecard Studio</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">SS</div>
+        <div>
+          <h1>Scorecard Studio</h1>
+          <p>0.1.0-web-dev • Build 001</p>
+        </div>
+      </div>
+
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-item active" type="button" aria-current="page"><span>⌂</span> Home</button>
+        <button class="nav-item" type="button" disabled><span>⚾</span> Games <small>Later</small></button>
+        <button class="nav-item" type="button" disabled><span>▣</span> Layouts <small>Later</small></button>
+        <button class="nav-item" type="button" disabled><span>✎</span> Layout Designer <small>Later</small></button>
+        <button class="nav-item" type="button" disabled><span>⎙</span> Generate <small>Later</small></button>
+        <button class="nav-item" type="button" disabled><span>⚙</span> Settings <small>Later</small></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-dot" id="app-status-dot"></div>
+        <span id="app-status-text">Browser app ready</span>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Scorecard Studio • Web Foundation</p>
+          <h2>Home</h2>
+        </div>
+        <div class="topbar-actions">
+          <button class="secondary-button" id="refresh-games-btn" type="button">Refresh Games</button>
+        </div>
+      </header>
+
+      <section class="hero-card card">
+        <div class="hero-copy">
+          <p class="section-label">Build 001</p>
+          <h3>GitHub Pages web foundation</h3>
+          <p>
+            This first web build proves that Scorecard Studio can run as a static browser application and retrieve MLB schedule data directly from the MLB Stats API without a local Python server.
+          </p>
+        </div>
+        <div class="foundation-status" aria-label="Build 001 scope">
+          <div><strong>Hosting</strong><span>Static / GitHub Pages</span></div>
+          <div><strong>Data</strong><span>MLB Stats API</span></div>
+          <div><strong>Server</strong><span>None</span></div>
+        </div>
+      </section>
+
+      <section class="card games-card" aria-labelledby="games-heading">
+        <div class="card-header-row">
+          <div>
+            <p class="section-label">MLB Schedule</p>
+            <h3 id="games-heading">Today's Games</h3>
+            <p class="subtle" id="games-date">Loading date…</p>
+          </div>
+          <div class="pill neutral" id="games-count">— games</div>
+        </div>
+
+        <div class="message-panel" id="games-message" role="status" aria-live="polite">
+          Loading today's MLB schedule…
+        </div>
+        <div class="games-list" id="games-list" hidden></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
