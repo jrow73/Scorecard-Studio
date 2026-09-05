@@ -27,7 +27,8 @@ const state = {
   designerPdfDocument: null,
   designerPageNumber: 1,
   designerPlacing: false,
-  designerRenderToken: 0
+  designerRenderToken: 0,
+  designerRenderScale: 1
 };
 
 const elements = {
@@ -887,6 +888,7 @@ async function renderDesignerPage() {
   const baseViewport = page.getViewport({ scale: 1 });
   const availableWidth = Math.max(260, Math.min(elements.designerStage.parentElement.clientWidth - 8, 1100));
   const scale = availableWidth / baseViewport.width;
+  state.designerRenderScale = scale;
   const viewport = page.getViewport({ scale });
   const outputScale = window.devicePixelRatio || 1;
   const canvas = elements.designerPdfCanvas;
@@ -915,7 +917,7 @@ function renderDesignerOverlay() {
     marker.className = "mapping-marker";
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
-    marker.style.fontSize = `${Math.max(9, mapping.fontSize)}px`;
+    marker.style.fontSize = `${Math.max(6, mapping.fontSize * state.designerRenderScale)}px`;
     marker.textContent = designerFieldPreview(mapping.field);
     marker.title = `${designerFieldLabel(mapping.field)} • click to delete`;
     marker.addEventListener("click", async (event) => {
@@ -1004,7 +1006,11 @@ function designerFieldLabel(field) {
 }
 
 function designerFieldPreview(field) {
-  return field === "away.teamName" ? "Away Team" : field === "home.teamName" ? "Home Team" : field;
+  return field === "away.teamName"
+    ? "Tampa Bay Devil Rays"
+    : field === "home.teamName"
+      ? "Seattle Mariners"
+      : field;
 }
 
 function makeMappingId() {

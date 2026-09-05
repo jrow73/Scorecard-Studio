@@ -843,10 +843,10 @@ button { font: inherit; }
   position: absolute;
   transform: translate(0, -50%);
   pointer-events: auto;
-  border: 1px solid rgba(37, 99, 235, .75);
-  border-radius: 4px;
-  padding: 2px 5px;
-  background: rgba(219, 234, 254, .92);
+  border: 1px dashed rgba(37, 99, 235, .65);
+  border-radius: 3px;
+  padding: 1px 3px;
+  background: rgba(219, 234, 254, .72);
   color: #172033;
   font-family: Arial, sans-serif;
   line-height: 1.1;
