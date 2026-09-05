@@ -25,32 +25,6 @@ An interactive, browser-based web application that allows baseball fans, scoreke
 
 ---
 
-## Tech Stack
-
-- **Frontend:** Plain HTML5, CSS3, Modern JavaScript (ES6+). Zero heavy frameworks required.
-- **Libraries (via CDN):**
-  - [`pdf-lib`](https://pdf-lib.js.org/) — Client-side PDF modification, custom font rendering, and RGB text placement.
-  - [`pdfjs-dist`](https://mozilla.github.io/pdf.js/) — High-fidelity PDF rendering onto HTML5 `<canvas>` elements for interactive mapping.
-  - [`localForage`](https://localforage.github.io/localForage/) — Asynchronous IndexedDB storage wrapper for saving raw PDF files (`Blob`) and profile configurations without browser storage limitations.
-- **Data Source:** [MLB Stats API](https://statsapi.mlb.com/api/v1/) — Free, HTTPS-compliant, public endpoints with no API key requirement.
-- **Hosting:** Static hosting via **GitHub Pages** (`github.io`).
-
----
-
-## Project Structure
-
-```text
-mlb-scorecard-generator/
-│
-├── index.html        # Main app UI (Canvas mapper, game selector, toolbar)
-├── style.css         # Modern, clean UI styles and responsive layouts
-├── app.js            # Core logic (MLB API fetch, PDF rendering, IndexedDB, pdf-lib merge)
-├── AI.md             # Architectural rules, data schemas, and Vibe Coding specifications
-└── README.md         # Project documentation
-```
-
----
-
 ## User Workflows
 
 ### 1. Template Setup & Field Mapping

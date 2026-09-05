@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   Scorecard Studio
-  Web Foundation
+  Browser Storage Foundation
   Version: 0.1.0-web-dev
-  Build: 001
+  Build: 002
 -->
 <html lang="en">
 <head>
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.1.0-web-dev • Build 001</p>
+          <p>0.1.0-web-dev • Build 002</p>
         </div>
       </div>
 
@@ -35,14 +35,14 @@
 
       <div class="sidebar-footer">
         <div class="status-dot" id="app-status-dot"></div>
-        <span id="app-status-text">Browser app ready</span>
+        <span id="app-status-text">Starting browser app…</span>
       </div>
     </aside>
 
     <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Scorecard Studio • Web Foundation</p>
+          <p class="eyebrow">Scorecard Studio • Browser Storage Foundation</p>
           <h2>Home</h2>
         </div>
         <div class="topbar-actions">
@@ -52,17 +52,68 @@
 
       <section class="hero-card card">
         <div class="hero-copy">
-          <p class="section-label">Build 001</p>
-          <h3>GitHub Pages web foundation</h3>
+          <p class="section-label">Build 002</p>
+          <h3>Persistent browser storage</h3>
           <p>
-            This first web build proves that Scorecard Studio can run as a static browser application and retrieve MLB schedule data directly from the MLB Stats API without a local Python server.
+            This build adds Scorecard Studio's IndexedDB storage foundation and proves that application settings can persist in the browser without a server or local filesystem.
           </p>
         </div>
-        <div class="foundation-status" aria-label="Build 001 scope">
+        <div class="foundation-status" aria-label="Build 002 scope">
           <div><strong>Hosting</strong><span>Static / GitHub Pages</span></div>
-          <div><strong>Data</strong><span>MLB Stats API</span></div>
+          <div><strong>Storage</strong><span>IndexedDB</span></div>
           <div><strong>Server</strong><span>None</span></div>
         </div>
+      </section>
+
+      <section class="card storage-card" aria-labelledby="storage-heading">
+        <div class="card-header-row">
+          <div>
+            <p class="section-label">Browser Storage Test</p>
+            <h3 id="storage-heading">Favorite Team</h3>
+            <p class="subtle">Save a favorite team, refresh the page, and confirm that the selection is restored.</p>
+          </div>
+          <div class="pill neutral" id="storage-status">Checking storage…</div>
+        </div>
+
+        <form class="settings-proof-form" id="favorite-team-form">
+          <label for="favorite-team-select">Favorite MLB team</label>
+          <div class="settings-proof-row">
+            <select id="favorite-team-select" name="favoriteTeam">
+              <option value="108">Los Angeles Angels</option>
+              <option value="109">Arizona Diamondbacks</option>
+              <option value="110">Baltimore Orioles</option>
+              <option value="111">Boston Red Sox</option>
+              <option value="112">Chicago Cubs</option>
+              <option value="113">Cincinnati Reds</option>
+              <option value="114">Cleveland Guardians</option>
+              <option value="115">Colorado Rockies</option>
+              <option value="116">Detroit Tigers</option>
+              <option value="117">Houston Astros</option>
+              <option value="118">Kansas City Royals</option>
+              <option value="119">Los Angeles Dodgers</option>
+              <option value="120">Washington Nationals</option>
+              <option value="121">New York Mets</option>
+              <option value="133">Athletics</option>
+              <option value="134">Pittsburgh Pirates</option>
+              <option value="135">San Diego Padres</option>
+              <option value="136" selected>Seattle Mariners</option>
+              <option value="137">San Francisco Giants</option>
+              <option value="138">St. Louis Cardinals</option>
+              <option value="139">Tampa Bay Rays</option>
+              <option value="140">Texas Rangers</option>
+              <option value="141">Toronto Blue Jays</option>
+              <option value="142">Minnesota Twins</option>
+              <option value="143">Philadelphia Phillies</option>
+              <option value="144">Atlanta Braves</option>
+              <option value="145">Chicago White Sox</option>
+              <option value="146">Miami Marlins</option>
+              <option value="147">New York Yankees</option>
+              <option value="158">Milwaukee Brewers</option>
+            </select>
+            <button class="primary-button" id="save-favorite-team-btn" type="submit">Save Favorite Team</button>
+          </div>
+          <p class="storage-message" id="storage-message" role="status" aria-live="polite"></p>
+        </form>
       </section>
 
       <section class="card games-card" aria-labelledby="games-heading">

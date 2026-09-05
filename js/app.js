@@ -2,10 +2,16 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.1.0-web-dev
- * Build: 001
+ * Build: 002
  */
 
 import { fetchMlbSchedule } from "./api.js";
+import { getSetting, initializeStorage, setSetting } from "./storage.js";
+
+const DEFAULT_FAVORITE_TEAM = {
+  id: 136,
+  name: "Seattle Mariners"
+};
 
 const elements = {
   refreshButton: document.querySelector("#refresh-games-btn"),
@@ -14,30 +20,104 @@ const elements = {
   gamesMessage: document.querySelector("#games-message"),
   gamesList: document.querySelector("#games-list"),
   appStatusText: document.querySelector("#app-status-text"),
-  appStatusDot: document.querySelector("#app-status-dot")
+  appStatusDot: document.querySelector("#app-status-dot"),
+  favoriteTeamForm: document.querySelector("#favorite-team-form"),
+  favoriteTeamSelect: document.querySelector("#favorite-team-select"),
+  saveFavoriteTeamButton: document.querySelector("#save-favorite-team-btn"),
+  storageStatus: document.querySelector("#storage-status"),
+  storageMessage: document.querySelector("#storage-message")
 };
 
 initialize();
 
-function initialize() {
+async function initialize() {
   const today = getLocalDateString();
   elements.gamesDate.textContent = formatDisplayDate(today);
   elements.refreshButton.addEventListener("click", () => loadGames(today));
-  loadGames(today);
+  elements.favoriteTeamForm.addEventListener("submit", saveFavoriteTeam);
+
+  await initializeFavoriteTeamSetting();
+  await loadGames(today);
+}
+
+async function initializeFavoriteTeamSetting() {
+  try {
+    await initializeStorage();
+
+    const savedTeam = await getSetting("favoriteTeam", null);
+    const favoriteTeam = isValidFavoriteTeam(savedTeam)
+      ? savedTeam
+      : DEFAULT_FAVORITE_TEAM;
+
+    if (!isValidFavoriteTeam(savedTeam)) {
+      await setSetting("favoriteTeam", favoriteTeam);
+    }
+
+    elements.favoriteTeamSelect.value = String(favoriteTeam.id);
+    setStorageStatus("IndexedDB ready", "ready");
+    elements.storageMessage.textContent = `Saved favorite: ${favoriteTeam.name}`;
+    setAppStatus("Browser storage ready", "ready");
+  } catch (error) {
+    console.error("Unable to initialize favorite-team setting:", error);
+    setStorageStatus("Storage unavailable", "error");
+    elements.storageMessage.textContent =
+      error instanceof Error ? error.message : "Browser storage is unavailable.";
+    elements.saveFavoriteTeamButton.disabled = true;
+    elements.favoriteTeamSelect.disabled = true;
+    setAppStatus("Browser storage unavailable", "error");
+  }
+}
+
+async function saveFavoriteTeam(event) {
+  event.preventDefault();
+
+  const selectedOption = elements.favoriteTeamSelect.selectedOptions[0];
+  if (!selectedOption) {
+    return;
+  }
+
+  const favoriteTeam = {
+    id: Number(selectedOption.value),
+    name: selectedOption.textContent.trim()
+  };
+
+  elements.saveFavoriteTeamButton.disabled = true;
+  elements.saveFavoriteTeamButton.textContent = "Saving…";
+  elements.storageMessage.textContent = "Saving favorite team to this browser…";
+
+  try {
+    await setSetting("favoriteTeam", favoriteTeam);
+    setStorageStatus("IndexedDB ready", "ready");
+    elements.storageMessage.textContent =
+      `Saved favorite: ${favoriteTeam.name}. Refresh the page to verify persistence.`;
+    setAppStatus("Browser storage ready", "ready");
+  } catch (error) {
+    console.error("Unable to save favorite team:", error);
+    setStorageStatus("Save failed", "error");
+    elements.storageMessage.textContent =
+      error instanceof Error ? error.message : "Could not save the favorite team.";
+    setAppStatus("Browser storage error", "error");
+  } finally {
+    elements.saveFavoriteTeamButton.disabled = false;
+    elements.saveFavoriteTeamButton.textContent = "Save Favorite Team";
+  }
 }
 
 async function loadGames(date) {
-  setLoadingState(true);
+  setGamesLoadingState(true);
 
   try {
     const games = await fetchMlbSchedule(date);
     renderGames(games);
-    setAppStatus("Connected to MLB Stats API", "ready");
+
+    if (!elements.storageStatus.classList.contains("error")) {
+      setAppStatus("Browser storage + MLB API ready", "ready");
+    }
   } catch (error) {
     renderError(error);
     setAppStatus("MLB API unavailable", "error");
   } finally {
-    setLoadingState(false);
+    setGamesLoadingState(false);
   }
 }
 
@@ -90,7 +170,7 @@ function renderError(error) {
     `Could not load today's MLB schedule. ${error instanceof Error ? error.message : "Unknown error."}`;
 }
 
-function setLoadingState(isLoading) {
+function setGamesLoadingState(isLoading) {
   elements.refreshButton.disabled = isLoading;
   elements.refreshButton.textContent = isLoading ? "Loading…" : "Refresh Games";
 
@@ -103,6 +183,17 @@ function setLoadingState(isLoading) {
   }
 }
 
+function setStorageStatus(text, state) {
+  elements.storageStatus.textContent = text;
+  elements.storageStatus.classList.remove("ready", "error");
+
+  if (state === "ready") {
+    elements.storageStatus.classList.add("ready");
+  } else if (state === "error") {
+    elements.storageStatus.classList.add("error");
+  }
+}
+
 function setAppStatus(text, state) {
   elements.appStatusText.textContent = text;
   elements.appStatusDot.classList.remove("loading", "error");
@@ -112,6 +203,15 @@ function setAppStatus(text, state) {
   } else if (state === "error") {
     elements.appStatusDot.classList.add("error");
   }
+}
+
+function isValidFavoriteTeam(value) {
+  return Boolean(
+    value &&
+    Number.isInteger(Number(value.id)) &&
+    typeof value.name === "string" &&
+    value.name.trim()
+  );
 }
 
 function getLocalDateString() {
