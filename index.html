@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   Scorecard Studio
-  Pregame Application Shell
+  PDF Upload & Persistence
   Version: 0.1.0-web-dev
-  Build: 003
+  Build: 004
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=003" />
+  <link rel="stylesheet" href="./css/styles.css?v=004" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,14 +20,14 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.1.0-web-dev • Build 003</p>
+          <p>0.1.0-web-dev • Build 004</p>
         </div>
       </div>
 
       <nav class="nav-list" aria-label="Main navigation">
         <button class="nav-item active" type="button" aria-current="page"><span>⌂</span> Home</button>
         <button class="nav-item" type="button" disabled><span>⚾</span> Games <small>Later</small></button>
-        <button class="nav-item" type="button" disabled><span>▣</span> Layouts <small>Later</small></button>
+        <button class="nav-item" type="button" disabled><span>▣</span> Layouts <small>Build 005</small></button>
         <button class="nav-item" type="button" disabled><span>✎</span> Layout Designer <small>Later</small></button>
         <button class="nav-item" type="button" disabled><span>⎙</span> Generate <small>Later</small></button>
         <button class="nav-item" type="button" disabled><span>⚙</span> Settings <small>Later</small></button>
@@ -42,7 +42,7 @@
     <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Scorecard Studio • Pregame Application Shell</p>
+          <p class="eyebrow">Scorecard Studio • PDF Upload & Persistence</p>
           <h2>Home</h2>
         </div>
         <div class="topbar-actions">
@@ -52,16 +52,17 @@
 
       <section class="hero-card card">
         <div class="hero-copy">
-          <p class="section-label">Build 003</p>
+          <p class="section-label">Build 004</p>
           <h3>Pregame data, directly in the browser</h3>
           <p>
-            Scorecard Studio now uses the saved favorite team to find today's game and load pregame information directly from the MLB Stats API. No server-side application or local game cache is required.
+            Scorecard Studio can now load and render a PDF template entirely in the browser, save the original PDF in IndexedDB, and restore it after a reload. Pregame data remains browser-only as well.
           </p>
         </div>
-        <div class="foundation-status" aria-label="Build 003 scope">
+        <div class="foundation-status" aria-label="Build 004 scope">
           <div><strong>Hosting</strong><span>GitHub Pages</span></div>
           <div><strong>Storage</strong><span>IndexedDB</span></div>
           <div><strong>Pregame Data</strong><span>MLB Stats API</span></div>
+          <div><strong>PDF Rendering</strong><span>PDF.js</span></div>
         </div>
       </section>
 
@@ -113,6 +114,40 @@
           </div>
           <p class="storage-message" id="storage-message" role="status" aria-live="polite"></p>
         </form>
+      </section>
+
+
+      <section class="card pdf-card" aria-labelledby="pdf-heading">
+        <div class="card-header-row">
+          <div>
+            <p class="section-label">Build 004 Proof</p>
+            <h3 id="pdf-heading">PDF Template Upload & Persistence</h3>
+            <p class="subtle">Upload one PDF template. Scorecard Studio will render it in the browser and save the original PDF in IndexedDB.</p>
+          </div>
+          <div class="pill neutral" id="pdf-status">No PDF loaded</div>
+        </div>
+
+        <div class="pdf-upload-row">
+          <label class="file-button" for="pdf-file-input">Choose PDF</label>
+          <input id="pdf-file-input" type="file" accept="application/pdf,.pdf" />
+          <div class="pdf-file-summary" id="pdf-file-summary">No stored template.</div>
+          <button class="secondary-button" id="remove-pdf-btn" type="button" disabled>Remove Stored PDF</button>
+        </div>
+
+        <div class="message-panel" id="pdf-message" role="status" aria-live="polite">
+          Choose a PDF to test browser rendering and IndexedDB persistence.
+        </div>
+
+        <div class="pdf-viewer" id="pdf-viewer" hidden>
+          <div class="pdf-toolbar">
+            <button class="secondary-button" id="pdf-prev-btn" type="button">Previous</button>
+            <strong id="pdf-page-label">Page 1 of 1</strong>
+            <button class="secondary-button" id="pdf-next-btn" type="button">Next</button>
+          </div>
+          <div class="pdf-canvas-wrap">
+            <canvas id="pdf-canvas" aria-label="Rendered PDF page"></canvas>
+          </div>
+        </div>
       </section>
 
       <section class="card today-card" aria-labelledby="today-heading">
@@ -177,6 +212,7 @@
     </main>
   </div>
 
-  <script type="module" src="./js/app.js?v=003"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script type="module" src="./js/app.js?v=004"></script>
 </body>
 </html>

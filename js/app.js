@@ -2,11 +2,11 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.1.0-web-dev
- * Build: 003
+ * Build: 004
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=003";
-import { getSetting, initializeStorage, setSetting } from "./storage.js?v=003";
+import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=004";
+import { deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage, savePdfTemplate, setSetting } from "./storage.js?v=004";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -14,7 +14,10 @@ const state = {
   favoriteTeam: DEFAULT_FAVORITE_TEAM,
   schedule: [],
   selectedGamePk: null,
-  selectedFeed: null
+  selectedFeed: null,
+  pdfDocument: null,
+  pdfPageNumber: 1,
+  pdfRecord: null
 };
 
 const elements = {
@@ -42,6 +45,16 @@ const elements = {
   homeLineupHeading: document.querySelector("#home-lineup-heading"),
   awayLineup: document.querySelector("#away-lineup"),
   homeLineup: document.querySelector("#home-lineup"),
+  pdfFileInput: document.querySelector("#pdf-file-input"),
+  pdfStatus: document.querySelector("#pdf-status"),
+  pdfFileSummary: document.querySelector("#pdf-file-summary"),
+  pdfMessage: document.querySelector("#pdf-message"),
+  pdfViewer: document.querySelector("#pdf-viewer"),
+  pdfCanvas: document.querySelector("#pdf-canvas"),
+  pdfPageLabel: document.querySelector("#pdf-page-label"),
+  pdfPrevButton: document.querySelector("#pdf-prev-btn"),
+  pdfNextButton: document.querySelector("#pdf-next-btn"),
+  removePdfButton: document.querySelector("#remove-pdf-btn"),
   appStatusText: document.querySelector("#app-status-text"),
   appStatusDot: document.querySelector("#app-status-dot")
 };
@@ -53,8 +66,13 @@ async function initialize() {
   elements.todayDate.textContent = formatDisplayDate(today);
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(today));
+  elements.pdfFileInput.addEventListener("change", handlePdfUpload);
+  elements.pdfPrevButton.addEventListener("click", () => changePdfPage(-1));
+  elements.pdfNextButton.addEventListener("click", () => changePdfPage(1));
+  elements.removePdfButton.addEventListener("click", removeStoredPdf);
 
   await initializeFavoriteTeamSetting();
+  await restoreStoredPdf();
   await loadFavoriteTeamPregame(today);
 }
 
@@ -528,6 +546,169 @@ function formatDisplayDate(dateString) {
     month: "long",
     day: "numeric"
   }).format(new Date(year, month - 1, day));
+}
+
+
+const PDF_TEMPLATE_KEY = "build004-proof-template";
+
+async function handlePdfUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    setPdfMessage("Please choose a PDF file.", true);
+    elements.pdfFileInput.value = "";
+    return;
+  }
+
+  try {
+    setPdfBusy(true, "Reading PDF…");
+    const document = await loadPdfDocument(file);
+    const record = await savePdfTemplate(PDF_TEMPLATE_KEY, file);
+    await showPdfDocument(document, record, 1);
+    setPdfMessage(`Saved ${record.name} to IndexedDB. Reload the page to verify persistence.`);
+    setPdfStatus("IndexedDB Saved", "ready");
+  } catch (error) {
+    console.error("Unable to load uploaded PDF:", error);
+    setPdfMessage(errorMessage(error, "The PDF could not be loaded."), true);
+    setPdfStatus("PDF Error", "error");
+  } finally {
+    setPdfBusy(false);
+    elements.pdfFileInput.value = "";
+  }
+}
+
+async function restoreStoredPdf() {
+  try {
+    const record = await getPdfTemplate(PDF_TEMPLATE_KEY);
+    if (!record?.blob) {
+      setPdfStatus("No PDF loaded", "neutral");
+      return;
+    }
+
+    setPdfBusy(true, "Restoring stored PDF…");
+    const document = await loadPdfDocument(record.blob);
+    await showPdfDocument(document, record, 1);
+    setPdfMessage("Stored PDF restored from IndexedDB after page load.");
+    setPdfStatus("IndexedDB Restored", "ready");
+  } catch (error) {
+    console.error("Unable to restore stored PDF:", error);
+    setPdfMessage(errorMessage(error, "The stored PDF could not be restored."), true);
+    setPdfStatus("Restore Error", "error");
+  } finally {
+    setPdfBusy(false);
+  }
+}
+
+async function loadPdfDocument(blob) {
+  if (!globalThis.pdfjsLib) throw new Error("PDF.js did not load. Check the browser network connection.");
+  globalThis.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const loadingTask = globalThis.pdfjsLib.getDocument({ data: bytes });
+  return loadingTask.promise;
+}
+
+async function showPdfDocument(document, record, pageNumber) {
+  state.pdfDocument = document;
+  state.pdfRecord = record;
+  state.pdfPageNumber = Math.min(Math.max(pageNumber, 1), document.numPages);
+  elements.pdfViewer.hidden = false;
+  elements.removePdfButton.disabled = false;
+  elements.pdfFileSummary.textContent = `${record.name} • ${document.numPages} page${document.numPages === 1 ? "" : "s"} • ${formatFileSize(record.size)}`;
+  await renderPdfPage();
+}
+
+async function renderPdfPage() {
+  if (!state.pdfDocument) return;
+  const page = await state.pdfDocument.getPage(state.pdfPageNumber);
+  const baseViewport = page.getViewport({ scale: 1 });
+  const availableWidth = Math.min(elements.pdfCanvas.parentElement.clientWidth - 32, 1100);
+  const scale = Math.max(0.25, availableWidth / baseViewport.width);
+  const viewport = page.getViewport({ scale });
+  const outputScale = window.devicePixelRatio || 1;
+  const canvas = elements.pdfCanvas;
+  const context = canvas.getContext("2d");
+
+  canvas.width = Math.floor(viewport.width * outputScale);
+  canvas.height = Math.floor(viewport.height * outputScale);
+  canvas.style.width = `${Math.floor(viewport.width)}px`;
+  canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+  await page.render({
+    canvasContext: context,
+    viewport,
+    transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
+  }).promise;
+
+  elements.pdfPageLabel.textContent = `Page ${state.pdfPageNumber} of ${state.pdfDocument.numPages}`;
+  elements.pdfPrevButton.disabled = state.pdfPageNumber <= 1;
+  elements.pdfNextButton.disabled = state.pdfPageNumber >= state.pdfDocument.numPages;
+}
+
+async function changePdfPage(delta) {
+  if (!state.pdfDocument) return;
+  const next = state.pdfPageNumber + delta;
+  if (next < 1 || next > state.pdfDocument.numPages) return;
+  state.pdfPageNumber = next;
+  try {
+    setPdfBusy(true, `Rendering page ${next}…`);
+    await renderPdfPage();
+  } catch (error) {
+    console.error("Unable to render PDF page:", error);
+    setPdfMessage("That PDF page could not be rendered.", true);
+  } finally {
+    setPdfBusy(false);
+  }
+}
+
+async function removeStoredPdf() {
+  try {
+    setPdfBusy(true, "Removing stored PDF…");
+    await deletePdfTemplate(PDF_TEMPLATE_KEY);
+    state.pdfDocument = null;
+    state.pdfRecord = null;
+    state.pdfPageNumber = 1;
+    elements.pdfViewer.hidden = true;
+    elements.removePdfButton.disabled = true;
+    elements.pdfFileSummary.textContent = "No stored template.";
+    setPdfMessage("Stored PDF removed from IndexedDB.");
+    setPdfStatus("No PDF loaded", "neutral");
+  } catch (error) {
+    console.error("Unable to remove stored PDF:", error);
+    setPdfMessage("The stored PDF could not be removed.", true);
+  } finally {
+    setPdfBusy(false);
+  }
+}
+
+function setPdfBusy(isBusy, message = "") {
+  elements.pdfFileInput.disabled = isBusy;
+  elements.pdfPrevButton.disabled = isBusy || !state.pdfDocument || state.pdfPageNumber <= 1;
+  elements.pdfNextButton.disabled = isBusy || !state.pdfDocument || state.pdfPageNumber >= state.pdfDocument.numPages;
+  elements.removePdfButton.disabled = isBusy || !state.pdfRecord;
+  if (isBusy && message) {
+    setPdfMessage(message);
+    setPdfStatus("Working…", "neutral");
+  }
+}
+
+function setPdfMessage(message, isError = false) {
+  elements.pdfMessage.textContent = message;
+  elements.pdfMessage.classList.toggle("error", isError);
+}
+
+function setPdfStatus(text, state) {
+  elements.pdfStatus.textContent = text;
+  const className = state === "ready" ? "ready" : state === "error" ? "error" : "neutral";
+  elements.pdfStatus.className = `pill ${className}`;
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes)) return "Unknown size";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function errorMessage(error, fallback) {
