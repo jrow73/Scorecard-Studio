@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   Scorecard Studio
-  PDF Upload & Persistence
+  Layout Management
   Version: 0.1.0-web-dev
-  Build: 004
+  Build: 005
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=004" />
+  <link rel="stylesheet" href="./css/styles.css?v=005" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,15 +20,15 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.1.0-web-dev • Build 004</p>
+          <p>0.1.0-web-dev • Build 005</p>
         </div>
       </div>
 
       <nav class="nav-list" aria-label="Main navigation">
-        <button class="nav-item active" type="button" aria-current="page"><span>⌂</span> Home</button>
+        <button class="nav-item active" id="nav-home" type="button" aria-current="page"><span>⌂</span> Home</button>
         <button class="nav-item" type="button" disabled><span>⚾</span> Games <small>Later</small></button>
-        <button class="nav-item" type="button" disabled><span>▣</span> Layouts <small>Build 005</small></button>
-        <button class="nav-item" type="button" disabled><span>✎</span> Layout Designer <small>Later</small></button>
+        <button class="nav-item" id="nav-layouts" type="button"><span>▣</span> Layouts</button>
+        <button class="nav-item" type="button" disabled><span>✎</span> Layout Designer <small>Build 006</small></button>
         <button class="nav-item" type="button" disabled><span>⎙</span> Generate <small>Later</small></button>
         <button class="nav-item" type="button" disabled><span>⚙</span> Settings <small>Later</small></button>
       </nav>
@@ -42,23 +42,23 @@
     <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Scorecard Studio • PDF Upload & Persistence</p>
-          <h2>Home</h2>
+          <p class="eyebrow" id="page-eyebrow">Scorecard Studio • Pregame</p>
+          <h2 id="page-title">Home</h2>
         </div>
         <div class="topbar-actions">
           <button class="secondary-button" id="refresh-pregame-btn" type="button">Refresh Pregame Data</button>
         </div>
       </header>
 
-      <section class="hero-card card">
+      <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 004</p>
+          <p class="section-label">Build 005</p>
           <h3>Pregame data, directly in the browser</h3>
           <p>
-            Scorecard Studio can now load and render a PDF template entirely in the browser, save the original PDF in IndexedDB, and restore it after a reload. Pregame data remains browser-only as well.
+            Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
           </p>
         </div>
-        <div class="foundation-status" aria-label="Build 004 scope">
+        <div class="foundation-status" aria-label="Build 005 scope">
           <div><strong>Hosting</strong><span>GitHub Pages</span></div>
           <div><strong>Storage</strong><span>IndexedDB</span></div>
           <div><strong>Pregame Data</strong><span>MLB Stats API</span></div>
@@ -66,7 +66,7 @@
         </div>
       </section>
 
-      <section class="card favorite-card" aria-labelledby="favorite-heading">
+      <section class="card favorite-card" data-view="home" aria-labelledby="favorite-heading">
         <div class="card-header-row compact-header">
           <div>
             <p class="section-label">Browser Preference</p>
@@ -117,40 +117,7 @@
       </section>
 
 
-      <section class="card pdf-card" aria-labelledby="pdf-heading">
-        <div class="card-header-row">
-          <div>
-            <p class="section-label">Build 004 Proof</p>
-            <h3 id="pdf-heading">PDF Template Upload & Persistence</h3>
-            <p class="subtle">Upload one PDF template. Scorecard Studio will render it in the browser and save the original PDF in IndexedDB.</p>
-          </div>
-          <div class="pill neutral" id="pdf-status">No PDF loaded</div>
-        </div>
-
-        <div class="pdf-upload-row">
-          <label class="file-button" for="pdf-file-input">Choose PDF</label>
-          <input id="pdf-file-input" type="file" accept="application/pdf,.pdf" />
-          <div class="pdf-file-summary" id="pdf-file-summary">No stored template.</div>
-          <button class="secondary-button" id="remove-pdf-btn" type="button" disabled>Remove Stored PDF</button>
-        </div>
-
-        <div class="message-panel" id="pdf-message" role="status" aria-live="polite">
-          Choose a PDF to test browser rendering and IndexedDB persistence.
-        </div>
-
-        <div class="pdf-viewer" id="pdf-viewer" hidden>
-          <div class="pdf-toolbar">
-            <button class="secondary-button" id="pdf-prev-btn" type="button">Previous</button>
-            <strong id="pdf-page-label">Page 1 of 1</strong>
-            <button class="secondary-button" id="pdf-next-btn" type="button">Next</button>
-          </div>
-          <div class="pdf-canvas-wrap">
-            <canvas id="pdf-canvas" aria-label="Rendered PDF page"></canvas>
-          </div>
-        </div>
-      </section>
-
-      <section class="card today-card" aria-labelledby="today-heading">
+      <section class="card today-card" data-view="home" aria-labelledby="today-heading">
         <div class="card-header-row">
           <div>
             <p class="section-label">Favorite Team</p>
@@ -209,10 +176,87 @@
           </details>
         </div>
       </section>
+
+      <section class="layouts-view" data-view="layouts" hidden aria-labelledby="layouts-heading">
+        <section class="card layout-create-card">
+          <div class="card-header-row">
+            <div>
+              <p class="section-label">Build 005</p>
+              <h3 id="layouts-heading">Layout Library</h3>
+              <p class="subtle">Create a named layout from a PDF template. Field mapping arrives in Build 006.</p>
+            </div>
+            <div class="pill neutral" id="layout-storage-status">Loading layouts…</div>
+          </div>
+
+          <div class="layout-form-grid">
+            <label>Layout name
+              <input id="layout-name-input" type="text" maxlength="80" placeholder="Custom 11x17 B&W" />
+            </label>
+            <label>Description
+              <input id="layout-description-input" type="text" maxlength="240" placeholder="Optional description" />
+            </label>
+          </div>
+
+          <div class="layout-upload-row">
+            <label class="file-button" for="layout-pdf-input">Choose PDF</label>
+            <input id="layout-pdf-input" type="file" accept="application/pdf,.pdf" />
+            <span class="pdf-file-summary" id="layout-pdf-summary">No PDF selected.</span>
+            <button class="primary-button" id="create-layout-btn" type="button">Create Layout</button>
+          </div>
+          <div class="message-panel" id="layout-message" role="status" aria-live="polite">Create your first saved layout.</div>
+        </section>
+
+        <section class="card">
+          <div class="card-header-row compact-header">
+            <div>
+              <p class="section-label">Saved in this browser</p>
+              <h3>Layouts</h3>
+            </div>
+            <span class="pill neutral" id="layout-count">0 layouts</span>
+          </div>
+          <div class="layout-list" id="layout-list"></div>
+        </section>
+
+        <section class="card layout-detail-card" id="layout-detail-card" hidden>
+          <div class="card-header-row">
+            <div>
+              <p class="section-label">Selected Layout</p>
+              <h3 id="selected-layout-heading">Layout</h3>
+              <p class="subtle" id="selected-layout-meta"></p>
+            </div>
+            <div class="pill ready">Ready</div>
+          </div>
+
+          <div class="layout-form-grid">
+            <label>Layout name
+              <input id="edit-layout-name" type="text" maxlength="80" />
+            </label>
+            <label>Description
+              <input id="edit-layout-description" type="text" maxlength="240" />
+            </label>
+          </div>
+          <div class="layout-detail-actions">
+            <button class="primary-button" id="save-layout-metadata-btn" type="button">Save Changes</button>
+            <button class="secondary-button" id="duplicate-layout-btn" type="button">Duplicate</button>
+            <button class="danger-button" id="delete-layout-btn" type="button">Delete Layout</button>
+          </div>
+
+          <div class="pdf-viewer" id="pdf-viewer" hidden>
+            <div class="pdf-toolbar">
+              <button class="secondary-button" id="pdf-prev-btn" type="button">Previous</button>
+              <strong id="pdf-page-label">Page 1 of 1</strong>
+              <button class="secondary-button" id="pdf-next-btn" type="button">Next</button>
+            </div>
+            <div class="pdf-canvas-wrap">
+              <canvas id="pdf-canvas" aria-label="Rendered layout PDF page"></canvas>
+            </div>
+          </div>
+        </section>
+      </section>
     </main>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script type="module" src="./js/app.js?v=004"></script>
+  <script type="module" src="./js/app.js?v=005"></script>
 </body>
 </html>

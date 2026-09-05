@@ -2,11 +2,14 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.1.0-web-dev
- * Build: 004
+ * Build: 005
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=004";
-import { deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage, savePdfTemplate, setSetting } from "./storage.js?v=004";
+import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=005";
+import {
+  deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
+  listLayouts, saveLayout, savePdfTemplate, setSetting
+} from "./storage.js?v=005";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -17,7 +20,10 @@ const state = {
   selectedFeed: null,
   pdfDocument: null,
   pdfPageNumber: 1,
-  pdfRecord: null
+  pdfRecord: null,
+  layouts: [],
+  selectedLayoutId: null,
+  pendingLayoutPdf: null
 };
 
 const elements = {
@@ -45,16 +51,32 @@ const elements = {
   homeLineupHeading: document.querySelector("#home-lineup-heading"),
   awayLineup: document.querySelector("#away-lineup"),
   homeLineup: document.querySelector("#home-lineup"),
-  pdfFileInput: document.querySelector("#pdf-file-input"),
-  pdfStatus: document.querySelector("#pdf-status"),
-  pdfFileSummary: document.querySelector("#pdf-file-summary"),
-  pdfMessage: document.querySelector("#pdf-message"),
+  navHome: document.querySelector("#nav-home"),
+  navLayouts: document.querySelector("#nav-layouts"),
+  pageTitle: document.querySelector("#page-title"),
+  pageEyebrow: document.querySelector("#page-eyebrow"),
+  layoutStorageStatus: document.querySelector("#layout-storage-status"),
+  layoutNameInput: document.querySelector("#layout-name-input"),
+  layoutDescriptionInput: document.querySelector("#layout-description-input"),
+  layoutPdfInput: document.querySelector("#layout-pdf-input"),
+  layoutPdfSummary: document.querySelector("#layout-pdf-summary"),
+  createLayoutButton: document.querySelector("#create-layout-btn"),
+  layoutMessage: document.querySelector("#layout-message"),
+  layoutList: document.querySelector("#layout-list"),
+  layoutCount: document.querySelector("#layout-count"),
+  layoutDetailCard: document.querySelector("#layout-detail-card"),
+  selectedLayoutHeading: document.querySelector("#selected-layout-heading"),
+  selectedLayoutMeta: document.querySelector("#selected-layout-meta"),
+  editLayoutName: document.querySelector("#edit-layout-name"),
+  editLayoutDescription: document.querySelector("#edit-layout-description"),
+  saveLayoutMetadataButton: document.querySelector("#save-layout-metadata-btn"),
+  duplicateLayoutButton: document.querySelector("#duplicate-layout-btn"),
+  deleteLayoutButton: document.querySelector("#delete-layout-btn"),
   pdfViewer: document.querySelector("#pdf-viewer"),
   pdfCanvas: document.querySelector("#pdf-canvas"),
   pdfPageLabel: document.querySelector("#pdf-page-label"),
   pdfPrevButton: document.querySelector("#pdf-prev-btn"),
   pdfNextButton: document.querySelector("#pdf-next-btn"),
-  removePdfButton: document.querySelector("#remove-pdf-btn"),
   appStatusText: document.querySelector("#app-status-text"),
   appStatusDot: document.querySelector("#app-status-dot")
 };
@@ -66,13 +88,18 @@ async function initialize() {
   elements.todayDate.textContent = formatDisplayDate(today);
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(today));
-  elements.pdfFileInput.addEventListener("change", handlePdfUpload);
+  elements.navHome.addEventListener("click", () => showView("home"));
+  elements.navLayouts.addEventListener("click", () => showView("layouts"));
+  elements.layoutPdfInput.addEventListener("change", handleLayoutPdfSelection);
+  elements.createLayoutButton.addEventListener("click", createLayout);
+  elements.saveLayoutMetadataButton.addEventListener("click", saveSelectedLayoutMetadata);
+  elements.duplicateLayoutButton.addEventListener("click", duplicateSelectedLayout);
+  elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
   elements.pdfPrevButton.addEventListener("click", () => changePdfPage(-1));
   elements.pdfNextButton.addEventListener("click", () => changePdfPage(1));
-  elements.removePdfButton.addEventListener("click", removeStoredPdf);
 
   await initializeFavoriteTeamSetting();
-  await restoreStoredPdf();
+  await refreshLayouts();
   await loadFavoriteTeamPregame(today);
 }
 
@@ -549,64 +576,214 @@ function formatDisplayDate(dateString) {
 }
 
 
-const PDF_TEMPLATE_KEY = "build004-proof-template";
+function showView(view) {
+  document.querySelectorAll("[data-view]").forEach((node) => {
+    node.hidden = node.dataset.view !== view;
+  });
+  const isHome = view === "home";
+  elements.navHome.classList.toggle("active", isHome);
+  elements.navLayouts.classList.toggle("active", !isHome);
+  elements.navHome.toggleAttribute("aria-current", isHome);
+  elements.navLayouts.toggleAttribute("aria-current", !isHome);
+  elements.refreshButton.hidden = !isHome;
+  elements.pageTitle.textContent = isHome ? "Home" : "Layouts";
+  elements.pageEyebrow.textContent = isHome ? "Scorecard Studio • Pregame" : "Scorecard Studio • Layout Management";
+}
 
-async function handlePdfUpload(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
+function handleLayoutPdfSelection(event) {
+  const file = event.target.files?.[0] ?? null;
+  state.pendingLayoutPdf = file;
+  elements.layoutPdfSummary.textContent = file ? `${file.name} • ${formatFileSize(file.size)}` : "No PDF selected.";
+}
 
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-    setPdfMessage("Please choose a PDF file.", true);
-    elements.pdfFileInput.value = "";
-    return;
-  }
+async function createLayout() {
+  const name = elements.layoutNameInput.value.trim();
+  const description = elements.layoutDescriptionInput.value.trim();
+  const file = state.pendingLayoutPdf;
+  if (!name) return setLayoutMessage("Enter a layout name.", true);
+  if (!file) return setLayoutMessage("Choose a PDF template.", true);
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return setLayoutMessage("Please choose a PDF file.", true);
 
+  setLayoutBusy(true, "Reading PDF…");
   try {
-    setPdfBusy(true, "Reading PDF…");
-    const document = await loadPdfDocument(file);
-    const record = await savePdfTemplate(PDF_TEMPLATE_KEY, file);
-    await showPdfDocument(document, record, 1);
-    setPdfMessage(`Saved ${record.name} to IndexedDB. Reload the page to verify persistence.`);
-    setPdfStatus("IndexedDB Saved", "ready");
+    const pdf = await loadPdfDocument(file);
+    const id = createId();
+    const now = new Date().toISOString();
+    await savePdfTemplate(id, file);
+    const layout = {
+      id,
+      schemaVersion: 1,
+      name,
+      description,
+      pdfTemplateId: id,
+      pdfFileName: file.name,
+      pageCount: pdf.numPages,
+      createdAt: now,
+      updatedAt: now
+    };
+    await saveLayout(layout);
+    elements.layoutNameInput.value = "";
+    elements.layoutDescriptionInput.value = "";
+    elements.layoutPdfInput.value = "";
+    elements.layoutPdfSummary.textContent = "No PDF selected.";
+    state.pendingLayoutPdf = null;
+    await refreshLayouts();
+    await openLayout(id);
+    setLayoutMessage(`Created ${layout.name}.`);
   } catch (error) {
-    console.error("Unable to load uploaded PDF:", error);
-    setPdfMessage(errorMessage(error, "The PDF could not be loaded."), true);
-    setPdfStatus("PDF Error", "error");
+    console.error("Unable to create layout:", error);
+    setLayoutMessage(errorMessage(error, "The layout could not be created."), true);
   } finally {
-    setPdfBusy(false);
-    elements.pdfFileInput.value = "";
+    setLayoutBusy(false);
   }
 }
 
-async function restoreStoredPdf() {
+async function refreshLayouts() {
   try {
-    const record = await getPdfTemplate(PDF_TEMPLATE_KEY);
-    if (!record?.blob) {
-      setPdfStatus("No PDF loaded", "neutral");
-      return;
-    }
-
-    setPdfBusy(true, "Restoring stored PDF…");
-    const document = await loadPdfDocument(record.blob);
-    await showPdfDocument(document, record, 1);
-    setPdfMessage("Stored PDF restored from IndexedDB after page load.");
-    setPdfStatus("IndexedDB Restored", "ready");
+    state.layouts = await listLayouts();
+    renderLayoutList();
+    elements.layoutStorageStatus.textContent = "IndexedDB Ready";
+    elements.layoutStorageStatus.className = "pill ready";
   } catch (error) {
-    console.error("Unable to restore stored PDF:", error);
-    setPdfMessage(errorMessage(error, "The stored PDF could not be restored."), true);
-    setPdfStatus("Restore Error", "error");
-  } finally {
-    setPdfBusy(false);
+    console.error("Unable to load layouts:", error);
+    elements.layoutStorageStatus.textContent = "Layout Error";
+    elements.layoutStorageStatus.className = "pill error";
+    setLayoutMessage(errorMessage(error, "Layouts could not be loaded."), true);
   }
+}
+
+function renderLayoutList() {
+  elements.layoutList.replaceChildren();
+  const count = state.layouts.length;
+  elements.layoutCount.textContent = `${count} layout${count === 1 ? "" : "s"}`;
+  if (!count) {
+    const empty = document.createElement("div");
+    empty.className = "empty-note";
+    empty.textContent = "No layouts saved yet.";
+    elements.layoutList.append(empty);
+    return;
+  }
+  state.layouts.forEach((layout) => {
+    const card = document.createElement("article");
+    card.className = `layout-list-item${layout.id === state.selectedLayoutId ? " selected" : ""}`;
+    const copy = document.createElement("div");
+    copy.className = "layout-list-copy";
+    const title = document.createElement("strong");
+    title.textContent = layout.name;
+    const desc = document.createElement("span");
+    desc.textContent = layout.description || layout.pdfFileName || "PDF layout";
+    const meta = document.createElement("small");
+    meta.textContent = `${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"} • Schema ${layout.schemaVersion}`;
+    copy.append(title, desc, meta);
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "secondary-button";
+    open.textContent = "Open";
+    open.addEventListener("click", () => openLayout(layout.id));
+    card.append(copy, open);
+    elements.layoutList.append(card);
+  });
+}
+
+async function openLayout(id) {
+  const layout = state.layouts.find((item) => item.id === id);
+  if (!layout) return;
+  state.selectedLayoutId = id;
+  renderLayoutList();
+  elements.layoutDetailCard.hidden = false;
+  elements.selectedLayoutHeading.textContent = layout.name;
+  elements.selectedLayoutMeta.textContent = `${layout.pdfFileName} • ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
+  elements.editLayoutName.value = layout.name;
+  elements.editLayoutDescription.value = layout.description || "";
+  try {
+    const record = await getPdfTemplate(layout.pdfTemplateId);
+    if (!record?.blob) throw new Error("This layout's PDF template is missing.");
+    setLayoutBusy(true, "Opening layout PDF…");
+    const pdf = await loadPdfDocument(record.blob);
+    await showPdfDocument(pdf, record, 1);
+  } catch (error) {
+    console.error("Unable to open layout PDF:", error);
+    state.pdfDocument = null;
+    elements.pdfViewer.hidden = true;
+    setLayoutMessage(errorMessage(error, "The layout PDF could not be opened."), true);
+  } finally {
+    setLayoutBusy(false);
+  }
+}
+
+async function saveSelectedLayoutMetadata() {
+  const layout = selectedLayout();
+  if (!layout) return;
+  const name = elements.editLayoutName.value.trim();
+  if (!name) return setLayoutMessage("Layout name cannot be blank.", true);
+  try {
+    const updated = { ...layout, name, description: elements.editLayoutDescription.value.trim(), updatedAt: new Date().toISOString() };
+    await saveLayout(updated);
+    await refreshLayouts();
+    state.selectedLayoutId = updated.id;
+    elements.selectedLayoutHeading.textContent = updated.name;
+    setLayoutMessage(`Saved changes to ${updated.name}.`);
+  } catch (error) {
+    setLayoutMessage(errorMessage(error, "Layout changes could not be saved."), true);
+  }
+}
+
+async function duplicateSelectedLayout() {
+  const layout = selectedLayout();
+  if (!layout) return;
+  setLayoutBusy(true, "Duplicating layout…");
+  try {
+    const sourcePdf = await getPdfTemplate(layout.pdfTemplateId);
+    if (!sourcePdf?.blob) throw new Error("The source PDF is missing.");
+    const id = createId();
+    const now = new Date().toISOString();
+    const blobAsFile = new File([sourcePdf.blob], sourcePdf.name, { type: sourcePdf.type || "application/pdf" });
+    await savePdfTemplate(id, blobAsFile);
+    const duplicate = { ...layout, id, pdfTemplateId: id, name: `${layout.name} Copy`, createdAt: now, updatedAt: now };
+    await saveLayout(duplicate);
+    await refreshLayouts();
+    await openLayout(id);
+    setLayoutMessage(`Duplicated ${layout.name}.`);
+  } catch (error) {
+    console.error("Unable to duplicate layout:", error);
+    setLayoutMessage(errorMessage(error, "The layout could not be duplicated."), true);
+  } finally {
+    setLayoutBusy(false);
+  }
+}
+
+async function deleteSelectedLayout() {
+  const layout = selectedLayout();
+  if (!layout) return;
+  if (!window.confirm(`Delete layout "${layout.name}" and its stored PDF?`)) return;
+  setLayoutBusy(true, "Deleting layout…");
+  try {
+    await deleteLayout(layout.id);
+    await deletePdfTemplate(layout.pdfTemplateId);
+    state.selectedLayoutId = null;
+    state.pdfDocument = null;
+    state.pdfRecord = null;
+    elements.pdfViewer.hidden = true;
+    elements.layoutDetailCard.hidden = true;
+    await refreshLayouts();
+    setLayoutMessage(`Deleted ${layout.name}.`);
+  } catch (error) {
+    console.error("Unable to delete layout:", error);
+    setLayoutMessage(errorMessage(error, "The layout could not be deleted."), true);
+  } finally {
+    setLayoutBusy(false);
+  }
+}
+
+function selectedLayout() {
+  return state.layouts.find((item) => item.id === state.selectedLayoutId) ?? null;
 }
 
 async function loadPdfDocument(blob) {
   if (!globalThis.pdfjsLib) throw new Error("PDF.js did not load. Check the browser network connection.");
   globalThis.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  const loadingTask = globalThis.pdfjsLib.getDocument({ data: bytes });
-  return loadingTask.promise;
+  return globalThis.pdfjsLib.getDocument({ data: bytes }).promise;
 }
 
 async function showPdfDocument(document, record, pageNumber) {
@@ -614,8 +791,6 @@ async function showPdfDocument(document, record, pageNumber) {
   state.pdfRecord = record;
   state.pdfPageNumber = Math.min(Math.max(pageNumber, 1), document.numPages);
   elements.pdfViewer.hidden = false;
-  elements.removePdfButton.disabled = false;
-  elements.pdfFileSummary.textContent = `${record.name} • ${document.numPages} page${document.numPages === 1 ? "" : "s"} • ${formatFileSize(record.size)}`;
   await renderPdfPage();
 }
 
@@ -629,21 +804,13 @@ async function renderPdfPage() {
   const outputScale = window.devicePixelRatio || 1;
   const canvas = elements.pdfCanvas;
   const context = canvas.getContext("2d");
-
   canvas.width = Math.floor(viewport.width * outputScale);
   canvas.height = Math.floor(viewport.height * outputScale);
   canvas.style.width = `${Math.floor(viewport.width)}px`;
   canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-  await page.render({
-    canvasContext: context,
-    viewport,
-    transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
-  }).promise;
-
+  await page.render({ canvasContext: context, viewport, transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0] }).promise;
   elements.pdfPageLabel.textContent = `Page ${state.pdfPageNumber} of ${state.pdfDocument.numPages}`;
-  elements.pdfPrevButton.disabled = state.pdfPageNumber <= 1;
-  elements.pdfNextButton.disabled = state.pdfPageNumber >= state.pdfDocument.numPages;
+  updatePdfNavButtons();
 }
 
 async function changePdfPage(delta) {
@@ -651,57 +818,33 @@ async function changePdfPage(delta) {
   const next = state.pdfPageNumber + delta;
   if (next < 1 || next > state.pdfDocument.numPages) return;
   state.pdfPageNumber = next;
-  try {
-    setPdfBusy(true, `Rendering page ${next}…`);
-    await renderPdfPage();
-  } catch (error) {
-    console.error("Unable to render PDF page:", error);
-    setPdfMessage("That PDF page could not be rendered.", true);
-  } finally {
-    setPdfBusy(false);
-  }
+  try { setLayoutBusy(true, `Rendering page ${next}…`); await renderPdfPage(); }
+  catch (error) { setLayoutMessage("That PDF page could not be rendered.", true); }
+  finally { setLayoutBusy(false); }
 }
 
-async function removeStoredPdf() {
-  try {
-    setPdfBusy(true, "Removing stored PDF…");
-    await deletePdfTemplate(PDF_TEMPLATE_KEY);
-    state.pdfDocument = null;
-    state.pdfRecord = null;
-    state.pdfPageNumber = 1;
-    elements.pdfViewer.hidden = true;
-    elements.removePdfButton.disabled = true;
-    elements.pdfFileSummary.textContent = "No stored template.";
-    setPdfMessage("Stored PDF removed from IndexedDB.");
-    setPdfStatus("No PDF loaded", "neutral");
-  } catch (error) {
-    console.error("Unable to remove stored PDF:", error);
-    setPdfMessage("The stored PDF could not be removed.", true);
-  } finally {
-    setPdfBusy(false);
-  }
+function updatePdfNavButtons() {
+  elements.pdfPrevButton.disabled = !state.pdfDocument || state.pdfPageNumber <= 1;
+  elements.pdfNextButton.disabled = !state.pdfDocument || state.pdfPageNumber >= state.pdfDocument.numPages;
 }
 
-function setPdfBusy(isBusy, message = "") {
-  elements.pdfFileInput.disabled = isBusy;
-  elements.pdfPrevButton.disabled = isBusy || !state.pdfDocument || state.pdfPageNumber <= 1;
-  elements.pdfNextButton.disabled = isBusy || !state.pdfDocument || state.pdfPageNumber >= state.pdfDocument.numPages;
-  elements.removePdfButton.disabled = isBusy || !state.pdfRecord;
-  if (isBusy && message) {
-    setPdfMessage(message);
-    setPdfStatus("Working…", "neutral");
-  }
+function setLayoutBusy(isBusy, message = "") {
+  elements.createLayoutButton.disabled = isBusy;
+  elements.layoutPdfInput.disabled = isBusy;
+  elements.saveLayoutMetadataButton.disabled = isBusy;
+  elements.duplicateLayoutButton.disabled = isBusy;
+  elements.deleteLayoutButton.disabled = isBusy;
+  if (isBusy && message) setLayoutMessage(message);
+  updatePdfNavButtons();
 }
 
-function setPdfMessage(message, isError = false) {
-  elements.pdfMessage.textContent = message;
-  elements.pdfMessage.classList.toggle("error", isError);
+function setLayoutMessage(message, isError = false) {
+  elements.layoutMessage.textContent = message;
+  elements.layoutMessage.classList.toggle("error", isError);
 }
 
-function setPdfStatus(text, state) {
-  elements.pdfStatus.textContent = text;
-  const className = state === "ready" ? "ready" : state === "error" ? "error" : "neutral";
-  elements.pdfStatus.className = `pill ${className}`;
+function createId() {
+  return globalThis.crypto?.randomUUID?.() || `layout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function formatFileSize(bytes) {
