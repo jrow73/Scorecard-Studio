@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   Scorecard Studio
-  Browser Storage Foundation
+  Pregame Application Shell
   Version: 0.1.0-web-dev
-  Build: 002
+  Build: 003
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/styles.css?v=003" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.1.0-web-dev • Build 002</p>
+          <p>0.1.0-web-dev • Build 003</p>
         </div>
       </div>
 
@@ -42,42 +42,41 @@
     <main class="main-panel">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Scorecard Studio • Browser Storage Foundation</p>
+          <p class="eyebrow">Scorecard Studio • Pregame Application Shell</p>
           <h2>Home</h2>
         </div>
         <div class="topbar-actions">
-          <button class="secondary-button" id="refresh-games-btn" type="button">Refresh Games</button>
+          <button class="secondary-button" id="refresh-pregame-btn" type="button">Refresh Pregame Data</button>
         </div>
       </header>
 
       <section class="hero-card card">
         <div class="hero-copy">
-          <p class="section-label">Build 002</p>
-          <h3>Persistent browser storage</h3>
+          <p class="section-label">Build 003</p>
+          <h3>Pregame data, directly in the browser</h3>
           <p>
-            This build adds Scorecard Studio's IndexedDB storage foundation and proves that application settings can persist in the browser without a server or local filesystem.
+            Scorecard Studio now uses the saved favorite team to find today's game and load pregame information directly from the MLB Stats API. No server-side application or local game cache is required.
           </p>
         </div>
-        <div class="foundation-status" aria-label="Build 002 scope">
-          <div><strong>Hosting</strong><span>Static / GitHub Pages</span></div>
+        <div class="foundation-status" aria-label="Build 003 scope">
+          <div><strong>Hosting</strong><span>GitHub Pages</span></div>
           <div><strong>Storage</strong><span>IndexedDB</span></div>
-          <div><strong>Server</strong><span>None</span></div>
+          <div><strong>Pregame Data</strong><span>MLB Stats API</span></div>
         </div>
       </section>
 
-      <section class="card storage-card" aria-labelledby="storage-heading">
-        <div class="card-header-row">
+      <section class="card favorite-card" aria-labelledby="favorite-heading">
+        <div class="card-header-row compact-header">
           <div>
-            <p class="section-label">Browser Storage Test</p>
-            <h3 id="storage-heading">Favorite Team</h3>
-            <p class="subtle">Save a favorite team, refresh the page, and confirm that the selection is restored.</p>
+            <p class="section-label">Browser Preference</p>
+            <h3 id="favorite-heading">Favorite Team</h3>
           </div>
           <div class="pill neutral" id="storage-status">Checking storage…</div>
         </div>
 
-        <form class="settings-proof-form" id="favorite-team-form">
+        <form class="favorite-form" id="favorite-team-form">
           <label for="favorite-team-select">Favorite MLB team</label>
-          <div class="settings-proof-row">
+          <div class="favorite-row">
             <select id="favorite-team-select" name="favoriteTeam">
               <option value="108">Los Angeles Angels</option>
               <option value="109">Arizona Diamondbacks</option>
@@ -110,30 +109,74 @@
               <option value="147">New York Yankees</option>
               <option value="158">Milwaukee Brewers</option>
             </select>
-            <button class="primary-button" id="save-favorite-team-btn" type="submit">Save Favorite Team</button>
+            <button class="primary-button" id="save-favorite-team-btn" type="submit">Save & Load Team</button>
           </div>
           <p class="storage-message" id="storage-message" role="status" aria-live="polite"></p>
         </form>
       </section>
 
-      <section class="card games-card" aria-labelledby="games-heading">
+      <section class="card today-card" aria-labelledby="today-heading">
         <div class="card-header-row">
           <div>
-            <p class="section-label">MLB Schedule</p>
-            <h3 id="games-heading">Today's Games</h3>
-            <p class="subtle" id="games-date">Loading date…</p>
+            <p class="section-label">Favorite Team</p>
+            <h3 id="today-heading">Today's Game</h3>
+            <p class="subtle" id="today-date">Loading date…</p>
           </div>
-          <div class="pill neutral" id="games-count">— games</div>
+          <div class="pill neutral" id="lineup-status">Checking lineups…</div>
         </div>
 
-        <div class="message-panel" id="games-message" role="status" aria-live="polite">
-          Loading today's MLB schedule…
+        <div class="message-panel" id="pregame-message" role="status" aria-live="polite">
+          Loading today's favorite-team game…
         </div>
-        <div class="games-list" id="games-list" hidden></div>
+
+        <div id="pregame-content" hidden>
+          <div class="game-choice-list" id="game-choice-list" hidden></div>
+
+          <div class="selected-game-heading">
+            <div>
+              <h3 id="matchup-heading">Away Team at Home Team</h3>
+              <p id="game-status-text"></p>
+            </div>
+          </div>
+
+          <div class="pregame-kpis">
+            <div class="kpi"><span class="label">First Pitch</span><span class="value" id="first-pitch">Not listed</span></div>
+            <div class="kpi"><span class="label">Venue</span><span class="value" id="venue">Not listed</span></div>
+            <div class="kpi"><span class="label">Weather</span><span class="value" id="weather">Not listed</span></div>
+          </div>
+
+          <details class="detail-panel">
+            <summary>Pitchers</summary>
+            <div class="team-detail-grid">
+              <div>
+                <h4 id="away-pitchers-heading">Away Team</h4>
+                <div id="away-pitchers"></div>
+              </div>
+              <div>
+                <h4 id="home-pitchers-heading">Home Team</h4>
+                <div id="home-pitchers"></div>
+              </div>
+            </div>
+          </details>
+
+          <details class="detail-panel">
+            <summary>Lineups</summary>
+            <div class="team-detail-grid">
+              <div>
+                <h4 id="away-lineup-heading">Away Team</h4>
+                <div id="away-lineup"></div>
+              </div>
+              <div>
+                <h4 id="home-lineup-heading">Home Team</h4>
+                <div id="home-lineup"></div>
+              </div>
+            </div>
+          </details>
+        </div>
       </section>
     </main>
   </div>
 
-  <script type="module" src="./js/app.js"></script>
+  <script type="module" src="./js/app.js?v=003"></script>
 </body>
 </html>
