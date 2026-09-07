@@ -2,14 +2,14 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.1.0-web-dev
- * Build: 006
+ * Build: 007
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=006";
+import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=007";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=006";
+} from "./storage.js?v=007";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -89,6 +89,8 @@ const elements = {
   designerFieldSelect: document.querySelector("#designer-field-select"),
   designerFontSize: document.querySelector("#designer-font-size"),
   designerPlaceButton: document.querySelector("#designer-place-btn"),
+  designerGenerateButton: document.querySelector("#designer-generate-btn"),
+  generateMessage: document.querySelector("#generate-message"),
   designerMessage: document.querySelector("#designer-message"),
   designerMappingCount: document.querySelector("#designer-mapping-count"),
   designerMappingList: document.querySelector("#designer-mapping-list"),
@@ -125,6 +127,7 @@ async function initialize() {
   elements.openDesignerButton.addEventListener("click", openDesigner);
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
   elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
+  elements.designerGenerateButton.addEventListener("click", generateTestPdf);
   elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
   elements.designerStage.addEventListener("click", handleDesignerStageClick);
@@ -837,10 +840,10 @@ async function openDesigner() {
 function beginDesignerPlacement() {
   if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
   const size = Number(elements.designerFontSize.value);
-  if (!Number.isFinite(size) || size < 6 || size > 36) return setDesignerMessage("Font size must be between 6 and 36 points.", true);
+  if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Font size must be between 1 and 144 points.", true);
   state.designerPlacing = true;
   elements.designerStage.classList.add("placing");
-  setDesignerMessage(`Click the PDF to place ${designerFieldLabel(elements.designerFieldSelect.value)}.`);
+  setDesignerMessage(`Click where the baseline for ${designerFieldLabel(elements.designerFieldSelect.value)} should begin.`);
 }
 
 async function handleDesignerStageClick(event) {
@@ -860,7 +863,8 @@ async function handleDesignerStageClick(event) {
     xPercent,
     yPercent,
     fontSize: Number(elements.designerFontSize.value),
-    alignment: "left"
+    alignment: "left",
+    anchor: "baseline-left"
   };
   layout.mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
   layout.mappings.push(mapping);
@@ -917,7 +921,9 @@ function renderDesignerOverlay() {
     marker.className = "mapping-marker";
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
-    marker.style.fontSize = `${Math.max(6, mapping.fontSize * state.designerRenderScale)}px`;
+    const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
+    marker.style.fontSize = `${previewFontPx}px`;
+    marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
     marker.textContent = designerFieldPreview(mapping.field);
     marker.title = `${designerFieldLabel(mapping.field)} • click to delete`;
     marker.addEventListener("click", async (event) => {
@@ -948,7 +954,7 @@ function renderDesignerMappingList() {
     const strong = document.createElement("strong");
     strong.textContent = designerFieldLabel(mapping.field);
     const meta = document.createElement("span");
-    meta.textContent = `Page ${mapping.pageIndex + 1} • ${(mapping.xPercent * 100).toFixed(1)}%, ${(mapping.yPercent * 100).toFixed(1)}% • ${mapping.fontSize} pt`;
+    meta.textContent = `Page ${mapping.pageIndex + 1} • ${(mapping.xPercent * 100).toFixed(1)}%, ${(mapping.yPercent * 100).toFixed(1)}% • ${mapping.fontSize} pt • ${mapping.anchor || "legacy"}`;
     copy.append(strong, meta);
     const go = document.createElement("button");
     go.type = "button";
@@ -1027,6 +1033,105 @@ function debounce(fn, delay) {
     window.clearTimeout(timer);
     timer = window.setTimeout(() => fn(...args), delay);
   };
+}
+
+
+async function generateTestPdf() {
+  const layout = selectedLayout();
+  if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
+  const mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
+  if (!mappings.length) return setGenerateMessage("Map at least one field before generating a PDF.", true);
+  if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load today's game first.", true);
+  if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
+
+  elements.designerGenerateButton.disabled = true;
+  setGenerateMessage("Generating PDF…");
+
+  try {
+    const record = await getPdfTemplate(layout.pdfTemplateId);
+    if (!record?.blob) throw new Error("The layout's source PDF is missing.");
+
+    const sourceBytes = await record.blob.arrayBuffer();
+    const pdfDoc = await globalThis.PDFLib.PDFDocument.load(sourceBytes);
+    const font = await pdfDoc.embedFont(globalThis.PDFLib.StandardFonts.Helvetica);
+    const pages = pdfDoc.getPages();
+
+    for (const mapping of mappings) {
+      const page = pages[mapping.pageIndex];
+      if (!page) continue;
+
+      const text = resolveMappedField(mapping.field);
+      if (!text) continue;
+
+      const size = Number(mapping.fontSize) || 10;
+      const { width, height } = page.getSize();
+      const x = width * clamp(Number(mapping.xPercent) || 0, 0, 1);
+      const y = height * (1 - clamp(Number(mapping.yPercent) || 0, 0, 1));
+
+      page.drawText(text, {
+        x,
+        y,
+        size,
+        font,
+        color: globalThis.PDFLib.rgb(0, 0, 0)
+      });
+    }
+
+    const outputBytes = await pdfDoc.save();
+    const blob = new Blob([outputBytes], { type: "application/pdf" });
+    const selected = state.schedule.find((game) => game.gamePk === state.selectedGamePk);
+    const filename = buildGeneratedFilename(layout, selected);
+    downloadBlob(blob, filename);
+    setGenerateMessage(`Generated ${filename}.`);
+  } catch (error) {
+    console.error("Unable to generate PDF:", error);
+    setGenerateMessage(errorMessage(error, "The PDF could not be generated."), true);
+  } finally {
+    elements.designerGenerateButton.disabled = false;
+  }
+}
+
+function resolveMappedField(field) {
+  const gameData = state.selectedFeed?.gameData ?? {};
+  if (field === "away.teamName") return gameData.teams?.away?.name || currentScheduleGame()?.awayTeam || "Away Team";
+  if (field === "home.teamName") return gameData.teams?.home?.name || currentScheduleGame()?.homeTeam || "Home Team";
+  return "";
+}
+
+function currentScheduleGame() {
+  return state.schedule.find((game) => game.gamePk === state.selectedGamePk) ?? null;
+}
+
+function buildGeneratedFilename(layout, game) {
+  const date = getLocalDateString();
+  const away = safeFilenamePart(game?.awayTeam || "Away");
+  const home = safeFilenamePart(game?.homeTeam || "Home");
+  const layoutName = safeFilenamePart(layout.name || "Scorecard");
+  return `${date}_${away}_at_${home}_${layoutName}.pdf`;
+}
+
+function safeFilenamePart(value) {
+  return String(value)
+    .trim()
+    .replace(/[<>:"/\\|?*]+/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_") || "Scorecard";
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function setGenerateMessage(message, isError = false) {
+  elements.generateMessage.textContent = message;
+  elements.generateMessage.classList.toggle("error", isError);
 }
 
 function selectedLayout() {

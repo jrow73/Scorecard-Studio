@@ -841,11 +841,11 @@ button { font: inherit; }
 
 .mapping-marker {
   position: absolute;
-  transform: translate(0, -50%);
+  transform: translateY(calc(-1 * var(--preview-font-px)));
   pointer-events: auto;
   border: 1px dashed rgba(37, 99, 235, .65);
   border-radius: 3px;
-  padding: 1px 3px;
+  padding: 0 3px;
   background: rgba(219, 234, 254, .72);
   color: #172033;
   font-family: Arial, sans-serif;
@@ -893,4 +893,34 @@ button { font: inherit; }
   .designer-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* Build 007: PDF generation proof */
+.generate-message {
+  margin-top: 2px;
+}
+
+
+/* Build 007 refinement: baseline-left mapping semantics */
+.mapping-marker::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid rgba(220, 38, 38, .85);
+  pointer-events: none;
+}
+
+.mapping-marker::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(220, 38, 38);
+  pointer-events: none;
 }

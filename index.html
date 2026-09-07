@@ -3,7 +3,7 @@
   Scorecard Studio
   Layout Management
   Version: 0.1.0-web-dev
-  Build: 006
+  Build: 007
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=006" />
+  <link rel="stylesheet" href="./css/styles.css?v=007" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.1.0-web-dev • Build 006</p>
+          <p>0.1.0-web-dev • Build 007</p>
         </div>
       </div>
 
@@ -52,13 +52,13 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 006</p>
+          <p class="section-label">Build 007</p>
           <h3>Pregame data, directly in the browser</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
           </p>
         </div>
-        <div class="foundation-status" aria-label="Build 006 scope">
+        <div class="foundation-status" aria-label="Build 007 scope">
           <div><strong>Hosting</strong><span>GitHub Pages</span></div>
           <div><strong>Storage</strong><span>IndexedDB</span></div>
           <div><strong>Pregame Data</strong><span>MLB Stats API</span></div>
@@ -181,7 +181,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 006</p>
+              <p class="section-label">Build 007</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -259,7 +259,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 006 • Mapping Proof</p>
+              <p class="section-label">Build 007 • Mapping Proof</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -274,11 +274,15 @@
                 </select>
               </label>
               <label for="designer-font-size">Font size (pt)
-                <input id="designer-font-size" type="number" min="6" max="36" step="1" value="10" />
+                <input id="designer-font-size" type="number" min="1" max="144" step="0.5" value="10" />
               </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
-              <p class="subtle designer-help">Choose a field, select Place Field, then click the PDF. Coordinates are saved as percentages of the PDF page.</p>
+              <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
+              <p class="subtle designer-help">Choose a field, select Place Field, then click where the text baseline should begin. Coordinates are saved as percentages of the PDF page.</p>
               <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
+              <div class="message-panel generate-message" id="generate-message" role="status" aria-live="polite">
+                Generated PDFs use the currently selected game on Home.
+              </div>
               <div class="designer-mapping-panel">
                 <div class="card-header-row compact-header">
                   <h4>Mappings</h4>
@@ -305,6 +309,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script type="module" src="./js/app.js?v=006"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script type="module" src="./js/app.js?v=007"></script>
 </body>
 </html>
