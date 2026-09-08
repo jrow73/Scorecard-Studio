@@ -3,7 +3,7 @@
   Scorecard Studio
   Layout Management
   Version: 0.1.0-web-dev
-  Build: 007
+  Build: 008
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=007" />
+  <link rel="stylesheet" href="./css/styles.css?v=008a" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,13 +20,13 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.1.0-web-dev • Build 007</p>
+          <p>0.1.0-web-dev • Build 008</p>
         </div>
       </div>
 
       <nav class="nav-list" aria-label="Main navigation">
         <button class="nav-item active" id="nav-home" type="button" aria-current="page"><span>⌂</span> Home</button>
-        <button class="nav-item" type="button" disabled><span>⚾</span> Games <small>Later</small></button>
+        <button class="nav-item" id="nav-gameday" type="button"><span>⚾</span> Game Day</button>
         <button class="nav-item" id="nav-layouts" type="button"><span>▣</span> Layouts</button>
         <button class="nav-item" id="nav-designer" type="button"><span>✎</span> Layout Designer</button>
         <button class="nav-item" type="button" disabled><span>⎙</span> Generate <small>Later</small></button>
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 007</p>
+          <p class="section-label">Build 008</p>
           <h3>Pregame data, directly in the browser</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -124,7 +124,16 @@
             <h3 id="today-heading">Today's Game</h3>
             <p class="subtle" id="today-date">Loading date…</p>
           </div>
-          <div class="pill neutral" id="lineup-status">Checking lineups…</div>
+          <div class="today-card-actions">
+            <div class="game-date-control">
+              <label for="game-date-input">Game date</label>
+              <div class="game-date-row">
+                <input id="game-date-input" type="date" />
+                <button class="secondary-button compact-button" id="game-date-today-btn" type="button">Today</button>
+              </div>
+            </div>
+            <div class="pill neutral" id="lineup-status">Checking lineups…</div>
+          </div>
         </div>
 
         <div class="message-panel" id="pregame-message" role="status" aria-live="polite">
@@ -177,11 +186,52 @@
         </div>
       </section>
 
+      <section class="gameday-view" data-view="gameday" hidden aria-labelledby="gameday-heading">
+        <section class="card gameday-header-card">
+          <div class="card-header-row">
+            <div>
+              <p class="section-label">Build 008 • Pregame Reference</p>
+              <h3 id="gameday-heading">Game Day</h3>
+              <p class="subtle" id="gameday-subtitle">Select a game on Home, then open Game Day.</p>
+            </div>
+            <button class="secondary-button" id="refresh-gameday-btn" type="button">Refresh Game Day</button>
+          </div>
+          <div class="message-panel" id="gameday-message" role="status" aria-live="polite">Game Day uses the game currently selected on Home.</div>
+          <div class="source-pills" id="gameday-sources" hidden>
+            <span class="pill ready">Game Pack</span>
+            <span class="pill neutral" id="coaches-source-pill">Coaches API: not requested</span>
+            <span class="pill neutral" id="standings-source-pill">Standings API: not requested</span>
+          </div>
+        </section>
+
+        <div id="gameday-content" hidden>
+          <section class="gameday-team-grid" id="gameday-team-grid"></section>
+
+          <section class="card gameday-section-card">
+            <div class="card-header-row compact-header"><div><p class="section-label">Posted starters</p><h3>Starting Lineups</h3></div></div>
+            <div class="gameday-lineup-grid">
+              <div><h4 id="gameday-away-lineup-heading">Away</h4><div class="gameday-table-wrap"><table class="gameday-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th><th>B</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th></tr></thead><tbody id="gameday-away-lineup"></tbody></table></div></div>
+              <div><h4 id="gameday-home-lineup-heading">Home</h4><div class="gameday-table-wrap"><table class="gameday-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th><th>B</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th></tr></thead><tbody id="gameday-home-lineup"></tbody></table></div></div>
+            </div>
+          </section>
+
+          <section class="gameday-two-column">
+            <section class="card gameday-section-card"><p class="section-label">Arms</p><h3>Pitching Staff</h3><div class="gameday-lineup-grid"><div><h4 id="gameday-away-pitching-heading">Away</h4><div id="gameday-away-pitching"></div></div><div><h4 id="gameday-home-pitching-heading">Home</h4><div id="gameday-home-pitching"></div></div></div></section>
+            <section class="card gameday-section-card"><p class="section-label">Available hitters</p><h3>Bench</h3><div class="gameday-lineup-grid"><div><h4 id="gameday-away-bench-heading">Away</h4><div id="gameday-away-bench"></div></div><div><h4 id="gameday-home-bench-heading">Home</h4><div id="gameday-home-bench"></div></div></div></section>
+          </section>
+
+          <section class="gameday-two-column">
+            <section class="card gameday-section-card"><p class="section-label">Crew</p><h3>Umpires</h3><div id="gameday-umpires"></div></section>
+            <section class="card gameday-section-card"><p class="section-label">Ballpark</p><h3>Venue & Weather</h3><div id="gameday-venue"></div></section>
+          </section>
+        </div>
+      </section>
+
       <section class="layouts-view" data-view="layouts" hidden aria-labelledby="layouts-heading">
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 007</p>
+              <p class="section-label">Build 008</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -310,6 +360,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=007"></script>
+  <script type="module" src="./js/app.js?v=008a"></script>
 </body>
 </html>

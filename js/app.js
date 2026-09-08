@@ -2,19 +2,20 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.1.0-web-dev
- * Build: 007
+ * Build: 008
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed } from "./api.js?v=007";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=008a";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=007";
+} from "./storage.js?v=008a";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
 const state = {
   favoriteTeam: DEFAULT_FAVORITE_TEAM,
+  selectedDate: null,
   schedule: [],
   selectedGamePk: null,
   selectedFeed: null,
@@ -39,6 +40,8 @@ const elements = {
   storageStatus: document.querySelector("#storage-status"),
   storageMessage: document.querySelector("#storage-message"),
   todayDate: document.querySelector("#today-date"),
+  gameDateInput: document.querySelector("#game-date-input"),
+  gameDateTodayButton: document.querySelector("#game-date-today-btn"),
   lineupStatus: document.querySelector("#lineup-status"),
   pregameMessage: document.querySelector("#pregame-message"),
   pregameContent: document.querySelector("#pregame-content"),
@@ -57,6 +60,29 @@ const elements = {
   awayLineup: document.querySelector("#away-lineup"),
   homeLineup: document.querySelector("#home-lineup"),
   navHome: document.querySelector("#nav-home"),
+  navGameDay: document.querySelector("#nav-gameday"),
+  refreshGameDayButton: document.querySelector("#refresh-gameday-btn"),
+  gameDaySubtitle: document.querySelector("#gameday-subtitle"),
+  gameDayMessage: document.querySelector("#gameday-message"),
+  gameDayContent: document.querySelector("#gameday-content"),
+  gameDaySources: document.querySelector("#gameday-sources"),
+  coachesSourcePill: document.querySelector("#coaches-source-pill"),
+  standingsSourcePill: document.querySelector("#standings-source-pill"),
+  gameDayTeamGrid: document.querySelector("#gameday-team-grid"),
+  gameDayAwayLineupHeading: document.querySelector("#gameday-away-lineup-heading"),
+  gameDayHomeLineupHeading: document.querySelector("#gameday-home-lineup-heading"),
+  gameDayAwayLineup: document.querySelector("#gameday-away-lineup"),
+  gameDayHomeLineup: document.querySelector("#gameday-home-lineup"),
+  gameDayAwayPitchingHeading: document.querySelector("#gameday-away-pitching-heading"),
+  gameDayHomePitchingHeading: document.querySelector("#gameday-home-pitching-heading"),
+  gameDayAwayPitching: document.querySelector("#gameday-away-pitching"),
+  gameDayHomePitching: document.querySelector("#gameday-home-pitching"),
+  gameDayAwayBenchHeading: document.querySelector("#gameday-away-bench-heading"),
+  gameDayHomeBenchHeading: document.querySelector("#gameday-home-bench-heading"),
+  gameDayAwayBench: document.querySelector("#gameday-away-bench"),
+  gameDayHomeBench: document.querySelector("#gameday-home-bench"),
+  gameDayUmpires: document.querySelector("#gameday-umpires"),
+  gameDayVenue: document.querySelector("#gameday-venue"),
   navLayouts: document.querySelector("#nav-layouts"),
   pageTitle: document.querySelector("#page-title"),
   pageEyebrow: document.querySelector("#page-eyebrow"),
@@ -108,10 +134,16 @@ initialize();
 
 async function initialize() {
   const today = getLocalDateString();
-  elements.todayDate.textContent = formatDisplayDate(today);
+  state.selectedDate = today;
+  elements.gameDateInput.value = today;
+  updateSelectedDateUi(today);
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
-  elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(today));
+  elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today));
+  elements.gameDateInput.addEventListener("change", handleGameDateChange);
+  elements.gameDateTodayButton.addEventListener("click", () => setSelectedGameDate(getLocalDateString()));
   elements.navHome.addEventListener("click", () => showView("home"));
+  elements.navGameDay.addEventListener("click", openGameDay);
+  elements.refreshGameDayButton.addEventListener("click", () => loadGameDay(true));
   elements.navLayouts.addEventListener("click", () => showView("layouts"));
   elements.navDesigner.addEventListener("click", () => {
     if (selectedLayout()) openDesigner();
@@ -182,7 +214,7 @@ async function saveFavoriteTeam() {
     state.favoriteTeam = favoriteTeam;
     elements.storageMessage.textContent = `Saved favorite: ${favoriteTeam.name}`;
     setStorageStatus("IndexedDB ready", "ready");
-    await loadFavoriteTeamPregame(getLocalDateString());
+    await loadFavoriteTeamPregame(state.selectedDate || getLocalDateString());
   } catch (error) {
     console.error("Unable to save favorite team:", error);
     setStorageStatus("Save failed", "error");
@@ -195,10 +227,20 @@ async function saveFavoriteTeam() {
 }
 
 async function loadFavoriteTeamPregame(date) {
-  setPregameLoading(true, `Finding today's ${state.favoriteTeam.name} game…`);
+  const requestedDate = date || getLocalDateString();
+  const dateChanged = state.selectedDate !== requestedDate;
+  state.selectedDate = requestedDate;
+  elements.gameDateInput.value = requestedDate;
+  updateSelectedDateUi(requestedDate);
+  if (dateChanged) {
+    state.selectedGamePk = null;
+    state.selectedFeed = null;
+  }
+
+  setPregameLoading(true, `Finding ${state.favoriteTeam.name} game for ${formatDisplayDate(requestedDate)}…`);
 
   try {
-    const schedule = await fetchFavoriteTeamSchedule(date, state.favoriteTeam.id);
+    const schedule = await fetchFavoriteTeamSchedule(requestedDate, state.favoriteTeam.id);
     state.schedule = schedule;
 
     if (schedule.length === 0) {
@@ -221,6 +263,26 @@ async function loadFavoriteTeamPregame(date) {
   } finally {
     setPregameLoading(false);
   }
+}
+
+async function handleGameDateChange() {
+  const value = elements.gameDateInput.value;
+  if (!value) return;
+  await setSelectedGameDate(value);
+}
+
+async function setSelectedGameDate(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) return;
+  await loadFavoriteTeamPregame(date);
+}
+
+function updateSelectedDateUi(date) {
+  const today = getLocalDateString();
+  const isToday = date === today;
+  elements.todayDate.textContent = formatDisplayDate(date);
+  const heading = document.querySelector("#today-heading");
+  if (heading) heading.textContent = isToday ? "Today's Game" : "Selected Game";
+  elements.gameDateTodayButton.disabled = isToday;
 }
 
 function chooseInitialGame(games) {
@@ -279,7 +341,9 @@ function renderNoGame() {
   elements.pregameContent.hidden = true;
   elements.pregameMessage.hidden = false;
   elements.pregameMessage.classList.remove("error");
-  elements.pregameMessage.textContent = `No ${state.favoriteTeam.name} game is scheduled for today.`;
+  const selectedDate = state.selectedDate || getLocalDateString();
+  const when = selectedDate === getLocalDateString() ? "today" : `on ${formatDisplayDate(selectedDate)}`;
+  elements.pregameMessage.textContent = `No ${state.favoriteTeam.name} game is scheduled ${when}.`;
   setLineupStatus("No game", "neutral");
 }
 
@@ -332,6 +396,231 @@ function renderSelectedGame(selected, feed) {
   elements.pregameMessage.hidden = true;
   elements.pregameMessage.classList.remove("error");
   elements.pregameContent.hidden = false;
+}
+
+
+async function openGameDay() {
+  showView("gameday");
+  await loadGameDay(false);
+}
+
+async function loadGameDay(forceSupplemental = false) {
+  const feed = state.selectedFeed;
+  const game = currentScheduleGame();
+  if (!feed || !game) {
+    elements.gameDayContent.hidden = true;
+    elements.gameDaySources.hidden = true;
+    elements.gameDayMessage.hidden = false;
+    elements.gameDayMessage.classList.remove("error");
+    elements.gameDayMessage.textContent = "No game is selected. Return Home and select a game first.";
+    return;
+  }
+
+  const gd = feed.gameData || {};
+  const officialDate = gd.datetime?.officialDate || game.officialDate || getLocalDateString();
+  const season = Number(gd.game?.season || officialDate.slice(0, 4));
+  const away = gd.teams?.away || {};
+  const home = gd.teams?.home || {};
+  elements.gameDaySubtitle.textContent = `${away.name || game.awayTeam} at ${home.name || game.homeTeam} • ${formatDisplayDate(officialDate)}`;
+  elements.gameDayMessage.hidden = false;
+  elements.gameDayMessage.classList.remove("error");
+  elements.gameDayMessage.textContent = "Game Pack loaded. Checking supplemental manager and standings data…";
+  elements.gameDayContent.hidden = false;
+  elements.gameDaySources.hidden = false;
+  renderGameDay(feed, null, null);
+
+  elements.refreshGameDayButton.disabled = true;
+  elements.coachesSourcePill.textContent = "Coaches API: loading…";
+  elements.standingsSourcePill.textContent = "Standings API: loading…";
+
+  const awayId = away.id || game.awayTeamId;
+  const homeId = home.id || game.homeTeamId;
+  const awayLeague = away.league?.id;
+  const homeLeague = home.league?.id;
+  const leagueIds = [...new Set([awayLeague, homeLeague].filter(Boolean))];
+
+  const coachPromise = Promise.allSettled([
+    fetchTeamCoaches(awayId, officialDate, season),
+    fetchTeamCoaches(homeId, officialDate, season)
+  ]);
+  const standingsPromise = Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, officialDate, season)));
+
+  try {
+    const [coachResults, standingsResults] = await Promise.all([coachPromise, standingsPromise]);
+    const coaches = {
+      away: coachResults[0]?.status === "fulfilled" ? coachResults[0].value : null,
+      home: coachResults[1]?.status === "fulfilled" ? coachResults[1].value : null
+    };
+    const standingsPayloads = standingsResults.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    const coachOk = Boolean(coaches.away || coaches.home);
+    const standingsOk = standingsPayloads.length > 0;
+    elements.coachesSourcePill.textContent = coachOk ? "Coaches API: loaded" : "Coaches API: unavailable";
+    elements.coachesSourcePill.className = `pill ${coachOk ? "ready" : "error"}`;
+    elements.standingsSourcePill.textContent = standingsOk ? "Standings API: loaded" : "Standings API: unavailable";
+    elements.standingsSourcePill.className = `pill ${standingsOk ? "ready" : "error"}`;
+    renderGameDay(feed, coaches, standingsPayloads);
+    if (coachOk && standingsOk) {
+      elements.gameDayMessage.textContent = "Game Pack + supplemental data loaded successfully.";
+    } else {
+      elements.gameDayMessage.textContent = "Game Pack is available. One or more supplemental requests did not return data; the page shows everything that loaded.";
+    }
+  } catch (error) {
+    console.error("Game Day supplemental hydration failed:", error);
+    elements.gameDayMessage.classList.add("error");
+    elements.gameDayMessage.textContent = `Game Pack loaded, but supplemental hydration failed. ${errorMessage(error, "Unknown error.")}`;
+  } finally {
+    elements.refreshGameDayButton.disabled = false;
+  }
+}
+
+function renderGameDay(feed, coaches, standingsPayloads) {
+  const gd = feed?.gameData || {};
+  const away = gd.teams?.away || {};
+  const home = gd.teams?.home || {};
+  const awayStanding = findStanding(standingsPayloads, away.id);
+  const homeStanding = findStanding(standingsPayloads, home.id);
+  renderGameDayTeamCards(away, home, coaches, awayStanding, homeStanding);
+
+  const awayLineup = lineupPlayers(feed, "away");
+  const homeLineup = lineupPlayers(feed, "home");
+  elements.gameDayAwayLineupHeading.textContent = away.name || "Away";
+  elements.gameDayHomeLineupHeading.textContent = home.name || "Home";
+  renderGameDayLineup(elements.gameDayAwayLineup, awayLineup);
+  renderGameDayLineup(elements.gameDayHomeLineup, homeLineup);
+
+  elements.gameDayAwayPitchingHeading.textContent = away.name || "Away";
+  elements.gameDayHomePitchingHeading.textContent = home.name || "Home";
+  renderGameDayPitching(elements.gameDayAwayPitching, startingPitcher(feed, "away"), bullpenPitchers(feed, "away"));
+  renderGameDayPitching(elements.gameDayHomePitching, startingPitcher(feed, "home"), bullpenPitchers(feed, "home"));
+
+  elements.gameDayAwayBenchHeading.textContent = away.name || "Away";
+  elements.gameDayHomeBenchHeading.textContent = home.name || "Home";
+  renderGameDayBench(elements.gameDayAwayBench, benchPlayers(feed, "away"));
+  renderGameDayBench(elements.gameDayHomeBench, benchPlayers(feed, "home"));
+  renderGameDayUmpires(feed);
+  renderGameDayVenue(feed);
+}
+
+function renderGameDayTeamCards(away, home, coaches, awayStanding, homeStanding) {
+  elements.gameDayTeamGrid.replaceChildren();
+  [["away", away, coaches?.away, awayStanding], ["home", home, coaches?.home, homeStanding]].forEach(([side, team, coachData, standing]) => {
+    const card = document.createElement("section");
+    card.className = "card gameday-team-card";
+    const manager = findManager(coachData);
+    const record = team.record || {};
+    card.innerHTML = `<p class="section-label">${side === "away" ? "Away" : "Home"}</p><h3>${escapeHtml(team.name || "Team")}</h3>
+      <div class="gameday-stat-grid">
+        ${gameDayStat("Record", record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—")}
+        ${gameDayStat("PCT", record.winningPercentage || "—")}
+        ${gameDayStat("Division", team.division?.nameShort || team.division?.name || "—")}
+        ${gameDayStat("Manager", manager || "Not loaded")}
+        ${gameDayStat("Division Rank", standing?.divisionRank || "—")}
+        ${gameDayStat("Games Back", standing?.gamesBack ?? standing?.divisionGamesBack ?? "—")}
+        ${gameDayStat("Streak", standing?.streak?.streakCode || standing?.streak?.code || "—")}
+        ${gameDayStat("Last 10", lastTenDisplay(standing))}
+      </div>`;
+    elements.gameDayTeamGrid.append(card);
+  });
+}
+
+function gameDayStat(label, value) {
+  return `<div class="gameday-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
+}
+
+function findManager(payload) {
+  const roster = Array.isArray(payload?.roster) ? payload.roster : [];
+  const manager = roster.find((entry) => String(entry?.job || entry?.title || "").toLowerCase() === "manager") || roster.find((entry) => /manager/i.test(String(entry?.job || entry?.title || "")));
+  return manager?.person?.fullName || "";
+}
+
+function findStanding(payloads, teamId) {
+  if (!Array.isArray(payloads) || !teamId) return null;
+  for (const payload of payloads) {
+    for (const record of payload?.records || []) {
+      const match = (record?.teamRecords || []).find((teamRecord) => String(teamRecord?.team?.id) === String(teamId));
+      if (match) return match;
+    }
+  }
+  return null;
+}
+
+function lastTenDisplay(standing) {
+  const split = (standing?.records?.splitRecords || []).find((item) => item?.type === "lastTen" || /last ten/i.test(item?.type || item?.description || ""));
+  if (split?.wins != null && split?.losses != null) return `${split.wins}-${split.losses}`;
+  const lastTen = standing?.lastTen;
+  if (lastTen?.wins != null && lastTen?.losses != null) return `${lastTen.wins}-${lastTen.losses}`;
+  return "—";
+}
+
+function renderGameDayLineup(tbody, players) {
+  tbody.replaceChildren();
+  if (!players.length) {
+    const tr = document.createElement("tr"); tr.innerHTML = '<td colspan="10" class="gameday-empty">Lineup not posted.</td>'; tbody.append(tr); return;
+  }
+  players.forEach((player, index) => {
+    const stats = seasonBattingStats(player);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${index + 1}</td><td><strong>${escapeHtml(playerName(player))}</strong><span class="gameday-number">${playerJersey(player) ? `#${escapeHtml(playerJersey(player))}` : ""}</span></td><td>${escapeHtml(playerPosition(player) || "—")}</td><td>${escapeHtml(playerBats(player) || "—")}</td><td>${escapeHtml(stats.avg || "—")}</td><td>${escapeHtml(stats.obp || "—")}</td><td>${escapeHtml(stats.slg || "—")}</td><td>${escapeHtml(stats.ops || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td>`;
+    tbody.append(tr);
+  });
+}
+
+function renderGameDayPitching(container, starter, bullpen) {
+  container.replaceChildren();
+  if (starter) container.append(gameDayPitcherRow(starter, "SP"));
+  bullpen.forEach((player) => container.append(gameDayPitcherRow(player, "RP")));
+  if (!starter && !bullpen.length) container.append(emptyRow("Pitchers not listed."));
+}
+
+function gameDayPitcherRow(player, role) {
+  const stats = seasonPitchingStats(player);
+  const row = document.createElement("div"); row.className = "gameday-person-row";
+  const record = stats.wins != null && stats.losses != null ? `${stats.wins}-${stats.losses}` : "—";
+  row.innerHTML = `<div><strong>${escapeHtml(role)} ${escapeHtml(playerName(player))}</strong><span>${playerJersey(player) ? `#${escapeHtml(playerJersey(player))} • ` : ""}${escapeHtml(playerThrows(player) || "—")}HP</span></div><div class="gameday-person-stats"><span>${escapeHtml(record)} W-L</span><span>${escapeHtml(stats.era || "—")} ERA</span><span>${escapeHtml(stats.whip || "—")} WHIP</span><span>${escapeHtml(String(stats.strikeOuts ?? "—"))} K</span></div>`;
+  return row;
+}
+
+function renderGameDayBench(container, players) {
+  container.replaceChildren();
+  if (!players.length) { container.append(emptyRow("Bench not listed.")); return; }
+  players.forEach((player) => {
+    const stats = seasonBattingStats(player);
+    const row = document.createElement("div"); row.className = "gameday-person-row";
+    row.innerHTML = `<div><strong>${escapeHtml(playerName(player))}</strong><span>${playerJersey(player) ? `#${escapeHtml(playerJersey(player))} • ` : ""}${escapeHtml(playerPosition(player) || "—")} • Bats ${escapeHtml(playerBats(player) || "—")}</span></div><div class="gameday-person-stats"><span>${escapeHtml(stats.avg || "—")} AVG</span><span>${escapeHtml(stats.ops || "—")} OPS</span><span>${escapeHtml(String(stats.homeRuns ?? "—"))} HR</span></div>`;
+    container.append(row);
+  });
+}
+
+function renderGameDayUmpires(feed) {
+  elements.gameDayUmpires.replaceChildren();
+  const officials = feed?.liveData?.boxscore?.officials || [];
+  if (!officials.length) { elements.gameDayUmpires.append(emptyRow("Umpire crew not listed yet.")); return; }
+  officials.forEach((item) => {
+    const row = document.createElement("div"); row.className = "gameday-person-row simple";
+    row.innerHTML = `<strong>${escapeHtml(item?.officialType || "Official")}</strong><span>${escapeHtml(item?.official?.fullName || "—")}</span>`;
+    elements.gameDayUmpires.append(row);
+  });
+}
+
+function renderGameDayVenue(feed) {
+  const gd = feed?.gameData || {}; const venue = gd.venue || {}; const weather = gd.weather || {}; const field = venue.fieldInfo || {};
+  const values = [
+    ["Venue", venue.name || "—"], ["Capacity", field.capacity ? Number(field.capacity).toLocaleString() : "—"], ["Surface", field.turfType || "—"], ["Roof", field.roofType || "—"],
+    ["Weather", weatherSummary(weather)], ["Location", [venue.location?.city, venue.location?.stateAbbrev].filter(Boolean).join(", ") || "—"]
+  ];
+  elements.gameDayVenue.innerHTML = `<div class="gameday-stat-grid">${values.map(([a,b]) => gameDayStat(a,b)).join("")}</div>`;
+}
+
+function seasonBattingStats(player) {
+  return player?.seasonStats?.batting && typeof player.seasonStats.batting === "object"
+    ? player.seasonStats.batting
+    : {};
+}
+
+function seasonPitchingStats(player) {
+  return player?.seasonStats?.pitching && typeof player.seasonStats.pitching === "object"
+    ? player.seasonStats.pitching
+    : {};
 }
 
 function lineupState(awayCount, homeCount) {
@@ -618,12 +907,13 @@ function showView(view) {
     node.hidden = node.dataset.view !== view;
   });
   elements.navHome.classList.toggle("active", view === "home");
+  elements.navGameDay.classList.toggle("active", view === "gameday");
   elements.navLayouts.classList.toggle("active", view === "layouts");
   elements.navDesigner.classList.toggle("active", view === "designer");
   elements.navHome.toggleAttribute("aria-current", view === "home");
   elements.navLayouts.toggleAttribute("aria-current", view === "layouts");
   elements.navDesigner.toggleAttribute("aria-current", view === "designer");
-  elements.pageTitle.textContent = view === "home" ? "Home" : view === "layouts" ? "Layouts" : "Layout Designer";
+  elements.pageTitle.textContent = view === "home" ? "Home" : view === "gameday" ? "Game Day" : view === "layouts" ? "Layouts" : "Layout Designer";
   elements.pageEyebrow.textContent = view === "home" ? "Scorecard Studio • Pregame" : view === "layouts" ? "Scorecard Studio • Layout Management" : "Scorecard Studio • Field Mapping";
   elements.refreshButton.hidden = view !== "home";
 }
@@ -1103,7 +1393,7 @@ function currentScheduleGame() {
 }
 
 function buildGeneratedFilename(layout, game) {
-  const date = getLocalDateString();
+  const date = game?.officialDate || state.selectedFeed?.gameData?.datetime?.officialDate || state.selectedDate || getLocalDateString();
   const away = safeFilenamePart(game?.awayTeam || "Away");
   const home = safeFilenamePart(game?.homeTeam || "Home");
   const layoutName = safeFilenamePart(layout.name || "Scorecard");

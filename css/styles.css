@@ -924,3 +924,89 @@ button { font: inherit; }
   background: rgb(220, 38, 38);
   pointer-events: none;
 }
+
+
+/* Build 008 — Game Day */
+.gameday-view { display: grid; gap: 18px; }
+.gameday-view[hidden] { display: none; }
+.source-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.gameday-team-grid, .gameday-two-column, .gameday-lineup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.gameday-team-grid { margin-bottom: 18px; }
+.gameday-two-column { margin-top: 18px; }
+.gameday-section-card { min-width: 0; }
+.gameday-section-card h4 { margin: 0 0 10px; }
+.gameday-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+.gameday-stat { min-width: 0; padding: 10px 11px; border: 1px solid var(--line); border-radius: 11px; background: rgba(0,0,0,.16); }
+.gameday-stat span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.gameday-stat strong { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.gameday-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+.gameday-table { width: 100%; border-collapse: collapse; min-width: 620px; font-size: 13px; }
+.gameday-table th, .gameday-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.gameday-table th:nth-child(2), .gameday-table td:nth-child(2) { text-align: left; }
+.gameday-table th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.gameday-table tbody tr:last-child td { border-bottom: 0; }
+.gameday-number { color: var(--muted); font-size: 11px; margin-left: 6px; }
+.gameday-empty { color: var(--muted); text-align: left !important; }
+.gameday-person-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.gameday-person-row:last-child { border-bottom: 0; }
+.gameday-person-row > div:first-child span, .gameday-person-row.simple span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.gameday-person-row.simple { display: grid; grid-template-columns: 120px 1fr; }
+.gameday-person-stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px 10px; color: var(--muted); font-size: 12px; text-align: right; }
+@media (max-width: 1050px) { .gameday-stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .gameday-lineup-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .gameday-team-grid, .gameday-two-column { grid-template-columns: 1fr; } .gameday-person-row { flex-direction: column; } .gameday-person-stats { justify-content: flex-start; text-align: left; } }
+
+
+/* Build 008 acceptance refinement: historical-date selector */
+.today-card-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.game-date-control {
+  display: grid;
+  gap: 6px;
+}
+
+.game-date-control label {
+  color: var(--muted-2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.game-date-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.game-date-row input[type="date"] {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  color-scheme: dark;
+}
+
+.game-date-row input[type="date"]:focus {
+  outline: 2px solid rgba(124, 199, 255, .45);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .today-card-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .game-date-row {
+    flex-wrap: wrap;
+  }
+}

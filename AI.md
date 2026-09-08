@@ -16,11 +16,15 @@ imported into an annotation app such as GoodNotes for use during the
 game.
 
 The application is hosted as a static site using GitHub Pages. All
-user-created layouts, settings, PDF templates, and cached data are
-stored locally in the user's browser. No locally hosted Python server or
+user-created layouts, settings, PDF templates, mappings, and cached data
+are stored locally in the user's browser. No locally hosted Python server or
 application backend is required.
 
-------------------------------------------------------------------------
+As of **v0.1.0**, the browser architecture has been proven end-to-end in both
+the local VS Code Live Server environment and the deployed GitHub Pages
+environment.
+
+---
 
 ## Architecture Principles
 
@@ -43,7 +47,25 @@ application backend is required.
 -   **Pregame only:** Do not introduce live scores, inning state, or
     other spoiler-prone in-game information into the primary workflow.
 
-------------------------------------------------------------------------
+-   **Lazy/on-demand pregame hydration:** The Home / Select Game workflow should
+    use the schedule and game-feed/game-pack data needed to identify and preview
+    available games. Do not fetch supplemental manager, standings, player-stat,
+    or other cross-reference data merely because a game appears on Home.
+    Supplemental data should be fetched only after the user selects the game
+    and layout to generate (or invokes an equivalent one-click generation
+    workflow), and ideally only for field categories actually required by that
+    layout.
+
+### Development environment terminology
+
+During development and acceptance testing:
+
+- **Local** means the VS Code Live Server version (for example, `127.0.0.1:5000`).
+- **Online** means the deployed GitHub Pages version (`github.io/Scorecard-Studio/`).
+
+Major builds should be acceptance-tested in both environments when practical.
+
+---
 
 ## Tech Stack
 
@@ -66,7 +88,7 @@ site**, application resources should use relative paths rather than
 root-relative paths so the application works correctly beneath the
 repository path.
 
-------------------------------------------------------------------------
+---
 
 ## Suggested Repository Structure
 
@@ -103,7 +125,7 @@ application responsibility.
 
 Module names and structure may evolve as the application grows.
 
-------------------------------------------------------------------------
+---
 
 ## Data Model Principles
 
@@ -139,7 +161,70 @@ instructions. It may include:
 A layout should not contain unrelated application preferences such as
 the user's favorite team.
 
-------------------------------------------------------------------------
+---
+
+## Pregame Data Loading Strategy
+
+Scorecard Studio should separate **game discovery** from **scorecard data
+hydration**.
+
+### Home / Select Game
+
+The Home page should remain lightweight. Use the schedule and existing
+game-feed/game-pack data to show the favorite team's game(s), lineup status,
+basic game metadata, and other information already available from the base
+pregame source.
+
+Do **not** preload supplemental cross-reference data such as:
+
+- manager/coaching personnel;
+- team standings, streak, or last-10 data;
+- batter season statistics;
+- pitcher season statistics;
+- other data requiring additional MLB API requests.
+
+The user may choose a different game, a different layout, or take no generation
+action at all.
+
+### Generate Scorecard
+
+Once a specific game and layout are selected, inspect the layout's mapped fields
+to determine what supplemental data is actually required.
+
+Conceptually:
+
+```text
+Schedule / Game Pack
+        ↓
+Home / Select Game
+        ↓
+Game + Layout selected
+        ↓
+Inspect mapped field requirements
+        ↓
+Fetch only required supplemental categories
+        ↓
+Normalize / hydrate pregame model
+        ↓
+Generate scorecard
+```
+
+A layout that needs only game-feed fields should require no supplemental API
+requests. A layout that maps manager, standings, or player-stat fields should
+trigger only the hydration needed for those mapped fields.
+
+### Future one-click generation
+
+A future **Today's Scorecard** action may combine the favorite team and favorite
+layout into a quick-generation workflow. It should follow the same rule:
+identify today's favorite-team game, inspect the favorite layout, hydrate only
+the missing data required by that layout, and generate the scorecard.
+
+This loading strategy is both a performance optimization and an architectural
+boundary: supplemental endpoints exist to satisfy scorecard field requirements,
+not to inflate the Home-page data payload.
+
+---
 
 ## User Workflows & Core Features
 
@@ -181,27 +266,30 @@ Possible formatting options include:
 
 Example conceptual mapping:
 
-``` json
+```json
 {
-  "field": "away.lineup[0]",
+  "field": "away.team.name",
   "pageIndex": 0,
   "position": {
     "xPercent": 0.1425,
-    "yPercent": 0.3271
+    "yPercent": 0.3271,
+    "anchor": "baseline-left"
   },
   "format": {
-    "template": "#{jersey} {initial}. {lastName} ({position})",
-    "fontSize": 8,
+    "fontSize": 10,
     "alignment": "left"
-  },
-  "style": {
-    "colorRule": "bats"
   }
 }
 ```
 
 The exact schema may evolve, but mappings should function as rendering
 instructions rather than simple X/Y field locations.
+
+**Mapping coordinate convention:** the stored X/Y coordinate identifies the
+**baseline-left text anchor** on the PDF page. The browser Designer may render
+the PDF at any display scale, but the stored percentages and point-size values
+remain independent of browser size. Generated PDFs use the same baseline anchor
+directly, without a visual-center offset.
 
 #### Save Layout
 
@@ -210,7 +298,7 @@ Save the layout definition and source PDF template in browser storage.
 The PDF binary should be stored as a `Blob` in IndexedDB rather than
 LocalStorage.
 
-------------------------------------------------------------------------
+---
 
 ### 2. Pregame Data
 
@@ -235,7 +323,7 @@ Examples include:
 Do not use final scores, current inning, live play state, or other
 in-game information as part of the normal pregame workflow.
 
-------------------------------------------------------------------------
+---
 
 ### 3. Daily Scorecard Generation
 
@@ -279,7 +367,7 @@ Provide clear UI states such as:
 -   `Generating PDF...`
 -   `Scorecard ready.`
 
-------------------------------------------------------------------------
+---
 
 ### 4. Browser Storage
 
@@ -316,7 +404,7 @@ Browser storage is device- and browser-specific. GitHub Pages hosts the
 application itself, but does not store each user's layouts or PDF
 templates.
 
-------------------------------------------------------------------------
+---
 
 ### 5. Backup & Portability
 
@@ -347,7 +435,7 @@ layouts/
 The backup format should include a schema/version identifier so future
 versions of Scorecard Studio can migrate older backups when necessary.
 
-------------------------------------------------------------------------
+---
 
 ## Error Handling
 
@@ -365,7 +453,7 @@ can reasonably fail, including:
 Errors should be surfaced to the user with useful, human-readable
 messages rather than only appearing in the browser console.
 
-------------------------------------------------------------------------
+---
 
 ## UI Principles
 
@@ -383,7 +471,7 @@ messages rather than only appearing in the browser console.
 -   Formatting previews should match generated PDF output as closely as
     practical.
 
-------------------------------------------------------------------------
+---
 
 ## Development and Migration Strategy
 
@@ -416,150 +504,185 @@ Replace:
 The old application can be archived after the browser-based application
 reaches acceptable feature parity.
 
-------------------------------------------------------------------------
+---
 
 ## Development Roadmap
 
-Development should proceed in small, testable builds. Each build should
-prove a limited set of architectural assumptions before additional
-complexity is introduced.
+Development should proceed in small, testable builds. Build numbers identify
+acceptance-test milestones; not every Git commit requires a new build number.
 
-### Build 001 --- Web Foundation
+### v0.1.0 — Browser Architecture Milestone — COMPLETE
 
-Goal: Prove the core static-hosting architecture.
+The v0.1.0 milestone proved that Scorecard Studio can function as a fully
+browser-based application.
 
--   Create the GitHub Pages application shell.
--   Establish `index.html`, CSS, and JavaScript modules.
--   Deploy the application through GitHub Pages.
--   Fetch and display today's MLB games directly from the deployed
-    `github.io` application.
--   Confirm that the MLB Stats API endpoints required by the application
-    can be called successfully from the browser, including CORS
-    behavior.
+#### Build 001 — Web Foundation — COMPLETE
 
-Do not add PDF or IndexedDB functionality yet.
+- GitHub Pages application shell.
+- Direct browser access to the MLB Stats API.
+- Verified MLB schedule retrieval both Local and Online.
 
-### Build 002 --- Browser Storage
+#### Build 002 — Browser Storage — COMPLETE
 
-Goal: Prove persistent local browser storage.
+- Native IndexedDB storage abstraction.
+- Persistent application settings.
+- Favorite-team persistence.
+- Verified browser storage both Local and Online.
 
--   Establish the storage abstraction.
--   Save and retrieve basic application settings.
--   Confirm persistence across browser reloads.
--   Establish the initial IndexedDB/localForage data structure.
+#### Build 003 — Pregame Application Shell — COMPLETE
 
-### Build 003 --- Pregame Application Shell
+- Favorite-team-driven game selection.
+- Pregame game metadata.
+- Starting pitchers.
+- Starting lineups.
+- Bench.
+- Bullpen.
+- Lineup status.
+- Spoiler-free pregame presentation.
 
-Goal: Recreate the useful pregame portions of the existing application.
+#### Build 004 — PDF Upload & Persistence — COMPLETE
 
--   Favorite-team setting.
--   Today's games.
--   First pitch.
--   Venue.
--   Weather when available.
--   Lineup-posted status.
--   Starting pitchers.
--   Starting lineups.
--   Bench.
--   Bullpen.
+- Multi-page PDF upload.
+- Page detection and browser rendering with PDF.js.
+- Page navigation.
+- PDF Blob persistence in IndexedDB.
+- Restore and render after browser reload.
 
-Maintain a pregame-only, spoiler-free experience.
+#### Build 005 — Layout Management — COMPLETE
 
-### Build 004 --- PDF Upload & Persistence
+- Named persistent layouts.
+- Layout metadata.
+- Associated source PDFs.
+- Open, edit, duplicate, and delete workflows.
 
-Goal: Prove the browser PDF pipeline.
+#### Build 006 — Interactive Layout Designer Proof — COMPLETE
 
--   Upload a PDF.
--   Detect page count.
--   Render individual pages to canvas with `pdfjs-dist`.
--   Navigate between pages.
--   Save the original PDF Blob to IndexedDB.
--   Reload the application.
--   Retrieve and render the stored PDF again.
+- Page-aware field placement.
+- Percentage-based X/Y coordinates.
+- Persistent mappings.
+- Multi-page mapping.
+- Browser-resize independence.
+- Representative sample-data preview.
+- Preview text scaling with the rendered PDF.
+- Mapping deletion.
 
-### Build 005 --- Layout Management
+#### Build 007 — PDF Generation Proof — COMPLETE
 
-Goal: Establish persistent browser-based layouts.
+- Browser-side PDF writing with `pdf-lib`.
+- Real selected-game data written onto mapped PDF fields.
+- Point-size preservation.
+- Multi-page generation.
+- Final mapping convention established as **baseline-left**.
+- Designer and generated PDF use the same mapping anchor semantics.
+- Verified end-to-end both Local and Online.
 
--   Create layouts.
--   Name and describe layouts.
--   Associate a source PDF with a layout.
--   List saved layouts.
--   Edit layout settings.
--   Duplicate layouts.
--   Delete layouts.
--   Establish schema/version handling.
+### v0.2.0 — Field Library & Formatting Milestone — ACTIVE ROADMAP
 
-### Build 006 --- Interactive Layout Designer
+The goal of v0.2.0 is to make the Designer capable of mapping and formatting
+the traditional pregame information a scorekeeper may reasonably want on a
+scorecard.
 
-Goal: Rebuild field mapping in the browser.
+The detailed candidate field inventory is maintained in:
 
--   Select data fields.
--   Configure formatting.
--   Place fields on the active PDF page.
--   Store `pageIndex`, `xPercent`, and `yPercent`.
--   Edit and remove mappings.
--   Add formatting and conditional styling rules.
--   Ensure mappings remain accurate at different display sizes.
+`docs/PREGAME_DATA_INVENTORY.md`
 
-### Build 007 --- PDF Generation Proof
+The v0.2.0 work should proceed iteratively rather than attempting to define the
+entire mapping UI in one build. Expected areas include:
 
-Goal: Prove end-to-end browser PDF writing.
+- Verify what pregame data is available in the game feed.
+- Identify supplemental MLB Stats API requests for missing data.
+- Build a normalized pregame data model independent of individual API endpoints.
+- Expand game, team, personnel, lineup, pitcher, bench, bullpen, umpire,
+  standings, venue, and weather fields.
+- Add season/YTD player statistics appropriate for traditional scorecards.
+- Add team record and standings information.
+- Add manager/personnel fields where available.
+- Develop repeated-field mapping for batting-order rows.
+- Develop variable-length collection behavior for bench and bullpen.
+- Add atomic and composite/display fields.
+- Add name-format options.
+- Add font size, alignment, and color controls.
+- Add conditional formatting such as bats/throws handedness.
+- Add prefixes, suffixes, separators, and composite templates.
+- Determine fit behavior for long values, including optional shrink-to-fit or
+  other maximum-width behavior.
+- Continue testing against real scorecard designs and actual MLB games.
 
-Progress incrementally:
+Build numbers within v0.2.0 should remain flexible because field architecture
+and formatting controls are expected to require multiple iterations.
 
-1.  Place static `Hello World` text on a mapped location.
-2.  Place a real player name.
-3.  Apply font sizing and alignment.
-4.  Apply conditional color rules.
-5.  Populate a lineup.
-6.  Populate all currently supported mapped scorecard fields.
+### Later pre-v1.0 work
 
-### Build 008 --- Backup & Portability
+After the v0.2.0 field/formatting milestone, likely areas include:
 
-Goal: Protect user-created data and support device migration.
+- Backup/export/import and cross-device portability.
+- Improved layout-management tooling.
+- More polished scorecard generation workflow.
+- MLB/MiLB league and team selection.
+- Data caching and request optimization.
+- Schema migration support.
+- Error/recovery behavior.
+- UI/UX polish.
+- Documentation and onboarding.
+- Other features discovered through regular scorekeeping use.
 
--   Export layouts and their PDF templates.
--   Include schema/version metadata.
--   Import exported backups.
--   Validate imported data.
--   Handle duplicate IDs and incompatible versions safely.
+### v1.0 scope boundary
 
-### Later Builds
+The v1.0 goal is a stable Scorecard Studio capable of producing traditional,
+pregame-populated scorecards from user-defined PDF layouts.
 
-After the browser architecture reaches feature parity with the useful
-portions of the former local application, continue development of:
+Advanced broadcaster-style research data is **not required for v1.0**. Examples
+include:
 
--   Expanded pregame data.
--   More flexible formatting rules.
--   Additional layout-management tools.
--   Improved designer workflow.
--   MLB/MiLB league and team selection.
--   Additional scorecard-generation options.
--   Schema migration support.
--   Other features identified through normal use.
+- head-to-head season-series records;
+- records versus division opponents;
+- home/road or other situational team splits;
+- batter-vs-pitcher history;
+- pitcher-vs-opponent history;
+- recent-performance windows;
+- platoon or situational splits;
+- other sabermetric or research-heavy matchup data.
 
-------------------------------------------------------------------------
+These may be added later without changing the core layout architecture.
 
-## Versioning During the Web Rewrite
+### Future: Pregame Research / Game Day View
 
-Treat the browser implementation as a new architectural baseline.
+Scorecard Studio may eventually include a browsable **Pregame Research** or
+**Game Day** view for useful contextual information that does not fit naturally
+as fixed PDF fields.
 
-During reconstruction, development builds may use a designation such as:
+This view could surface matchup history, recent form, splits, player-vs-pitcher
+notes, or other derived insights. The scorekeeper could selectively jot one or
+two useful items into the scorecard's notes area rather than forcing all
+research data into mapped PDF fields.
 
-``` text
-v0.1.0-web-dev
-Build 001
+The philosophy should remain:
+
+- **Scorecard PDF:** structured, predictable, repeatable, printable fields.
+- **Pregame Research:** contextual, variable-length, browsable information.
+
+---
+
+## Versioning
+
+**v0.1.0** is the completed browser-architecture milestone.
+
+Development now proceeds toward **v0.2.0**, focused on the field library,
+normalized pregame data, and formatting/mapping controls.
+
+Use small, testable build numbers within a milestone. Git commit messages should
+prefer a lightweight Conventional Commit style, for example:
+
+```text
+feat: add pregame field catalog (Build 008)
+fix: align designer and PDF text to baseline anchors
+docs: update pregame data inventory
 ```
 
-Keep builds small and testable.
+Build numbers identify planned acceptance-test milestones. Smaller fixes and
+documentation commits do not need their own build number.
 
-Once the browser implementation reaches functional parity with the
-useful portions of the previous application, select an appropriate
-public semantic version based on the project's maturity rather than
-automatically continuing the old local application's version number.
-
-------------------------------------------------------------------------
+---
 
 ## Coding Rules for AI
 
@@ -589,4 +712,11 @@ automatically continuing the old local application's version number.
     possible.
 -   Avoid introducing build tools, frameworks, server-side runtimes, or
     unnecessary dependencies unless there is a demonstrated need.
+-   Treat `docs/PREGAME_DATA_INVENTORY.md` as the working source of truth for candidate pregame fields.
+-   Keep field definitions independent of the MLB endpoint that supplies the value.
+-   Normalize API data before exposing it to the Designer.
+-   Prefer atomic source fields plus configurable composite/display fields over hard-coded long display strings.
+-   Store text mappings using page-relative percentages and an explicit `baseline-left` anchor unless a later schema deliberately introduces another anchor type.
+-   Keep stored font sizes in PDF points; Designer display scaling must not alter persisted font size.
+-   Treat advanced matchup/situational research as future scope rather than silently expanding the v1.0 field library.
 -   Prefer incremental, testable changes over large rewrites.
