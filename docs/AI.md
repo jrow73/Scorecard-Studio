@@ -621,9 +621,9 @@ and formatting controls are expected to require multiple iterations.
   were reported verified, including a manager-change case.
 - Timing/completeness across early-day and MiLB feeds remains conditional.
 
-### Build 009 — Pregame Field Registry + Normalized Data Model — IMPLEMENTED / ACCEPTANCE PENDING
+### Build 009 — Pregame Field Registry + Normalized Data Model — COMPLETE
 
-Implementation is now present in the Build 009 development package. Browser acceptance in Local and Online remains pending; do not mark Build 009 complete until that evidence exists. The full traditional v0.2.0 registry contract is in
+Build 009 has been accepted after Local and Online testing and layout-generation verification. The full traditional v0.2.0 registry contract is in
 [docs/FIELD_REGISTRY.md](docs/FIELD_REGISTRY.md). The bounded implementation and
 acceptance requirements are in
 [docs/BUILD_009_IMPLEMENTATION.md](docs/BUILD_009_IMPLEMENTATION.md).
@@ -643,6 +643,59 @@ acceptance requirements are in
 - Hydrate only missing dependencies; opening Game Day explicitly may request
   its displayed categories independently of PDF mappings.
 - Do not modify README.md as part of this build's documentation work.
+
+
+### Build 010 — Repeated Block Foundation + Starting Lineups — PLANNED
+
+Build 010 establishes the reusable repeated-block architecture, using starting
+lineups as the first implementation. It should not create nine unrelated copies
+of every lineup field. Instead, a block binds a row template to a collection and
+repeats that row over layout-defined geometry.
+
+- A block's **capacity** is a property of the layout, independent of the number
+  of members in the selected game's collection. MLB layouts may normally use
+  nine lineup rows, while college, youth, or other baseball layouts may define
+  ten or more.
+- For a vertical block, the Designer should preserve the proven Python-mapper
+  workflow: place the first row and last row, then infer the intermediate row
+  spacing. Persist page-relative starting coordinates plus physical PDF-point
+  spacing rather than browser pixels.
+- One repeated row may contain multiple independently placed columns, such as
+  jersey number, player name, position, handedness, and statistics. All columns
+  share the same collection row selection but retain independent formatting.
+- Repeated columns must support per-column `left`, `center`, and `right`
+  alignment semantics. Existing `baseline-left` mappings retain their exact
+  meaning and coordinates; new alignment-aware behavior must not reinterpret or
+  move legacy mappings.
+- Fewer members than capacity leave unused rows blank. More members than
+  capacity produce a visible overflow condition; never silently discard players
+  or invent additional PDF pages.
+- Horizontal repetition, grids, continuation blocks, and variable-length bench
+  and bullpen workflows are planned extensions of the same block model rather
+  than separate collection-specific systems.
+
+### Planned composite / free-text template architecture
+
+Custom templates are a general mapping capability, not a lineup-only feature.
+A placement may eventually render either one canonical field or a template made
+from static text plus allowlisted registry-field tokens. Examples include:
+
+```text
+[Away Team] ([W-L])
+Weather: [temp] and [conditions]
+[jersey] [lastname] ([position])
+```
+
+Templates used outside a repeated block resolve against the game/team context.
+Templates inside a repeated block additionally receive that collection row as
+their context. Template dependencies participate in the same lazy hydration
+planning as ordinary fields. Arbitrary JavaScript is never allowed.
+
+Build 010 should reserve compatible content/mapping semantics for templates but
+should not implement the template editor/parser. That work is tentatively
+planned for Build 012. Future template behavior should support optional or smart
+punctuation groups so missing values do not leave artifacts such as empty
+parentheses or dangling separators.
 
 ### Later pre-v1.0 work
 
@@ -762,4 +815,4 @@ Build 008 application source, current IndexedDB layout/storage shape, registry
 contract, implementation specification, inventory, and Game Pack matrix were
 available for inspection. Static/module checks and targeted fixture tests are
 documented in `docs/BUILD_009_TEST_REPORT.md`; Local and Online browser
-acceptance remains pending.
+acceptance and final PDF placement testing were completed successfully.

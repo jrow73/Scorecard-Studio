@@ -381,25 +381,58 @@ though a completed card may later show the actual start time.
 - A selected layout should declare its needs implicitly through its mapped fields; unmapped supplemental categories should not be fetched.
 - Future one-click generation for the favorite team/favorite layout should use the same dependency-driven hydration process.
 
-## 14. Open Design Questions
+## 14. Mapping and Formatting Design Decisions
 
+The following questions were resolved during post-Build-009 planning and form
+the design basis for Build 010 and later v0.2.0 work.
 
-1.  How should nine lineup rows be mapped without creating an enormous
-    field dropdown?
-2.  How should variable-length bench and bullpen collections be mapped?
-3.  Should layouts use predefined composite fields, user-defined
-    templates, or both?
-4.  Which team-name variants should be standardized?
-5.  Which batting and pitching stats belong in the initial v0.2.0 field
-    set?
-6.  What should a mapped field display when pregame data is unavailable?
-7.  How should probable/preliminary personnel differ from an officially
-    posted lineup?
-8.  How should two-way players and unusual roles be represented?
-9.  Should mapped text support maximum width, shrink-to-fit, clipping,
-    wrapping, or combinations?
-10. Which supplemental personnel/standings categories should Game Day hydrate
-    automatically versus only when required by a mapped layout?
+1. **Lineups use repeated blocks, not nine copies of every field.** A repeated
+   row structure binds to the lineup collection. The layout defines its own
+   capacity, so an MLB card may use nine rows while college, youth, or other
+   baseball cards may provide ten or more.
+2. **Vertical repeated placement uses first/last row geometry.** The user places
+   the first and last row for the configured capacity; intermediate row spacing
+   is inferred. This preserves the successful interaction from the earlier
+   Python mapper while removing the hard-coded nine-row assumption.
+3. **A repeated row may contain multiple independently formatted columns.**
+   Jersey number, name, position, handedness, and statistics may each have
+   independent X placement, font size, and alignment while sharing the same row
+   progression.
+4. **Alignment is per placement/column.** Left, center, and right alignment are
+   required. Existing baseline-left mappings retain their coordinates and
+   semantics. New repeated-column placement should support alignment-aware X
+   anchors without changing the baseline Y convention.
+5. **Bench and bullpen will reuse the repeated-block engine.** Their variable
+   length must not be hard-coded to four or any other typical count. Fewer
+   members than layout capacity leave blanks; overflow is explicitly reported.
+   Horizontal/grid arrangements and continuation blocks are planned extensions
+   rather than separate bench/bullpen systems.
+6. **Composite/free-text templates are general-purpose.** They may be used for
+   ordinary scalar placements (`[Away Team] ([W-L])`, `Weather: [temp] and
+   [conditions]`) or within repeated rows (`[jersey] [lastname] ([position])`).
+   Repeated templates resolve tokens in the current row context.
+7. **Templates remain allowlisted and dependency-aware.** They reference
+   registry fields, never arbitrary JavaScript, and their referenced fields
+   participate in lazy hydration planning. A template editor/parser is deferred
+   from Build 010, tentatively to Build 012. Future optional/smart punctuation
+   behavior should prevent empty parentheses, dangling separators, and similar
+   artifacts when values are missing.
+8. **Overflow must be visible.** Scorecard Studio must not silently discard
+   players, invent new pages, or unpredictably resize an entire collection to
+   force it into a layout. Explicit continuation/truncation choices can be added
+   later.
+
+Still open for later refinement:
+
+- Which exact batting and pitching statistics should be surfaced first in the
+  repeated-block Designer UI.
+- How probable/preliminary personnel should be labeled before an official lineup
+  is posted.
+- Detailed fit behavior for long text: maximum width, shrink-to-fit, clipping,
+  wrapping, or combinations.
+- Final grid/horizontal repeated-block interaction and continuation-block UX.
+- Which supplemental personnel/standings categories Game Day should hydrate
+  automatically versus only when required by a mapped layout.
 
 ## 15. Scope Boundary: Advanced Matchup & Situational Data
 

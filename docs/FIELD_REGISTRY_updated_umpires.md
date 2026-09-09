@@ -1,6 +1,6 @@
 # Scorecard Studio — Field Registry
 
-Status: Build 009 field contract accepted; repeated-block architecture refined for Build 010 planning. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
+Status: Build 009 design contract; implementation pending. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
 
 ## 1. Authority and evidence
 
@@ -99,10 +99,26 @@ The tables and leaf lists below are exhaustive for this version's traditional re
 | `game.weather.temperature` | atomic / decimal | `gameData.weather.temp`; Fahrenheit input |
 | `game.weather.condition`, `.wind` | atomic / text | `gameData.weather.condition`, `.wind`; preserve wind text, do not invent parsed speed/direction |
 | `game.weather.summary` | composite / text | temperature + condition + wind; omit absent component and its punctuation |
-| `game.umpires.home.name`, `.first.name`, `.second.name`, `.third.name` | atomic / text | `liveData.boxscore.officials[]`, matched by `officialType`, never array order |
-| `game.umpires.additional[].name`, `.role` | atomic / text, repeated | Remaining officials with explicit role; source order, ID deduplication |
+| `game.umpires.crew[].name`, `.role` | atomic / text, repeated | Canonical umpire-crew collection from `liveData.boxscore.officials[]`; preserve explicit role, source order, and ID deduplication |
+| `game.umpires.home.name`, `.first.name`, `.second.name`, `.third.name` | derived scalar view / text | Resolve from `game.umpires.crew[]` by explicit role, never array order |
+| `game.umpires.leftField.name`, `.rightField.name` | derived scalar view / text | Resolve from `game.umpires.crew[]` when postseason/outfield umpire roles are supplied |
+| `game.umpires.replay.name` | derived scalar view / text | Resolve from `game.umpires.crew[]` when a replay-official role is supplied |
+| `game.umpires.other[].name`, `.role` | derived repeated view / text | Crew members whose explicit role is not represented by one of the named scalar role views; preserve role text and source order |
 
-Internal: `game.id`, `game.venue.id`, each umpire `.id`, feed status and timing. Umpire objects contain `id`, `name`, `role`. Additional official roles are not coerced into one of the four bases. Availability before first pitch is conditional. Venue location leaf names must be validated against the actual payload during adapter implementation; the fixture matrix only establishes `location.*`.
+Internal: `game.id`, `game.venue.id`, each umpire `.id`, feed status and timing. Umpire objects contain `id`, `name`, and `role`.
+
+**Umpire crew cardinality is variable and must never be assumed to equal four.**
+Lower-level MiLB games may use fewer than four on-field umpires, while MLB
+postseason crews may include additional on-field assignments and a separate
+replay role. `game.umpires.crew[]` is therefore the canonical structure; named
+role fields are convenience views only. Missing roles remain missing/blank and
+must not be backfilled by array position. Additional or unfamiliar roles remain
+available through `game.umpires.other[]` rather than being discarded or coerced
+into a standard role.
+
+Availability before first pitch is conditional. Venue location leaf names must
+be validated against the actual payload during adapter implementation; the
+fixture matrix only establishes `location.*`.
 
 ### Team identity, records, and standings context
 
@@ -228,19 +244,11 @@ Prefer `gameData.probablePitchers.{side}`; retain internal designation `probable
 - A historic list may reflect later substitutions or usage. Do not infer the original bench by subtracting final lineup from a current roster. Use reconstructable pregame membership or mark uncertain/unavailable with provenance.
 - Selection is `{ row: 1 }` for the first normalized member, not player ID. Collection size is variable; never assume four bench players or a fixed bullpen size from the fixture.
 
-### Repeated placement contract (Build 010 foundation)
+### Repeated placement contract (later v0.2.0 UI)
 
-Single-row bindings use one-based `slot` or `row`. A repeated block is a layout-level rendering instruction that binds a collection to reusable row geometry. It specifies the collection, optional standings group, start row, layout-defined capacity, repetition pattern, and one or more independently formatted row columns. Capacity describes how many printable positions the layout provides; it is not inferred from the selected game's collection length. An MLB lineup may use capacity 9, while another baseball layout may deliberately provide 10 or more lineup positions.
+Single-row bindings use one-based `slot` or `row`. A repeated block specifies collection, optional standings group, start row, capacity, and row step in PDF points. All columns share the same row selection/order. Start coordinates remain page percentages; later rows add physical point offsets converted using page height. No browser-pixel spacing is persisted.
 
-For the initial vertical pattern, the Designer should preserve the proven mapper interaction: the user places the first row and the last row for the configured capacity, and Scorecard Studio infers the intermediate row step. Start coordinates remain page percentages. Repeated physical spacing is persisted in PDF points (or an equivalent page-scale-independent representation), never browser pixels. The Y coordinate remains a text baseline.
-
-A repeated row may contain multiple columns, for example jersey number, player name, position, bats, AVG, and other statistics. Every column shares the same collection row/order but retains its own X anchor, field/content binding, font size, alignment, and later formatting options. A block therefore repeats a row structure rather than creating nine unrelated field mappings.
-
-Repeated-column alignment supports `left`, `center`, and `right`. For left alignment, the X anchor is the text's left edge; for center it is the text centerline; for right it is the text's right edge. All use the same baseline Y semantics. Existing stored `baseline-left` mappings remain exact legacy semantics and must not be moved or reinterpreted. A later schema may represent the generalized concept as baseline + alignment while treating legacy `baseline-left` as baseline + left for rendering compatibility.
-
-Fewer members than capacity leave blank rows. More members than capacity trigger a visible overflow warning. Never silently drop members, automatically shrink the entire block, wrap into unrelated fields, or create PDF pages. Multiple separately placed blocks may explicitly continue a collection by specifying a later start row. Sorting, continuation, capacity, and overflow choices belong to the block instance, not field identity.
-
-Build 010 implements the vertical repeated-block foundation with starting lineups as the first collection. Horizontal repetition, grids, continuation UX, and variable-length bench/bullpen workflows are later extensions of the same engine rather than separate collection-specific systems. A future grid block may define rows and columns and infer both row and column spacing from placed bounds.
+Fewer members than capacity leave blank rows. More members than capacity trigger a visible overflow warning; default behavior requires the user to adjust the block or explicitly accept truncation before generation. Never silently drop members, wrap into unrelated fields, or create pages. Multiple separately placed blocks can explicitly continue at a later start row. Sorting and overflow choices belong to the block instance, not field identity. Build 009 defines this contract but does not implement its editor or rendering.
 
 ## 7. Hydration and source adapters
 
@@ -275,9 +283,7 @@ Illustrative target schema, not a mandate to rewrite existing stored layout shap
 
 A second mapping may use the exact same `field`, different ID/page/coordinates/font size. Repeated fields additionally carry `selector`, for example `{ "slot": 1 }`. Registry IDs and selectors define the data; font size in PDF points, font/color, name variant, numeric precision, date/timezone display, alignment, prefix/suffix, separator, template, missing-value policy, and fit behavior belong to each placement (or explicit block defaults). Global preferences may seed defaults but cannot rewrite saved mappings.
 
-Composite defaults are named registry recipes, not stored source strings. Future custom templates are a general mapping content type, not a lineup-only feature. They may combine static text with allowlisted registry fields, for example `[Away Team] ([W-L])`, `Weather: [temp] and [conditions]`, or, inside a repeated row, `[jersey] [lastname] ([position])`. Scalar templates resolve against their normal game/team context; repeated templates additionally receive the current collection row context. Their transitive dependency union drives hydration exactly like ordinary mappings. No arbitrary JavaScript templates.
-
-Build 010 should reserve compatible mapping/content semantics for a future distinction such as `content.type = field` versus `content.type = template`, but does not implement the custom-template editor/parser. That work is tentatively planned for Build 012. Future template syntax/formatting must support optional or smart punctuation behavior so missing values do not leave empty parentheses, doubled spaces, dangling labels, or separators. Build 009's fixed record/weather recipes remain valid named composites. W-L requires both values; weather and compact descriptions omit missing components and separators and return partial status. An entirely missing composite renders blank.
+Composite defaults are named registry recipes, not stored source strings. Future custom templates may reference only allowlisted fields in the same row/context; their dependency union drives hydration. No arbitrary JavaScript templates. Build 009 supports fixed record/weather recipes needed for its slice, not a custom template editor. W-L requires both values; weather and compact descriptions omit missing components and separators and return partial status. An entirely missing composite renders blank.
 
 Baseline-left and existing Y-axis convention remain unchanged. Alignment/fit work must not change saved anchor meaning. Preserve existing point size and percentage coordinates exactly. New precision/fit controls and conditional colors are later work. Default long text behavior in Build 009 remains the existing renderer's behavior; do not silently introduce shrink-to-fit.
 
