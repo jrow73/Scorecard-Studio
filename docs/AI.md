@@ -51,7 +51,7 @@ environment.
     use the schedule and game-feed/game-pack data needed to identify and preview
     available games. Do not fetch supplemental manager, standings, player-stat,
     or other cross-reference data merely because a game appears on Home.
-    Supplemental data should be fetched only after the user selects the game
+    Supplemental data should be fetched when the user explicitly opens Game Day for a selected game, or after the user selects the game
     and layout to generate (or invokes an equivalent one-click generation
     workflow), and ideally only for field categories actually required by that
     layout.
@@ -179,8 +179,8 @@ Do **not** preload supplemental cross-reference data such as:
 
 - manager/coaching personnel;
 - team standings, streak, or last-10 data;
-- batter season statistics;
-- pitcher season statistics;
+- supplemental player statistics only if a later, verified fallback requires them;
+- other optional supplemental statistics not already in the Game Pack;
 - other data requiring additional MLB API requests.
 
 The user may choose a different game, a different layout, or take no generation
@@ -210,8 +210,8 @@ Generate scorecard
 ```
 
 A layout that needs only game-feed fields should require no supplemental API
-requests. A layout that maps manager, standings, or player-stat fields should
-trigger only the hydration needed for those mapped fields.
+requests. A layout that maps manager or standings fields should
+trigger only the hydration needed for those mapped fields. Team W-L/PCT and embedded player season/YTD statistics are Game Pack-native; do not add per-player requests merely because a layout uses statistics.
 
 ### Future one-click generation
 
@@ -611,6 +611,39 @@ entire mapping UI in one build. Expected areas include:
 Build numbers within v0.2.0 should remain flexible because field architecture
 and formatting controls are expected to require multiple iterations.
 
+### Build 008 — Game Day / Pregame Data — COMPLETE
+
+- Browsable Game Day view, explicitly opened for the selected game.
+- Game Pack supplies team records and player season/YTD statistics.
+- Lazy Coaches and Standings API hydration; Home remains lightweight.
+- Historical date selection and Today reset, with spoiler-free selection.
+- Historical embedded player statistics and date-appropriate manager retrieval
+  were reported verified, including a manager-change case.
+- Timing/completeness across early-day and MiLB feeds remains conditional.
+
+### Build 009 — Pregame Field Registry + Normalized Data Model — IMPLEMENTED / ACCEPTANCE PENDING
+
+Implementation is now present in the Build 009 development package. Browser acceptance in Local and Online remains pending; do not mark Build 009 complete until that evidence exists. The full traditional v0.2.0 registry contract is in
+[docs/FIELD_REGISTRY.md](docs/FIELD_REGISTRY.md). The bounded implementation and
+acceptance requirements are in
+[docs/BUILD_009_IMPLEMENTATION.md](docs/BUILD_009_IMPLEMENTATION.md).
+
+- Define the full family architecture now; implement the documented 29-field
+  scalar slice in Build 009, plus normalization for existing Game Day coverage.
+- Keep the normalized model, registry and mapping instances separate.
+- Designer preview, Game Day and PDF generation share normalized semantics;
+  Designer and PDF use the same field resolver and formatter.
+- Each registry field may be mapped multiple times, with independent mapping
+  IDs, row bindings, placement and formatting. Home/Away families are symmetric.
+- Team-name representations are separate fields, never one global layout choice.
+- Use explicit repeated collection contracts for lineup, bench and bullpen;
+  repeated-block UI, custom composites and advanced formatting come later.
+- Preserve baseline-left anchors, point sizes, page percentages, existing
+  IndexedDB layouts/PDF Blobs, historical-date behavior and no-spoilers rules.
+- Hydrate only missing dependencies; opening Game Day explicitly may request
+  its displayed categories independently of PDF mappings.
+- Do not modify README.md as part of this build's documentation work.
+
 ### Later pre-v1.0 work
 
 After the v0.2.0 field/formatting milestone, likely areas include:
@@ -645,13 +678,13 @@ include:
 
 These may be added later without changing the core layout architecture.
 
-### Future: Pregame Research / Game Day View
+### Game Day foundation and future advanced research
 
-Scorecard Studio may eventually include a browsable **Pregame Research** or
-**Game Day** view for useful contextual information that does not fit naturally
+Build 008 established a browsable pregame
+**Game Day** view for useful information that does not fit naturally
 as fixed PDF fields.
 
-This view could surface matchup history, recent form, splits, player-vs-pitcher
+Future advanced research in this view could surface matchup history, recent form, splits, player-vs-pitcher
 notes, or other derived insights. The scorekeeper could selectively jot one or
 two useful items into the scorecard's notes area rather than forcing all
 research data into mapped PDF fields.
@@ -674,7 +707,7 @@ Use small, testable build numbers within a milestone. Git commit messages should
 prefer a lightweight Conventional Commit style, for example:
 
 ```text
-feat: add pregame field catalog (Build 008)
+feat: add normalized pregame field registry (Build 009)
 fix: align designer and PDF text to baseline anchors
 docs: update pregame data inventory
 ```
@@ -712,7 +745,7 @@ documentation commits do not need their own build number.
     possible.
 -   Avoid introducing build tools, frameworks, server-side runtimes, or
     unnecessary dependencies unless there is a demonstrated need.
--   Treat `docs/PREGAME_DATA_INVENTORY.md` as the working source of truth for candidate pregame fields.
+-   Use `docs/FIELD_REGISTRY.md` for canonical v0.2.0 field identity, family and collection contracts; keep `docs/PREGAME_DATA_INVENTORY.md` as candidate/discovery context and `docs/GAME_PACK_FIELD_MATRIX.md` as source evidence.
 -   Keep field definitions independent of the MLB endpoint that supplies the value.
 -   Normalize API data before exposing it to the Designer.
 -   Prefer atomic source fields plus configurable composite/display fields over hard-coded long display strings.
@@ -720,3 +753,13 @@ documentation commits do not need their own build number.
 -   Keep stored font sizes in PDF points; Designer display scaling must not alter persisted font size.
 -   Treat advanced matchup/situational research as future scope rather than silently expanding the v1.0 field library.
 -   Prefer incremental, testable changes over large rewrites.
+
+## Build 009 implementation provenance
+
+The Build 009 implementation was applied against the complete Scorecard Studio
+project package supplied after the field-registry planning pass. The existing
+Build 008 application source, current IndexedDB layout/storage shape, registry
+contract, implementation specification, inventory, and Game Pack matrix were
+available for inspection. Static/module checks and targeted fixture tests are
+documented in `docs/BUILD_009_TEST_REPORT.md`; Local and Online browser
+acceptance remains pending.

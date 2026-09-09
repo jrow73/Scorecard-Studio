@@ -36,13 +36,20 @@ The Game Pack already contains:
 - four-man umpire crew;
 - defensive alignment.
 
-The clearest remaining supplemental-data targets are:
+Build 008 subsequently verified the two supplemental-data families needed to
+fill the clearest remaining gaps:
 
-1. manager/coaching personnel;
-2. division/league rank;
-3. meaningful games-back values if the feed does not populate them reliably;
-4. streak;
-5. last-10 record.
+1. **Team Coaches API** for manager/coaching personnel;
+2. **Standings API** for division/league rank, meaningful games-back values,
+   streak, last-10 record, and standings-table context.
+
+Build 008 also verified historical-date behavior: embedded player season/YTD
+statistics corresponded to the selected historical game date; a real
+managerial-change test returned the manager appropriate to that historical
+date; and standings context was successfully retrieved for the selected date.
+
+These are verified application behaviors, not a guarantee that every MLB/MiLB
+game populates every field identically or at the same time before first pitch.
 
 ## 1. Game
 
@@ -102,15 +109,20 @@ Standings data may still be required for rank, GB, streak, last-10, and a full s
 
 ## 3. Team Personnel
 
-| Candidate field | Status | Game Pack path | Note |
-|---|---|---|---|
-| Manager name | MISSING — Supplemental research | — | No `manager` key/name found |
-| Manager number | MISSING — Supplemental research | — | |
-| Bench coach | MISSING — Supplemental research | — | |
-| Hitting coach(es) | MISSING — Supplemental research | — | |
-| Pitching coach | MISSING — Supplemental research | — | |
+Team personnel remain supplemental rather than Game-Pack-native. Build 008
+browser-verified the date-aware Team Coaches endpoint:
 
-This remains a genuine supplemental-data family.
+`/api/v1/teams/{teamId}/coaches?date={date}&season={season}`
+
+| Candidate field | Status | Source | Note |
+|---|---|---|---|
+| Manager name | VERIFIED — Supplemental | Team Coaches API | Historical managerial-change test returned the manager appropriate to the selected date |
+| Manager number | AVAILABLE — Supplemental | Team Coaches API | `jerseyNumber` when supplied |
+| Bench coach | AVAILABLE — Supplemental | Team Coaches API | Identified by job/title |
+| Hitting coach(es) | AVAILABLE — Supplemental | Team Coaches API | Variable collection by job/title |
+| Pitching coach | AVAILABLE — Supplemental | Team Coaches API | Identified by job/title |
+
+This remains a genuine supplemental-data family and should be lazily hydrated.
 
 ## 4. Player Identity & Metadata
 
@@ -337,7 +349,7 @@ Fixture roles:
 
 This proves that umpires were available at the time this fixture was captured. It does **not yet prove how early in the day MLB populates the crew**. That should remain a later timing/reliability test.
 
-## 13. Standings / Record Data Still Needing Research
+## 13. Standings / Record Data
 
 The Game Pack makes a useful distinction apparent:
 
@@ -350,55 +362,38 @@ The Game Pack makes a useful distinction apparent:
 - division leader flag;
 - league/division identity.
 
-### Still unresolved / likely supplemental
+### Verified supplemental standings context
 
-- division rank/place;
-- league rank/place;
-- meaningful games-back value;
-- current streak;
-- last 10;
-- full division/league standings table.
+Build 008 browser-verified the date-aware Standings API for division rank,
+games back, streak, last 10, and standings-table records:
 
-The Game Pack contains several `*GamesBack` keys, but all are `"-"` in this fixture, so they should **not yet be treated as verified usable standings fields**.
+`/api/v1/standings?leagueId={leagueId}&standingsTypes=regularSeason&date={date}&season={season}`
 
-## 14. Supplemental API Discovery Queue
+The Game Pack's `*GamesBack` values were `"-"` in the original fixture, so
+Scorecard Studio should continue to use the Standings API for reliable
+standings context.
 
-Based on this fixture, the next API discovery work should be much narrower than originally planned.
+## 14. Verified Supplemental APIs & Historical-Date Behavior
 
-### Priority 1 — Team personnel
+### Team Coaches API
+Build 008 browser-verified date-aware team-personnel hydration. A historical
+test involving a team whose manager was later replaced returned the manager
+appropriate to the selected game date.
 
-Need to discover and verify:
+### Standings API
+Build 008 browser-verified date-aware standings hydration, including division
+rank, games back, streak, and last-10 record.
 
-- manager name;
-- manager number if available;
-- bench coach;
-- hitting coach(es);
-- pitching coach.
+### Historical Game Pack season statistics
+Historical-date testing showed that embedded `seasonStats.batting` and
+`seasonStats.pitching` correspond to the selected historical game context
+rather than simply today's YTD totals.
 
-**Likely hydration trigger:** any mapped `manager` / `coach` field.
-
-### Priority 2 — Standings context
-
-Need to discover and verify:
-
-- division rank;
-- league rank if useful;
-- games back;
-- streak;
-- last 10;
-- standings-table rows.
-
-**Likely hydration trigger:** mapped standings/rank/GB/streak/last-10 fields or a standings block.
-
-### Lower-priority verification
-
-These are already present in this fixture but should eventually be tested for timing/consistency:
-
+### Remaining timing/consistency verification
 - umpire crew availability before first pitch;
-- Game Pack seasonStats completeness for all lineup/bench/bullpen players;
-- probable pitcher availability timing;
-- lineups and bench/bullpen population timing;
-- Game Pack behavior for MiLB games.
+- Game Pack completeness early in the day before lineups are posted;
+- probable-pitcher and lineup/bench/bullpen population timing;
+- MiLB consistency.
 
 ## 15. Implication for Scorecard Studio Hydration Architecture
 
@@ -434,12 +429,7 @@ The selected layout should still drive supplemental requests, but **most traditi
 
 ## 16. Next Discovery Step
 
-Research the two remaining high-value supplemental families using the IDs already present in this fixture:
-
-- Seattle Mariners team ID: `136`
-- Tampa Bay Rays team ID: `139`
-- Seattle division ID: `200`
-- Tampa Bay division ID: `201`
-- Season: `2026`
-
-Start with **manager/coaching staff**, then **standings context**.
+With the major traditional pregame data families identified and both
+supplemental endpoints browser-verified, discovery can shift toward locking the
+normalized pregame model, repeated/variable collection mapping, initial stat
+selection, formatting/composite controls, and continued timing/MiLB tests.

@@ -1,15 +1,18 @@
 /**
  * Scorecard Studio
  * Application coordinator
- * Version: 0.1.0-web-dev
- * Build: 008
+ * Version: 0.2.0-dev
+ * Build: 009
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=008a";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=009";
+import { normalizePregameData } from "./normalize.js?v=009";
+import { canonicalFieldId, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=009";
+import { formatFieldValue } from "./formatter.js?v=009";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=008a";
+} from "./storage.js?v=009";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -29,7 +32,9 @@ const state = {
   designerPageNumber: 1,
   designerPlacing: false,
   designerRenderToken: 0,
-  designerRenderScale: 1
+  designerRenderScale: 1,
+  normalizedPregame: null,
+  gameDayLoadToken: 0
 };
 
 const elements = {
@@ -137,6 +142,7 @@ async function initialize() {
   state.selectedDate = today;
   elements.gameDateInput.value = today;
   updateSelectedDateUi(today);
+  populateDesignerFieldSelect();
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today));
   elements.gameDateInput.addEventListener("change", handleGameDateChange);
@@ -303,7 +309,9 @@ async function selectGame(gamePk) {
 
   try {
     const feed = await fetchGameFeed(selected.gamePk);
+    if (String(state.selectedGamePk) !== String(selected.gamePk)) return;
     state.selectedFeed = feed;
+    state.normalizedPregame = normalizePregameData(feed, {}, selected);
     renderSelectedGame(selected, feed);
   } catch (error) {
     console.error(`Unable to load selected game ${selected.gamePk}:`, error);
@@ -416,6 +424,7 @@ async function loadGameDay(forceSupplemental = false) {
     return;
   }
 
+  const token = ++state.gameDayLoadToken;
   const gd = feed.gameData || {};
   const officialDate = gd.datetime?.officialDate || game.officialDate || getLocalDateString();
   const season = Number(gd.game?.season || officialDate.slice(0, 4));
@@ -427,7 +436,10 @@ async function loadGameDay(forceSupplemental = false) {
   elements.gameDayMessage.textContent = "Game Pack loaded. Checking supplemental manager and standings data…";
   elements.gameDayContent.hidden = false;
   elements.gameDaySources.hidden = false;
-  renderGameDay(feed, null, null);
+
+  const baseModel = normalizePregameData(feed, {}, game);
+  state.normalizedPregame = baseModel;
+  renderGameDay(baseModel);
 
   elements.refreshGameDayButton.disabled = true;
   elements.coachesSourcePill.textContent = "Coaches API: loading…";
@@ -435,89 +447,86 @@ async function loadGameDay(forceSupplemental = false) {
 
   const awayId = away.id || game.awayTeamId;
   const homeId = home.id || game.homeTeamId;
-  const awayLeague = away.league?.id;
-  const homeLeague = home.league?.id;
-  const leagueIds = [...new Set([awayLeague, homeLeague].filter(Boolean))];
-
-  const coachPromise = Promise.allSettled([
-    fetchTeamCoaches(awayId, officialDate, season),
-    fetchTeamCoaches(homeId, officialDate, season)
-  ]);
-  const standingsPromise = Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, officialDate, season)));
+  const leagueIds = [...new Set([away.league?.id, home.league?.id].filter(Boolean))];
 
   try {
-    const [coachResults, standingsResults] = await Promise.all([coachPromise, standingsPromise]);
+    const [coachResults, standingsResults] = await Promise.all([
+      Promise.allSettled([
+        awayId ? fetchTeamCoaches(awayId, officialDate, season) : Promise.resolve(null),
+        homeId ? fetchTeamCoaches(homeId, officialDate, season) : Promise.resolve(null)
+      ]),
+      Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, officialDate, season)))
+    ]);
+    if (token !== state.gameDayLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
+
     const coaches = {
       away: coachResults[0]?.status === "fulfilled" ? coachResults[0].value : null,
       home: coachResults[1]?.status === "fulfilled" ? coachResults[1].value : null
     };
     const standingsPayloads = standingsResults.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    const model = normalizePregameData(feed, { coaches, standingsPayloads }, game);
+    state.normalizedPregame = model;
+
     const coachOk = Boolean(coaches.away || coaches.home);
     const standingsOk = standingsPayloads.length > 0;
     elements.coachesSourcePill.textContent = coachOk ? "Coaches API: loaded" : "Coaches API: unavailable";
     elements.coachesSourcePill.className = `pill ${coachOk ? "ready" : "error"}`;
     elements.standingsSourcePill.textContent = standingsOk ? "Standings API: loaded" : "Standings API: unavailable";
     elements.standingsSourcePill.className = `pill ${standingsOk ? "ready" : "error"}`;
-    renderGameDay(feed, coaches, standingsPayloads);
-    if (coachOk && standingsOk) {
-      elements.gameDayMessage.textContent = "Game Pack + supplemental data loaded successfully.";
-    } else {
-      elements.gameDayMessage.textContent = "Game Pack is available. One or more supplemental requests did not return data; the page shows everything that loaded.";
-    }
+    renderGameDay(model);
+    elements.gameDayMessage.textContent = coachOk && standingsOk
+      ? "Game Pack + supplemental data loaded successfully."
+      : "Game Pack is available. One or more supplemental requests did not return data; the page shows everything that loaded.";
   } catch (error) {
+    if (token !== state.gameDayLoadToken) return;
     console.error("Game Day supplemental hydration failed:", error);
     elements.gameDayMessage.classList.add("error");
     elements.gameDayMessage.textContent = `Game Pack loaded, but supplemental hydration failed. ${errorMessage(error, "Unknown error.")}`;
   } finally {
-    elements.refreshGameDayButton.disabled = false;
+    if (token === state.gameDayLoadToken) elements.refreshGameDayButton.disabled = false;
   }
 }
 
-function renderGameDay(feed, coaches, standingsPayloads) {
-  const gd = feed?.gameData || {};
-  const away = gd.teams?.away || {};
-  const home = gd.teams?.home || {};
-  const awayStanding = findStanding(standingsPayloads, away.id);
-  const homeStanding = findStanding(standingsPayloads, home.id);
-  renderGameDayTeamCards(away, home, coaches, awayStanding, homeStanding);
+function renderGameDay(model) {
+  if (!model) return;
+  renderGameDayTeamCards(model.away, model.home);
 
-  const awayLineup = lineupPlayers(feed, "away");
-  const homeLineup = lineupPlayers(feed, "home");
-  elements.gameDayAwayLineupHeading.textContent = away.name || "Away";
-  elements.gameDayHomeLineupHeading.textContent = home.name || "Home";
-  renderGameDayLineup(elements.gameDayAwayLineup, awayLineup);
-  renderGameDayLineup(elements.gameDayHomeLineup, homeLineup);
+  elements.gameDayAwayLineupHeading.textContent = model.away?.team?.name || "Away";
+  elements.gameDayHomeLineupHeading.textContent = model.home?.team?.name || "Home";
+  renderGameDayLineup(elements.gameDayAwayLineup, model.away?.lineup || []);
+  renderGameDayLineup(elements.gameDayHomeLineup, model.home?.lineup || []);
 
-  elements.gameDayAwayPitchingHeading.textContent = away.name || "Away";
-  elements.gameDayHomePitchingHeading.textContent = home.name || "Home";
-  renderGameDayPitching(elements.gameDayAwayPitching, startingPitcher(feed, "away"), bullpenPitchers(feed, "away"));
-  renderGameDayPitching(elements.gameDayHomePitching, startingPitcher(feed, "home"), bullpenPitchers(feed, "home"));
+  elements.gameDayAwayPitchingHeading.textContent = model.away?.team?.name || "Away";
+  elements.gameDayHomePitchingHeading.textContent = model.home?.team?.name || "Home";
+  renderGameDayPitching(elements.gameDayAwayPitching, model.away?.startingPitcher, model.away?.bullpen || []);
+  renderGameDayPitching(elements.gameDayHomePitching, model.home?.startingPitcher, model.home?.bullpen || []);
 
-  elements.gameDayAwayBenchHeading.textContent = away.name || "Away";
-  elements.gameDayHomeBenchHeading.textContent = home.name || "Home";
-  renderGameDayBench(elements.gameDayAwayBench, benchPlayers(feed, "away"));
-  renderGameDayBench(elements.gameDayHomeBench, benchPlayers(feed, "home"));
-  renderGameDayUmpires(feed);
-  renderGameDayVenue(feed);
+  elements.gameDayAwayBenchHeading.textContent = model.away?.team?.name || "Away";
+  elements.gameDayHomeBenchHeading.textContent = model.home?.team?.name || "Home";
+  renderGameDayBench(elements.gameDayAwayBench, model.away?.bench || []);
+  renderGameDayBench(elements.gameDayHomeBench, model.home?.bench || []);
+  renderGameDayUmpires(model.game?.umpires);
+  renderGameDayVenue(model.game);
 }
 
-function renderGameDayTeamCards(away, home, coaches, awayStanding, homeStanding) {
+function renderGameDayTeamCards(away, home) {
   elements.gameDayTeamGrid.replaceChildren();
-  [["away", away, coaches?.away, awayStanding], ["home", home, coaches?.home, homeStanding]].forEach(([side, team, coachData, standing]) => {
+  [["away", away], ["home", home]].forEach(([side, data]) => {
     const card = document.createElement("section");
     card.className = "card gameday-team-card";
-    const manager = findManager(coachData);
+    const team = data?.team || {};
     const record = team.record || {};
+    const standings = team.standings || {};
     card.innerHTML = `<p class="section-label">${side === "away" ? "Away" : "Home"}</p><h3>${escapeHtml(team.name || "Team")}</h3>
       <div class="gameday-stat-grid">
         ${gameDayStat("Record", record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—")}
-        ${gameDayStat("PCT", record.winningPercentage || "—")}
-        ${gameDayStat("Division", team.division?.nameShort || team.division?.name || "—")}
-        ${gameDayStat("Manager", manager || "Not loaded")}
-        ${gameDayStat("Division Rank", standing?.divisionRank || "—")}
-        ${gameDayStat("Games Back", standing?.gamesBack ?? standing?.divisionGamesBack ?? "—")}
-        ${gameDayStat("Streak", standing?.streak?.streakCode || standing?.streak?.code || "—")}
-        ${gameDayStat("Last 10", lastTenDisplay(standing))}
+        ${gameDayStat("PCT", record.pct != null ? formatRate(record.pct, 3) : "—")}
+        ${gameDayStat("Division", team.division?.name || "—")}
+        ${gameDayStat("Manager", data?.manager?.name || "Not loaded")}
+        ${gameDayStat("Division Rank", standings.divisionRank ?? "—")}
+        ${gameDayStat("Games Back", standings.divisionGamesBack ?? "—")}
+        ${gameDayStat("Streak", standings.streak || "—")}
+        ${gameDayStat("Last 10", standings.last10?.display || "—")}
       </div>`;
     elements.gameDayTeamGrid.append(card);
   });
@@ -527,100 +536,78 @@ function gameDayStat(label, value) {
   return `<div class="gameday-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
 }
 
-function findManager(payload) {
-  const roster = Array.isArray(payload?.roster) ? payload.roster : [];
-  const manager = roster.find((entry) => String(entry?.job || entry?.title || "").toLowerCase() === "manager") || roster.find((entry) => /manager/i.test(String(entry?.job || entry?.title || "")));
-  return manager?.person?.fullName || "";
-}
-
-function findStanding(payloads, teamId) {
-  if (!Array.isArray(payloads) || !teamId) return null;
-  for (const payload of payloads) {
-    for (const record of payload?.records || []) {
-      const match = (record?.teamRecords || []).find((teamRecord) => String(teamRecord?.team?.id) === String(teamId));
-      if (match) return match;
-    }
-  }
-  return null;
-}
-
-function lastTenDisplay(standing) {
-  const split = (standing?.records?.splitRecords || []).find((item) => item?.type === "lastTen" || /last ten/i.test(item?.type || item?.description || ""));
-  if (split?.wins != null && split?.losses != null) return `${split.wins}-${split.losses}`;
-  const lastTen = standing?.lastTen;
-  if (lastTen?.wins != null && lastTen?.losses != null) return `${lastTen.wins}-${lastTen.losses}`;
-  return "—";
-}
-
-function renderGameDayLineup(tbody, players) {
+function renderGameDayLineup(tbody, slots) {
   tbody.replaceChildren();
+  const players = slots.filter((slot) => slot?.player?.name);
   if (!players.length) {
     const tr = document.createElement("tr"); tr.innerHTML = '<td colspan="10" class="gameday-empty">Lineup not posted.</td>'; tbody.append(tr); return;
   }
-  players.forEach((player, index) => {
-    const stats = seasonBattingStats(player);
+  slots.forEach((slot, index) => {
+    if (!slot?.player?.name) return;
+    const stats = slot.stats || {};
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${index + 1}</td><td><strong>${escapeHtml(playerName(player))}</strong><span class="gameday-number">${playerJersey(player) ? `#${escapeHtml(playerJersey(player))}` : ""}</span></td><td>${escapeHtml(playerPosition(player) || "—")}</td><td>${escapeHtml(playerBats(player) || "—")}</td><td>${escapeHtml(stats.avg || "—")}</td><td>${escapeHtml(stats.obp || "—")}</td><td>${escapeHtml(stats.slg || "—")}</td><td>${escapeHtml(stats.ops || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td>`;
+    tr.innerHTML = `<td>${slot.battingOrder || index + 1}</td><td><strong>${escapeHtml(slot.player.name)}</strong><span class="gameday-number">${slot.player.number ? `#${escapeHtml(slot.player.number)}` : ""}</span></td><td>${escapeHtml(slot.position?.abbreviation || "—")}</td><td>${escapeHtml(slot.player.bats || "—")}</td><td>${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td>`;
     tbody.append(tr);
   });
 }
 
 function renderGameDayPitching(container, starter, bullpen) {
   container.replaceChildren();
-  if (starter) container.append(gameDayPitcherRow(starter, "SP"));
-  bullpen.forEach((player) => container.append(gameDayPitcherRow(player, "RP")));
-  if (!starter && !bullpen.length) container.append(emptyRow("Pitchers not listed."));
+  if (starter?.player?.name) container.append(gameDayPitcherRow(starter, "SP"));
+  bullpen.filter((player) => player?.player?.name).forEach((player) => container.append(gameDayPitcherRow(player, "RP")));
+  if (!starter?.player?.name && !bullpen.length) container.append(emptyRow("Pitchers not listed."));
 }
 
-function gameDayPitcherRow(player, role) {
-  const stats = seasonPitchingStats(player);
+function gameDayPitcherRow(item, role) {
+  const stats = item?.stats || {};
   const row = document.createElement("div"); row.className = "gameday-person-row";
   const record = stats.wins != null && stats.losses != null ? `${stats.wins}-${stats.losses}` : "—";
-  row.innerHTML = `<div><strong>${escapeHtml(role)} ${escapeHtml(playerName(player))}</strong><span>${playerJersey(player) ? `#${escapeHtml(playerJersey(player))} • ` : ""}${escapeHtml(playerThrows(player) || "—")}HP</span></div><div class="gameday-person-stats"><span>${escapeHtml(record)} W-L</span><span>${escapeHtml(stats.era || "—")} ERA</span><span>${escapeHtml(stats.whip || "—")} WHIP</span><span>${escapeHtml(String(stats.strikeOuts ?? "—"))} K</span></div>`;
+  row.innerHTML = `<div><strong>${escapeHtml(role)} ${escapeHtml(item?.player?.name || "Player")}</strong><span>${item?.player?.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item?.player?.throws || "—")}HP</span></div><div class="gameday-person-stats"><span>${escapeHtml(record)} W-L</span><span>${escapeHtml(formatRate(stats.era, 2) || "—")} ERA</span><span>${escapeHtml(formatRate(stats.whip, 2) || "—")} WHIP</span><span>${escapeHtml(String(stats.strikeouts ?? "—"))} K</span></div>`;
   return row;
 }
 
 function renderGameDayBench(container, players) {
   container.replaceChildren();
-  if (!players.length) { container.append(emptyRow("Bench not listed.")); return; }
-  players.forEach((player) => {
-    const stats = seasonBattingStats(player);
+  const known = players.filter((item) => item?.player?.name);
+  if (!known.length) { container.append(emptyRow("Bench not listed.")); return; }
+  known.forEach((item) => {
+    const stats = item.stats || {};
     const row = document.createElement("div"); row.className = "gameday-person-row";
-    row.innerHTML = `<div><strong>${escapeHtml(playerName(player))}</strong><span>${playerJersey(player) ? `#${escapeHtml(playerJersey(player))} • ` : ""}${escapeHtml(playerPosition(player) || "—")} • Bats ${escapeHtml(playerBats(player) || "—")}</span></div><div class="gameday-person-stats"><span>${escapeHtml(stats.avg || "—")} AVG</span><span>${escapeHtml(stats.ops || "—")} OPS</span><span>${escapeHtml(String(stats.homeRuns ?? "—"))} HR</span></div>`;
+    row.innerHTML = `<div><strong>${escapeHtml(item.player.name)}</strong><span>${item.player.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item.position?.abbreviation || item.player.primaryPosition?.abbreviation || "—")} • Bats ${escapeHtml(item.player.bats || "—")}</span></div><div class="gameday-person-stats"><span>${escapeHtml(formatRate(stats.avg, 3) || "—")} AVG</span><span>${escapeHtml(formatRate(stats.ops, 3) || "—")} OPS</span><span>${escapeHtml(String(stats.homeRuns ?? "—"))} HR</span></div>`;
     container.append(row);
   });
 }
 
-function renderGameDayUmpires(feed) {
+function renderGameDayUmpires(umpires) {
   elements.gameDayUmpires.replaceChildren();
-  const officials = feed?.liveData?.boxscore?.officials || [];
-  if (!officials.length) { elements.gameDayUmpires.append(emptyRow("Umpire crew not listed yet.")); return; }
-  officials.forEach((item) => {
+  const rows = [
+    ["Home Plate", umpires?.home], ["First Base", umpires?.first], ["Second Base", umpires?.second], ["Third Base", umpires?.third],
+    ...(umpires?.additional || []).map((item) => [item.role || "Official", item])
+  ].filter(([, item]) => item?.name);
+  if (!rows.length) { elements.gameDayUmpires.append(emptyRow("Umpire crew not listed yet.")); return; }
+  rows.forEach(([role, item]) => {
     const row = document.createElement("div"); row.className = "gameday-person-row simple";
-    row.innerHTML = `<strong>${escapeHtml(item?.officialType || "Official")}</strong><span>${escapeHtml(item?.official?.fullName || "—")}</span>`;
+    row.innerHTML = `<strong>${escapeHtml(role)}</strong><span>${escapeHtml(item.name)}</span>`;
     elements.gameDayUmpires.append(row);
   });
 }
 
-function renderGameDayVenue(feed) {
-  const gd = feed?.gameData || {}; const venue = gd.venue || {}; const weather = gd.weather || {}; const field = venue.fieldInfo || {};
+function renderGameDayVenue(game) {
+  const venue = game?.venue || {}; const weather = game?.weather || {};
+  const weatherParts = [weather.condition, weather.temperature != null ? `${weather.temperature}°` : "", weather.wind].filter(Boolean);
   const values = [
-    ["Venue", venue.name || "—"], ["Capacity", field.capacity ? Number(field.capacity).toLocaleString() : "—"], ["Surface", field.turfType || "—"], ["Roof", field.roofType || "—"],
-    ["Weather", weatherSummary(weather)], ["Location", [venue.location?.city, venue.location?.stateAbbrev].filter(Boolean).join(", ") || "—"]
+    ["Venue", venue.name || "—"], ["Capacity", venue.capacity != null ? Number(venue.capacity).toLocaleString() : "—"], ["Surface", venue.turfType || "—"], ["Roof", venue.roofType || "—"],
+    ["Weather", weatherParts.join(" • ") || "—"], ["Location", [venue.city, venue.state].filter(Boolean).join(", ") || "—"]
   ];
   elements.gameDayVenue.innerHTML = `<div class="gameday-stat-grid">${values.map(([a,b]) => gameDayStat(a,b)).join("")}</div>`;
 }
 
-function seasonBattingStats(player) {
-  return player?.seasonStats?.batting && typeof player.seasonStats.batting === "object"
-    ? player.seasonStats.batting
-    : {};
-}
-
-function seasonPitchingStats(player) {
-  return player?.seasonStats?.pitching && typeof player.seasonStats.pitching === "object"
-    ? player.seasonStats.pitching
-    : {};
+function formatRate(value, precision) {
+  if (value === null || value === undefined || value === "") return "";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return String(value);
+  const text = number.toFixed(precision);
+  return precision === 3 && Math.abs(number) < 1 ? text.replace(/^0(?=\.)/, "") : text;
 }
 
 function lineupState(awayCount, homeCount) {
@@ -1018,6 +1005,12 @@ async function openLayout(id) {
   const layout = state.layouts.find((item) => item.id === id);
   if (layout && !Array.isArray(layout.mappings)) layout.mappings = [];
   if (!layout) return;
+  const mappingIdsAdded = ensureMappingIds(layout);
+  if (mappingIdsAdded) {
+    layout.updatedAt = new Date().toISOString();
+    try { await saveLayout(layout); }
+    catch (error) { console.warn("Unable to persist legacy mapping IDs:", error); }
+  }
   state.selectedLayoutId = id;
   renderLayoutList();
   elements.layoutDetailCard.hidden = false;
@@ -1208,7 +1201,8 @@ function renderDesignerOverlay() {
   mappings.forEach((mapping) => {
     const marker = document.createElement("button");
     marker.type = "button";
-    marker.className = "mapping-marker";
+    marker.className = `mapping-marker${getFieldDefinition(mapping.field) ? "" : " unsupported"}`;
+    marker.dataset.mappingId = mapping.id || "";
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
     const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
@@ -1251,12 +1245,41 @@ function renderDesignerMappingList() {
     go.className = "secondary-button compact-button";
     go.textContent = "Show";
     go.addEventListener("click", async () => {
-      state.designerPageNumber = mapping.pageIndex + 1;
-      await renderDesignerPage();
+      await showDesignerMapping(mapping);
     });
     row.append(copy, go);
     elements.designerMappingList.append(row);
   });
+}
+
+async function showDesignerMapping(mapping) {
+  state.designerPageNumber = mapping.pageIndex + 1;
+  state.designerPlacing = false;
+  elements.designerStage.classList.remove("placing");
+
+  try {
+    await renderDesignerPage();
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+    const marker = Array.from(elements.designerOverlay.querySelectorAll(".mapping-marker"))
+      .find((candidate) => candidate.dataset.mappingId === String(mapping.id || ""));
+
+    if (!marker) {
+      setDesignerMessage(`Mapped field “${designerFieldLabel(mapping.field)}” could not be located on the rendered page.`, true);
+      return;
+    }
+
+    marker.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    marker.classList.remove("show-target");
+    // Force a style flush so repeated Show clicks restart the pulse.
+    void marker.offsetWidth;
+    marker.classList.add("show-target");
+    marker.focus({ preventScroll: true });
+    window.setTimeout(() => marker.classList.remove("show-target"), 1800);
+    setDesignerMessage(`Showing ${designerFieldLabel(mapping.field)} on page ${mapping.pageIndex + 1}.`);
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "That mapped field could not be shown."), true);
+  }
 }
 
 async function deleteDesignerMapping(id) {
@@ -1298,16 +1321,61 @@ function setDesignerMessage(message, isError = false) {
 }
 
 function designerFieldLabel(field) {
-  return field === "away.teamName" ? "Away Team Name" : field === "home.teamName" ? "Home Team Name" : field;
+  const definition = getFieldDefinition(field);
+  return definition?.label || `Unsupported: ${field}`;
 }
 
 function designerFieldPreview(field) {
-  return field === "away.teamName"
-    ? "Tampa Bay Devil Rays"
-    : field === "home.teamName"
-      ? "Seattle Mariners"
-      : field;
+  const definition = getFieldDefinition(field);
+  if (!definition) return `[Unsupported: ${field}]`;
+  const resolution = resolveField(DESIGNER_SAMPLE_MODEL, field);
+  return formatFieldValue(definition, resolution, DESIGNER_SAMPLE_MODEL) || definition.label;
 }
+
+function populateDesignerFieldSelect() {
+  elements.designerFieldSelect.replaceChildren();
+  const groups = new Map();
+  for (const definition of getSupportedFields()) {
+    if (!groups.has(definition.category)) groups.set(definition.category, []);
+    groups.get(definition.category).push(definition);
+  }
+  for (const [category, definitions] of groups) {
+    const group = document.createElement("optgroup");
+    group.label = category;
+    for (const definition of definitions) {
+      const option = document.createElement("option");
+      option.value = definition.id;
+      option.textContent = definition.label.replace(/^(Away|Home)\s+/, "");
+      group.append(option);
+    }
+    elements.designerFieldSelect.append(group);
+  }
+}
+
+function ensureMappingIds(layout) {
+  let changed = false;
+  for (const mapping of layout?.mappings || []) {
+    if (!mapping.id) { mapping.id = makeMappingId(); changed = true; }
+  }
+  return changed;
+}
+
+const DESIGNER_SAMPLE_MODEL = {
+  schemaVersion: 1,
+  game: {
+    date: "2026-09-08", startTime: "2026-09-08T23:10:00Z",
+    venue: { name: "T-Mobile Park", timeZone: "America/Los_Angeles" },
+    weather: { temperature: 72, condition: "Partly Cloudy", wind: "7 mph, Out To RF" }
+  },
+  away: {
+    team: { name: "Tampa Bay Devil Rays", locationName: "St. Petersburg", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB", record: { wins: 78, losses: 64, pct: 0.549 } },
+    manager: { name: "Kevin Cash" }, startingPitcher: { player: { name: "Shane Baz" } }
+  },
+  home: {
+    team: { name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA", record: { wins: 81, losses: 61, pct: 0.570 } },
+    manager: { name: "Dan Wilson" }, startingPitcher: { player: { name: "Logan Gilbert" } }
+  }
+};
 
 function makeMappingId() {
   return globalThis.crypto?.randomUUID?.() || `mapping-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -1331,40 +1399,46 @@ async function generateTestPdf() {
   if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
   const mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
   if (!mappings.length) return setGenerateMessage("Map at least one field before generating a PDF.", true);
-  if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load today's game first.", true);
+  if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load a game first.", true);
   if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
 
   elements.designerGenerateButton.disabled = true;
-  setGenerateMessage("Generating PDF…");
+  setGenerateMessage("Loading required pregame data…");
+  const gameKey = String(state.selectedGamePk || "");
 
   try {
+    const model = await buildModelForMappings(mappings, gameKey);
+    if (String(state.selectedGamePk || "") !== gameKey) throw new Error("Game selection changed while pregame data was loading. Generate again for the selected game.");
+
     const record = await getPdfTemplate(layout.pdfTemplateId);
     if (!record?.blob) throw new Error("The layout's source PDF is missing.");
+    setGenerateMessage("Generating PDF…");
 
     const sourceBytes = await record.blob.arrayBuffer();
     const pdfDoc = await globalThis.PDFLib.PDFDocument.load(sourceBytes);
     const font = await pdfDoc.embedFont(globalThis.PDFLib.StandardFonts.Helvetica);
     const pages = pdfDoc.getPages();
+    const skipped = [];
+    let missingCount = 0;
 
     for (const mapping of mappings) {
       const page = pages[mapping.pageIndex];
-      if (!page) continue;
-
-      const text = resolveMappedField(mapping.field);
-      if (!text) continue;
+      if (!page) { skipped.push(mapping.field); continue; }
+      const definition = getFieldDefinition(mapping.field);
+      if (!definition) { skipped.push(mapping.field); continue; }
+      const resolution = resolveField(model, mapping.field);
+      const text = formatFieldValue(definition, resolution, model);
+      if (!text) {
+        if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
+        else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+        continue;
+      }
 
       const size = Number(mapping.fontSize) || 10;
       const { width, height } = page.getSize();
       const x = width * clamp(Number(mapping.xPercent) || 0, 0, 1);
       const y = height * (1 - clamp(Number(mapping.yPercent) || 0, 0, 1));
-
-      page.drawText(text, {
-        x,
-        y,
-        size,
-        font,
-        color: globalThis.PDFLib.rgb(0, 0, 0)
-      });
+      page.drawText(text, { x, y, size, font, color: globalThis.PDFLib.rgb(0, 0, 0) });
     }
 
     const outputBytes = await pdfDoc.save();
@@ -1372,7 +1446,10 @@ async function generateTestPdf() {
     const selected = state.schedule.find((game) => game.gamePk === state.selectedGamePk);
     const filename = buildGeneratedFilename(layout, selected);
     downloadBlob(blob, filename);
-    setGenerateMessage(`Generated ${filename}.`);
+    const notices = [];
+    if (missingCount) notices.push(`${missingCount} mapped value(s) were unavailable and left blank.`);
+    if (skipped.length) notices.push(`${skipped.length} unsupported/error mapping(s) were skipped.`);
+    setGenerateMessage(`Generated ${filename}.${notices.length ? ` ${notices.join(" ")}` : ""}`, skipped.length > 0);
   } catch (error) {
     console.error("Unable to generate PDF:", error);
     setGenerateMessage(errorMessage(error, "The PDF could not be generated."), true);
@@ -1381,11 +1458,33 @@ async function generateTestPdf() {
   }
 }
 
-function resolveMappedField(field) {
-  const gameData = state.selectedFeed?.gameData ?? {};
-  if (field === "away.teamName") return gameData.teams?.away?.name || currentScheduleGame()?.awayTeam || "Away Team";
-  if (field === "home.teamName") return gameData.teams?.home?.name || currentScheduleGame()?.homeTeam || "Home Team";
-  return "";
+async function buildModelForMappings(mappings, expectedGameKey) {
+  const fieldIds = mappings.map((mapping) => canonicalFieldId(mapping.field));
+  const requirements = sourceRequirementsForFields(fieldIds);
+  const game = currentScheduleGame();
+  const feed = state.selectedFeed;
+  if (!feed || !game) throw new Error("No selected game data is available.");
+  if (!requirements.has("coaches")) {
+    const model = normalizePregameData(feed, {}, game);
+    state.normalizedPregame = model;
+    return model;
+  }
+
+  const gd = feed.gameData || {};
+  const officialDate = gd.datetime?.officialDate || game.officialDate || state.selectedDate || getLocalDateString();
+  const season = Number(gd.game?.season || officialDate.slice(0, 4));
+  const neededSides = new Set(fieldIds.filter((id) => id.endsWith(".manager.name")).map((id) => id.split(".")[0]));
+  const coaches = {};
+  await Promise.all([...neededSides].map(async (side) => {
+    const teamId = gd.teams?.[side]?.id || game?.[`${side}TeamId`];
+    if (!teamId) return;
+    try { coaches[side] = await fetchTeamCoaches(teamId, officialDate, season); }
+    catch (error) { console.warn(`Manager hydration failed for ${side}:`, error); coaches[side] = null; }
+  }));
+  if (String(state.selectedGamePk || "") !== expectedGameKey) throw new Error("Game selection changed during supplemental hydration.");
+  const model = normalizePregameData(feed, { coaches }, game);
+  state.normalizedPregame = model;
+  return model;
 }
 
 function currentScheduleGame() {

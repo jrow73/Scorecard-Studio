@@ -70,9 +70,9 @@ Applies to both `away` and `home`.
   Team ID        136        Internal   Per Team      Game feed     `away.team.id`                       Application
                                                                                                         data
 
-  Wins           82         Core       Per Team      Other MLB API `away.team.record.wins`              Verify
+  Wins           82         Core       Per Team      Game feed     `away.team.record.wins`              Verify
 
-  Losses         63         Core       Per Team      Other MLB API `away.team.record.losses`            Verify
+  Losses         63         Core       Per Team      Game feed     `away.team.record.losses`            Verify
 
   W-L record     82-63      Core       Composite     Derived       `away.team.record.display`           
 
@@ -138,32 +138,32 @@ Repeat for batting-order positions 1--9 for each team.
   Bats            R/L/S            Common         Player          `away.lineup[].player.bats`
                                                   metadata/feed   
 
-  AVG             .284             Common         Other MLB API   `away.lineup[].stats.avg`
+  AVG             .284             Common         Game feed       `away.lineup[].stats.avg`
 
-  OBP             .351             Common         Other MLB API   `away.lineup[].stats.obp`
+  OBP             .351             Common         Game feed       `away.lineup[].stats.obp`
 
-  SLG             .492             Common         Other MLB API   `away.lineup[].stats.slg`
+  SLG             .492             Common         Game feed       `away.lineup[].stats.slg`
 
-  OPS             .843             Common         Other           `away.lineup[].stats.ops`
+  OPS             .843             Common         Game feed       `away.lineup[].stats.ops`
                                                   API/derived     
 
-  HR              18               Common         Other MLB API   `away.lineup[].stats.homeRuns`
+  HR              18               Common         Game feed       `away.lineup[].stats.homeRuns`
 
-  RBI             67               Common         Other MLB API   `away.lineup[].stats.rbi`
+  RBI             67               Common         Game feed       `away.lineup[].stats.rbi`
 
-  Runs            72               Optional       Other MLB API   `away.lineup[].stats.runs`
+  Runs            72               Optional       Game feed       `away.lineup[].stats.runs`
 
-  Hits            143              Optional       Other MLB API   `away.lineup[].stats.hits`
+  Hits            143              Optional       Game feed       `away.lineup[].stats.hits`
 
-  Doubles         28               Optional       Other MLB API   `away.lineup[].stats.doubles`
+  Doubles         28               Optional       Game feed       `away.lineup[].stats.doubles`
 
-  Triples         3                Optional       Other MLB API   `away.lineup[].stats.triples`
+  Triples         3                Optional       Game feed       `away.lineup[].stats.triples`
 
-  Stolen bases    22               Optional       Other MLB API   `away.lineup[].stats.stolenBases`
+  Stolen bases    22               Optional       Game feed       `away.lineup[].stats.stolenBases`
 
-  Walks           48               Optional       Other MLB API   `away.lineup[].stats.walks`
+  Walks           48               Optional       Game feed       `away.lineup[].stats.walks`
 
-  Strikeouts      121              Optional       Other MLB API   `away.lineup[].stats.strikeouts`
+  Strikeouts      121              Optional       Game feed       `away.lineup[].stats.strikeouts`
 
   Slash line      .284/.351/.492   Common         Derived         `away.lineup[].stats.slashLine`
   -------------------------------------------------------------------------------------------------------
@@ -181,29 +181,29 @@ Repeat for batting-order positions 1--9 for each team.
   Throws         R/L            Common         Player          `away.startingPitcher.player.throws`
                                                metadata/feed   
 
-  Wins           11             Common         Other MLB API   `away.startingPitcher.stats.wins`
+  Wins           11             Common         Game feed       `away.startingPitcher.stats.wins`
 
-  Losses         7              Common         Other MLB API   `away.startingPitcher.stats.losses`
+  Losses         7              Common         Game feed       `away.startingPitcher.stats.losses`
 
   W-L            11-7           Common         Derived         `away.startingPitcher.stats.record`
 
-  ERA            3.42           Common         Other MLB API   `away.startingPitcher.stats.era`
+  ERA            3.42           Common         Game feed       `away.startingPitcher.stats.era`
 
-  WHIP           1.08           Common         Other MLB API   `away.startingPitcher.stats.whip`
+  WHIP           1.08           Common         Game feed       `away.startingPitcher.stats.whip`
 
-  IP             154.2          Common         Other MLB API   `away.startingPitcher.stats.inningsPitched`
+  IP             154.2          Common         Game feed       `away.startingPitcher.stats.inningsPitched`
 
-  Hits allowed   132            Optional       Other MLB API   `away.startingPitcher.stats.hits`
+  Hits allowed   132            Optional       Game feed       `away.startingPitcher.stats.hits`
 
-  Runs allowed   61             Optional       Other MLB API   `away.startingPitcher.stats.runs`
+  Runs allowed   61             Optional       Game feed       `away.startingPitcher.stats.runs`
 
-  Earned runs    58             Optional       Other MLB API   `away.startingPitcher.stats.earnedRuns`
+  Earned runs    58             Optional       Game feed       `away.startingPitcher.stats.earnedRuns`
 
-  Walks          39             Optional       Other MLB API   `away.startingPitcher.stats.walks`
+  Walks          39             Optional       Game feed       `away.startingPitcher.stats.walks`
 
-  Strikeouts     171            Common         Other MLB API   `away.startingPitcher.stats.strikeouts`
+  Strikeouts     171            Common         Game feed       `away.startingPitcher.stats.strikeouts`
 
-  HR allowed     17             Optional       Other MLB API   `away.startingPitcher.stats.homeRuns`
+  HR allowed     17             Optional       Game feed       `away.startingPitcher.stats.homeRuns`
 
   Opponent AVG   .221           Optional       Other           `away.startingPitcher.stats.opponentAvg`
                                                API/derived     
@@ -226,7 +226,7 @@ Variable-length collection for each team.
 
   Bats              Common            Player metadata   `away.bench[].player.bats`
 
-  AVG/OBP/SLG/OPS   Optional          Other MLB API     `away.bench[].stats.*`
+  AVG/OBP/SLG/OPS   Optional          Game feed         `away.bench[].stats.*`
   --------------------------------------------------------------------------------------------
 
 ## 7. Bullpen
@@ -243,17 +243,17 @@ Variable-length collection for each team.
 
   Throws            Common            Player metadata   `away.bullpen[].player.throws`
 
-  W-L               Optional          Other MLB API     `away.bullpen[].stats.record`
+  W-L               Optional          Game feed         `away.bullpen[].stats.record`
 
-  ERA               Common            Other MLB API     `away.bullpen[].stats.era`
+  ERA               Common            Game feed         `away.bullpen[].stats.era`
 
-  WHIP              Optional          Other MLB API     `away.bullpen[].stats.whip`
+  WHIP              Optional          Game feed         `away.bullpen[].stats.whip`
 
-  Saves             Common            Other MLB API     `away.bullpen[].stats.saves`
+  Saves             Common            Game feed         `away.bullpen[].stats.saves`
 
-  Holds             Optional          Other MLB API     `away.bullpen[].stats.holds`
+  Holds             Optional          Game feed         `away.bullpen[].stats.holds`
 
-  Strikeouts        Optional          Other MLB API     `away.bullpen[].stats.strikeouts`
+  Strikeouts        Optional          Game feed         `away.bullpen[].stats.strikeouts`
   -----------------------------------------------------------------------------------------
 
 ## 8. Defensive Alignment
@@ -375,7 +375,9 @@ though a completed card may later show the actual start time.
 - Variable collections such as bench and bullpen require layout behavior that tolerates different collection lengths.
 - Traditional scorecard information is the v0.2/v1.0 priority; advanced broadcaster-style matchup research is deferred.
 - Game Pack / game-feed data is the base pregame model used for Home / Select Game.
-- Supplemental manager, standings, and player-stat data should be treated as on-demand hydration.
+- Supplemental manager/coaching personnel and standings context should be treated as on-demand hydration.
+- Team records and relevant player season/YTD statistics are Game-Pack-native and do not require separate player-stat hydration.
+- Build 008 historical testing verified date-appropriate player season/YTD statistics, manager, and standings context for selected historical games.
 - A selected layout should declare its needs implicitly through its mapped fields; unmapped supplemental categories should not be fetched.
 - Future one-click generation for the favorite team/favorite layout should use the same dependency-driven hydration process.
 
@@ -396,8 +398,8 @@ though a completed card may later show the actual start time.
 8.  How should two-way players and unusual roles be represented?
 9.  Should mapped text support maximum width, shrink-to-fit, clipping,
     wrapping, or combinations?
-10. Which supplemental API data can be hydrated in batches rather than
-    player-by-player?
+10. Which supplemental personnel/standings categories should Game Day hydrate
+    automatically versus only when required by a mapped layout?
 
 ## 15. Scope Boundary: Advanced Matchup & Situational Data
 
@@ -444,26 +446,35 @@ every possible matchup statistic.
 
 ## 16. API Verification Worklist
 
+-   [x] Manager/coaching staff — Team Coaches API browser-verified; historical manager date behavior verified
+-   [x] Team W-L record — Game Pack
+-   [x] Division rank and games back — Standings API browser-verified
+-   [x] Current streak — Standings API browser-verified
+-   [x] Last-10 record — Standings API browser-verified
+-   [x] Batter season statistics — Game Pack `seasonStats.batting`
+-   [x] Starting-pitcher season statistics — Game Pack `seasonStats.pitching`
+-   [x] Bullpen season statistics — Game Pack `seasonStats.pitching`
+-   [x] Bench-player season statistics — Game Pack `seasonStats.batting`
+-   [x] Bats/throws metadata — Game Pack player metadata
+-   [x] Venue capacity/metadata — Game Pack
+-   [x] Historical player season/YTD date behavior — verified with a selected historical game
+-   [ ] Pregame umpire availability/timing — present in tested fixture; timing still to characterize
+-   [ ] Early-day Game Pack completeness before lineups are posted
+-   [ ] MiLB consistency for the same data families
 
--   [ ] Manager/coaching staff
--   [ ] Team W-L record
--   [ ] Division rank and games back
--   [ ] Current streak
--   [ ] Last-10 record
--   [ ] Batter season statistics
--   [ ] Starting-pitcher season statistics
--   [ ] Bullpen season statistics
--   [ ] Bench-player season statistics
--   [ ] Bats/throws metadata
--   [ ] Venue capacity/metadata
--   [ ] Pregame umpire availability/timing
--   [ ] Efficient multi-player/stat hydration options
+### Build 008 historical-date verification
 
-For each verified item, record: 1. endpoint/request; 2. response path;
-3. reliability before first pitch; 4. required IDs from the game feed;
-5. raw versus derived normalized value;
-6. which mapped field(s) or field category should trigger the request;
-7. whether the request can be skipped entirely when the selected layout does not use that data.
+Build 008 added historical date selection to Home / Select Game. Testing showed
+that a selected historical game returned season/YTD player statistics
+appropriate to that game date. A separate test involving a team whose manager
+had subsequently been replaced returned the manager appropriate to the
+historical date. Standings context was also successfully retrieved for the
+selected game's date.
+
+These results support historical scorecard generation as a useful secondary
+workflow while keeping today's game as the normal use case. They remain
+verified real-game behaviors rather than a guarantee of identical availability
+or timing for every MLB/MiLB fixture.
 
 ## 17. Source Notes
 
@@ -474,3 +485,6 @@ scorecard as an example of a detailed scorekeeper's information needs.
 Because the Carpenter example is a completed card, this inventory
 intentionally extracts candidate **pregame** information rather than
 treating every handwritten value as something available before the game.
+
+
+Build 008 browser testing further refined this inventory using the Game Day view, Team Coaches API, Standings API, and historical-date selection.

@@ -1010,3 +1010,27 @@ button { font: inherit; }
     flex-wrap: wrap;
   }
 }
+
+/* Build 009: unsupported legacy registry mappings remain visible and round-trip safely. */
+.mapping-marker.unsupported {
+  border-style: dotted;
+  opacity: .72;
+}
+
+
+/* Build 009 acceptance refinement: make Show navigation visually obvious. */
+.mapping-marker.show-target {
+  z-index: 3;
+  outline: 3px solid rgba(255, 193, 7, .95);
+  outline-offset: 3px;
+  animation: mapping-show-pulse 900ms ease-in-out 2;
+}
+
+@keyframes mapping-show-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 193, 7, .34); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mapping-marker.show-target { animation: none; }
+}
