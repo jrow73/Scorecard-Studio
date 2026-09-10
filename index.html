@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=011" />
+  <link rel="stylesheet" href="./css/styles.css?v=0111c" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 011</p>
+          <p>0.2.0-dev • Build 011.1</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 011</p>
+          <p class="section-label">Build 011.1</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 011</p>
+              <p class="section-label">Build 011.1</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,7 +309,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 011 • Repeated Collections</p>
+              <p class="section-label">Build 011.1 • Designer Zoom</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -328,7 +328,7 @@
 
               <div class="designer-repeat-panel">
                 <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 011</p><h4>Repeated Player Block</h4></div>
+                  <div><p class="section-label">Build 011.1</p><h4>Repeated Player Block</h4></div>
                   <span class="pill neutral" id="designer-block-count">0</span>
                 </div>
                 <label for="designer-lineup-side">Collection
@@ -388,10 +388,20 @@
                 <button class="secondary-button" id="designer-prev-btn" type="button">Previous</button>
                 <strong id="designer-page-label">Page 1 of 1</strong>
                 <button class="secondary-button" id="designer-next-btn" type="button">Next</button>
+                <span class="designer-zoom-controls" aria-label="PDF zoom controls">
+                  <button class="secondary-button compact-button" id="designer-zoom-out-btn" type="button" aria-label="Zoom out">−</button>
+                  <select id="designer-zoom-select" aria-label="PDF zoom">
+                    <option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option>
+                    <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
+                  </select>
+                  <button class="secondary-button compact-button" id="designer-zoom-in-btn" type="button" aria-label="Zoom in">+</button>
+                </span>
               </div>
+              <div class="designer-stage-scroll" id="designer-stage-scroll">
               <div class="designer-stage" id="designer-stage">
                 <canvas id="designer-pdf-canvas" aria-label="PDF page used for field mapping"></canvas>
                 <div class="designer-overlay" id="designer-overlay" aria-label="Mapped fields"></div>
+              </div>
               </div>
             </div>
           </div>
@@ -402,6 +412,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=011"></script>
+  <script type="module" src="./js/app.js?v=0111a"></script>
 </body>
 </html>

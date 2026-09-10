@@ -891,3 +891,9 @@ contract, implementation specification, inventory, and Game Pack matrix were
 available for inspection. Static/module checks and targeted fixture tests are
 documented in `docs/BUILD_009_TEST_REPORT.md`; Local and Online browser
 acceptance and final PDF placement testing were completed successfully.
+## Build 011.1 — Designer PDF-only zoom
+- Added as a pre-Build-012 usability/testing increment after Build 011 acceptance.
+- Designer PDF zoom presets: 50/75/100/125/150/200%, with +/- stepping.
+- Zoom changes only the rendered Designer PDF and its overlays; layout mappings remain stored in PDF-relative coordinates and generated output is unaffected.
+- Enlarged PDF pages scroll within their own viewport and zoom persists across page changes in the Designer session.
+- Advanced zoom gestures and broader Designer UX polish remain deferred.

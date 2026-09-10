@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 011
+ * Build: 011.1
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=011";
@@ -34,6 +34,7 @@ const state = {
   designerPlacement: null,
   designerRenderToken: 0,
   designerRenderScale: 1,
+  designerZoom: 1,
   normalizedPregame: null,
   gameDayLoadToken: 0
 };
@@ -141,6 +142,10 @@ const elements = {
   designerPrevButton: document.querySelector("#designer-prev-btn"),
   designerNextButton: document.querySelector("#designer-next-btn"),
   designerPageLabel: document.querySelector("#designer-page-label"),
+  designerZoomOutButton: document.querySelector("#designer-zoom-out-btn"),
+  designerZoomInButton: document.querySelector("#designer-zoom-in-btn"),
+  designerZoomSelect: document.querySelector("#designer-zoom-select"),
+  designerStageScroll: document.querySelector("#designer-stage-scroll"),
   designerStage: document.querySelector("#designer-stage"),
   designerPdfCanvas: document.querySelector("#designer-pdf-canvas"),
   designerOverlay: document.querySelector("#designer-overlay"),
@@ -187,6 +192,9 @@ async function initialize() {
   elements.designerGenerateButton.addEventListener("click", generateTestPdf);
   elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
+  elements.designerZoomOutButton.addEventListener("click", () => changeDesignerZoom(-1));
+  elements.designerZoomInButton.addEventListener("click", () => changeDesignerZoom(1));
+  elements.designerZoomSelect.addEventListener("change", () => setDesignerZoom(Number(elements.designerZoomSelect.value)));
   elements.designerStage.addEventListener("click", handleDesignerStageClick);
   window.addEventListener("resize", debounce(() => {
     if (!document.querySelector('[data-view="designer"]').hidden && state.designerPdfDocument) renderDesignerPage();
@@ -1206,8 +1214,9 @@ function beginDesignerBlockColumnPlacement() {
   const field = elements.designerColumnField.value;
   const definition = getFieldDefinition(field);
   if (!definition || definition.cardinality !== "repeated" || definition.collection !== block.collection) return setDesignerMessage("Choose a field that belongs to the selected block.", true);
-  setDesignerPlacement({ mode: "blockColumn", blockId: block.id });
-  setDesignerMessage(`Click the X anchor for ${designerFieldLabel(field)}. The row baselines already come from the block geometry.`);
+  const alignment = ["left", "center", "right"].includes(elements.designerColumnAlignment.value) ? elements.designerColumnAlignment.value : "left";
+  setDesignerPlacement({ mode: "blockColumn", blockId: block.id, field, fontSize: size, alignment });
+  setDesignerMessage(`Click the ${alignment}-alignment X anchor for ${designerFieldLabel(field)}. The row baselines already come from the block geometry.`);
 }
 
 async function handleDesignerStageClick(event) {
@@ -1290,14 +1299,14 @@ async function handleDesignerStageClick(event) {
 
   if (placement.mode === "blockColumn") {
     if (state.designerPageNumber - 1 !== block.pageIndex) return setDesignerMessage("Place collection columns on the block's PDF page.", true);
-    const field = elements.designerColumnField.value;
-    const alignment = ["left", "center", "right"].includes(elements.designerColumnAlignment.value) ? elements.designerColumnAlignment.value : "left";
+    const field = placement.field;
+    const alignment = placement.alignment;
     const column = {
       id: makeMappingId(),
       field,
       content: { type: "field", field },
       xPercent,
-      fontSize: Number(elements.designerColumnFontSize.value),
+      fontSize: placement.fontSize,
       alignment,
       anchor: `baseline-${alignment}`
     };
@@ -1324,8 +1333,9 @@ async function renderDesignerPage() {
   const token = ++state.designerRenderToken;
   const page = await state.designerPdfDocument.getPage(state.designerPageNumber);
   const baseViewport = page.getViewport({ scale: 1 });
-  const availableWidth = Math.max(260, Math.min(elements.designerStage.parentElement.clientWidth - 8, 1100));
-  const scale = availableWidth / baseViewport.width;
+  const availableWidth = Math.max(260, Math.min(elements.designerStageScroll.clientWidth - 8, 1100));
+  const fitScale = availableWidth / baseViewport.width;
+  const scale = fitScale * state.designerZoom;
   state.designerRenderScale = scale;
   const viewport = page.getViewport({ scale });
   const outputScale = window.devicePixelRatio || 1;
@@ -1642,6 +1652,24 @@ function setDesignerPlacement(placement) {
 
 function cancelDesignerPlacement() {
   setDesignerPlacement(null);
+}
+
+const DESIGNER_ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+function setDesignerZoom(zoom) {
+  const next = DESIGNER_ZOOM_LEVELS.includes(zoom) ? zoom : 1;
+  state.designerZoom = next;
+  elements.designerZoomSelect.value = String(next);
+  elements.designerZoomOutButton.disabled = next <= DESIGNER_ZOOM_LEVELS[0];
+  elements.designerZoomInButton.disabled = next >= DESIGNER_ZOOM_LEVELS[DESIGNER_ZOOM_LEVELS.length - 1];
+  renderDesignerPage().catch(() => setDesignerMessage("The PDF could not be rendered at that zoom level.", true));
+}
+
+function changeDesignerZoom(direction) {
+  const currentIndex = Math.max(0, DESIGNER_ZOOM_LEVELS.indexOf(state.designerZoom));
+  const nextIndex = clamp(currentIndex + direction, 0, DESIGNER_ZOOM_LEVELS.length - 1);
+  if (nextIndex === currentIndex) return;
+  setDesignerZoom(DESIGNER_ZOOM_LEVELS[nextIndex]);
 }
 
 async function changeDesignerPage(delta) {

@@ -854,6 +854,17 @@ button { font: inherit; }
   cursor: pointer;
 }
 
+/* Repeated-block X coordinates are alignment anchors, not always left edges.
+   Preserve the baseline Y transform while shifting the preview horizontally
+   around the stored anchor for center/right-aligned columns. */
+.mapping-marker.repeated-marker.align-center {
+  transform: translate(-50%, calc(-1 * var(--preview-font-px)));
+}
+
+.mapping-marker.repeated-marker.align-right {
+  transform: translate(-100%, calc(-1 * var(--preview-font-px)));
+}
+
 .designer-mapping-panel {
   border-top: 1px solid var(--border, rgba(255,255,255,.12));
   padding-top: 12px;
@@ -1035,37 +1046,22 @@ button { font: inherit; }
   .mapping-marker.show-target { animation: none; }
 }
 
-/* Build 010 — repeated starting-lineup blocks */
-.designer-repeat-panel {
-  display: grid;
-  gap: 11px;
-  padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: rgba(255,255,255,.025);
+/* Build 011.1: Designer PDF-only zoom */
+.designer-zoom-controls { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.designer-zoom-controls select { min-width: 78px; }
+.designer-stage-scroll { width: 100%; max-height: 78vh; overflow: auto; border-radius: 8px; }
+.designer-stage { max-width: none; overflow: hidden; }
+#designer-pdf-canvas { width: auto; height: auto; }
+
+/* Build 011.1 anchor-dot refinement:
+   repeated-column preview text may shift around the stored X anchor for
+   center/right alignment, but the red dot itself must remain on that anchor. */
+.mapping-marker.repeated-marker.align-center::before {
+  left: 50%;
+  transform: translateX(-50%);
 }
-.designer-repeat-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.designer-repeat-heading h4 { margin: 1px 0 0; }
-.designer-column-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, .55fr); gap: 9px; }
-.designer-block-list { display: grid; gap: 8px; }
-.designer-block-card { padding: 9px 0; border-top: 1px solid var(--line); }
-.designer-block-card:first-child { border-top: 0; }
-.designer-block-card strong, .designer-block-card span { display: block; }
-.designer-block-card span { margin-top: 3px; font-size: .8rem; opacity: .72; }
-.designer-block-column-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
-.designer-block-column-row button { flex: 0 0 auto; }
-.repeated-row-guide {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-bottom: 1px dotted rgba(37, 99, 235, .45);
-  pointer-events: none;
+
+.mapping-marker.repeated-marker.align-right::before {
+  left: 100%;
+  transform: translateX(-50%);
 }
-.mapping-marker.repeated-marker { border-style: solid; background: rgba(224, 242, 254, .76); }
-.mapping-marker.align-center { transform: translate(-50%, calc(-1 * var(--preview-font-px))); }
-.mapping-marker.align-right { transform: translate(-100%, calc(-1 * var(--preview-font-px))); }
-.mapping-marker.align-center::before { left: calc(50% - 4px); }
-.mapping-marker.align-right::before { left: auto; right: -5px; }
-.mapping-marker.align-center::after { left: 0; right: 0; }
-.mapping-marker.align-right::after { left: 0; right: 0; }
-@media (max-width: 520px) { .designer-column-grid { grid-template-columns: 1fr; } }
