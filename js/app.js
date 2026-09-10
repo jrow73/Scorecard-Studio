@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 010
+ * Build: 011
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=010";
-import { normalizePregameData } from "./normalize.js?v=010";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=010";
-import { formatFieldValue } from "./formatter.js?v=010";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=011";
+import { normalizePregameData } from "./normalize.js?v=011";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=011";
+import { formatFieldValue } from "./formatter.js?v=011";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=010";
+} from "./storage.js?v=011";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -178,7 +178,7 @@ async function initialize() {
   elements.openDesignerButton.addEventListener("click", openDesigner);
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
   elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
-  elements.designerCreateBlockButton.addEventListener("click", createDesignerLineupBlock);
+  elements.designerCreateBlockButton.addEventListener("click", createDesignerRepeatedBlock);
   elements.designerBlockSelect.addEventListener("change", syncDesignerBlockControls);
   elements.designerLineupSide.addEventListener("change", populateDesignerColumnFieldSelect);
   elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
@@ -1136,7 +1136,7 @@ async function openDesigner() {
     await renderDesignerPage();
     renderDesignerMappingList();
     renderDesignerBlockList();
-    setDesignerMessage("Place scalar fields or create a starting-lineup block.");
+    setDesignerMessage("Place scalar fields or create a repeated player block.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
     setDesignerMessage(errorMessage(error, "The Designer could not open this layout."), true);
@@ -1151,16 +1151,18 @@ function beginDesignerPlacement() {
   setDesignerMessage(`Click where the baseline for ${designerFieldLabel(elements.designerFieldSelect.value)} should begin.`);
 }
 
-async function createDesignerLineupBlock() {
+async function createDesignerRepeatedBlock() {
   const layout = selectedLayout();
   if (!layout) return setDesignerMessage("Open a layout first.", true);
   const capacity = Number(elements.designerLineupCapacity.value);
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return setDesignerMessage("Lineup capacity must be a whole number from 1 through 30.", true);
-  const side = elements.designerLineupSide.value === "home" ? "home" : "away";
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return setDesignerMessage("Block capacity must be a whole number from 1 through 30.", true);
+  const requestedCollection = String(elements.designerLineupSide.value || "away.lineup");
+  const supportedCollections = new Set(["away.lineup", "home.lineup", "away.bench", "home.bench", "away.bullpen", "home.bullpen"]);
+  const collection = supportedCollections.has(requestedCollection) ? requestedCollection : "away.lineup";
   const block = {
     id: makeMappingId(),
     type: "repeated",
-    collection: `${side}.lineup`,
+    collection,
     capacity,
     pageIndex: null,
     geometry: null,
@@ -1175,17 +1177,17 @@ async function createDesignerLineupBlock() {
     populateDesignerBlockSelect(block.id);
     syncDesignerBlockControls();
     renderDesignerBlockList();
-    setDesignerMessage(`Created ${side === "away" ? "Away" : "Home"} lineup block with ${capacity} rows. Place its first and last row baselines next.`);
+    setDesignerMessage(`Created ${blockLabel(block)} with ${capacity} rows. Place its first and last row baselines next.`);
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
   } catch (error) {
-    setDesignerMessage(errorMessage(error, "The lineup block could not be saved."), true);
+    setDesignerMessage(errorMessage(error, "The repeated block could not be saved."), true);
   }
 }
 
 function beginDesignerBlockGeometryPlacement() {
   const block = selectedDesignerBlock();
-  if (!block) return setDesignerMessage("Create or select a lineup block first.", true);
+  if (!block) return setDesignerMessage("Create or select a repeated block first.", true);
   if (block.capacity < 2) return setDesignerMessage("A repeated block needs at least two rows to infer spacing from first and last rows.", true);
   setDesignerPlacement({ mode: "blockGeometryFirst", blockId: block.id });
   setDesignerMessage(`Click the baseline for row 1 of the ${blockLabel(block)}.`);
@@ -1193,17 +1195,17 @@ function beginDesignerBlockGeometryPlacement() {
 
 function beginDesignerBlockColumnPlacement() {
   const block = selectedDesignerBlock();
-  if (!block) return setDesignerMessage("Create or select a lineup block first.", true);
+  if (!block) return setDesignerMessage("Create or select a repeated block first.", true);
   if (!block.geometry || !Number.isInteger(block.pageIndex)) return setDesignerMessage("Place the first and last rows for this block before adding columns.", true);
   if (state.designerPageNumber - 1 !== block.pageIndex) {
     state.designerPageNumber = block.pageIndex + 1;
-    renderDesignerPage().catch(() => setDesignerMessage("The lineup block page could not be rendered.", true));
+    renderDesignerPage().catch(() => setDesignerMessage("The repeated block page could not be rendered.", true));
   }
   const size = Number(elements.designerColumnFontSize.value);
   if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Column font size must be between 1 and 144 points.", true);
   const field = elements.designerColumnField.value;
   const definition = getFieldDefinition(field);
-  if (!definition || definition.cardinality !== "repeated" || definition.collection !== block.collection) return setDesignerMessage("Choose a lineup field that belongs to the selected block.", true);
+  if (!definition || definition.cardinality !== "repeated" || definition.collection !== block.collection) return setDesignerMessage("Choose a field that belongs to the selected block.", true);
   setDesignerPlacement({ mode: "blockColumn", blockId: block.id });
   setDesignerMessage(`Click the X anchor for ${designerFieldLabel(field)}. The row baselines already come from the block geometry.`);
 }
@@ -1287,7 +1289,7 @@ async function handleDesignerStageClick(event) {
   }
 
   if (placement.mode === "blockColumn") {
-    if (state.designerPageNumber - 1 !== block.pageIndex) return setDesignerMessage("Place lineup columns on the block's PDF page.", true);
+    if (state.designerPageNumber - 1 !== block.pageIndex) return setDesignerMessage("Place collection columns on the block's PDF page.", true);
     const field = elements.designerColumnField.value;
     const alignment = ["left", "center", "right"].includes(elements.designerColumnAlignment.value) ? elements.designerColumnAlignment.value : "left";
     const column = {
@@ -1308,11 +1310,11 @@ async function handleDesignerStageClick(event) {
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerBlockList();
-      setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned lineup column.`);
+      setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned collection column.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
     } catch (error) {
-      setDesignerMessage(errorMessage(error, "The lineup column could not be saved."), true);
+      setDesignerMessage(errorMessage(error, "The collection column could not be saved."), true);
     }
   }
 }
@@ -1514,18 +1516,18 @@ async function deleteDesignerBlockColumn(blockId, columnId) {
     await saveLayout(layout);
     renderDesignerOverlay();
     renderDesignerBlockList();
-    setDesignerMessage("Lineup column deleted.");
+    setDesignerMessage("Collection column deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
   } catch (error) {
-    setDesignerMessage(errorMessage(error, "The lineup column could not be deleted."), true);
+    setDesignerMessage(errorMessage(error, "The collection column could not be deleted."), true);
   }
 }
 
 async function deleteSelectedDesignerBlock() {
   const layout = selectedLayout();
   const block = selectedDesignerBlock();
-  if (!layout || !block) return setDesignerMessage("Select a lineup block first.", true);
+  if (!layout || !block) return setDesignerMessage("Select a repeated block first.", true);
   if (!window.confirm(`Delete the ${blockLabel(block)} and all of its columns?`)) return;
   layout.repeatedBlocks = (layout.repeatedBlocks || []).filter((item) => item.id !== block.id);
   layout.updatedAt = new Date().toISOString();
@@ -1536,11 +1538,11 @@ async function deleteSelectedDesignerBlock() {
     syncDesignerBlockControls();
     renderDesignerOverlay();
     renderDesignerBlockList();
-    setDesignerMessage("Lineup block deleted.");
+    setDesignerMessage("Repeated block deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
   } catch (error) {
-    setDesignerMessage(errorMessage(error, "The lineup block could not be deleted."), true);
+    setDesignerMessage(errorMessage(error, "The repeated block could not be deleted."), true);
   }
 }
 
@@ -1552,7 +1554,7 @@ function populateDesignerBlockSelect(preferredId = null) {
   if (!blocks.length) {
     const option = document.createElement("option");
     option.value = "";
-    option.textContent = "No lineup blocks";
+    option.textContent = "No repeated blocks";
     elements.designerBlockSelect.append(option);
     elements.designerBlockSelect.disabled = true;
     return;
@@ -1569,13 +1571,12 @@ function populateDesignerBlockSelect(preferredId = null) {
 
 function populateDesignerColumnFieldSelect() {
   const block = selectedDesignerBlock();
-  const side = block?.collection?.startsWith("home.") ? "home" : block?.collection?.startsWith("away.") ? "away" : (elements.designerLineupSide.value === "home" ? "home" : "away");
-  const collection = `${side}.lineup`;
+  const collection = block?.collection || String(elements.designerLineupSide.value || "away.lineup");
   elements.designerColumnField.replaceChildren();
   for (const definition of getSupportedFields({ cardinality: "repeated", collection })) {
     const option = document.createElement("option");
     option.value = definition.id;
-    option.textContent = definition.label.replace(/^(Away|Home) Lineup — /, "");
+    option.textContent = definition.label.replace(/^(Away|Home) (Lineup|Bench|Bullpen) — /, "");
     elements.designerColumnField.append(option);
   }
 }
@@ -1587,7 +1588,7 @@ function syncDesignerBlockControls() {
   elements.designerPlaceColumnButton.disabled = disabled;
   elements.designerDeleteBlockButton.disabled = disabled;
   if (block) {
-    elements.designerLineupSide.value = block.collection.startsWith("home.") ? "home" : "away";
+    elements.designerLineupSide.value = block.collection;
     elements.designerLineupCapacity.value = block.capacity;
   }
   populateDesignerColumnFieldSelect();
@@ -1603,7 +1604,15 @@ function findDesignerBlock(id) {
 }
 
 function blockLabel(block) {
-  return block?.collection === "home.lineup" ? "Home starting lineup" : "Away starting lineup";
+  const labels = {
+    "away.lineup": "Away starting lineup",
+    "home.lineup": "Home starting lineup",
+    "away.bench": "Away bench",
+    "home.bench": "Home bench",
+    "away.bullpen": "Away bullpen",
+    "home.bullpen": "Home bullpen"
+  };
+  return labels[block?.collection] || String(block?.collection || "Repeated block");
 }
 
 function ensureRepeatedBlockIds(layout) {
@@ -1707,12 +1716,16 @@ const DESIGNER_SAMPLE_MODEL = {
   away: {
     team: { name: "Tampa Bay Devil Rays", locationName: "St. Petersburg", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB", record: { wins: 78, losses: 64, pct: 0.549 } },
     manager: { name: "Kevin Cash" }, startingPitcher: { player: { name: "Shane Baz" } },
-    lineup: sampleLineup(["Yandy Díaz", "Brandon Lowe", "Junior Caminero", "Jonathan Aranda", "Josh Lowe", "Christopher Morel", "Jake Mangum", "Nick Fortes", "Taylor Walls"], ["1B", "2B", "3B", "DH", "RF", "LF", "CF", "C", "SS"], ["R", "L", "R", "L", "L", "R", "S", "R", "S"])
+    lineup: sampleLineup(["Yandy Díaz", "Brandon Lowe", "Junior Caminero", "Jonathan Aranda", "Josh Lowe", "Christopher Morel", "Jake Mangum", "Nick Fortes", "Taylor Walls"], ["1B", "2B", "3B", "DH", "RF", "LF", "CF", "C", "SS"], ["R", "L", "R", "L", "L", "R", "S", "R", "S"]),
+    bench: sampleBench(["Kameron Misner", "José Caballero", "Ben Rortvedt", "Curtis Mead"], ["OF", "IF", "C", "IF"], ["L", "R", "L", "R"]),
+    bullpen: sampleBullpen(["Pete Fairbanks", "Garrett Cleavinger", "Mason Montgomery", "Edwin Uceta", "Kevin Kelly", "Manuel Rodríguez"], ["R", "L", "L", "R", "R", "R"])
   },
   home: {
     team: { name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA", record: { wins: 81, losses: 61, pct: 0.570 } },
     manager: { name: "Dan Wilson" }, startingPitcher: { player: { name: "Logan Gilbert" } },
-    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "RF"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"])
+    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "RF"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"]),
+    bench: sampleBench(["Mitch Garver", "Leo Rivas", "Luke Raley", "Austin Shenton"], ["C", "IF", "OF", "IF"], ["R", "S", "L", "L"]),
+    bullpen: sampleBullpen(["Andrés Muñoz", "Matt Brash", "Gabe Speier", "Eduard Bazardo", "Carlos Vargas", "Casey Legumina"], ["R", "R", "L", "R", "R", "R"])
   }
 };
 
@@ -1722,6 +1735,22 @@ function sampleLineup(names, positions, bats) {
     player: { id: 1000 + index, name, number: String(index + 1), bats: bats[index] },
     position: { abbreviation: positions[index] },
     stats: { avg: .250 + index / 1000, obp: .325 + index / 1000, slg: .410 + index / 1000, ops: .735 + index / 1000, homeRuns: 8 + index, rbi: 40 + index * 3 }
+  }));
+}
+
+function sampleBench(names, positions, bats) {
+  return names.map((name, index) => ({
+    player: { id: 2000 + index, name, number: String(20 + index), bats: bats[index] },
+    position: { abbreviation: positions[index] },
+    stats: { avg: .238 + index / 1000, obp: .310 + index / 1000, slg: .390 + index / 1000, ops: .700 + index / 1000, homeRuns: 4 + index, rbi: 18 + index * 4 }
+  }));
+}
+
+function sampleBullpen(names, throws) {
+  return names.map((name, index) => ({
+    player: { id: 3000 + index, name, number: String(30 + index), throws: throws[index] },
+    position: { abbreviation: "P" },
+    stats: { wins: 2 + index, losses: 1 + (index % 3), era: 2.35 + index / 10, whip: 1.02 + index / 100, inningsPitched: `${42 + index}.1`, strikeouts: 48 + index * 5, saves: index === 0 ? 31 : 0, holds: index === 0 ? 0 : 6 + index }
   }));
 }
 
@@ -1747,7 +1776,7 @@ async function generateTestPdf() {
   if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
   const mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
   const repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
-  if (!mappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar field or lineup column before generating a PDF.", true);
+  if (!mappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar field or repeated-block column before generating a PDF.", true);
   if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load a game first.", true);
   if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
 
@@ -1798,7 +1827,7 @@ async function generateTestPdf() {
         const yPercent = 1 - (y / height);
         for (const column of block.columns || []) {
           const definition = getFieldDefinition(column.field);
-          if (!definition || definition.collection !== block.collection) { skipped.push(column.field || "lineup column"); continue; }
+          if (!definition || definition.collection !== block.collection) { skipped.push(column.field || "repeated column"); continue; }
           const resolution = resolveField(model, column.field, { slot: rowIndex + 1 });
           const text = formatFieldValue(definition, resolution, model);
           if (!text) {

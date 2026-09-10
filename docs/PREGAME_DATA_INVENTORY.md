@@ -414,7 +414,7 @@ the design basis for Build 010 and later v0.2.0 work.
 7. **Templates remain allowlisted and dependency-aware.** They reference
    registry fields, never arbitrary JavaScript, and their referenced fields
    participate in lazy hydration planning. A template editor/parser is deferred
-   from Build 010, tentatively to Build 012. Future optional/smart punctuation
+   from Build 010, tentatively after the repeated-collection geometry work. Future optional/smart punctuation
    behavior should prevent empty parentheses, dangling separators, and similar
    artifacts when values are missing.
 8. **Overflow must be visible.** Scorecard Studio must not silently discard
@@ -521,3 +521,15 @@ treating every handwritten value as something available before the game.
 
 
 Build 008 browser testing further refined this inventory using the Game Day view, Team Coaches API, Standings API, and historical-date selection.
+
+
+### Collection geometry note (post-Build 011)
+
+Build 011 acceptance confirms the repeated-block data model can be reused across
+starting lineup, bench, and bullpen collections. Future layout geometry should
+remain independent of collection type. The same collection may need to render as
+a vertical list, horizontal list, configurable grid, or individually placed
+items/roles depending on the scorecard design. This also covers role-oriented
+diagrams, such as individually placed umpire assignments or lineup players placed
+at defensive positions. These are future placement capabilities, not new pregame
+data requirements.

@@ -645,7 +645,7 @@ acceptance requirements are in
 - Do not modify README.md as part of this build's documentation work.
 
 
-### Build 010 — Repeated Block Foundation + Starting Lineups — IMPLEMENTED; ACCEPTANCE PENDING
+### Build 010 — Repeated Block Foundation + Starting Lineups — COMPLETE
 
 Build 010 establishes the reusable repeated-block architecture, using starting
 lineups as the first implementation. It should not create nine unrelated copies
@@ -684,7 +684,70 @@ Implementation notes for Build 010:
 - Generation resolves each repeated field by a 1-based slot selector, leaves unused capacity blank, and visibly reports players beyond capacity.
 - The normalized lineup preserves posted orders longer than nine rows instead of truncating them.
 - Scalar and repeated column records now reserve `content: { type: "field", field: ... }` semantics so a later `type: "template"` can fit the same placement model without implementing template parsing in Build 010.
-- Local and Online browser acceptance remain required before calling Build 010 complete.
+- Local browser acceptance validated multiple row/column combinations and mixed alignments; generated rows and columns matched the intended PDF geometry. Build 010 was accepted and committed on September 10, 2026.
+
+### Build 011 — Variable-Length Bench + Bullpen Blocks — COMPLETE
+
+Build 011 proves that the Build 010 repeated-block architecture is collection-
+agnostic by extending it to the variable-length Away/Home bench and bullpen.
+It deliberately preserves the same stored `repeatedBlocks` schema and the same
+first/last-row geometry, per-column X placement, point-size, alignment, slot
+resolution, blank-row, and overflow behavior already accepted for lineups.
+
+- The Designer collection selector now offers Away/Home starting lineup, bench,
+  and bullpen blocks.
+- Bench columns expose jersey number, player name, position, bats, AVG, OBP,
+  SLG, OPS, HR, and RBI.
+- Bullpen columns expose jersey number, pitcher name, throws, wins, losses, ERA,
+  WHIP, innings pitched, strikeouts, saves, and holds.
+- Capacity remains layout-defined from 1 through 30 and is not inferred from the
+  currently selected game.
+- Existing Build 010 lineup blocks require no migration and retain their stored
+  collection IDs, geometry, columns, and alignment semantics.
+- Bench membership excludes posted lineup players; bullpen membership excludes
+  the selected starter, using the normalized collections already established in
+  Build 009/010.
+- Fewer available members than layout capacity is normal: populated slots render
+  and the unused slots remain blank. This is not an error condition.
+- Members beyond capacity produce an explicit overflow notice; extra members do
+  not alter spacing, create pages, or silently replace mapped slots.
+- Horizontal/grid geometry, continuation blocks, custom sorting, composite/free-
+  text templates, and broader formatting controls remain outside Build 011.
+
+Browser acceptance completed September 10, 2026. Existing Build 010 lineup
+blocks remained correct; multiple bench/bullpen capacities and mixed alignments
+generated correctly; under-capacity blocks left unused slots blank; over-capacity
+blocks generated correctly and reported overflow. The current generation-status
+message is functional but easy to miss when the browser file-save dialog opens.
+Future UX should separate successful generation from warnings, preferably with a
+post-generation dialog/toast that summarizes unavailable values and overflow in
+plain language.
+
+### Future collection placement geometry
+
+Repeated collection data must not be tied to one visual arrangement. A scorecard
+may present the same collection vertically, horizontally, in a grid, or as
+individually placed items. The long-term Designer should therefore ask how a
+collection should be arranged rather than assuming a collection-specific layout.
+Candidate user-facing modes are:
+
+- **Vertical list** — the current 1-column repeated-block behavior.
+- **Horizontal list** — repeated items distributed across one row.
+- **Grid** — configurable rows and columns (for example 2 x 2, 1 x 4, or 4 x 1).
+- **Individual placement** — each item/role receives its own independent anchor.
+
+These are geometry choices, separate from the field columns rendered inside each
+item slot. A grid slot might itself contain jersey number, name, and position as
+independently aligned fields. Individual placement may also be role-based rather
+than ordinal: examples include placing umpire roles at distinct labeled locations
+or placing starting players at their defensive positions on a field diagram.
+No collection should be permanently assigned to one of these modes.
+
+Build 012 is tentatively the geometry step, beginning with reusable horizontal
+and grid placement on top of the accepted repeated-block engine. Individual/role-
+based placement should remain compatible with that architecture and can be added
+when its UX and selector semantics are sufficiently defined. Composite/free-text
+templates follow after the geometry foundation.
 
 ### Planned composite / free-text template architecture
 
@@ -705,7 +768,7 @@ planning as ordinary fields. Arbitrary JavaScript is never allowed.
 
 Build 010 should reserve compatible content/mapping semantics for templates but
 should not implement the template editor/parser. That work is tentatively
-planned for Build 012. Future template behavior should support optional or smart
+planned after the collection-geometry work (currently Build 013). Future template behavior should support optional or smart
 punctuation groups so missing values do not leave artifacts such as empty
 parentheses or dangling separators.
 

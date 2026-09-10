@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Canonical pregame field registry
  * Version: 0.2.0-dev
- * Build: 010
+ * Build: 011
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
@@ -64,7 +64,46 @@ const lineupFields = ["away", "home"].flatMap((side) => {
   ];
 });
 
-export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields, ...lineupFields].map((entry, index) => Object.freeze({
+const benchFields = ["away", "home"].flatMap((side) => {
+  const label = SIDE_LABEL[side];
+  const collection = `${side}.bench`;
+  const category = `${label} / Bench`;
+  return [
+    repeatedField(`${side}.bench[].player.number`, `${label} Bench — Jersey #`, category, "text", collection, "player.number"),
+    repeatedField(`${side}.bench[].player.name`, `${label} Bench — Player Name`, category, "text", collection, "player.name"),
+    repeatedField(`${side}.bench[].position.abbreviation`, `${label} Bench — Position`, category, "text", collection, "position.abbreviation"),
+    repeatedField(`${side}.bench[].player.bats`, `${label} Bench — Bats`, category, "text", collection, "player.bats"),
+    repeatedField(`${side}.bench[].stats.avg`, `${label} Bench — AVG`, category, "decimal", collection, "stats.avg", { precision: 3 }),
+    repeatedField(`${side}.bench[].stats.obp`, `${label} Bench — OBP`, category, "decimal", collection, "stats.obp", { precision: 3 }),
+    repeatedField(`${side}.bench[].stats.slg`, `${label} Bench — SLG`, category, "decimal", collection, "stats.slg", { precision: 3 }),
+    repeatedField(`${side}.bench[].stats.ops`, `${label} Bench — OPS`, category, "decimal", collection, "stats.ops", { precision: 3 }),
+    repeatedField(`${side}.bench[].stats.homeRuns`, `${label} Bench — HR`, category, "integer", collection, "stats.homeRuns"),
+    repeatedField(`${side}.bench[].stats.rbi`, `${label} Bench — RBI`, category, "integer", collection, "stats.rbi")
+  ];
+});
+
+const bullpenFields = ["away", "home"].flatMap((side) => {
+  const label = SIDE_LABEL[side];
+  const collection = `${side}.bullpen`;
+  const category = `${label} / Bullpen`;
+  return [
+    repeatedField(`${side}.bullpen[].player.number`, `${label} Bullpen — Jersey #`, category, "text", collection, "player.number"),
+    repeatedField(`${side}.bullpen[].player.name`, `${label} Bullpen — Pitcher Name`, category, "text", collection, "player.name"),
+    repeatedField(`${side}.bullpen[].player.throws`, `${label} Bullpen — Throws`, category, "text", collection, "player.throws"),
+    repeatedField(`${side}.bullpen[].stats.wins`, `${label} Bullpen — Wins`, category, "integer", collection, "stats.wins"),
+    repeatedField(`${side}.bullpen[].stats.losses`, `${label} Bullpen — Losses`, category, "integer", collection, "stats.losses"),
+    repeatedField(`${side}.bullpen[].stats.era`, `${label} Bullpen — ERA`, category, "decimal", collection, "stats.era", { precision: 2 }),
+    repeatedField(`${side}.bullpen[].stats.whip`, `${label} Bullpen — WHIP`, category, "decimal", collection, "stats.whip", { precision: 2 }),
+    repeatedField(`${side}.bullpen[].stats.inningsPitched`, `${label} Bullpen — IP`, category, "text", collection, "stats.inningsPitched"),
+    repeatedField(`${side}.bullpen[].stats.strikeouts`, `${label} Bullpen — SO`, category, "integer", collection, "stats.strikeouts"),
+    repeatedField(`${side}.bullpen[].stats.saves`, `${label} Bullpen — Saves`, category, "integer", collection, "stats.saves"),
+    repeatedField(`${side}.bullpen[].stats.holds`, `${label} Bullpen — Holds`, category, "integer", collection, "stats.holds")
+  ];
+});
+
+const repeatedFields = [...lineupFields, ...benchFields, ...bullpenFields];
+
+export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields, ...repeatedFields].map((entry, index) => Object.freeze({
   ...entry,
   order: index + 1,
   availability: "supported",
@@ -72,7 +111,7 @@ export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields, ...li
 })));
 
 const byId = new Map(FIELD_REGISTRY.map((entry) => [entry.id, entry]));
-const supportedCollections = new Set(lineupFields.map((entry) => entry.collection));
+const supportedCollections = new Set(repeatedFields.map((entry) => entry.collection));
 
 export function canonicalFieldId(fieldId) {
   return LEGACY_ALIASES.get(fieldId) || fieldId;

@@ -1,6 +1,6 @@
 # Scorecard Studio — Field Registry
 
-Status: Build 010 active contract. Build 009 scalar registry is accepted; Build 010 adds the starting-lineup repeated-field slice and repeated-block placement foundation. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
+Status: Build 011 accepted contract. Build 009 scalar registry, Build 010 lineup repeated-block foundation, and Build 011 variable-length bench/bullpen repeated-field slices are accepted. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
 
 ## 1. Authority and evidence
 
@@ -293,3 +293,59 @@ Existing scalar `baseline-left` mappings retain their exact coordinates and outp
 The normalized starting-lineup adapter must preserve orders longer than nine when the feed supplies them. It still supplies nine placeholder slots when no longer order is present so MLB lineup gaps remain positionally stable.
 
 Custom free-text/composite templates remain deferred. Build 010 only reserves placement content semantics compatible with a later allowlisted, dependency-aware template parser.
+
+## 11. Build 011 bench and bullpen repeated-block slice
+
+Build 011 extends the accepted Build 010 repeated-block implementation without
+changing its stored schema or geometry semantics. Supported collections are now
+`away.lineup`, `home.lineup`, `away.bench`, `home.bench`, `away.bullpen`, and
+`home.bullpen`. All use validated 1-based `{ slot }` selectors and layout-defined
+capacity.
+
+Bench fields implemented per side: `player.number`, `player.name`,
+`position.abbreviation`, `player.bats`, `stats.avg`, `stats.obp`, `stats.slg`,
+`stats.ops`, `stats.homeRuns`, and `stats.rbi`. These are Game Pack-native
+batting-context values from the normalized bench collection.
+
+Bullpen fields implemented per side: `player.number`, `player.name`,
+`player.throws`, `stats.wins`, `stats.losses`, `stats.era`, `stats.whip`,
+`stats.inningsPitched`, `stats.strikeouts`, `stats.saves`, and `stats.holds`.
+These are Game Pack-native pitching-context values from the normalized bullpen
+collection.
+
+Membership/order semantics remain those established earlier: bench uses the
+pregame boxscore bench list, deduplicated by player ID and excluding posted
+lineup members; bullpen uses the pregame boxscore bullpen list, deduplicated and
+excluding the selected probable starter. Source order is preserved. A missing
+collection renders no players; it is not filled by guessing from current roster
+subtraction or completed-game usage.
+
+The accepted first/last-row baseline workflow, physical PDF-point row spacing,
+per-column left/center/right anchors, blank unused rows, and explicit overflow
+warning all apply unchanged. Existing Build 010 lineup blocks require no
+migration. Grids, horizontal repetition, continuation blocks, custom ordering,
+and free-text/composite templates remain deferred.
+
+
+
+## 12. Future repeated-collection geometry
+
+Collection identity and visual geometry are separate concerns. No repeated
+collection is permanently defined as a column, row, grid, or individually placed
+set. Future Designer geometry should support, where appropriate:
+
+- vertical list;
+- horizontal list;
+- configurable row x column grid;
+- individual placement of each ordinal slot or semantic role.
+
+The fields rendered inside an item slot remain independent of the slot geometry.
+For example, a grid cell can still contain multiple aligned fields. Individual
+placement must leave room for semantic selectors in addition to ordinal selectors,
+so role-based layouts can map distinct umpire positions or defensive positions
+without pretending they are merely a fixed list order.
+
+Under-capacity repeated collections are normal and render blank unused slots.
+Only over-capacity membership is a warning condition. Future generation UX should
+surface overflow clearly after the file-generation interaction rather than rely
+on a page message that may be obscured by the browser save dialog.

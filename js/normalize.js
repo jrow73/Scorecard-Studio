@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 010
+ * Build: 011
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
