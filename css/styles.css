@@ -1065,3 +1065,24 @@ button { font: inherit; }
   left: 100%;
   transform: translateX(-50%);
 }
+
+/* Build 012: generalized repeated-block slot geometry */
+#designer-grid-dimensions[hidden], #designer-capacity-wrap[hidden] { display: none !important; }
+.repeated-slot-guide {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border: 1px dashed rgba(37, 99, 235, .65);
+  border-radius: 50%;
+  background: rgba(219, 234, 254, .22);
+  pointer-events: none;
+}
+.repeated-slot-guide::before,
+.repeated-slot-guide::after {
+  content: "";
+  position: absolute;
+  background: rgba(37, 99, 235, .55);
+}
+.repeated-slot-guide::before { left: 50%; top: -4px; bottom: -4px; width: 1px; transform: translateX(-50%); }
+.repeated-slot-guide::after { top: 50%; left: -4px; right: -4px; height: 1px; transform: translateY(-50%); }

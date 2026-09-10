@@ -743,11 +743,13 @@ than ordinal: examples include placing umpire roles at distinct labeled location
 or placing starting players at their defensive positions on a field diagram.
 No collection should be permanently assigned to one of these modes.
 
-Build 012 is tentatively the geometry step, beginning with reusable horizontal
-and grid placement on top of the accepted repeated-block engine. Individual/role-
-based placement should remain compatible with that architecture and can be added
-when its UX and selector semantics are sufficiently defined. Composite/free-text
-templates follow after the geometry foundation.
+Build 012 implements the geometry step with reusable vertical, horizontal, and
+grid placement on top of the accepted repeated-block engine. New repeated blocks
+use generalized slot geometry; fields are placed once relative to slot 1 and are
+repeated through all slots. Individual/role-based placement remains compatible
+with the architecture but is deliberately deferred until its UX and selector
+semantics are sufficiently defined. Composite/free-text templates follow after
+the geometry foundation.
 
 ### Planned composite / free-text template architecture
 
@@ -897,3 +899,17 @@ acceptance and final PDF placement testing were completed successfully.
 - Zoom changes only the rendered Designer PDF and its overlays; layout mappings remain stored in PDF-relative coordinates and generated output is unaffected.
 - Enlarged PDF pages scroll within their own viewport and zoom persists across page changes in the Designer session.
 - Advanced zoom gestures and broader Designer UX polish remain deferred.
+
+
+## Build 012 — Repeated Block Geometry
+- Generalizes repeated collections from vertical-only lists to vertical lists, horizontal lists, and configurable row-by-column grids.
+- Treats vertical and horizontal lists as special cases of slot geometry (`N x 1` and `1 x N`).
+- New block geometry stores first/last slot origins plus row/column spacing in PDF points.
+- Grid/list slot order is row-major: left-to-right, then top-to-bottom.
+- Existing per-slot fields retain independent font size and left/center/right alignment.
+- Fields are mapped against slot 1 and repeated using a slot-relative X offset.
+- Existing Build 010/011 vertical blocks remain backwards compatible and do not require migration.
+- Re-geometrizing a legacy block converts its existing absolute field X anchors into relative offsets to preserve placement.
+- Individual/free and role-based placement remain future geometry modes; no collection is assigned a mandatory layout geometry.
+- Composite/free-text templates remain deferred until after geometry.
+- Known Layout Designer UI cleanup items, including the post-generation stretched-DOM issue, remain deferred until the Designer feature set is further along.

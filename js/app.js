@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 011.1
+ * Build: 012
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=011";
-import { normalizePregameData } from "./normalize.js?v=011";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=011";
-import { formatFieldValue } from "./formatter.js?v=011";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=012";
+import { normalizePregameData } from "./normalize.js?v=012";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=012";
+import { formatFieldValue } from "./formatter.js?v=012";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=011";
+} from "./storage.js?v=012";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -125,6 +125,11 @@ const elements = {
   designerBlockCount: document.querySelector("#designer-block-count"),
   designerLineupSide: document.querySelector("#designer-lineup-side"),
   designerLineupCapacity: document.querySelector("#designer-lineup-capacity"),
+  designerBlockArrangement: document.querySelector("#designer-block-arrangement"),
+  designerCapacityWrap: document.querySelector("#designer-capacity-wrap"),
+  designerGridDimensions: document.querySelector("#designer-grid-dimensions"),
+  designerGridRows: document.querySelector("#designer-grid-rows"),
+  designerGridColumns: document.querySelector("#designer-grid-columns"),
   designerCreateBlockButton: document.querySelector("#designer-create-block-btn"),
   designerBlockSelect: document.querySelector("#designer-block-select"),
   designerPlaceRowsButton: document.querySelector("#designer-place-rows-btn"),
@@ -186,6 +191,7 @@ async function initialize() {
   elements.designerCreateBlockButton.addEventListener("click", createDesignerRepeatedBlock);
   elements.designerBlockSelect.addEventListener("change", syncDesignerBlockControls);
   elements.designerLineupSide.addEventListener("change", populateDesignerColumnFieldSelect);
+  elements.designerBlockArrangement.addEventListener("change", syncDesignerArrangementInputs);
   elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
   elements.designerPlaceColumnButton.addEventListener("click", beginDesignerBlockColumnPlacement);
   elements.designerDeleteBlockButton.addEventListener("click", deleteSelectedDesignerBlock);
@@ -1162,8 +1168,26 @@ function beginDesignerPlacement() {
 async function createDesignerRepeatedBlock() {
   const layout = selectedLayout();
   if (!layout) return setDesignerMessage("Open a layout first.", true);
-  const capacity = Number(elements.designerLineupCapacity.value);
-  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return setDesignerMessage("Block capacity must be a whole number from 1 through 30.", true);
+  const arrangement = ["vertical", "horizontal", "grid"].includes(elements.designerBlockArrangement.value)
+    ? elements.designerBlockArrangement.value : "vertical";
+  let rows;
+  let columns;
+  if (arrangement === "grid") {
+    rows = Number(elements.designerGridRows.value);
+    columns = Number(elements.designerGridColumns.value);
+    if (!Number.isInteger(rows) || rows < 1 || rows > 30 || !Number.isInteger(columns) || columns < 1 || columns > 30) {
+      return setDesignerMessage("Grid rows and columns must each be whole numbers from 1 through 30.", true);
+    }
+    if (rows * columns > 30) return setDesignerMessage("A repeated block may contain at most 30 slots.", true);
+  } else {
+    const slotCount = Number(elements.designerLineupCapacity.value);
+    if (!Number.isInteger(slotCount) || slotCount < 1 || slotCount > 30) {
+      return setDesignerMessage("Number of slots must be a whole number from 1 through 30.", true);
+    }
+    rows = arrangement === "vertical" ? slotCount : 1;
+    columns = arrangement === "horizontal" ? slotCount : 1;
+  }
+  const capacity = rows * columns;
   const requestedCollection = String(elements.designerLineupSide.value || "away.lineup");
   const supportedCollections = new Set(["away.lineup", "home.lineup", "away.bench", "home.bench", "away.bullpen", "home.bullpen"]);
   const collection = supportedCollections.has(requestedCollection) ? requestedCollection : "away.lineup";
@@ -1172,20 +1196,23 @@ async function createDesignerRepeatedBlock() {
     type: "repeated",
     collection,
     capacity,
+    arrangement,
+    slotRows: rows,
+    slotColumns: columns,
     pageIndex: null,
     geometry: null,
     columns: []
   };
   layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
   layout.repeatedBlocks.push(block);
-  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 4);
   layout.updatedAt = new Date().toISOString();
   try {
     await saveLayout(layout);
     populateDesignerBlockSelect(block.id);
     syncDesignerBlockControls();
     renderDesignerBlockList();
-    setDesignerMessage(`Created ${blockLabel(block)} with ${capacity} rows. Place its first and last row baselines next.`);
+    setDesignerMessage(`Created ${blockLabel(block)} with ${capacity} slots in a ${blockArrangementLabel(block)}. Place its outer slot anchors next.`);
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
   } catch (error) {
@@ -1196,15 +1223,17 @@ async function createDesignerRepeatedBlock() {
 function beginDesignerBlockGeometryPlacement() {
   const block = selectedDesignerBlock();
   if (!block) return setDesignerMessage("Create or select a repeated block first.", true);
-  if (block.capacity < 2) return setDesignerMessage("A repeated block needs at least two rows to infer spacing from first and last rows.", true);
+  if (block.capacity < 2) return setDesignerMessage("A repeated block needs at least two slots to infer spacing from its outer anchors.", true);
+  const { rows, columns } = blockDimensions(block);
   setDesignerPlacement({ mode: "blockGeometryFirst", blockId: block.id });
-  setDesignerMessage(`Click the baseline for row 1 of the ${blockLabel(block)}.`);
+  if (rows > 1 && columns > 1) setDesignerMessage(`Click the baseline origin for slot 1 (top-left) of the ${blockLabel(block)} grid.`);
+  else setDesignerMessage(`Click the baseline origin for slot 1 of the ${blockLabel(block)}.`);
 }
 
 function beginDesignerBlockColumnPlacement() {
   const block = selectedDesignerBlock();
   if (!block) return setDesignerMessage("Create or select a repeated block first.", true);
-  if (!block.geometry || !Number.isInteger(block.pageIndex)) return setDesignerMessage("Place the first and last rows for this block before adding columns.", true);
+  if (!block.geometry || !Number.isInteger(block.pageIndex)) return setDesignerMessage("Place the block geometry before adding slot fields.", true);
   if (state.designerPageNumber - 1 !== block.pageIndex) {
     state.designerPageNumber = block.pageIndex + 1;
     renderDesignerPage().catch(() => setDesignerMessage("The repeated block page could not be rendered.", true));
@@ -1216,7 +1245,7 @@ function beginDesignerBlockColumnPlacement() {
   if (!definition || definition.cardinality !== "repeated" || definition.collection !== block.collection) return setDesignerMessage("Choose a field that belongs to the selected block.", true);
   const alignment = ["left", "center", "right"].includes(elements.designerColumnAlignment.value) ? elements.designerColumnAlignment.value : "left";
   setDesignerPlacement({ mode: "blockColumn", blockId: block.id, field, fontSize: size, alignment });
-  setDesignerMessage(`Click the ${alignment}-alignment X anchor for ${designerFieldLabel(field)}. The row baselines already come from the block geometry.`);
+  setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} in slot 1. Scorecard Studio will repeat that offset through the block.`);
 }
 
 async function handleDesignerStageClick(event) {
@@ -1264,41 +1293,64 @@ async function handleDesignerStageClick(event) {
   if (!block) return cancelDesignerPlacement();
 
   if (placement.mode === "blockGeometryFirst") {
-    state.designerPlacement = { mode: "blockGeometryLast", blockId: block.id, pageIndex: state.designerPageNumber - 1, firstYPercent: yPercent };
-    setDesignerMessage(`First row set. Click the baseline for row ${block.capacity} on the same PDF page.`);
+    const { rows, columns } = blockDimensions(block);
+    state.designerPlacement = {
+      mode: "blockGeometryLast",
+      blockId: block.id,
+      pageIndex: state.designerPageNumber - 1,
+      firstXPercent: xPercent,
+      firstYPercent: yPercent
+    };
+    if (rows > 1 && columns > 1) setDesignerMessage(`First slot set. Click the baseline origin for slot ${block.capacity} (bottom-right) on the same PDF page.`);
+    else setDesignerMessage(`First slot set. Click the baseline origin for slot ${block.capacity} on the same PDF page.`);
     return;
   }
 
   if (placement.mode === "blockGeometryLast") {
-    if (state.designerPageNumber - 1 !== placement.pageIndex) return setDesignerMessage("The first and last row must be placed on the same PDF page.", true);
-    if (yPercent <= placement.firstYPercent) return setDesignerMessage("Place the last row below the first row so row order runs down the page.", true);
+    if (state.designerPageNumber - 1 !== placement.pageIndex) return setDesignerMessage("The outer slot anchors must be placed on the same PDF page.", true);
+    const { rows, columns } = blockDimensions(block);
+    if (rows > 1 && yPercent <= placement.firstYPercent) return setDesignerMessage("Place the final slot below the first slot.", true);
+    if (columns > 1 && xPercent <= placement.firstXPercent) return setDesignerMessage("Place the final slot to the right of the first slot.", true);
     const page = await state.designerPdfDocument.getPage(state.designerPageNumber);
-    const pageHeight = page.getViewport({ scale: 1 }).height;
+    const viewport = page.getViewport({ scale: 1 });
+    const lastXPercent = columns > 1 ? xPercent : placement.firstXPercent;
+    const lastYPercent = rows > 1 ? yPercent : placement.firstYPercent;
     block.pageIndex = placement.pageIndex;
+    const priorColumns = Array.isArray(block.columns) ? block.columns : [];
     block.geometry = {
-      direction: "vertical",
+      mode: "slot-grid-v1",
+      firstXPercent: placement.firstXPercent,
       firstYPercent: placement.firstYPercent,
-      lastYPercent: yPercent,
-      rowSpacingPoints: ((yPercent - placement.firstYPercent) * pageHeight) / (block.capacity - 1)
+      lastXPercent,
+      lastYPercent,
+      rowSpacingPoints: rows > 1 ? ((lastYPercent - placement.firstYPercent) * viewport.height) / (rows - 1) : 0,
+      columnSpacingPoints: columns > 1 ? ((lastXPercent - placement.firstXPercent) * viewport.width) / (columns - 1) : 0
     };
-    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+    // If a legacy vertical block is re-geometrized in Build 012, preserve its
+    // existing absolute column anchors by converting them to slot-relative offsets.
+    for (const column of priorColumns) {
+      if (!Number.isFinite(Number(column.xOffsetPoints)) && Number.isFinite(Number(column.xPercent))) {
+        column.xOffsetPoints = (Number(column.xPercent) - placement.firstXPercent) * viewport.width;
+      }
+    }
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 4);
     layout.updatedAt = new Date().toISOString();
     try {
       await saveLayout(layout);
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerBlockList();
-      setDesignerMessage(`Placed ${block.capacity} ${blockLabel(block)} rows with ${block.geometry.rowSpacingPoints.toFixed(2)} pt spacing.`);
+      setDesignerMessage(`Placed ${block.capacity} ${blockLabel(block)} slots as a ${blockArrangementLabel(block)}.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
     } catch (error) {
-      setDesignerMessage(errorMessage(error, "The repeated-row geometry could not be saved."), true);
+      setDesignerMessage(errorMessage(error, "The repeated-block geometry could not be saved."), true);
     }
     return;
   }
 
   if (placement.mode === "blockColumn") {
-    if (state.designerPageNumber - 1 !== block.pageIndex) return setDesignerMessage("Place collection columns on the block's PDF page.", true);
+    if (state.designerPageNumber - 1 !== block.pageIndex) return setDesignerMessage("Place slot fields on the block's PDF page.", true);
     const field = placement.field;
     const alignment = placement.alignment;
     const column = {
@@ -1310,20 +1362,25 @@ async function handleDesignerStageClick(event) {
       alignment,
       anchor: `baseline-${alignment}`
     };
+    if (isSlotGridGeometry(block)) {
+      const page = await state.designerPdfDocument.getPage(state.designerPageNumber);
+      const pageWidth = page.getViewport({ scale: 1 }).width;
+      column.xOffsetPoints = (xPercent - Number(block.geometry.firstXPercent || 0)) * pageWidth;
+    }
     block.columns = Array.isArray(block.columns) ? block.columns : [];
     block.columns.push(column);
-    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, isSlotGridGeometry(block) ? 4 : 3);
     layout.updatedAt = new Date().toISOString();
     try {
       await saveLayout(layout);
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerBlockList();
-      setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned collection column.`);
+      setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned repeated slot field.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
     } catch (error) {
-      setDesignerMessage(errorMessage(error, "The collection column could not be saved."), true);
+      setDesignerMessage(errorMessage(error, "The repeated slot field could not be saved."), true);
     }
   }
 }
@@ -1379,27 +1436,55 @@ function renderDesignerOverlay() {
     elements.designerOverlay.append(marker);
   });
 
-  const pageHeightPoints = elements.designerPdfCanvas.getBoundingClientRect().height / Math.max(state.designerRenderScale, .0001);
+  const canvasRect = elements.designerPdfCanvas.getBoundingClientRect();
+  const pageWidthPoints = canvasRect.width / Math.max(state.designerRenderScale, .0001);
+  const pageHeightPoints = canvasRect.height / Math.max(state.designerRenderScale, .0001);
   for (const block of layout.repeatedBlocks || []) {
     if (block.pageIndex !== state.designerPageNumber - 1 || !block.geometry) continue;
-    for (let rowIndex = 0; rowIndex < block.capacity; rowIndex += 1) {
-      const yPercent = repeatedRowYPercent(block, rowIndex, pageHeightPoints);
-      const guide = document.createElement("div");
-      guide.className = "repeated-row-guide";
-      guide.style.top = `${yPercent * 100}%`;
-      elements.designerOverlay.append(guide);
-      for (const column of block.columns || []) {
-        const marker = document.createElement("span");
-        const alignment = ["left", "center", "right"].includes(column.alignment) ? column.alignment : "left";
-        marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(column.field) ? "" : " unsupported"}`;
-        marker.style.left = `${column.xPercent * 100}%`;
-        marker.style.top = `${yPercent * 100}%`;
-        const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
-        marker.style.fontSize = `${previewFontPx}px`;
-        marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-        marker.textContent = designerFieldPreview(column.field, { slot: rowIndex + 1 });
-        marker.title = `${designerFieldLabel(column.field)} • row ${rowIndex + 1} • ${alignment}`;
-        elements.designerOverlay.append(marker);
+    if (isSlotGridGeometry(block)) {
+      for (let slotIndex = 0; slotIndex < block.capacity; slotIndex += 1) {
+        const slot = repeatedSlotPosition(block, slotIndex, pageWidthPoints, pageHeightPoints);
+        const guide = document.createElement("div");
+        guide.className = "repeated-slot-guide";
+        guide.style.left = `${slot.xPercent * 100}%`;
+        guide.style.top = `${slot.yPercent * 100}%`;
+        guide.title = `${blockLabel(block)} slot ${slotIndex + 1}`;
+        elements.designerOverlay.append(guide);
+        for (const column of block.columns || []) {
+          const marker = document.createElement("span");
+          const alignment = ["left", "center", "right"].includes(column.alignment) ? column.alignment : "left";
+          marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(column.field) ? "" : " unsupported"}`;
+          const anchorXPercent = slot.xPercent + ((Number(column.xOffsetPoints) || 0) / pageWidthPoints);
+          marker.style.left = `${anchorXPercent * 100}%`;
+          marker.style.top = `${slot.yPercent * 100}%`;
+          const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
+          marker.style.fontSize = `${previewFontPx}px`;
+          marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+          marker.textContent = designerFieldPreview(column.field, { slot: slotIndex + 1 });
+          marker.title = `${designerFieldLabel(column.field)} • slot ${slotIndex + 1} • ${alignment}`;
+          elements.designerOverlay.append(marker);
+        }
+      }
+    } else {
+      for (let rowIndex = 0; rowIndex < block.capacity; rowIndex += 1) {
+        const yPercent = repeatedRowYPercent(block, rowIndex, pageHeightPoints);
+        const guide = document.createElement("div");
+        guide.className = "repeated-row-guide";
+        guide.style.top = `${yPercent * 100}%`;
+        elements.designerOverlay.append(guide);
+        for (const column of block.columns || []) {
+          const marker = document.createElement("span");
+          const alignment = ["left", "center", "right"].includes(column.alignment) ? column.alignment : "left";
+          marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(column.field) ? "" : " unsupported"}`;
+          marker.style.left = `${column.xPercent * 100}%`;
+          marker.style.top = `${yPercent * 100}%`;
+          const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
+          marker.style.fontSize = `${previewFontPx}px`;
+          marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+          marker.textContent = designerFieldPreview(column.field, { slot: rowIndex + 1 });
+          marker.title = `${designerFieldLabel(column.field)} • row ${rowIndex + 1} • ${alignment}`;
+          elements.designerOverlay.append(marker);
+        }
       }
     }
   }
@@ -1452,11 +1537,17 @@ function renderDesignerBlockList() {
     const card = document.createElement("div");
     card.className = "designer-block-card";
     const strong = document.createElement("strong");
-    strong.textContent = `${blockLabel(block)} • ${block.capacity} rows`;
+    strong.textContent = `${blockLabel(block)} • ${block.capacity} slots • ${blockArrangementLabel(block)}`;
     const meta = document.createElement("span");
-    meta.textContent = block.geometry && Number.isInteger(block.pageIndex)
-      ? `Page ${block.pageIndex + 1} • ${block.geometry.rowSpacingPoints.toFixed(2)} pt row spacing • ${(block.columns || []).length} column(s)`
-      : `Row geometry not placed • ${(block.columns || []).length} column(s)`;
+    if (block.geometry && Number.isInteger(block.pageIndex)) {
+      if (isSlotGridGeometry(block)) {
+        const rowText = Number(block.geometry.rowSpacingPoints || 0).toFixed(2);
+        const columnText = Number(block.geometry.columnSpacingPoints || 0).toFixed(2);
+        meta.textContent = `Page ${block.pageIndex + 1} • row ${rowText} pt • column ${columnText} pt spacing • ${(block.columns || []).length} field(s)`;
+      } else {
+        meta.textContent = `Page ${block.pageIndex + 1} • ${Number(block.geometry.rowSpacingPoints || 0).toFixed(2)} pt row spacing • ${(block.columns || []).length} field(s) • legacy vertical`;
+      }
+    } else meta.textContent = `Geometry not placed • ${(block.columns || []).length} field(s)`;
     card.append(strong, meta);
     for (const column of block.columns || []) {
       const row = document.createElement("div");
@@ -1573,7 +1664,7 @@ function populateDesignerBlockSelect(preferredId = null) {
   blocks.forEach((block, index) => {
     const option = document.createElement("option");
     option.value = block.id;
-    option.textContent = `${blockLabel(block)} ${index + 1} • ${block.capacity} rows`;
+    option.textContent = `${blockLabel(block)} ${index + 1} • ${block.capacity} slots • ${blockArrangementLabel(block)}`;
     elements.designerBlockSelect.append(option);
   });
   if (blocks.some((block) => block.id === prior)) elements.designerBlockSelect.value = prior;
@@ -1598,10 +1689,23 @@ function syncDesignerBlockControls() {
   elements.designerPlaceColumnButton.disabled = disabled;
   elements.designerDeleteBlockButton.disabled = disabled;
   if (block) {
+    const { rows, columns } = blockDimensions(block);
     elements.designerLineupSide.value = block.collection;
+    elements.designerBlockArrangement.value = blockArrangement(block);
     elements.designerLineupCapacity.value = block.capacity;
-  }
+    elements.designerGridRows.value = rows;
+    elements.designerGridColumns.value = columns;
+    elements.designerPlaceRowsButton.textContent = rows > 1 && columns > 1 ? "Place Top-Left & Bottom-Right Slots" : "Place First & Last Slots";
+  } else elements.designerPlaceRowsButton.textContent = "Place First & Last Slots";
+  syncDesignerArrangementInputs();
   populateDesignerColumnFieldSelect();
+}
+
+function syncDesignerArrangementInputs() {
+  const arrangement = elements.designerBlockArrangement.value || "vertical";
+  const isGrid = arrangement === "grid";
+  elements.designerCapacityWrap.hidden = isGrid;
+  elements.designerGridDimensions.hidden = !isGrid;
 }
 
 function selectedDesignerBlock() {
@@ -1623,6 +1727,45 @@ function blockLabel(block) {
     "home.bullpen": "Home bullpen"
   };
   return labels[block?.collection] || String(block?.collection || "Repeated block");
+}
+
+function blockArrangement(block) {
+  if (["vertical", "horizontal", "grid"].includes(block?.arrangement)) return block.arrangement;
+  return "vertical";
+}
+
+function blockDimensions(block) {
+  const arrangement = blockArrangement(block);
+  const capacity = Math.max(1, Number(block?.capacity) || 1);
+  if (arrangement === "grid") {
+    const rows = Math.max(1, Number(block?.slotRows) || 1);
+    const columns = Math.max(1, Number(block?.slotColumns) || 1);
+    return { rows, columns };
+  }
+  if (arrangement === "horizontal") return { rows: 1, columns: capacity };
+  return { rows: capacity, columns: 1 };
+}
+
+function blockArrangementLabel(block) {
+  const { rows, columns } = blockDimensions(block);
+  if (rows === 1 && columns > 1) return `horizontal ${columns}-slot list`;
+  if (columns === 1 && rows > 1) return `vertical ${rows}-slot list`;
+  if (rows === 1 && columns === 1) return "single slot";
+  return `${rows} × ${columns} grid`;
+}
+
+function isSlotGridGeometry(block) {
+  return block?.geometry?.mode === "slot-grid-v1";
+}
+
+function repeatedSlotPosition(block, slotIndex, pageWidthPoints, pageHeightPoints) {
+  const { columns } = blockDimensions(block);
+  const rowIndex = Math.floor(slotIndex / columns);
+  const columnIndex = slotIndex % columns;
+  return {
+    xPercent: clamp(Number(block.geometry.firstXPercent || 0) + ((Number(block.geometry.columnSpacingPoints) || 0) * columnIndex / pageWidthPoints), 0, 1),
+    yPercent: clamp(Number(block.geometry.firstYPercent || 0) + ((Number(block.geometry.rowSpacingPoints) || 0) * rowIndex / pageHeightPoints), 0, 1)
+  };
 }
 
 function ensureRepeatedBlockIds(layout) {
@@ -1849,21 +1992,25 @@ async function generateTestPdf() {
       const page = pages[block.pageIndex];
       if (!page) { skipped.push(`${block.collection} block page`); continue; }
       if (collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
-      const { height } = page.getSize();
-      for (let rowIndex = 0; rowIndex < block.capacity; rowIndex += 1) {
-        const y = height * (1 - Number(block.geometry.firstYPercent || 0)) - (Number(block.geometry.rowSpacingPoints) || 0) * rowIndex;
-        const yPercent = 1 - (y / height);
+      const { width, height } = page.getSize();
+      for (let slotIndex = 0; slotIndex < block.capacity; slotIndex += 1) {
+        const slot = isSlotGridGeometry(block)
+          ? repeatedSlotPosition(block, slotIndex, width, height)
+          : { xPercent: null, yPercent: repeatedRowYPercent(block, slotIndex, height) };
         for (const column of block.columns || []) {
           const definition = getFieldDefinition(column.field);
-          if (!definition || definition.collection !== block.collection) { skipped.push(column.field || "repeated column"); continue; }
-          const resolution = resolveField(model, column.field, { slot: rowIndex + 1 });
+          if (!definition || definition.collection !== block.collection) { skipped.push(column.field || "repeated field"); continue; }
+          const resolution = resolveField(model, column.field, { slot: slotIndex + 1 });
           const text = formatFieldValue(definition, resolution, model);
           if (!text) {
             if (["unsupported", "error"].includes(resolution.state)) skipped.push(column.field);
             else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
             continue;
           }
-          drawAlignedPdfText(page, font, text, column.fontSize, column.xPercent, yPercent, column.alignment || "left");
+          const xPercent = isSlotGridGeometry(block)
+            ? slot.xPercent + ((Number(column.xOffsetPoints) || 0) / width)
+            : column.xPercent;
+          drawAlignedPdfText(page, font, text, column.fontSize, xPercent, slot.yPercent, column.alignment || "left");
         }
       }
     }
