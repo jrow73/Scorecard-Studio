@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 009
+ * Build: 010
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
@@ -99,8 +99,9 @@ function normalizeSide(feed, side, coachesPayload, standingsPayloads) {
 function normalizeLineup(feed, side) {
   const box = feed?.liveData?.boxscore?.teams?.[side] || {};
   const ids = Array.isArray(box.battingOrder) ? box.battingOrder.map(String) : [];
-  const slots = Array.from({ length: 9 }, (_, index) => ({ battingOrder: index + 1, player: null, position: null, stats: {} }));
-  ids.slice(0, 9).forEach((id, index) => { slots[index] = normalizeBoxPlayer(feed, side, id, index + 1); });
+  const capacity = Math.max(9, ids.length);
+  const slots = Array.from({ length: capacity }, (_, index) => ({ battingOrder: index + 1, player: null, position: null, stats: {} }));
+  ids.forEach((id, index) => { slots[index] = normalizeBoxPlayer(feed, side, id, index + 1); });
   return slots;
 }
 

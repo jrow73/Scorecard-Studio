@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 009
+ * Build: 010
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=009";
-import { normalizePregameData } from "./normalize.js?v=009";
-import { canonicalFieldId, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=009";
-import { formatFieldValue } from "./formatter.js?v=009";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=010";
+import { normalizePregameData } from "./normalize.js?v=010";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=010";
+import { formatFieldValue } from "./formatter.js?v=010";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=009";
+} from "./storage.js?v=010";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -31,6 +31,7 @@ const state = {
   designerPdfDocument: null,
   designerPageNumber: 1,
   designerPlacing: false,
+  designerPlacement: null,
   designerRenderToken: 0,
   designerRenderScale: 1,
   normalizedPregame: null,
@@ -120,6 +121,18 @@ const elements = {
   designerFieldSelect: document.querySelector("#designer-field-select"),
   designerFontSize: document.querySelector("#designer-font-size"),
   designerPlaceButton: document.querySelector("#designer-place-btn"),
+  designerBlockCount: document.querySelector("#designer-block-count"),
+  designerLineupSide: document.querySelector("#designer-lineup-side"),
+  designerLineupCapacity: document.querySelector("#designer-lineup-capacity"),
+  designerCreateBlockButton: document.querySelector("#designer-create-block-btn"),
+  designerBlockSelect: document.querySelector("#designer-block-select"),
+  designerPlaceRowsButton: document.querySelector("#designer-place-rows-btn"),
+  designerColumnField: document.querySelector("#designer-column-field"),
+  designerColumnAlignment: document.querySelector("#designer-column-alignment"),
+  designerColumnFontSize: document.querySelector("#designer-column-font-size"),
+  designerPlaceColumnButton: document.querySelector("#designer-place-column-btn"),
+  designerDeleteBlockButton: document.querySelector("#designer-delete-block-btn"),
+  designerBlockList: document.querySelector("#designer-block-list"),
   designerGenerateButton: document.querySelector("#designer-generate-btn"),
   generateMessage: document.querySelector("#generate-message"),
   designerMessage: document.querySelector("#designer-message"),
@@ -165,6 +178,12 @@ async function initialize() {
   elements.openDesignerButton.addEventListener("click", openDesigner);
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
   elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
+  elements.designerCreateBlockButton.addEventListener("click", createDesignerLineupBlock);
+  elements.designerBlockSelect.addEventListener("change", syncDesignerBlockControls);
+  elements.designerLineupSide.addEventListener("change", populateDesignerColumnFieldSelect);
+  elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
+  elements.designerPlaceColumnButton.addEventListener("click", beginDesignerBlockColumnPlacement);
+  elements.designerDeleteBlockButton.addEventListener("click", deleteSelectedDesignerBlock);
   elements.designerGenerateButton.addEventListener("click", generateTestPdf);
   elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
@@ -1110,10 +1129,14 @@ async function openDesigner() {
     if (!record?.blob) throw new Error("This layout's PDF template is missing.");
     state.designerPdfDocument = await loadPdfDocument(record.blob);
     state.designerPageNumber = 1;
-    state.designerPlacing = false;
+    cancelDesignerPlacement();
+    ensureRepeatedBlockIds(layout);
+    populateDesignerBlockSelect();
+    populateDesignerColumnFieldSelect();
     await renderDesignerPage();
     renderDesignerMappingList();
-    setDesignerMessage("Choose a field, select Place Field, then click the PDF.");
+    renderDesignerBlockList();
+    setDesignerMessage("Place scalar fields or create a starting-lineup block.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
     setDesignerMessage(errorMessage(error, "The Designer could not open this layout."), true);
@@ -1124,47 +1147,173 @@ function beginDesignerPlacement() {
   if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
   const size = Number(elements.designerFontSize.value);
   if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Font size must be between 1 and 144 points.", true);
-  state.designerPlacing = true;
-  elements.designerStage.classList.add("placing");
+  setDesignerPlacement({ mode: "scalar" });
   setDesignerMessage(`Click where the baseline for ${designerFieldLabel(elements.designerFieldSelect.value)} should begin.`);
 }
 
+async function createDesignerLineupBlock() {
+  const layout = selectedLayout();
+  if (!layout) return setDesignerMessage("Open a layout first.", true);
+  const capacity = Number(elements.designerLineupCapacity.value);
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 30) return setDesignerMessage("Lineup capacity must be a whole number from 1 through 30.", true);
+  const side = elements.designerLineupSide.value === "home" ? "home" : "away";
+  const block = {
+    id: makeMappingId(),
+    type: "repeated",
+    collection: `${side}.lineup`,
+    capacity,
+    pageIndex: null,
+    geometry: null,
+    columns: []
+  };
+  layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
+  layout.repeatedBlocks.push(block);
+  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+  layout.updatedAt = new Date().toISOString();
+  try {
+    await saveLayout(layout);
+    populateDesignerBlockSelect(block.id);
+    syncDesignerBlockControls();
+    renderDesignerBlockList();
+    setDesignerMessage(`Created ${side === "away" ? "Away" : "Home"} lineup block with ${capacity} rows. Place its first and last row baselines next.`);
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The lineup block could not be saved."), true);
+  }
+}
+
+function beginDesignerBlockGeometryPlacement() {
+  const block = selectedDesignerBlock();
+  if (!block) return setDesignerMessage("Create or select a lineup block first.", true);
+  if (block.capacity < 2) return setDesignerMessage("A repeated block needs at least two rows to infer spacing from first and last rows.", true);
+  setDesignerPlacement({ mode: "blockGeometryFirst", blockId: block.id });
+  setDesignerMessage(`Click the baseline for row 1 of the ${blockLabel(block)}.`);
+}
+
+function beginDesignerBlockColumnPlacement() {
+  const block = selectedDesignerBlock();
+  if (!block) return setDesignerMessage("Create or select a lineup block first.", true);
+  if (!block.geometry || !Number.isInteger(block.pageIndex)) return setDesignerMessage("Place the first and last rows for this block before adding columns.", true);
+  if (state.designerPageNumber - 1 !== block.pageIndex) {
+    state.designerPageNumber = block.pageIndex + 1;
+    renderDesignerPage().catch(() => setDesignerMessage("The lineup block page could not be rendered.", true));
+  }
+  const size = Number(elements.designerColumnFontSize.value);
+  if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Column font size must be between 1 and 144 points.", true);
+  const field = elements.designerColumnField.value;
+  const definition = getFieldDefinition(field);
+  if (!definition || definition.cardinality !== "repeated" || definition.collection !== block.collection) return setDesignerMessage("Choose a lineup field that belongs to the selected block.", true);
+  setDesignerPlacement({ mode: "blockColumn", blockId: block.id });
+  setDesignerMessage(`Click the X anchor for ${designerFieldLabel(field)}. The row baselines already come from the block geometry.`);
+}
+
 async function handleDesignerStageClick(event) {
-  if (!state.designerPlacing || !state.designerPdfDocument) return;
+  if (!state.designerPlacing || !state.designerPdfDocument || !state.designerPlacement) return;
   const canvasRect = elements.designerPdfCanvas.getBoundingClientRect();
   if (event.clientX < canvasRect.left || event.clientX > canvasRect.right || event.clientY < canvasRect.top || event.clientY > canvasRect.bottom) return;
   const xPercent = clamp((event.clientX - canvasRect.left) / canvasRect.width, 0, 1);
   const yPercent = clamp((event.clientY - canvasRect.top) / canvasRect.height, 0, 1);
   const layout = selectedLayout();
   if (!layout) return;
+  const placement = state.designerPlacement;
 
-  const field = elements.designerFieldSelect.value;
-  const mapping = {
-    id: makeMappingId(),
-    field,
-    pageIndex: state.designerPageNumber - 1,
-    xPercent,
-    yPercent,
-    fontSize: Number(elements.designerFontSize.value),
-    alignment: "left",
-    anchor: "baseline-left"
-  };
-  layout.mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
-  layout.mappings.push(mapping);
-  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 2);
-  layout.updatedAt = new Date().toISOString();
+  if (placement.mode === "scalar") {
+    const field = elements.designerFieldSelect.value;
+    const mapping = {
+      id: makeMappingId(),
+      field,
+      content: { type: "field", field },
+      pageIndex: state.designerPageNumber - 1,
+      xPercent,
+      yPercent,
+      fontSize: Number(elements.designerFontSize.value),
+      alignment: "left",
+      anchor: "baseline-left"
+    };
+    layout.mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
+    layout.mappings.push(mapping);
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+    layout.updatedAt = new Date().toISOString();
+    try {
+      await saveLayout(layout);
+      cancelDesignerPlacement();
+      renderDesignerOverlay();
+      renderDesignerMappingList();
+      setDesignerMessage(`Placed ${designerFieldLabel(field)} on page ${state.designerPageNumber}.`);
+      await refreshLayouts();
+      state.selectedLayoutId = layout.id;
+    } catch (error) {
+      setDesignerMessage(errorMessage(error, "The mapping could not be saved."), true);
+    }
+    return;
+  }
 
-  try {
-    await saveLayout(layout);
-    state.designerPlacing = false;
-    elements.designerStage.classList.remove("placing");
-    renderDesignerOverlay();
-    renderDesignerMappingList();
-    setDesignerMessage(`Placed ${designerFieldLabel(field)} on page ${state.designerPageNumber}.`);
-    await refreshLayouts();
-    state.selectedLayoutId = layout.id;
-  } catch (error) {
-    setDesignerMessage(errorMessage(error, "The mapping could not be saved."), true);
+  const block = findDesignerBlock(placement.blockId);
+  if (!block) return cancelDesignerPlacement();
+
+  if (placement.mode === "blockGeometryFirst") {
+    state.designerPlacement = { mode: "blockGeometryLast", blockId: block.id, pageIndex: state.designerPageNumber - 1, firstYPercent: yPercent };
+    setDesignerMessage(`First row set. Click the baseline for row ${block.capacity} on the same PDF page.`);
+    return;
+  }
+
+  if (placement.mode === "blockGeometryLast") {
+    if (state.designerPageNumber - 1 !== placement.pageIndex) return setDesignerMessage("The first and last row must be placed on the same PDF page.", true);
+    if (yPercent <= placement.firstYPercent) return setDesignerMessage("Place the last row below the first row so row order runs down the page.", true);
+    const page = await state.designerPdfDocument.getPage(state.designerPageNumber);
+    const pageHeight = page.getViewport({ scale: 1 }).height;
+    block.pageIndex = placement.pageIndex;
+    block.geometry = {
+      direction: "vertical",
+      firstYPercent: placement.firstYPercent,
+      lastYPercent: yPercent,
+      rowSpacingPoints: ((yPercent - placement.firstYPercent) * pageHeight) / (block.capacity - 1)
+    };
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+    layout.updatedAt = new Date().toISOString();
+    try {
+      await saveLayout(layout);
+      cancelDesignerPlacement();
+      renderDesignerOverlay();
+      renderDesignerBlockList();
+      setDesignerMessage(`Placed ${block.capacity} ${blockLabel(block)} rows with ${block.geometry.rowSpacingPoints.toFixed(2)} pt spacing.`);
+      await refreshLayouts();
+      state.selectedLayoutId = layout.id;
+    } catch (error) {
+      setDesignerMessage(errorMessage(error, "The repeated-row geometry could not be saved."), true);
+    }
+    return;
+  }
+
+  if (placement.mode === "blockColumn") {
+    if (state.designerPageNumber - 1 !== block.pageIndex) return setDesignerMessage("Place lineup columns on the block's PDF page.", true);
+    const field = elements.designerColumnField.value;
+    const alignment = ["left", "center", "right"].includes(elements.designerColumnAlignment.value) ? elements.designerColumnAlignment.value : "left";
+    const column = {
+      id: makeMappingId(),
+      field,
+      content: { type: "field", field },
+      xPercent,
+      fontSize: Number(elements.designerColumnFontSize.value),
+      alignment,
+      anchor: `baseline-${alignment}`
+    };
+    block.columns = Array.isArray(block.columns) ? block.columns : [];
+    block.columns.push(column);
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 3);
+    layout.updatedAt = new Date().toISOString();
+    try {
+      await saveLayout(layout);
+      cancelDesignerPlacement();
+      renderDesignerOverlay();
+      renderDesignerBlockList();
+      setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned lineup column.`);
+      await refreshLayouts();
+      state.selectedLayoutId = layout.id;
+    } catch (error) {
+      setDesignerMessage(errorMessage(error, "The lineup column could not be saved."), true);
+    }
   }
 }
 
@@ -1217,6 +1366,31 @@ function renderDesignerOverlay() {
     });
     elements.designerOverlay.append(marker);
   });
+
+  const pageHeightPoints = elements.designerPdfCanvas.getBoundingClientRect().height / Math.max(state.designerRenderScale, .0001);
+  for (const block of layout.repeatedBlocks || []) {
+    if (block.pageIndex !== state.designerPageNumber - 1 || !block.geometry) continue;
+    for (let rowIndex = 0; rowIndex < block.capacity; rowIndex += 1) {
+      const yPercent = repeatedRowYPercent(block, rowIndex, pageHeightPoints);
+      const guide = document.createElement("div");
+      guide.className = "repeated-row-guide";
+      guide.style.top = `${yPercent * 100}%`;
+      elements.designerOverlay.append(guide);
+      for (const column of block.columns || []) {
+        const marker = document.createElement("span");
+        const alignment = ["left", "center", "right"].includes(column.alignment) ? column.alignment : "left";
+        marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(column.field) ? "" : " unsupported"}`;
+        marker.style.left = `${column.xPercent * 100}%`;
+        marker.style.top = `${yPercent * 100}%`;
+        const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
+        marker.style.fontSize = `${previewFontPx}px`;
+        marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+        marker.textContent = designerFieldPreview(column.field, { slot: rowIndex + 1 });
+        marker.title = `${designerFieldLabel(column.field)} • row ${rowIndex + 1} • ${alignment}`;
+        elements.designerOverlay.append(marker);
+      }
+    }
+  }
 }
 
 function renderDesignerMappingList() {
@@ -1227,7 +1401,7 @@ function renderDesignerMappingList() {
   if (!mappings.length) {
     const empty = document.createElement("p");
     empty.className = "subtle";
-    empty.textContent = "No fields mapped yet.";
+    empty.textContent = "No scalar fields mapped yet.";
     elements.designerMappingList.append(empty);
     return;
   }
@@ -1244,34 +1418,65 @@ function renderDesignerMappingList() {
     go.type = "button";
     go.className = "secondary-button compact-button";
     go.textContent = "Show";
-    go.addEventListener("click", async () => {
-      await showDesignerMapping(mapping);
-    });
+    go.addEventListener("click", async () => { await showDesignerMapping(mapping); });
     row.append(copy, go);
     elements.designerMappingList.append(row);
   });
 }
 
+function renderDesignerBlockList() {
+  const layout = selectedLayout();
+  const blocks = layout?.repeatedBlocks || [];
+  elements.designerBlockCount.textContent = String(blocks.length);
+  elements.designerBlockList.replaceChildren();
+  if (!blocks.length) {
+    const empty = document.createElement("p");
+    empty.className = "subtle";
+    empty.textContent = "No repeated blocks yet.";
+    elements.designerBlockList.append(empty);
+    return;
+  }
+  for (const block of blocks) {
+    const card = document.createElement("div");
+    card.className = "designer-block-card";
+    const strong = document.createElement("strong");
+    strong.textContent = `${blockLabel(block)} • ${block.capacity} rows`;
+    const meta = document.createElement("span");
+    meta.textContent = block.geometry && Number.isInteger(block.pageIndex)
+      ? `Page ${block.pageIndex + 1} • ${block.geometry.rowSpacingPoints.toFixed(2)} pt row spacing • ${(block.columns || []).length} column(s)`
+      : `Row geometry not placed • ${(block.columns || []).length} column(s)`;
+    card.append(strong, meta);
+    for (const column of block.columns || []) {
+      const row = document.createElement("div");
+      row.className = "designer-block-column-row";
+      const text = document.createElement("span");
+      text.textContent = `${designerFieldLabel(column.field)} • ${column.fontSize} pt • ${column.alignment || "left"}`;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "secondary-button compact-button";
+      remove.textContent = "Delete";
+      remove.addEventListener("click", () => deleteDesignerBlockColumn(block.id, column.id));
+      row.append(text, remove);
+      card.append(row);
+    }
+    elements.designerBlockList.append(card);
+  }
+}
+
 async function showDesignerMapping(mapping) {
   state.designerPageNumber = mapping.pageIndex + 1;
-  state.designerPlacing = false;
-  elements.designerStage.classList.remove("placing");
-
+  cancelDesignerPlacement();
   try {
     await renderDesignerPage();
     await new Promise((resolve) => window.requestAnimationFrame(resolve));
-
     const marker = Array.from(elements.designerOverlay.querySelectorAll(".mapping-marker"))
       .find((candidate) => candidate.dataset.mappingId === String(mapping.id || ""));
-
     if (!marker) {
       setDesignerMessage(`Mapped field “${designerFieldLabel(mapping.field)}” could not be located on the rendered page.`, true);
       return;
     }
-
     marker.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     marker.classList.remove("show-target");
-    // Force a style flush so repeated Show clicks restart the pulse.
     void marker.offsetWidth;
     marker.classList.add("show-target");
     marker.focus({ preventScroll: true });
@@ -1299,13 +1504,143 @@ async function deleteDesignerMapping(id) {
   }
 }
 
+async function deleteDesignerBlockColumn(blockId, columnId) {
+  const layout = selectedLayout();
+  const block = findDesignerBlock(blockId);
+  if (!layout || !block) return;
+  block.columns = (block.columns || []).filter((column) => column.id !== columnId);
+  layout.updatedAt = new Date().toISOString();
+  try {
+    await saveLayout(layout);
+    renderDesignerOverlay();
+    renderDesignerBlockList();
+    setDesignerMessage("Lineup column deleted.");
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The lineup column could not be deleted."), true);
+  }
+}
+
+async function deleteSelectedDesignerBlock() {
+  const layout = selectedLayout();
+  const block = selectedDesignerBlock();
+  if (!layout || !block) return setDesignerMessage("Select a lineup block first.", true);
+  if (!window.confirm(`Delete the ${blockLabel(block)} and all of its columns?`)) return;
+  layout.repeatedBlocks = (layout.repeatedBlocks || []).filter((item) => item.id !== block.id);
+  layout.updatedAt = new Date().toISOString();
+  try {
+    await saveLayout(layout);
+    cancelDesignerPlacement();
+    populateDesignerBlockSelect();
+    syncDesignerBlockControls();
+    renderDesignerOverlay();
+    renderDesignerBlockList();
+    setDesignerMessage("Lineup block deleted.");
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The lineup block could not be deleted."), true);
+  }
+}
+
+function populateDesignerBlockSelect(preferredId = null) {
+  const layout = selectedLayout();
+  const blocks = layout?.repeatedBlocks || [];
+  const prior = preferredId || elements.designerBlockSelect.value;
+  elements.designerBlockSelect.replaceChildren();
+  if (!blocks.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No lineup blocks";
+    elements.designerBlockSelect.append(option);
+    elements.designerBlockSelect.disabled = true;
+    return;
+  }
+  elements.designerBlockSelect.disabled = false;
+  blocks.forEach((block, index) => {
+    const option = document.createElement("option");
+    option.value = block.id;
+    option.textContent = `${blockLabel(block)} ${index + 1} • ${block.capacity} rows`;
+    elements.designerBlockSelect.append(option);
+  });
+  if (blocks.some((block) => block.id === prior)) elements.designerBlockSelect.value = prior;
+}
+
+function populateDesignerColumnFieldSelect() {
+  const block = selectedDesignerBlock();
+  const side = block?.collection?.startsWith("home.") ? "home" : block?.collection?.startsWith("away.") ? "away" : (elements.designerLineupSide.value === "home" ? "home" : "away");
+  const collection = `${side}.lineup`;
+  elements.designerColumnField.replaceChildren();
+  for (const definition of getSupportedFields({ cardinality: "repeated", collection })) {
+    const option = document.createElement("option");
+    option.value = definition.id;
+    option.textContent = definition.label.replace(/^(Away|Home) Lineup — /, "");
+    elements.designerColumnField.append(option);
+  }
+}
+
+function syncDesignerBlockControls() {
+  const block = selectedDesignerBlock();
+  const disabled = !block;
+  elements.designerPlaceRowsButton.disabled = disabled;
+  elements.designerPlaceColumnButton.disabled = disabled;
+  elements.designerDeleteBlockButton.disabled = disabled;
+  if (block) {
+    elements.designerLineupSide.value = block.collection.startsWith("home.") ? "home" : "away";
+    elements.designerLineupCapacity.value = block.capacity;
+  }
+  populateDesignerColumnFieldSelect();
+}
+
+function selectedDesignerBlock() {
+  return findDesignerBlock(elements.designerBlockSelect.value);
+}
+
+function findDesignerBlock(id) {
+  const layout = selectedLayout();
+  return (layout?.repeatedBlocks || []).find((block) => String(block.id) === String(id)) || null;
+}
+
+function blockLabel(block) {
+  return block?.collection === "home.lineup" ? "Home starting lineup" : "Away starting lineup";
+}
+
+function ensureRepeatedBlockIds(layout) {
+  let changed = false;
+  layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
+  for (const block of layout.repeatedBlocks) {
+    if (!block.id) { block.id = makeMappingId(); changed = true; }
+    block.columns = Array.isArray(block.columns) ? block.columns : [];
+    for (const column of block.columns) {
+      if (!column.id) { column.id = makeMappingId(); changed = true; }
+      if (!column.content && column.field) { column.content = { type: "field", field: column.field }; changed = true; }
+    }
+  }
+  return changed;
+}
+
+function repeatedRowYPercent(block, rowIndex, pageHeightPoints) {
+  if (!block?.geometry) return 0;
+  return clamp(Number(block.geometry.firstYPercent) + ((Number(block.geometry.rowSpacingPoints) || 0) * rowIndex / pageHeightPoints), 0, 1);
+}
+
+function setDesignerPlacement(placement) {
+  state.designerPlacement = placement;
+  state.designerPlacing = Boolean(placement);
+  elements.designerStage.classList.toggle("placing", Boolean(placement));
+}
+
+function cancelDesignerPlacement() {
+  setDesignerPlacement(null);
+}
+
 async function changeDesignerPage(delta) {
   if (!state.designerPdfDocument) return;
   const next = state.designerPageNumber + delta;
   if (next < 1 || next > state.designerPdfDocument.numPages) return;
   state.designerPageNumber = next;
-  state.designerPlacing = false;
-  elements.designerStage.classList.remove("placing");
+  cancelDesignerPlacement();
   try { await renderDesignerPage(); }
   catch (error) { setDesignerMessage("That PDF page could not be rendered.", true); }
 }
@@ -1325,17 +1660,17 @@ function designerFieldLabel(field) {
   return definition?.label || `Unsupported: ${field}`;
 }
 
-function designerFieldPreview(field) {
+function designerFieldPreview(field, selector = null) {
   const definition = getFieldDefinition(field);
   if (!definition) return `[Unsupported: ${field}]`;
-  const resolution = resolveField(DESIGNER_SAMPLE_MODEL, field);
-  return formatFieldValue(definition, resolution, DESIGNER_SAMPLE_MODEL) || definition.label;
+  const resolution = resolveField(DESIGNER_SAMPLE_MODEL, field, selector);
+  return formatFieldValue(definition, resolution, DESIGNER_SAMPLE_MODEL) || (definition.cardinality === "repeated" ? "" : definition.label);
 }
 
 function populateDesignerFieldSelect() {
   elements.designerFieldSelect.replaceChildren();
   const groups = new Map();
-  for (const definition of getSupportedFields()) {
+  for (const definition of getSupportedFields({ cardinality: "single" })) {
     if (!groups.has(definition.category)) groups.set(definition.category, []);
     groups.get(definition.category).push(definition);
   }
@@ -1356,7 +1691,9 @@ function ensureMappingIds(layout) {
   let changed = false;
   for (const mapping of layout?.mappings || []) {
     if (!mapping.id) { mapping.id = makeMappingId(); changed = true; }
+    if (!mapping.content && mapping.field) { mapping.content = { type: "field", field: mapping.field }; changed = true; }
   }
+  if (ensureRepeatedBlockIds(layout)) changed = true;
   return changed;
 }
 
@@ -1369,13 +1706,24 @@ const DESIGNER_SAMPLE_MODEL = {
   },
   away: {
     team: { name: "Tampa Bay Devil Rays", locationName: "St. Petersburg", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB", record: { wins: 78, losses: 64, pct: 0.549 } },
-    manager: { name: "Kevin Cash" }, startingPitcher: { player: { name: "Shane Baz" } }
+    manager: { name: "Kevin Cash" }, startingPitcher: { player: { name: "Shane Baz" } },
+    lineup: sampleLineup(["Yandy Díaz", "Brandon Lowe", "Junior Caminero", "Jonathan Aranda", "Josh Lowe", "Christopher Morel", "Jake Mangum", "Nick Fortes", "Taylor Walls"], ["1B", "2B", "3B", "DH", "RF", "LF", "CF", "C", "SS"], ["R", "L", "R", "L", "L", "R", "S", "R", "S"])
   },
   home: {
     team: { name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA", record: { wins: 81, losses: 61, pct: 0.570 } },
-    manager: { name: "Dan Wilson" }, startingPitcher: { player: { name: "Logan Gilbert" } }
+    manager: { name: "Dan Wilson" }, startingPitcher: { player: { name: "Logan Gilbert" } },
+    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "RF"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"])
   }
 };
+
+function sampleLineup(names, positions, bats) {
+  return names.map((name, index) => ({
+    battingOrder: index + 1,
+    player: { id: 1000 + index, name, number: String(index + 1), bats: bats[index] },
+    position: { abbreviation: positions[index] },
+    stats: { avg: .250 + index / 1000, obp: .325 + index / 1000, slg: .410 + index / 1000, ops: .735 + index / 1000, homeRuns: 8 + index, rbi: 40 + index * 3 }
+  }));
+}
 
 function makeMappingId() {
   return globalThis.crypto?.randomUUID?.() || `mapping-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -1398,7 +1746,8 @@ async function generateTestPdf() {
   const layout = selectedLayout();
   if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
   const mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
-  if (!mappings.length) return setGenerateMessage("Map at least one field before generating a PDF.", true);
+  const repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
+  if (!mappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar field or lineup column before generating a PDF.", true);
   if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load a game first.", true);
   if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
 
@@ -1407,7 +1756,8 @@ async function generateTestPdf() {
   const gameKey = String(state.selectedGamePk || "");
 
   try {
-    const model = await buildModelForMappings(mappings, gameKey);
+    const fieldIds = collectLayoutFieldIds(layout);
+    const model = await buildModelForMappings(fieldIds, gameKey);
     if (String(state.selectedGamePk || "") !== gameKey) throw new Error("Game selection changed while pregame data was loading. Generate again for the selected game.");
 
     const record = await getPdfTemplate(layout.pdfTemplateId);
@@ -1419,6 +1769,7 @@ async function generateTestPdf() {
     const font = await pdfDoc.embedFont(globalThis.PDFLib.StandardFonts.Helvetica);
     const pages = pdfDoc.getPages();
     const skipped = [];
+    const overflowBlocks = [];
     let missingCount = 0;
 
     for (const mapping of mappings) {
@@ -1433,12 +1784,31 @@ async function generateTestPdf() {
         else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
         continue;
       }
+      drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, "left");
+    }
 
-      const size = Number(mapping.fontSize) || 10;
-      const { width, height } = page.getSize();
-      const x = width * clamp(Number(mapping.xPercent) || 0, 0, 1);
-      const y = height * (1 - clamp(Number(mapping.yPercent) || 0, 0, 1));
-      page.drawText(text, { x, y, size, font, color: globalThis.PDFLib.rgb(0, 0, 0) });
+    for (const block of repeatedBlocks) {
+      if (!block.geometry || !Number.isInteger(block.pageIndex)) { skipped.push(`${block.collection} block geometry`); continue; }
+      const page = pages[block.pageIndex];
+      if (!page) { skipped.push(`${block.collection} block page`); continue; }
+      if (collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
+      const { height } = page.getSize();
+      for (let rowIndex = 0; rowIndex < block.capacity; rowIndex += 1) {
+        const y = height * (1 - Number(block.geometry.firstYPercent || 0)) - (Number(block.geometry.rowSpacingPoints) || 0) * rowIndex;
+        const yPercent = 1 - (y / height);
+        for (const column of block.columns || []) {
+          const definition = getFieldDefinition(column.field);
+          if (!definition || definition.collection !== block.collection) { skipped.push(column.field || "lineup column"); continue; }
+          const resolution = resolveField(model, column.field, { slot: rowIndex + 1 });
+          const text = formatFieldValue(definition, resolution, model);
+          if (!text) {
+            if (["unsupported", "error"].includes(resolution.state)) skipped.push(column.field);
+            else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+            continue;
+          }
+          drawAlignedPdfText(page, font, text, column.fontSize, column.xPercent, yPercent, column.alignment || "left");
+        }
+      }
     }
 
     const outputBytes = await pdfDoc.save();
@@ -1448,8 +1818,9 @@ async function generateTestPdf() {
     downloadBlob(blob, filename);
     const notices = [];
     if (missingCount) notices.push(`${missingCount} mapped value(s) were unavailable and left blank.`);
+    if (overflowBlocks.length) notices.push(`Overflow: ${[...new Set(overflowBlocks)].join(", ")} contains player(s) beyond the layout capacity.`);
     if (skipped.length) notices.push(`${skipped.length} unsupported/error mapping(s) were skipped.`);
-    setGenerateMessage(`Generated ${filename}.${notices.length ? ` ${notices.join(" ")}` : ""}`, skipped.length > 0);
+    setGenerateMessage(`Generated ${filename}.${notices.length ? ` ${notices.join(" ")}` : ""}`, skipped.length > 0 || overflowBlocks.length > 0);
   } catch (error) {
     console.error("Unable to generate PDF:", error);
     setGenerateMessage(errorMessage(error, "The PDF could not be generated."), true);
@@ -1458,8 +1829,24 @@ async function generateTestPdf() {
   }
 }
 
-async function buildModelForMappings(mappings, expectedGameKey) {
-  const fieldIds = mappings.map((mapping) => canonicalFieldId(mapping.field));
+function drawAlignedPdfText(page, font, text, fontSize, xPercent, yPercent, alignment = "left") {
+  const size = Number(fontSize) || 10;
+  const { width, height } = page.getSize();
+  const anchorX = width * clamp(Number(xPercent) || 0, 0, 1);
+  const y = height * (1 - clamp(Number(yPercent) || 0, 0, 1));
+  const textWidth = font.widthOfTextAtSize(text, size);
+  const x = alignment === "right" ? anchorX - textWidth : alignment === "center" ? anchorX - textWidth / 2 : anchorX;
+  page.drawText(text, { x, y, size, font, color: globalThis.PDFLib.rgb(0, 0, 0) });
+}
+
+function collectLayoutFieldIds(layout) {
+  const ids = [];
+  for (const mapping of layout?.mappings || []) if (mapping.field) ids.push(canonicalFieldId(mapping.field));
+  for (const block of layout?.repeatedBlocks || []) for (const column of block.columns || []) if (column.field) ids.push(canonicalFieldId(column.field));
+  return ids;
+}
+
+async function buildModelForMappings(fieldIds, expectedGameKey) {
   const requirements = sourceRequirementsForFields(fieldIds);
   const game = currentScheduleGame();
   const feed = state.selectedFeed;

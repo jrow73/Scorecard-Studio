@@ -1,6 +1,6 @@
 # Scorecard Studio — Field Registry
 
-Status: Build 009 design contract; implementation pending. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
+Status: Build 010 active contract. Build 009 scalar registry is accepted; Build 010 adds the starting-lineup repeated-field slice and repeated-block placement foundation. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
 
 ## 1. Authority and evidence
 
@@ -267,7 +267,7 @@ Illustrative target schema, not a mandate to rewrite existing stored layout shap
 
 A second mapping may use the exact same `field`, different ID/page/coordinates/font size. Repeated fields additionally carry `selector`, for example `{ "slot": 1 }`. Registry IDs and selectors define the data; font size in PDF points, font/color, name variant, numeric precision, date/timezone display, alignment, prefix/suffix, separator, template, missing-value policy, and fit behavior belong to each placement (or explicit block defaults). Global preferences may seed defaults but cannot rewrite saved mappings.
 
-Composite defaults are named registry recipes, not stored source strings. Future custom templates may reference only allowlisted fields in the same row/context; their dependency union drives hydration. No arbitrary JavaScript templates. Build 009 supports fixed record/weather recipes needed for its slice, not a custom template editor. W-L requires both values; weather and compact descriptions omit missing components and separators and return partial status. An entirely missing composite renders blank.
+Composite defaults are named registry recipes, not stored source strings. Future custom templates may reference only allowlisted fields in the same row/context; their dependency union drives hydration. No arbitrary JavaScript templates. Build 009 supports fixed record/weather recipes needed for its slice. Build 010 reserves `content.type = "field" | "template"` placement semantics but does not implement a custom template editor/parser. W-L requires both values; weather and compact descriptions omit missing components and separators and return partial status. An entirely missing composite renders blank.
 
 Baseline-left and existing Y-axis convention remain unchanged. Alignment/fit work must not change saved anchor meaning. Preserve existing point size and percentage coordinates exactly. New precision/fit controls and conditional colors are later work. Default long text behavior in Build 009 remains the existing renderer's behavior; do not silently introduce shrink-to-fit.
 
@@ -280,3 +280,16 @@ Preserve unknown mappings and their formatting for round-trip storage, show an u
 Excluded visible fields: scores, inning/outs/count, play state, R/H/E/LOB totals, current-game batting/pitching stats, winning/losing pitcher, current-game save, actual first pitch, finish time, duration, and scoring marks. Feed status is internal discovery information, not a printable result. The matrix's verified firstPitch and live defense are not automatic authorization to expose them.
 
 Advanced matchup history, splits, recent windows and broadcaster research remain beyond the traditional v0.2.0/v1.0 scope. Optional fields in this catalog may remain unavailable when upstream data is missing; catalog completeness does not claim universal source availability or complete UI implementation in Build 009.
+
+
+## 10. Build 010 repeated-block implementation slice
+
+Build 010 makes the first repeated family selectable: `{side}.lineup[]`. The supported per-row leaves are `battingOrder`, `player.number`, `player.name`, `position.abbreviation`, `player.bats`, `stats.avg`, `stats.obp`, `stats.slg`, `stats.ops`, `stats.homeRuns`, and `stats.rbi`, symmetrically for Away and Home. Repeated resolution requires a validated 1-based `{ slot }` selector.
+
+A stored repeated block is separate from scalar mappings and contains a collection ID, layout-defined capacity, PDF page, vertical row geometry, and independent columns. Vertical geometry stores the first-row page percentage and physical row spacing in PDF points; the Designer derives that spacing from user placement of the first and last row. Each column stores its own field/content reference, X percentage, font size, alignment, and alignment-aware baseline anchor.
+
+Existing scalar `baseline-left` mappings retain their exact coordinates and output semantics. Build 010 alignment applies to repeated columns only. Fewer posted members than block capacity leave blank rows. A posted member beyond capacity is an explicit overflow condition in generation status; it is never silently discarded without notice and never causes implicit page creation or whole-block scaling.
+
+The normalized starting-lineup adapter must preserve orders longer than nine when the feed supplies them. It still supplies nine placeholder slots when no longer order is present so MLB lineup gaps remain positionally stable.
+
+Custom free-text/composite templates remain deferred. Build 010 only reserves placement content semantics compatible with a later allowlisted, dependency-aware template parser.

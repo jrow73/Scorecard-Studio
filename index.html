@@ -3,7 +3,7 @@
   Scorecard Studio
   Layout Management
   Version: 0.2.0-dev
-  Build: 009
+  Build: 010
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=009a" />
+  <link rel="stylesheet" href="./css/styles.css?v=010" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 009</p>
+          <p>0.2.0-dev • Build 010</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 009</p>
+          <p class="section-label">Build 010</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 009</p>
+              <p class="section-label">Build 010</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,7 +309,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 009 • Field Registry</p>
+              <p class="section-label">Build 010 • Field Registry</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -324,8 +324,49 @@
                 <input id="designer-font-size" type="number" min="1" max="144" step="0.5" value="10" />
               </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
+              <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Existing scalar mappings remain baseline-left.</p>
+
+              <div class="designer-repeat-panel">
+                <div class="designer-repeat-heading">
+                  <div><p class="section-label">Build 010</p><h4>Starting Lineup Block</h4></div>
+                  <span class="pill neutral" id="designer-block-count">0</span>
+                </div>
+                <label for="designer-lineup-side">Lineup
+                  <select id="designer-lineup-side">
+                    <option value="away">Away starting lineup</option>
+                    <option value="home">Home starting lineup</option>
+                  </select>
+                </label>
+                <label for="designer-lineup-capacity">Layout row capacity
+                  <input id="designer-lineup-capacity" type="number" min="1" max="30" step="1" value="9" />
+                </label>
+                <button class="secondary-button" id="designer-create-block-btn" type="button">Create Lineup Block</button>
+                <label for="designer-block-select">Edit block
+                  <select id="designer-block-select" aria-label="Repeated lineup block"></select>
+                </label>
+                <button class="secondary-button" id="designer-place-rows-btn" type="button">Place First & Last Rows</button>
+                <div class="designer-column-grid">
+                  <label for="designer-column-field">Column field
+                    <select id="designer-column-field"></select>
+                  </label>
+                  <label for="designer-column-alignment">Alignment
+                    <select id="designer-column-alignment">
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </label>
+                </div>
+                <label for="designer-column-font-size">Column font size (pt)
+                  <input id="designer-column-font-size" type="number" min="1" max="144" step="0.5" value="10" />
+                </label>
+                <button class="primary-button" id="designer-place-column-btn" type="button">Place Lineup Column</button>
+                <button class="danger-button" id="designer-delete-block-btn" type="button">Delete Selected Block</button>
+                <p class="subtle designer-help">Create a block, place the first and last row baselines to establish spacing, then place each column's X anchor. All columns share the row spacing but keep their own field, font size, and alignment.</p>
+                <div id="designer-block-list" class="designer-block-list"></div>
+              </div>
+
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
-              <p class="subtle designer-help">Choose a field, select Place Field, then click where the text baseline should begin. Coordinates are saved as percentages of the PDF page.</p>
               <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
               <div class="message-panel generate-message" id="generate-message" role="status" aria-live="polite">
                 Generated PDFs use the currently selected game on Home.
@@ -357,6 +398,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=009a"></script>
+  <script type="module" src="./js/app.js?v=010"></script>
 </body>
 </html>

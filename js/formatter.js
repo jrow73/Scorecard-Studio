@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Shared field formatting
  * Version: 0.2.0-dev
- * Build: 009
+ * Build: 010
  */
 
 export function formatFieldValue(definition, resolution, model) {

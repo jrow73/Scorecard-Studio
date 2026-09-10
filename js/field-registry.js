@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Canonical pregame field registry
  * Version: 0.2.0-dev
- * Build: 009
+ * Build: 010
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
@@ -45,15 +45,34 @@ const sideFields = ["away", "home"].flatMap((side) => {
   ];
 });
 
-export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields].map((entry, index) => Object.freeze({
+const lineupFields = ["away", "home"].flatMap((side) => {
+  const label = SIDE_LABEL[side];
+  const collection = `${side}.lineup`;
+  const category = `${label} / Starting Lineup`;
+  return [
+    repeatedField(`${side}.lineup[].battingOrder`, `${label} Lineup — Batting Order`, category, "integer", collection, "battingOrder"),
+    repeatedField(`${side}.lineup[].player.number`, `${label} Lineup — Jersey #`, category, "text", collection, "player.number"),
+    repeatedField(`${side}.lineup[].player.name`, `${label} Lineup — Player Name`, category, "text", collection, "player.name"),
+    repeatedField(`${side}.lineup[].position.abbreviation`, `${label} Lineup — Position`, category, "text", collection, "position.abbreviation"),
+    repeatedField(`${side}.lineup[].player.bats`, `${label} Lineup — Bats`, category, "text", collection, "player.bats"),
+    repeatedField(`${side}.lineup[].stats.avg`, `${label} Lineup — AVG`, category, "decimal", collection, "stats.avg", { precision: 3 }),
+    repeatedField(`${side}.lineup[].stats.obp`, `${label} Lineup — OBP`, category, "decimal", collection, "stats.obp", { precision: 3 }),
+    repeatedField(`${side}.lineup[].stats.slg`, `${label} Lineup — SLG`, category, "decimal", collection, "stats.slg", { precision: 3 }),
+    repeatedField(`${side}.lineup[].stats.ops`, `${label} Lineup — OPS`, category, "decimal", collection, "stats.ops", { precision: 3 }),
+    repeatedField(`${side}.lineup[].stats.homeRuns`, `${label} Lineup — HR`, category, "integer", collection, "stats.homeRuns"),
+    repeatedField(`${side}.lineup[].stats.rbi`, `${label} Lineup — RBI`, category, "integer", collection, "stats.rbi")
+  ];
+});
+
+export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields, ...lineupFields].map((entry, index) => Object.freeze({
   ...entry,
   order: index + 1,
-  cardinality: "single",
   availability: "supported",
-  introducedIn: "v0.2.0"
+  introducedIn: entry.introducedIn || "v0.2.0"
 })));
 
 const byId = new Map(FIELD_REGISTRY.map((entry) => [entry.id, entry]));
+const supportedCollections = new Set(lineupFields.map((entry) => entry.collection));
 
 export function canonicalFieldId(fieldId) {
   return LEGACY_ALIASES.get(fieldId) || fieldId;
@@ -63,8 +82,10 @@ export function getFieldDefinition(fieldId) {
   return byId.get(canonicalFieldId(fieldId)) || null;
 }
 
-export function getSupportedFields() {
-  return FIELD_REGISTRY.slice();
+export function getSupportedFields(options = {}) {
+  const cardinality = options.cardinality || null;
+  const collection = options.collection || null;
+  return FIELD_REGISTRY.filter((entry) => (!cardinality || entry.cardinality === cardinality) && (!collection || entry.collection === collection));
 }
 
 export function getFieldLabel(fieldId) {
@@ -72,10 +93,22 @@ export function getFieldLabel(fieldId) {
   return definition?.label || String(fieldId || "Unknown field");
 }
 
-export function resolveField(model, fieldId) {
+export function resolveField(model, fieldId, selector = null) {
   const canonicalId = canonicalFieldId(fieldId);
   const definition = byId.get(canonicalId);
   if (!definition) return { value: null, state: "unsupported", reason: `Unsupported field: ${fieldId}`, fieldId: canonicalId };
+
+  if (definition.cardinality === "repeated") {
+    const slot = Number(selector?.slot);
+    if (!Number.isInteger(slot) || slot < 1) return { value: null, state: "unsupported", reason: "Repeated field requires a positive slot selector.", fieldId: canonicalId };
+    const rows = getCollectionRows(model, definition.collection);
+    const row = rows[slot - 1];
+    if (!row) return { value: null, state: "missing", reason: `Collection slot ${slot} is not available.`, fieldId: canonicalId };
+    const value = readPath(row, definition.rowPath);
+    return value === null || value === undefined || value === ""
+      ? { value: null, state: "missing", reason: "Value is not available.", fieldId: canonicalId }
+      : { value, state: "available", reason: "", fieldId: canonicalId };
+  }
 
   if (definition.kind === "atomic") {
     const value = readPath(model, definition.path);
@@ -96,6 +129,21 @@ export function sourceRequirementsForFields(fieldIds) {
     for (const requirement of definition?.sourceRequirements || []) requirements.add(requirement);
   }
   return requirements;
+}
+
+export function getCollectionRows(model, collection) {
+  if (!supportedCollections.has(collection)) return [];
+  const value = readPath(model, collection);
+  return Array.isArray(value) ? value : [];
+}
+
+export function collectionHasOverflow(model, collection, capacity) {
+  const rows = getCollectionRows(model, collection);
+  return rows.slice(Math.max(0, Number(capacity) || 0)).some((row) => rowHasMember(row));
+}
+
+function rowHasMember(row) {
+  return Boolean(row?.player?.id || row?.player?.name);
 }
 
 function resolveRecord(model, definition) {
@@ -120,9 +168,13 @@ function readPath(root, path) {
 }
 
 function field(id, label, category, valueType, kind, path, sourceRequirements, defaultFormat = {}) {
-  return { id, label, category, valueType, kind, path, sourceRequirements, defaultFormat };
+  return { id, label, category, valueType, kind, path, sourceRequirements, defaultFormat, cardinality: "single" };
 }
 
 function composite(id, label, category, resolver, dependencies, sourceRequirements) {
-  return { id, label, category, valueType: "text", kind: "composite", resolver, dependencies, sourceRequirements, defaultFormat: {} };
+  return { id, label, category, valueType: "text", kind: "composite", resolver, dependencies, sourceRequirements, defaultFormat: {}, cardinality: "single" };
+}
+
+function repeatedField(id, label, category, valueType, collection, rowPath, defaultFormat = {}) {
+  return { id, label, category, valueType, kind: "atomic", cardinality: "repeated", collection, rowPath, sourceRequirements: ["gamePack"], defaultFormat };
 }

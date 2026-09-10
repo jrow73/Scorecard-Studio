@@ -645,7 +645,7 @@ acceptance requirements are in
 - Do not modify README.md as part of this build's documentation work.
 
 
-### Build 010 — Repeated Block Foundation + Starting Lineups — PLANNED
+### Build 010 — Repeated Block Foundation + Starting Lineups — IMPLEMENTED; ACCEPTANCE PENDING
 
 Build 010 establishes the reusable repeated-block architecture, using starting
 lineups as the first implementation. It should not create nine unrelated copies
@@ -673,6 +673,18 @@ repeats that row over layout-defined geometry.
 - Horizontal repetition, grids, continuation blocks, and variable-length bench
   and bullpen workflows are planned extensions of the same block model rather
   than separate collection-specific systems.
+
+
+Implementation notes for Build 010:
+
+- Adds `repeatedBlocks` alongside legacy scalar `mappings`; existing baseline-left scalar mappings are not reinterpreted.
+- Starting-lineup blocks persist collection, layout capacity, PDF page, first-row percentage, physical row spacing in PDF points, and independent column definitions.
+- Designer supports first/last-row placement and independently placed lineup columns with left/center/right X anchors.
+- Initial repeated lineup fields are batting order, jersey number, player name, position, bats, AVG, OBP, SLG, OPS, HR, and RBI for both Away and Home.
+- Generation resolves each repeated field by a 1-based slot selector, leaves unused capacity blank, and visibly reports players beyond capacity.
+- The normalized lineup preserves posted orders longer than nine rows instead of truncating them.
+- Scalar and repeated column records now reserve `content: { type: "field", field: ... }` semantics so a later `type: "template"` can fit the same placement model without implementing template parsing in Build 010.
+- Local and Online browser acceptance remain required before calling Build 010 complete.
 
 ### Planned composite / free-text template architecture
 
