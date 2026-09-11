@@ -913,3 +913,17 @@ acceptance and final PDF placement testing were completed successfully.
 - Individual/free and role-based placement remain future geometry modes; no collection is assigned a mandatory layout geometry.
 - Composite/free-text templates remain deferred until after geometry.
 - Known Layout Designer UI cleanup items, including the post-generation stretched-DOM issue, remain deferred until the Designer feature set is further along.
+
+## Build 013 — Composite / Free Text
+- Adds generic composite/free-text mappings that may be placed anywhere on a layout.
+- Templates combine literal text with readable field tokens inserted from the existing scalar field registry; users do not need to memorize canonical IDs.
+- Example templates include `[Away Team — Full Name] ([Away Team — W-L Record])` and `Weather: [Temperature]°F, [Conditions]`.
+- Composite mappings store the exact template string plus page-relative baseline anchor, PDF-point font size, and left/center/right alignment.
+- Template tokens resolve through the existing normalized field registry and formatter during Designer preview and PDF generation.
+- Unavailable or unknown token values render blank rather than printing token syntax.
+- Template-referenced fields participate in source requirement discovery (for example manager tokens can trigger coach-data loading).
+- Existing scalar mappings and Build 010–012 repeated blocks remain unchanged and backward compatible.
+- Layout schema version 5 is introduced only when a composite/free-text mapping is stored.
+- Advanced conditionals, formulas, rich text, per-token styling, and repeated-collection tokens remain future work.
+- Build 012 was accepted in browser testing; vertical, horizontal, and grid repeated-block geometry all generated correctly.
+- Future Designer sample-data work should fill unused preview slots with collection-aware synthetic identities (for example Sample Player / Sample Pitcher / Sample Umpire) while respecting eventual name-format choices; unusually large capacities should likely use a soft warning rather than an MLB-specific hard assumption.

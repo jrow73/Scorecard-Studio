@@ -3,7 +3,7 @@
   Scorecard Studio
   Layout Management
   Version: 0.2.0-dev
-  Build: 012
+  Build: 013
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=012" />
+  <link rel="stylesheet" href="./css/styles.css?v=013-multiline-preview-hotfix1" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 012</p>
+          <p>0.2.0-dev • Build 013</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 012</p>
+          <p class="section-label">Build 013</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 012</p>
+              <p class="section-label">Build 013</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,7 +309,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 012 • Repeated Block Geometry</p>
+              <p class="section-label">Build 013 • Composite / Free Text</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -326,9 +326,39 @@
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
               <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Existing scalar mappings remain baseline-left.</p>
 
+              <div class="designer-composite-panel">
+                <div class="designer-repeat-heading">
+                  <div><p class="section-label">Build 013</p><h4>Composite / Free Text</h4></div>
+                </div>
+                <label for="designer-template-text">Text template
+                  <textarea id="designer-template-text" rows="3" placeholder="Example: Weather: [Temperature]°F, [Conditions]"></textarea>
+                </label>
+                <div class="designer-column-grid">
+                  <label for="designer-template-field">Insert field
+                    <select id="designer-template-field"></select>
+                  </label>
+                  <button class="secondary-button composite-insert-button" id="designer-template-insert-btn" type="button">Insert Field</button>
+                </div>
+                <div class="designer-column-grid">
+                  <label for="designer-template-alignment">Alignment
+                    <select id="designer-template-alignment">
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </label>
+                  <label for="designer-template-font-size">Font size (pt)
+                    <input id="designer-template-font-size" type="number" min="1" max="144" step="0.5" value="10" />
+                  </label>
+                </div>
+                <div class="composite-preview"><span>Preview</span><strong id="designer-template-preview">Enter text or insert a field.</strong></div>
+                <button class="primary-button" id="designer-template-place-btn" type="button">Place Composite Text</button>
+                <p class="subtle designer-help">Type ordinary text and insert supported game fields wherever needed. The template is stored exactly as written; unavailable field values render blank.</p>
+              </div>
+
               <div class="designer-repeat-panel">
                 <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 012</p><h4>Repeated Player Block</h4></div>
+                  <div><p class="section-label">Build 013</p><h4>Repeated Player Block</h4></div>
                   <span class="pill neutral" id="designer-block-count">0</span>
                 </div>
                 <label for="designer-lineup-side">Collection
@@ -427,6 +457,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=012"></script>
+  <script type="module" src="./js/app.js?v=013-pdf-hotfix1"></script>
 </body>
 </html>

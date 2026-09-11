@@ -1086,3 +1086,77 @@ button { font: inherit; }
 }
 .repeated-slot-guide::before { left: 50%; top: -4px; bottom: -4px; width: 1px; transform: translateX(-50%); }
 .repeated-slot-guide::after { top: 50%; left: -4px; right: -4px; height: 1px; transform: translateY(-50%); }
+
+/* Build 013: composite / free-text mappings */
+.designer-composite-panel {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, rgba(255,255,255,.12));
+}
+
+.designer-controls textarea {
+  width: 100%;
+  min-height: 74px;
+  resize: vertical;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.composite-insert-button {
+  align-self: end;
+  min-height: 39px;
+}
+
+.composite-preview {
+  display: grid;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0,0,0,.13);
+  overflow-wrap: anywhere;
+}
+
+.composite-preview span {
+  color: var(--muted-2);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.composite-preview strong {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
+
+.mapping-marker.template-marker {
+  white-space: pre;
+  text-align: left;
+}
+
+.mapping-marker.template-marker.align-center {
+  text-align: center;
+  transform: translate(-50%, calc(-1 * var(--preview-font-px)));
+}
+
+.mapping-marker.template-marker.align-right {
+  text-align: right;
+  transform: translate(-100%, calc(-1 * var(--preview-font-px)));
+}
+
+.mapping-marker.template-marker.align-center::before {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mapping-marker.template-marker.align-right::before {
+  left: 100%;
+  transform: translateX(-50%);
+}

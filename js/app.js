@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 012
+ * Build: 013
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=012";
-import { normalizePregameData } from "./normalize.js?v=012";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=012";
-import { formatFieldValue } from "./formatter.js?v=012";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=013";
+import { normalizePregameData } from "./normalize.js?v=013";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=013";
+import { formatFieldValue } from "./formatter.js?v=013";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=012";
+} from "./storage.js?v=013";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -122,6 +122,13 @@ const elements = {
   designerFieldSelect: document.querySelector("#designer-field-select"),
   designerFontSize: document.querySelector("#designer-font-size"),
   designerPlaceButton: document.querySelector("#designer-place-btn"),
+  designerTemplateText: document.querySelector("#designer-template-text"),
+  designerTemplateField: document.querySelector("#designer-template-field"),
+  designerTemplateInsertButton: document.querySelector("#designer-template-insert-btn"),
+  designerTemplateAlignment: document.querySelector("#designer-template-alignment"),
+  designerTemplateFontSize: document.querySelector("#designer-template-font-size"),
+  designerTemplatePreview: document.querySelector("#designer-template-preview"),
+  designerTemplatePlaceButton: document.querySelector("#designer-template-place-btn"),
   designerBlockCount: document.querySelector("#designer-block-count"),
   designerLineupSide: document.querySelector("#designer-lineup-side"),
   designerLineupCapacity: document.querySelector("#designer-lineup-capacity"),
@@ -158,14 +165,14 @@ const elements = {
   appStatusDot: document.querySelector("#app-status-dot")
 };
 
-initialize();
-
 async function initialize() {
   const today = getLocalDateString();
   state.selectedDate = today;
   elements.gameDateInput.value = today;
   updateSelectedDateUi(today);
   populateDesignerFieldSelect();
+  populateDesignerTemplateFieldSelect();
+  updateDesignerTemplatePreview();
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today));
   elements.gameDateInput.addEventListener("change", handleGameDateChange);
@@ -188,6 +195,9 @@ async function initialize() {
   elements.openDesignerButton.addEventListener("click", openDesigner);
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
   elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
+  elements.designerTemplateInsertButton.addEventListener("click", insertDesignerTemplateField);
+  elements.designerTemplateText.addEventListener("input", updateDesignerTemplatePreview);
+  elements.designerTemplatePlaceButton.addEventListener("click", beginDesignerTemplatePlacement);
   elements.designerCreateBlockButton.addEventListener("click", createDesignerRepeatedBlock);
   elements.designerBlockSelect.addEventListener("change", syncDesignerBlockControls);
   elements.designerLineupSide.addEventListener("change", populateDesignerColumnFieldSelect);
@@ -1150,7 +1160,7 @@ async function openDesigner() {
     await renderDesignerPage();
     renderDesignerMappingList();
     renderDesignerBlockList();
-    setDesignerMessage("Place scalar fields or create a repeated player block.");
+    setDesignerMessage("Place scalar fields, composite text, or create a repeated player block.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
     setDesignerMessage(errorMessage(error, "The Designer could not open this layout."), true);
@@ -1163,6 +1173,94 @@ function beginDesignerPlacement() {
   if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Font size must be between 1 and 144 points.", true);
   setDesignerPlacement({ mode: "scalar" });
   setDesignerMessage(`Click where the baseline for ${designerFieldLabel(elements.designerFieldSelect.value)} should begin.`);
+}
+
+function populateDesignerTemplateFieldSelect() {
+  if (!elements.designerTemplateField) return;
+  elements.designerTemplateField.replaceChildren();
+  const groups = new Map();
+  for (const definition of getSupportedFields({ cardinality: "single" })) {
+    if (!groups.has(definition.category)) groups.set(definition.category, []);
+    groups.get(definition.category).push(definition);
+  }
+  for (const [category, definitions] of groups) {
+    const group = document.createElement("optgroup");
+    group.label = category;
+    for (const definition of definitions) {
+      const option = document.createElement("option");
+      option.value = definition.id;
+      option.textContent = definition.label;
+      group.append(option);
+    }
+    elements.designerTemplateField.append(group);
+  }
+}
+
+function templateTokenForField(fieldId) {
+  const definition = getFieldDefinition(fieldId);
+  return definition ? `[${definition.label}]` : "";
+}
+
+function templateFieldIdByToken(tokenText) {
+  const token = String(tokenText || "").trim();
+  const direct = getFieldDefinition(token);
+  if (direct?.cardinality === "single") return direct.id;
+  const definition = getSupportedFields({ cardinality: "single" }).find((entry) => entry.label === token);
+  return definition?.id || null;
+}
+
+function templateFieldIds(template) {
+  const ids = [];
+  const seen = new Set();
+  const regex = /\[([^\[\]]+)\]/g;
+  let match;
+  while ((match = regex.exec(String(template || ""))) !== null) {
+    const id = templateFieldIdByToken(match[1]);
+    if (id && !seen.has(id)) { seen.add(id); ids.push(id); }
+  }
+  return ids;
+}
+
+function resolveTemplateText(template, model) {
+  return String(template || "").replace(/\[([^\[\]]+)\]/g, (_whole, token) => {
+    const fieldId = templateFieldIdByToken(token);
+    if (!fieldId) return "";
+    const definition = getFieldDefinition(fieldId);
+    const resolution = resolveField(model, fieldId);
+    return formatFieldValue(definition, resolution, model) || "";
+  });
+}
+
+function insertDesignerTemplateField() {
+  const fieldId = elements.designerTemplateField.value;
+  const token = templateTokenForField(fieldId);
+  if (!token) return;
+  const textarea = elements.designerTemplateText;
+  const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
+  const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : textarea.value.length;
+  textarea.value = textarea.value.slice(0, start) + token + textarea.value.slice(end);
+  const caret = start + token.length;
+  textarea.focus();
+  textarea.setSelectionRange(caret, caret);
+  updateDesignerTemplatePreview();
+}
+
+function updateDesignerTemplatePreview() {
+  if (!elements.designerTemplatePreview) return;
+  const template = elements.designerTemplateText.value;
+  const preview = resolveTemplateText(template, DESIGNER_SAMPLE_MODEL);
+  elements.designerTemplatePreview.textContent = preview || "Enter text or insert a field.";
+}
+
+function beginDesignerTemplatePlacement() {
+  if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
+  const template = elements.designerTemplateText.value;
+  if (!template.trim()) return setDesignerMessage("Enter composite text before placing it.", true);
+  const size = Number(elements.designerTemplateFontSize.value);
+  if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Composite font size must be between 1 and 144 points.", true);
+  const alignment = ["left", "center", "right"].includes(elements.designerTemplateAlignment.value) ? elements.designerTemplateAlignment.value : "left";
+  setDesignerPlacement({ mode: "template", template, fontSize: size, alignment });
+  setDesignerMessage(`Click the ${alignment}-alignment baseline anchor for the composite text.`);
 }
 
 async function createDesignerRepeatedBlock() {
@@ -1285,6 +1383,36 @@ async function handleDesignerStageClick(event) {
       state.selectedLayoutId = layout.id;
     } catch (error) {
       setDesignerMessage(errorMessage(error, "The mapping could not be saved."), true);
+    }
+    return;
+  }
+
+  if (placement.mode === "template") {
+    const mapping = {
+      id: makeMappingId(),
+      field: null,
+      content: { type: "template", template: placement.template },
+      pageIndex: state.designerPageNumber - 1,
+      xPercent,
+      yPercent,
+      fontSize: placement.fontSize,
+      alignment: placement.alignment,
+      anchor: `baseline-${placement.alignment}`
+    };
+    layout.mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
+    layout.mappings.push(mapping);
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 5);
+    layout.updatedAt = new Date().toISOString();
+    try {
+      await saveLayout(layout);
+      cancelDesignerPlacement();
+      renderDesignerOverlay();
+      renderDesignerMappingList();
+      setDesignerMessage("Placed composite text.");
+      await refreshLayouts();
+      state.selectedLayoutId = layout.id;
+    } catch (error) {
+      setDesignerMessage(errorMessage(error, "The composite text mapping could not be saved."), true);
     }
     return;
   }
@@ -1419,18 +1547,21 @@ function renderDesignerOverlay() {
   mappings.forEach((mapping) => {
     const marker = document.createElement("button");
     marker.type = "button";
-    marker.className = `mapping-marker${getFieldDefinition(mapping.field) ? "" : " unsupported"}`;
+    const isTemplate = mapping.content?.type === "template";
+    const alignment = isTemplate && ["left", "center", "right"].includes(mapping.alignment) ? mapping.alignment : "left";
+    marker.className = `mapping-marker${isTemplate ? ` template-marker align-${alignment}` : ""}${!isTemplate && !getFieldDefinition(mapping.field) ? " unsupported" : ""}`;
     marker.dataset.mappingId = mapping.id || "";
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
     const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
     marker.style.fontSize = `${previewFontPx}px`;
     marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-    marker.textContent = designerFieldPreview(mapping.field);
-    marker.title = `${designerFieldLabel(mapping.field)} • click to delete`;
+    marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL) || "[blank composite]") : designerFieldPreview(mapping.field);
+    marker.title = `${isTemplate ? "Composite text" : designerFieldLabel(mapping.field)} • click to delete`;
     marker.addEventListener("click", async (event) => {
       event.stopPropagation();
-      if (!window.confirm(`Delete mapping "${designerFieldLabel(mapping.field)}"?`)) return;
+      const label = mapping.content?.type === "template" ? "Composite text" : designerFieldLabel(mapping.field);
+      if (!window.confirm(`Delete mapping "${label}"?`)) return;
       await deleteDesignerMapping(mapping.id);
     });
     elements.designerOverlay.append(marker);
@@ -1498,7 +1629,7 @@ function renderDesignerMappingList() {
   if (!mappings.length) {
     const empty = document.createElement("p");
     empty.className = "subtle";
-    empty.textContent = "No scalar fields mapped yet.";
+    empty.textContent = "No scalar or composite mappings yet.";
     elements.designerMappingList.append(empty);
     return;
   }
@@ -1507,7 +1638,8 @@ function renderDesignerMappingList() {
     row.className = "designer-mapping-row";
     const copy = document.createElement("div");
     const strong = document.createElement("strong");
-    strong.textContent = designerFieldLabel(mapping.field);
+    const isTemplate = mapping.content?.type === "template";
+    strong.textContent = isTemplate ? `Composite: ${mapping.content.template}` : designerFieldLabel(mapping.field);
     const meta = document.createElement("span");
     meta.textContent = `Page ${mapping.pageIndex + 1} • ${(mapping.xPercent * 100).toFixed(1)}%, ${(mapping.yPercent * 100).toFixed(1)}% • ${mapping.fontSize} pt • ${mapping.anchor || "legacy"}`;
     copy.append(strong, meta);
@@ -1575,7 +1707,7 @@ async function showDesignerMapping(mapping) {
     const marker = Array.from(elements.designerOverlay.querySelectorAll(".mapping-marker"))
       .find((candidate) => candidate.dataset.mappingId === String(mapping.id || ""));
     if (!marker) {
-      setDesignerMessage(`Mapped field “${designerFieldLabel(mapping.field)}” could not be located on the rendered page.`, true);
+      setDesignerMessage(`${mapping.content?.type === "template" ? "Composite text" : `Mapped field “${designerFieldLabel(mapping.field)}”`} could not be located on the rendered page.`, true);
       return;
     }
     marker.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
@@ -1584,7 +1716,7 @@ async function showDesignerMapping(mapping) {
     marker.classList.add("show-target");
     marker.focus({ preventScroll: true });
     window.setTimeout(() => marker.classList.remove("show-target"), 1800);
-    setDesignerMessage(`Showing ${designerFieldLabel(mapping.field)} on page ${mapping.pageIndex + 1}.`);
+    setDesignerMessage(`Showing ${mapping.content?.type === "template" ? "composite text" : designerFieldLabel(mapping.field)} on page ${mapping.pageIndex + 1}.`);
   } catch (error) {
     setDesignerMessage(errorMessage(error, "That mapped field could not be shown."), true);
   }
@@ -1974,7 +2106,13 @@ async function generateTestPdf() {
 
     for (const mapping of mappings) {
       const page = pages[mapping.pageIndex];
-      if (!page) { skipped.push(mapping.field); continue; }
+      if (!page) { skipped.push(mapping.content?.type === "template" ? "composite text" : mapping.field); continue; }
+      if (mapping.content?.type === "template") {
+        const text = resolveTemplateText(mapping.content.template, model);
+        if (!text) continue;
+        drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+        continue;
+      }
       const definition = getFieldDefinition(mapping.field);
       if (!definition) { skipped.push(mapping.field); continue; }
       const resolution = resolveField(model, mapping.field);
@@ -2037,15 +2175,27 @@ function drawAlignedPdfText(page, font, text, fontSize, xPercent, yPercent, alig
   const size = Number(fontSize) || 10;
   const { width, height } = page.getSize();
   const anchorX = width * clamp(Number(xPercent) || 0, 0, 1);
-  const y = height * (1 - clamp(Number(yPercent) || 0, 0, 1));
-  const textWidth = font.widthOfTextAtSize(text, size);
-  const x = alignment === "right" ? anchorX - textWidth : alignment === "center" ? anchorX - textWidth / 2 : anchorX;
-  page.drawText(text, { x, y, size, font, color: globalThis.PDFLib.rgb(0, 0, 0) });
+  const anchorY = height * (1 - clamp(Number(yPercent) || 0, 0, 1));
+  const lines = String(text ?? "").split(/\r\n|\r|\n/);
+  const lineHeight = size * 1.2;
+
+  lines.forEach((line, lineIndex) => {
+    // pdf-lib StandardFonts use WinAnsi encoding and cannot encode newline
+    // characters directly. Draw each template line independently instead.
+    if (!line) return;
+    const textWidth = font.widthOfTextAtSize(line, size);
+    const x = alignment === "right" ? anchorX - textWidth : alignment === "center" ? anchorX - textWidth / 2 : anchorX;
+    const y = anchorY - lineIndex * lineHeight;
+    page.drawText(line, { x, y, size, font, color: globalThis.PDFLib.rgb(0, 0, 0) });
+  });
 }
 
 function collectLayoutFieldIds(layout) {
   const ids = [];
-  for (const mapping of layout?.mappings || []) if (mapping.field) ids.push(canonicalFieldId(mapping.field));
+  for (const mapping of layout?.mappings || []) {
+    if (mapping.content?.type === "template") ids.push(...templateFieldIds(mapping.content.template));
+    else if (mapping.field) ids.push(canonicalFieldId(mapping.field));
+  }
   for (const block of layout?.repeatedBlocks || []) for (const column of block.columns || []) if (column.field) ids.push(canonicalFieldId(column.field));
   return ids;
 }
@@ -2205,3 +2355,6 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+// Start only after module-level constants (including Designer sample data) are initialized.
+initialize();
