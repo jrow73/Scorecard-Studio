@@ -927,3 +927,34 @@ acceptance and final PDF placement testing were completed successfully.
 - Advanced conditionals, formulas, rich text, per-token styling, and repeated-collection tokens remain future work.
 - Build 012 was accepted in browser testing; vertical, horizontal, and grid repeated-block geometry all generated correctly.
 - Future Designer sample-data work should fill unused preview slots with collection-aware synthetic identities (for example Sample Player / Sample Pitcher / Sample Umpire) while respecting eventual name-format choices; unusually large capacities should likely use a soft warning rather than an MLB-specific hard assumption.
+
+## Build 014 — Individual Collection Placement
+- Adds the fourth placement mode: individual collection members may be mapped independently rather than inferred from list/grid spacing.
+- Individual mappings are stored separately in `layout.individualMappings` and advance a layout to schema version 6 only when used.
+- Two selectors are supported:
+  - slot/order: select a 1-based collection member and place one of its repeated fields anywhere;
+  - role: select a semantic role when the collection has stable role metadata.
+- Role placement is initially supported for Away/Home starting lineups by defensive-position abbreviation and for the umpire crew by assignment (Home Plate, 1B, 2B, 3B, LF, RF, Replay).
+- Bench and bullpen individual placement use slot/order because those collections do not expose a stable semantic role appropriate for mapping.
+- Umpires now expose a canonical normalized `game.umpires.crew[]` collection while preserving the existing named Home/First/Second/Third views used elsewhere in the app.
+- Individual mappings retain field-specific PDF-point font size, left/center/right baseline alignment, page-relative coordinates, Designer zoom behavior, and normal missing-value handling.
+- Existing scalar, composite/free-text, vertical, horizontal, and grid mappings remain backward compatible.
+- Build 014 is a capability/proof-of-concept increment. Final Designer workflow and terminology remain deferred to the later UI/UX cleanup pass.
+
+## Post-Build 014 Architecture Note - Composable Collection Mappings
+
+The collection features proven in Builds 010-014 are **composable layers**, not mutually exclusive mapping modes. The final Designer should allow a user to combine these decisions independently:
+
+1. **Collection** - choose the source records, such as starting lineup, bench, bullpen, or umpires.
+2. **Arrangement** - choose how records are positioned: vertical list, horizontal list, grid, or individual placement.
+3. **Content** - choose what appears within each record/slot. This may be one or more ordinary collection fields or a composite/free-text record template.
+4. **Formatting** - apply font, size, alignment, and future static or data-driven/conditional color.
+5. **Individual identification** - when Arrangement is Individual, identify the record either by list order/slot or by semantic role where the collection supports roles.
+
+Examples:
+
+- A bullpen may use a **vertical repeated arrangement** with a composite record template such as `#[Jersey Number] ([Throws]) [First Initial]. [Last Name]`, producing lines such as `#26 (R) J. Smith` and `#2 (L) B. Johnson`.
+- A defensive diamond may use **individual placement by defensive role**, with the Catcher location containing multiple pieces of content such as `#52 Cal Raleigh (S)`.
+- Future conditional formatting may color a whole record or selected content according to data, such as a user-selected blue for right-handed throwers and red for left-handed throwers. The architecture should not assume particular colors or require color at all.
+
+The eventual Designer UX should therefore organize these concepts as compatible choices rather than forcing the user to choose between repeated block, composite text, and individual placement as exclusive features.

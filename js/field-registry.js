@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Canonical pregame field registry
  * Version: 0.2.0-dev
- * Build: 011
+ * Build: 014
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
@@ -101,7 +101,13 @@ const bullpenFields = ["away", "home"].flatMap((side) => {
   ];
 });
 
-const repeatedFields = [...lineupFields, ...benchFields, ...bullpenFields];
+
+const umpireFields = [
+  repeatedField("game.umpires.crew[].name", "Umpire Crew — Name", "Game / Umpires", "text", "game.umpires.crew", "name"),
+  repeatedField("game.umpires.crew[].role", "Umpire Crew — Role", "Game / Umpires", "text", "game.umpires.crew", "role")
+];
+
+const repeatedFields = [...lineupFields, ...benchFields, ...bullpenFields, ...umpireFields];
 
 export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields, ...repeatedFields].map((entry, index) => Object.freeze({
   ...entry,
@@ -138,11 +144,18 @@ export function resolveField(model, fieldId, selector = null) {
   if (!definition) return { value: null, state: "unsupported", reason: `Unsupported field: ${fieldId}`, fieldId: canonicalId };
 
   if (definition.cardinality === "repeated") {
-    const slot = Number(selector?.slot);
-    if (!Number.isInteger(slot) || slot < 1) return { value: null, state: "unsupported", reason: "Repeated field requires a positive slot selector.", fieldId: canonicalId };
     const rows = getCollectionRows(model, definition.collection);
-    const row = rows[slot - 1];
-    if (!row) return { value: null, state: "missing", reason: `Collection slot ${slot} is not available.`, fieldId: canonicalId };
+    let row = null;
+    if (selector?.role) {
+      const wantedRole = canonicalRoleKey(selector.role);
+      row = rows.find((candidate) => canonicalRoleKey(repeatedRowRole(definition.collection, candidate)) === wantedRole) || null;
+      if (!row) return { value: null, state: "missing", reason: `Collection role ${selector.role} is not available.`, fieldId: canonicalId };
+    } else {
+      const slot = Number(selector?.slot);
+      if (!Number.isInteger(slot) || slot < 1) return { value: null, state: "unsupported", reason: "Repeated field requires a positive slot selector or role selector.", fieldId: canonicalId };
+      row = rows[slot - 1];
+      if (!row) return { value: null, state: "missing", reason: `Collection slot ${slot} is not available.`, fieldId: canonicalId };
+    }
     const value = readPath(row, definition.rowPath);
     return value === null || value === undefined || value === ""
       ? { value: null, state: "missing", reason: "Value is not available.", fieldId: canonicalId }
@@ -200,6 +213,26 @@ function resolveWeather(model, definition) {
   if (!parts.length) return { value: null, state: "missing", reason: "Weather is not available.", fieldId: definition.id };
   const partial = [temp, condition, wind].some((item) => item.state !== "available");
   return { value: parts.join(" • "), state: partial ? "partial" : "available", reason: partial ? "Weather summary is partial." : "", fieldId: definition.id };
+}
+
+
+function repeatedRowRole(collection, row) {
+  if (collection === "game.umpires.crew") return row?.role ?? null;
+  if (collection === "away.lineup" || collection === "home.lineup") return row?.position?.abbreviation ?? null;
+  return null;
+}
+
+function canonicalRoleKey(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return "";
+  if (text.includes("home") && text.includes("plate")) return "HP";
+  if (text.includes("first")) return "1B";
+  if (text.includes("second")) return "2B";
+  if (text.includes("third")) return "3B";
+  if (text.includes("left") && text.includes("field")) return "LF";
+  if (text.includes("right") && text.includes("field")) return "RF";
+  if (text.includes("replay")) return "REPLAY";
+  return text.toUpperCase().replace(/[^A-Z0-9]+/g, "");
 }
 
 function readPath(root, path) {

@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 013</p>
+          <p>0.2.0-dev • Build 014</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 013</p>
+          <p class="section-label">Build 014</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 013</p>
+              <p class="section-label">Build 014</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,7 +309,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 013 • Composite / Free Text</p>
+              <p class="section-label">Build 014 • Composite / Free Text</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -328,7 +328,7 @@
 
               <div class="designer-composite-panel">
                 <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 013</p><h4>Composite / Free Text</h4></div>
+                  <div><p class="section-label">Build 014</p><h4>Composite / Free Text</h4></div>
                 </div>
                 <label for="designer-template-text">Text template
                   <textarea id="designer-template-text" rows="3" placeholder="Example: Weather: [Temperature]°F, [Conditions]"></textarea>
@@ -358,7 +358,7 @@
 
               <div class="designer-repeat-panel">
                 <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 013</p><h4>Repeated Player Block</h4></div>
+                  <div><p class="section-label">Build 014</p><h4>Repeated Player Block</h4></div>
                   <span class="pill neutral" id="designer-block-count">0</span>
                 </div>
                 <label for="designer-lineup-side">Collection
@@ -415,6 +415,54 @@
                 <div id="designer-block-list" class="designer-block-list"></div>
               </div>
 
+              <div class="designer-repeat-panel">
+                <div class="designer-repeat-heading">
+                  <div><p class="section-label">Build 014</p><h4>Individual Collection Placement</h4></div>
+                  <span class="pill neutral" id="designer-individual-count">0</span>
+                </div>
+                <label for="designer-individual-collection">Collection
+                  <select id="designer-individual-collection">
+                    <option value="away.lineup">Away starting lineup</option>
+                    <option value="home.lineup">Home starting lineup</option>
+                    <option value="away.bench">Away bench</option>
+                    <option value="home.bench">Home bench</option>
+                    <option value="away.bullpen">Away bullpen</option>
+                    <option value="home.bullpen">Home bullpen</option>
+                    <option value="game.umpires.crew">Umpire crew</option>
+                  </select>
+                </label>
+                <label for="designer-individual-strategy">Select member by
+                  <select id="designer-individual-strategy">
+                    <option value="slot">Slot / order</option>
+                    <option value="role">Role</option>
+                  </select>
+                </label>
+                <label id="designer-individual-slot-wrap" for="designer-individual-slot">Slot number
+                  <input id="designer-individual-slot" type="number" min="1" max="30" step="1" value="1" />
+                </label>
+                <label id="designer-individual-role-wrap" for="designer-individual-role" hidden>Role
+                  <select id="designer-individual-role"></select>
+                </label>
+                <div class="designer-column-grid">
+                  <label for="designer-individual-field">Field
+                    <select id="designer-individual-field"></select>
+                  </label>
+                  <label for="designer-individual-alignment">Alignment
+                    <select id="designer-individual-alignment">
+                      <option value="left">Left</option>
+                      <option value="center">Center</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </label>
+                </div>
+                <label for="designer-individual-font-size">Font size (pt)
+                  <input id="designer-individual-font-size" type="number" min="1" max="144" step="0.5" value="10" />
+                </label>
+                <button class="primary-button" id="designer-individual-place-btn" type="button">Place Individual Item</button>
+                <p class="subtle designer-help">Place one collection member independently by slot/order, or by semantic role when the collection supports it. Role placement is available for starting-lineup defensive positions and umpire assignments.</p>
+                <div id="designer-individual-list" class="designer-block-list"></div>
+              </div>
+
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
               <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
               <div class="message-panel generate-message" id="generate-message" role="status" aria-live="polite">
@@ -457,6 +505,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=013-pdf-hotfix1"></script>
+  <script type="module" src="./js/app.js?v=014"></script>
 </body>
 </html>

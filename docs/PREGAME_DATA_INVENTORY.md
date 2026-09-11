@@ -533,3 +533,20 @@ items/roles depending on the scorecard design. This also covers role-oriented
 diagrams, such as individually placed umpire assignments or lineup players placed
 at defensive positions. These are future placement capabilities, not new pregame
 data requirements.
+
+## Historical GamePack Caveat - Final/As-Is State vs. Pregame Snapshot
+
+Testing against completed historical games indicates that MLB GamePack collection data can reflect the **final or current as-is state of the game**, rather than preserving the exact lineup, bench, bullpen, and defensive assignments that existed before first pitch.
+
+Observed implications include:
+
+- A player who began the game on the bench but later entered may no longer appear in the returned bench collection.
+- A substitute can replace the original starter in the returned lineup/defensive-position state.
+- Role-based individual placement can therefore render the final defensive assignment correctly while still being wrong for a scorecard intended to represent the pregame configuration.
+- Historical bench counts can be much smaller than the actual pregame bench because players who entered the game are no longer represented there as bench players.
+
+Example: if **J. Pereda replaces Cal Raleigh at catcher in the seventh inning**, the completed-game GamePack may identify Pereda as the catcher and place him in the applicable lineup state while Raleigh is absent from the collections Scorecard Studio currently uses. A historical defensive diamond generated directly from that state would therefore show Pereda at catcher instead of the pregame starter, Raleigh.
+
+**Design consequence:** Scorecard Studio must not treat a completed historical GamePack as an authoritative pregame snapshot. This is a data-source limitation rather than a placement/rendering defect.
+
+A future data investigation should determine whether the original pregame state can be obtained or reconstructed reliably from another MLB endpoint, boxscore data, play-by-play/substitution history, or a combination of sources. Until that investigation is complete, historical games should be treated cautiously when validating pregame collection content.

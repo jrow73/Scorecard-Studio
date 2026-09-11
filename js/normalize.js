@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 011
+ * Build: 014
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
@@ -206,9 +206,10 @@ function normalizeStanding(standing) {
 }
 
 function normalizeUmpires(officials) {
-  const result = { home: null, first: null, second: null, third: null, additional: [] };
+  const result = { home: null, first: null, second: null, third: null, additional: [], crew: [] };
   for (const item of Array.isArray(officials) ? officials : []) {
     const official = { id: item?.official?.id ?? null, name: item?.official?.fullName ?? null, role: item?.officialType ?? null };
+    result.crew.push(official);
     const role = String(item?.officialType || "").toLowerCase();
     if (role.includes("home")) result.home = official;
     else if (role.includes("first")) result.first = official;

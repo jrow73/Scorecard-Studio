@@ -349,3 +349,35 @@ Under-capacity repeated collections are normal and render blank unused slots.
 Only over-capacity membership is a warning condition. Future generation UX should
 surface overflow clearly after the file-generation interaction rather than rely
 on a page message that may be obscured by the browser save dialog.
+
+## 13. Build 014 individual-placement slice
+
+Build 014 adds individual collection placement without assigning any collection a
+mandatory visual geometry. Individual mappings are stored separately from scalar
+mappings and repeated blocks and identify a collection, a selector, one repeated
+field, a PDF page-relative baseline anchor, PDF-point font size, and left/center/right
+alignment.
+
+Two selector forms are supported:
+
+- `{ slot: N }` selects the Nth member of the normalized collection using the same
+  1-based ordering already used by repeated blocks.
+- `{ role: key }` selects a member by stable semantic role when the collection
+  supports role identity.
+
+Starting-lineup role selection resolves against `position.abbreviation`, allowing
+independent placement of defensive roles such as `C`, `1B`, `2B`, `3B`, `SS`, `LF`,
+`CF`, `RF`, `DH`, and `P`. This is independent of batting order. Umpire role
+selection resolves against the explicit official assignment rather than array order.
+Canonical role keys include `HP`, `1B`, `2B`, `3B`, `LF`, `RF`, and `REPLAY`.
+
+Build 014 also exposes `game.umpires.crew[]` to the runtime repeated-field registry
+with `name` and `role` leaves. The normalizer preserves the complete crew array while
+retaining the prior named umpire views (`home`, `first`, `second`, `third`, and
+`additional`) for compatibility.
+
+Bench and bullpen collections support individual slot/order placement but do not yet
+claim semantic role selectors. Missing slots or roles render blank through the normal
+field-resolution path. Existing scalar mappings, composite/free-text mappings, and
+Build 010-012 repeated-block geometry require no migration. Layouts containing an
+individual mapping advance to schema version 6.

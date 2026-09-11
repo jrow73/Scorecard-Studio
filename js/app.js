@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 013
+ * Build: 014
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=013";
-import { normalizePregameData } from "./normalize.js?v=013";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=013";
-import { formatFieldValue } from "./formatter.js?v=013";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=014";
+import { normalizePregameData } from "./normalize.js?v=014";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=014";
+import { formatFieldValue } from "./formatter.js?v=014";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=013";
+} from "./storage.js?v=014";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -146,6 +146,18 @@ const elements = {
   designerPlaceColumnButton: document.querySelector("#designer-place-column-btn"),
   designerDeleteBlockButton: document.querySelector("#designer-delete-block-btn"),
   designerBlockList: document.querySelector("#designer-block-list"),
+  designerIndividualCount: document.querySelector("#designer-individual-count"),
+  designerIndividualCollection: document.querySelector("#designer-individual-collection"),
+  designerIndividualStrategy: document.querySelector("#designer-individual-strategy"),
+  designerIndividualSlotWrap: document.querySelector("#designer-individual-slot-wrap"),
+  designerIndividualSlot: document.querySelector("#designer-individual-slot"),
+  designerIndividualRoleWrap: document.querySelector("#designer-individual-role-wrap"),
+  designerIndividualRole: document.querySelector("#designer-individual-role"),
+  designerIndividualField: document.querySelector("#designer-individual-field"),
+  designerIndividualAlignment: document.querySelector("#designer-individual-alignment"),
+  designerIndividualFontSize: document.querySelector("#designer-individual-font-size"),
+  designerIndividualPlaceButton: document.querySelector("#designer-individual-place-btn"),
+  designerIndividualList: document.querySelector("#designer-individual-list"),
   designerGenerateButton: document.querySelector("#designer-generate-btn"),
   generateMessage: document.querySelector("#generate-message"),
   designerMessage: document.querySelector("#designer-message"),
@@ -205,6 +217,9 @@ async function initialize() {
   elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
   elements.designerPlaceColumnButton.addEventListener("click", beginDesignerBlockColumnPlacement);
   elements.designerDeleteBlockButton.addEventListener("click", deleteSelectedDesignerBlock);
+  elements.designerIndividualCollection.addEventListener("change", syncDesignerIndividualControls);
+  elements.designerIndividualStrategy.addEventListener("change", syncDesignerIndividualControls);
+  elements.designerIndividualPlaceButton.addEventListener("click", beginDesignerIndividualPlacement);
   elements.designerGenerateButton.addEventListener("click", generateTestPdf);
   elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
@@ -1157,10 +1172,12 @@ async function openDesigner() {
     ensureRepeatedBlockIds(layout);
     populateDesignerBlockSelect();
     populateDesignerColumnFieldSelect();
+    syncDesignerIndividualControls();
     await renderDesignerPage();
     renderDesignerMappingList();
     renderDesignerBlockList();
-    setDesignerMessage("Place scalar fields, composite text, or create a repeated player block.");
+    renderDesignerIndividualList();
+    setDesignerMessage("Place scalar fields, composite text, repeated blocks, or individual collection items.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
     setDesignerMessage(errorMessage(error, "The Designer could not open this layout."), true);
@@ -1346,6 +1363,72 @@ function beginDesignerBlockColumnPlacement() {
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} in slot 1. Scorecard Studio will repeat that offset through the block.`);
 }
 
+const INDIVIDUAL_ROLE_OPTIONS = {
+  "away.lineup": [["C", "Catcher"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["SS", "Shortstop"], ["LF", "Left Field"], ["CF", "Center Field"], ["RF", "Right Field"], ["DH", "Designated Hitter"], ["P", "Pitcher"]],
+  "home.lineup": [["C", "Catcher"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["SS", "Shortstop"], ["LF", "Left Field"], ["CF", "Center Field"], ["RF", "Right Field"], ["DH", "Designated Hitter"], ["P", "Pitcher"]],
+  "game.umpires.crew": [["HP", "Home Plate"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["LF", "Left Field"], ["RF", "Right Field"], ["REPLAY", "Replay Official"]]
+};
+
+function syncDesignerIndividualControls() {
+  if (!elements.designerIndividualCollection) return;
+  const collection = elements.designerIndividualCollection.value || "away.lineup";
+  const supportsRole = Boolean(INDIVIDUAL_ROLE_OPTIONS[collection]);
+  if (!supportsRole && elements.designerIndividualStrategy.value === "role") elements.designerIndividualStrategy.value = "slot";
+  const byRole = elements.designerIndividualStrategy.value === "role" && supportsRole;
+  elements.designerIndividualSlotWrap.hidden = byRole;
+  elements.designerIndividualRoleWrap.hidden = !byRole;
+  const roleOption = Array.from(elements.designerIndividualStrategy.options).find((option) => option.value === "role");
+  if (roleOption) roleOption.disabled = !supportsRole;
+  elements.designerIndividualRole.replaceChildren();
+  for (const [value, label] of INDIVIDUAL_ROLE_OPTIONS[collection] || []) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    elements.designerIndividualRole.append(option);
+  }
+  populateDesignerIndividualFieldSelect();
+}
+
+function populateDesignerIndividualFieldSelect() {
+  if (!elements.designerIndividualField) return;
+  const collection = elements.designerIndividualCollection.value || "away.lineup";
+  elements.designerIndividualField.replaceChildren();
+  for (const definition of getSupportedFields({ cardinality: "repeated", collection })) {
+    const option = document.createElement("option");
+    option.value = definition.id;
+    option.textContent = definition.label.replace(/^(Away|Home) (Lineup|Bench|Bullpen) — /, "").replace(/^Umpire Crew — /, "");
+    elements.designerIndividualField.append(option);
+  }
+}
+
+function individualSelectorLabel(mapping) {
+  if (mapping?.strategy === "role") {
+    const option = (INDIVIDUAL_ROLE_OPTIONS[mapping.collection] || []).find(([value]) => value === mapping.selector?.role);
+    return option?.[1] || mapping.selector?.role || "Role";
+  }
+  return `Slot ${mapping?.selector?.slot || 1}`;
+}
+
+function beginDesignerIndividualPlacement() {
+  if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
+  const collection = elements.designerIndividualCollection.value || "away.lineup";
+  let strategy = elements.designerIndividualStrategy.value === "role" ? "role" : "slot";
+  if (strategy === "role" && !INDIVIDUAL_ROLE_OPTIONS[collection]) return setDesignerMessage("That collection does not provide stable roles. Use slot/order placement instead.", true);
+  const selector = strategy === "role"
+    ? { role: elements.designerIndividualRole.value }
+    : { slot: Number(elements.designerIndividualSlot.value) };
+  if (strategy === "slot" && (!Number.isInteger(selector.slot) || selector.slot < 1 || selector.slot > 30)) return setDesignerMessage("Individual slot must be a whole number from 1 through 30.", true);
+  if (strategy === "role" && !selector.role) return setDesignerMessage("Choose a role to place.", true);
+  const field = elements.designerIndividualField.value;
+  const definition = getFieldDefinition(field);
+  if (!definition || definition.cardinality !== "repeated" || definition.collection !== collection) return setDesignerMessage("Choose a field that belongs to the selected collection.", true);
+  const fontSize = Number(elements.designerIndividualFontSize.value);
+  if (!Number.isFinite(fontSize) || fontSize < 1 || fontSize > 144) return setDesignerMessage("Individual field font size must be between 1 and 144 points.", true);
+  const alignment = ["left", "center", "right"].includes(elements.designerIndividualAlignment.value) ? elements.designerIndividualAlignment.value : "left";
+  setDesignerPlacement({ mode: "individual", collection, strategy, selector, field, fontSize, alignment });
+  setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} • ${individualSelectorLabel({ collection, strategy, selector })}.`);
+}
+
 async function handleDesignerStageClick(event) {
   if (!state.designerPlacing || !state.designerPdfDocument || !state.designerPlacement) return;
   const canvasRect = elements.designerPdfCanvas.getBoundingClientRect();
@@ -1413,6 +1496,40 @@ async function handleDesignerStageClick(event) {
       state.selectedLayoutId = layout.id;
     } catch (error) {
       setDesignerMessage(errorMessage(error, "The composite text mapping could not be saved."), true);
+    }
+    return;
+  }
+
+  if (placement.mode === "individual") {
+    const mapping = {
+      id: makeMappingId(),
+      type: "individual",
+      collection: placement.collection,
+      strategy: placement.strategy,
+      selector: { ...placement.selector },
+      field: placement.field,
+      content: { type: "field", field: placement.field },
+      pageIndex: state.designerPageNumber - 1,
+      xPercent,
+      yPercent,
+      fontSize: placement.fontSize,
+      alignment: placement.alignment,
+      anchor: `baseline-${placement.alignment}`
+    };
+    layout.individualMappings = Array.isArray(layout.individualMappings) ? layout.individualMappings : [];
+    layout.individualMappings.push(mapping);
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 6);
+    layout.updatedAt = new Date().toISOString();
+    try {
+      await saveLayout(layout);
+      cancelDesignerPlacement();
+      renderDesignerOverlay();
+      renderDesignerIndividualList();
+      setDesignerMessage(`Placed ${designerFieldLabel(mapping.field)} for ${individualSelectorLabel(mapping)}.`);
+      await refreshLayouts();
+      state.selectedLayoutId = layout.id;
+    } catch (error) {
+      setDesignerMessage(errorMessage(error, "The individual mapping could not be saved."), true);
     }
     return;
   }
@@ -1619,6 +1736,78 @@ function renderDesignerOverlay() {
       }
     }
   }
+
+  for (const mapping of layout.individualMappings || []) {
+    if (mapping.pageIndex !== state.designerPageNumber - 1) continue;
+    const marker = document.createElement("button");
+    marker.type = "button";
+    const alignment = ["left", "center", "right"].includes(mapping.alignment) ? mapping.alignment : "left";
+    marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(mapping.field) ? "" : " unsupported"}`;
+    marker.dataset.individualId = mapping.id || "";
+    marker.style.left = `${mapping.xPercent * 100}%`;
+    marker.style.top = `${mapping.yPercent * 100}%`;
+    const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
+    marker.style.fontSize = `${previewFontPx}px`;
+    marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+    marker.textContent = designerFieldPreview(mapping.field, mapping.selector) || `[${individualSelectorLabel(mapping)}]`;
+    marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to delete`;
+    marker.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (!window.confirm(`Delete individual mapping "${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)}"?`)) return;
+      await deleteDesignerIndividualMapping(mapping.id);
+    });
+    elements.designerOverlay.append(marker);
+  }
+}
+
+function renderDesignerIndividualList() {
+  const layout = selectedLayout();
+  const mappings = layout?.individualMappings || [];
+  if (!elements.designerIndividualList) return;
+  elements.designerIndividualCount.textContent = String(mappings.length);
+  elements.designerIndividualList.replaceChildren();
+  if (!mappings.length) {
+    const empty = document.createElement("p");
+    empty.className = "subtle";
+    empty.textContent = "No individual collection placements yet.";
+    elements.designerIndividualList.append(empty);
+    return;
+  }
+  for (const mapping of mappings) {
+    const row = document.createElement("div");
+    row.className = "designer-block-column-row";
+    const text = document.createElement("span");
+    text.textContent = `${individualCollectionLabel(mapping.collection)} • ${individualSelectorLabel(mapping)} • ${designerFieldLabel(mapping.field)} • ${mapping.fontSize} pt • ${mapping.alignment || "left"}`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "secondary-button compact-button";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", () => deleteDesignerIndividualMapping(mapping.id));
+    row.append(text, remove);
+    elements.designerIndividualList.append(row);
+  }
+}
+
+async function deleteDesignerIndividualMapping(id) {
+  const layout = selectedLayout();
+  if (!layout) return;
+  layout.individualMappings = (layout.individualMappings || []).filter((item) => item.id !== id);
+  layout.updatedAt = new Date().toISOString();
+  try {
+    await saveLayout(layout);
+    renderDesignerOverlay();
+    renderDesignerIndividualList();
+    setDesignerMessage("Individual collection mapping deleted.");
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The individual mapping could not be deleted."), true);
+  }
+}
+
+function individualCollectionLabel(collection) {
+  if (collection === "game.umpires.crew") return "Umpire crew";
+  return blockLabel({ collection });
 }
 
 function renderDesignerMappingList() {
@@ -2006,6 +2195,11 @@ function ensureMappingIds(layout) {
     if (!mapping.content && mapping.field) { mapping.content = { type: "field", field: mapping.field }; changed = true; }
   }
   if (ensureRepeatedBlockIds(layout)) changed = true;
+  layout.individualMappings = Array.isArray(layout.individualMappings) ? layout.individualMappings : [];
+  for (const mapping of layout.individualMappings) {
+    if (!mapping.id) { mapping.id = makeMappingId(); changed = true; }
+    if (!mapping.content && mapping.field) { mapping.content = { type: "field", field: mapping.field }; changed = true; }
+  }
   return changed;
 }
 
@@ -2014,7 +2208,20 @@ const DESIGNER_SAMPLE_MODEL = {
   game: {
     date: "2026-09-08", startTime: "2026-09-08T23:10:00Z",
     venue: { name: "T-Mobile Park", timeZone: "America/Los_Angeles" },
-    weather: { temperature: 72, condition: "Partly Cloudy", wind: "7 mph, Out To RF" }
+    weather: { temperature: 72, condition: "Partly Cloudy", wind: "7 mph, Out To RF" },
+    umpires: {
+      home: { id: 4001, name: "Sample Umpire", role: "Home Plate" },
+      first: { id: 4002, name: "Sample Umpire", role: "First Base" },
+      second: { id: 4003, name: "Sample Umpire", role: "Second Base" },
+      third: { id: 4004, name: "Sample Umpire", role: "Third Base" },
+      additional: [],
+      crew: [
+        { id: 4001, name: "Sample Umpire", role: "Home Plate" },
+        { id: 4002, name: "Sample Umpire", role: "First Base" },
+        { id: 4003, name: "Sample Umpire", role: "Second Base" },
+        { id: 4004, name: "Sample Umpire", role: "Third Base" }
+      ]
+    }
   },
   away: {
     team: { name: "Tampa Bay Devil Rays", locationName: "St. Petersburg", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB", record: { wins: 78, losses: 64, pct: 0.549 } },
@@ -2026,7 +2233,7 @@ const DESIGNER_SAMPLE_MODEL = {
   home: {
     team: { name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA", record: { wins: 81, losses: 61, pct: 0.570 } },
     manager: { name: "Dan Wilson" }, startingPitcher: { player: { name: "Logan Gilbert" } },
-    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "RF"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"]),
+    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "3B"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"]),
     bench: sampleBench(["Mitch Garver", "Leo Rivas", "Luke Raley", "Austin Shenton"], ["C", "IF", "OF", "IF"], ["R", "S", "L", "L"]),
     bullpen: sampleBullpen(["Andrés Muñoz", "Matt Brash", "Gabe Speier", "Eduard Bazardo", "Carlos Vargas", "Casey Legumina"], ["R", "R", "L", "R", "R", "R"])
   }
@@ -2079,7 +2286,8 @@ async function generateTestPdf() {
   if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
   const mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
   const repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
-  if (!mappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar field or repeated-block column before generating a PDF.", true);
+  const individualMappings = Array.isArray(layout.individualMappings) ? layout.individualMappings : [];
+  if (!mappings.length && !individualMappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar, composite, repeated-block, or individual collection field before generating a PDF.", true);
   if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load a game first.", true);
   if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
 
@@ -2153,6 +2361,21 @@ async function generateTestPdf() {
       }
     }
 
+    for (const mapping of individualMappings) {
+      const page = pages[mapping.pageIndex];
+      if (!page) { skipped.push(`${mapping.collection} individual mapping page`); continue; }
+      const definition = getFieldDefinition(mapping.field);
+      if (!definition || definition.cardinality !== "repeated" || definition.collection !== mapping.collection) { skipped.push(mapping.field || "individual field"); continue; }
+      const resolution = resolveField(model, mapping.field, mapping.selector);
+      const text = formatFieldValue(definition, resolution, model);
+      if (!text) {
+        if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
+        else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+        continue;
+      }
+      drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+    }
+
     const outputBytes = await pdfDoc.save();
     const blob = new Blob([outputBytes], { type: "application/pdf" });
     const selected = state.schedule.find((game) => game.gamePk === state.selectedGamePk);
@@ -2197,6 +2420,7 @@ function collectLayoutFieldIds(layout) {
     else if (mapping.field) ids.push(canonicalFieldId(mapping.field));
   }
   for (const block of layout?.repeatedBlocks || []) for (const column of block.columns || []) if (column.field) ids.push(canonicalFieldId(column.field));
+  for (const mapping of layout?.individualMappings || []) if (mapping.field) ids.push(canonicalFieldId(mapping.field));
   return ids;
 }
 
