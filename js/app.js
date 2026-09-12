@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 014
+ * Build: 015
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=014";
-import { normalizePregameData } from "./normalize.js?v=014";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=014";
-import { formatFieldValue } from "./formatter.js?v=014";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=015";
+import { normalizePregameData } from "./normalize.js?v=015";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=015";
+import { formatFieldValue } from "./formatter.js?v=015";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=014";
+} from "./storage.js?v=015";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -35,6 +35,11 @@ const state = {
   designerRenderToken: 0,
   designerRenderScale: 1,
   designerZoom: 1,
+  designerSelection: null,
+  designerDrag: null,
+  designerSaveTimer: null,
+  designerPageWidthPoints: 0,
+  designerPageHeightPoints: 0,
   normalizedPregame: null,
   gameDayLoadToken: 0
 };
@@ -173,6 +178,23 @@ const elements = {
   designerStage: document.querySelector("#designer-stage"),
   designerPdfCanvas: document.querySelector("#designer-pdf-canvas"),
   designerOverlay: document.querySelector("#designer-overlay"),
+  designerPaletteEditButton: document.querySelector("#designer-palette-edit-btn"),
+  designerPaletteChooser: document.querySelector("#designer-palette-chooser"),
+  designerUnplacedCount: document.querySelector("#designer-unplaced-count"),
+  designerPlacedCount: document.querySelector("#designer-placed-count"),
+  designerUnplacedList: document.querySelector("#designer-unplaced-list"),
+  designerPlacedList: document.querySelector("#designer-placed-list"),
+  designerSelectionTitle: document.querySelector("#designer-selection-title"),
+  designerSelectionHelp: document.querySelector("#designer-selection-help"),
+  designerSelectionControls: document.querySelector("#designer-selection-controls"),
+  designerSelectionClearButton: document.querySelector("#designer-selection-clear-btn"),
+  designerSelectionX: document.querySelector("#designer-selection-x"),
+  designerSelectionY: document.querySelector("#designer-selection-y"),
+  designerSelectionFontSize: document.querySelector("#designer-selection-font-size"),
+  designerSelectionAlignment: document.querySelector("#designer-selection-alignment"),
+  designerSelectionTemplateWrap: document.querySelector("#designer-selection-template-wrap"),
+  designerSelectionTemplate: document.querySelector("#designer-selection-template"),
+  designerSelectionDeleteButton: document.querySelector("#designer-selection-delete-btn"),
   appStatusText: document.querySelector("#app-status-text"),
   appStatusDot: document.querySelector("#app-status-dot")
 };
@@ -227,6 +249,15 @@ async function initialize() {
   elements.designerZoomInButton.addEventListener("click", () => changeDesignerZoom(1));
   elements.designerZoomSelect.addEventListener("change", () => setDesignerZoom(Number(elements.designerZoomSelect.value)));
   elements.designerStage.addEventListener("click", handleDesignerStageClick);
+  elements.designerPaletteEditButton.addEventListener("click", toggleDesignerPaletteChooser);
+  elements.designerSelectionClearButton.addEventListener("click", clearDesignerSelection);
+  elements.designerSelectionDeleteButton.addEventListener("click", deleteSelectedDesignerObject);
+  elements.designerSelectionX.addEventListener("input", applyDesignerInspectorPosition);
+  elements.designerSelectionY.addEventListener("input", applyDesignerInspectorPosition);
+  elements.designerSelectionFontSize.addEventListener("input", applyDesignerInspectorFormatting);
+  elements.designerSelectionAlignment.addEventListener("change", applyDesignerInspectorFormatting);
+  elements.designerSelectionTemplate.addEventListener("input", applyDesignerInspectorTemplate);
+  document.addEventListener("keydown", handleDesignerKeyboard);
   window.addEventListener("resize", debounce(() => {
     if (!document.querySelector('[data-view="designer"]').hidden && state.designerPdfDocument) renderDesignerPage();
   }, 150));
@@ -948,6 +979,8 @@ function formatDisplayDate(dateString) {
 
 
 function showView(view) {
+  document.body.classList.toggle("designer-mode", view === "designer");
+  if (view !== "designer") clearDesignerSelection({ render: false });
   document.querySelectorAll("[data-view]").forEach((node) => {
     node.hidden = node.dataset.view !== view;
   });
@@ -987,6 +1020,8 @@ async function createLayout() {
       id,
       schemaVersion: 2,
       mappings: [],
+      designerPaletteGroups: [],
+      designerPaletteConfigured: false,
       name,
       description,
       pdfTemplateId: id,
@@ -1177,7 +1212,10 @@ async function openDesigner() {
     renderDesignerMappingList();
     renderDesignerBlockList();
     renderDesignerIndividualList();
-    setDesignerMessage("Place scalar fields, composite text, repeated blocks, or individual collection items.");
+    initializeDesignerPalette(layout);
+    renderDesignerPalette();
+    renderDesignerSelectionInspector();
+    setDesignerMessage("Select data from the palette, place it on the scorecard, then click any placed object to fine-tune it.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
     setDesignerMessage(errorMessage(error, "The Designer could not open this layout."), true);
@@ -1196,7 +1234,9 @@ function populateDesignerTemplateFieldSelect() {
   if (!elements.designerTemplateField) return;
   elements.designerTemplateField.replaceChildren();
   const groups = new Map();
+  const activeGroups = activeDesignerPaletteGroups();
   for (const definition of getSupportedFields({ cardinality: "single" })) {
+    if (selectedLayout() && !activeGroups.has(designerPaletteGroupForField(definition))) continue;
     if (!groups.has(definition.category)) groups.set(definition.category, []);
     groups.get(definition.category).push(definition);
   }
@@ -1211,6 +1251,8 @@ function populateDesignerTemplateFieldSelect() {
     }
     elements.designerTemplateField.append(group);
   }
+  elements.designerTemplateField.disabled = elements.designerTemplateField.options.length === 0;
+  elements.designerTemplateInsertButton.disabled = elements.designerTemplateField.options.length === 0;
 }
 
 function templateTokenForField(fieldId) {
@@ -1461,6 +1503,8 @@ async function handleDesignerStageClick(event) {
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerMappingList();
+      renderDesignerPalette();
+      selectDesignerObject({ kind: "mapping", id: mapping.id }, { renderOverlay: true });
       setDesignerMessage(`Placed ${designerFieldLabel(field)} on page ${state.designerPageNumber}.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
@@ -1491,6 +1535,8 @@ async function handleDesignerStageClick(event) {
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerMappingList();
+      renderDesignerPalette();
+      selectDesignerObject({ kind: "mapping", id: mapping.id }, { renderOverlay: true });
       setDesignerMessage("Placed composite text.");
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
@@ -1525,6 +1571,8 @@ async function handleDesignerStageClick(event) {
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerIndividualList();
+      renderDesignerPalette();
+      selectDesignerObject({ kind: "individual", id: mapping.id }, { renderOverlay: true });
       setDesignerMessage(`Placed ${designerFieldLabel(mapping.field)} for ${individualSelectorLabel(mapping)}.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
@@ -1585,6 +1633,8 @@ async function handleDesignerStageClick(event) {
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerBlockList();
+      renderDesignerPalette();
+      selectDesignerObject({ kind: "block", blockId: block.id }, { renderOverlay: true });
       setDesignerMessage(`Placed ${block.capacity} ${blockLabel(block)} slots as a ${blockArrangementLabel(block)}.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
@@ -1621,6 +1671,8 @@ async function handleDesignerStageClick(event) {
       cancelDesignerPlacement();
       renderDesignerOverlay();
       renderDesignerBlockList();
+      renderDesignerPalette();
+      selectDesignerObject({ kind: "repeatedColumn", blockId: block.id, columnId: column.id }, { renderOverlay: true });
       setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned repeated slot field.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
@@ -1635,6 +1687,8 @@ async function renderDesignerPage() {
   const token = ++state.designerRenderToken;
   const page = await state.designerPdfDocument.getPage(state.designerPageNumber);
   const baseViewport = page.getViewport({ scale: 1 });
+  state.designerPageWidthPoints = baseViewport.width;
+  state.designerPageHeightPoints = baseViewport.height;
   const availableWidth = Math.max(260, Math.min(elements.designerStageScroll.clientWidth - 8, 1100));
   const fitScale = availableWidth / baseViewport.width;
   const scale = fitScale * state.designerZoom;
@@ -1674,13 +1728,9 @@ function renderDesignerOverlay() {
     marker.style.fontSize = `${previewFontPx}px`;
     marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
     marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL) || "[blank composite]") : designerFieldPreview(mapping.field);
-    marker.title = `${isTemplate ? "Composite text" : designerFieldLabel(mapping.field)} • click to delete`;
-    marker.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      const label = mapping.content?.type === "template" ? "Composite text" : designerFieldLabel(mapping.field);
-      if (!window.confirm(`Delete mapping "${label}"?`)) return;
-      await deleteDesignerMapping(mapping.id);
-    });
+    marker.title = `${isTemplate ? "Composite text" : designerFieldLabel(mapping.field)} • click to edit • drag to move`;
+    if (state.designerSelection?.kind === "mapping" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
+    wireDesignerMarker(marker, { kind: "mapping", id: mapping.id });
     elements.designerOverlay.append(marker);
   });
 
@@ -1696,7 +1746,9 @@ function renderDesignerOverlay() {
         guide.className = "repeated-slot-guide";
         guide.style.left = `${slot.xPercent * 100}%`;
         guide.style.top = `${slot.yPercent * 100}%`;
-        guide.title = `${blockLabel(block)} slot ${slotIndex + 1}`;
+        guide.title = `${blockLabel(block)} slot ${slotIndex + 1} • click to select block`;
+        guide.classList.toggle("selected-object", state.designerSelection?.kind === "block" && state.designerSelection.blockId === block.id);
+        guide.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject({ kind: "block", blockId: block.id }); });
         elements.designerOverlay.append(guide);
         for (const column of block.columns || []) {
           const marker = document.createElement("span");
@@ -1709,7 +1761,11 @@ function renderDesignerOverlay() {
           marker.style.fontSize = `${previewFontPx}px`;
           marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
           marker.textContent = designerFieldPreview(column.field, { slot: slotIndex + 1 });
-          marker.title = `${designerFieldLabel(column.field)} • slot ${slotIndex + 1} • ${alignment}`;
+          marker.title = `${designerFieldLabel(column.field)} • slot ${slotIndex + 1} • ${alignment} • click to edit column`;
+          marker.dataset.blockId = block.id;
+          marker.dataset.columnId = column.id;
+          if (state.designerSelection?.kind === "repeatedColumn" && state.designerSelection.blockId === block.id && state.designerSelection.columnId === column.id) marker.classList.add("selected-object");
+          marker.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject({ kind: "repeatedColumn", blockId: block.id, columnId: column.id }); });
           elements.designerOverlay.append(marker);
         }
       }
@@ -1719,6 +1775,9 @@ function renderDesignerOverlay() {
         const guide = document.createElement("div");
         guide.className = "repeated-row-guide";
         guide.style.top = `${yPercent * 100}%`;
+        guide.classList.toggle("selected-object", state.designerSelection?.kind === "block" && state.designerSelection.blockId === block.id);
+        guide.title = `${blockLabel(block)} • click to select block`;
+        guide.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject({ kind: "block", blockId: block.id }); });
         elements.designerOverlay.append(guide);
         for (const column of block.columns || []) {
           const marker = document.createElement("span");
@@ -1730,7 +1789,11 @@ function renderDesignerOverlay() {
           marker.style.fontSize = `${previewFontPx}px`;
           marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
           marker.textContent = designerFieldPreview(column.field, { slot: rowIndex + 1 });
-          marker.title = `${designerFieldLabel(column.field)} • row ${rowIndex + 1} • ${alignment}`;
+          marker.title = `${designerFieldLabel(column.field)} • row ${rowIndex + 1} • ${alignment} • click to edit column`;
+          marker.dataset.blockId = block.id;
+          marker.dataset.columnId = column.id;
+          if (state.designerSelection?.kind === "repeatedColumn" && state.designerSelection.blockId === block.id && state.designerSelection.columnId === column.id) marker.classList.add("selected-object");
+          marker.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject({ kind: "repeatedColumn", blockId: block.id, columnId: column.id }); });
           elements.designerOverlay.append(marker);
         }
       }
@@ -1750,12 +1813,9 @@ function renderDesignerOverlay() {
     marker.style.fontSize = `${previewFontPx}px`;
     marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
     marker.textContent = designerFieldPreview(mapping.field, mapping.selector) || `[${individualSelectorLabel(mapping)}]`;
-    marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to delete`;
-    marker.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      if (!window.confirm(`Delete individual mapping "${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)}"?`)) return;
-      await deleteDesignerIndividualMapping(mapping.id);
-    });
+    marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to edit • drag to move`;
+    if (state.designerSelection?.kind === "individual" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
+    wireDesignerMarker(marker, { kind: "individual", id: mapping.id });
     elements.designerOverlay.append(marker);
   }
 }
@@ -1797,6 +1857,9 @@ async function deleteDesignerIndividualMapping(id) {
     await saveLayout(layout);
     renderDesignerOverlay();
     renderDesignerIndividualList();
+    clearDesignerSelection({ render: false });
+    renderDesignerPalette();
+    renderDesignerSelectionInspector();
     setDesignerMessage("Individual collection mapping deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
@@ -1920,6 +1983,9 @@ async function deleteDesignerMapping(id) {
     await saveLayout(layout);
     renderDesignerOverlay();
     renderDesignerMappingList();
+    clearDesignerSelection({ render: false });
+    renderDesignerPalette();
+    renderDesignerSelectionInspector();
     setDesignerMessage("Mapping deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
@@ -1938,6 +2004,9 @@ async function deleteDesignerBlockColumn(blockId, columnId) {
     await saveLayout(layout);
     renderDesignerOverlay();
     renderDesignerBlockList();
+    clearDesignerSelection({ render: false });
+    renderDesignerPalette();
+    renderDesignerSelectionInspector();
     setDesignerMessage("Collection column deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
@@ -1960,6 +2029,9 @@ async function deleteSelectedDesignerBlock() {
     syncDesignerBlockControls();
     renderDesignerOverlay();
     renderDesignerBlockList();
+    clearDesignerSelection({ render: false });
+    renderDesignerPalette();
+    renderDesignerSelectionInspector();
     setDesignerMessage("Repeated block deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
@@ -2169,9 +2241,14 @@ function designerFieldPreview(field, selector = null) {
 }
 
 function populateDesignerFieldSelect() {
+  if (!elements.designerFieldSelect) return;
+  const previous = elements.designerFieldSelect.value;
   elements.designerFieldSelect.replaceChildren();
+  const activeGroups = activeDesignerPaletteGroups();
   const groups = new Map();
   for (const definition of getSupportedFields({ cardinality: "single" })) {
+    const paletteGroup = designerPaletteGroupForField(definition);
+    if (!activeGroups.has(paletteGroup)) continue;
     if (!groups.has(definition.category)) groups.set(definition.category, []);
     groups.get(definition.category).push(definition);
   }
@@ -2185,6 +2262,372 @@ function populateDesignerFieldSelect() {
       group.append(option);
     }
     elements.designerFieldSelect.append(group);
+  }
+  if (previous && Array.from(elements.designerFieldSelect.options).some((option) => option.value === previous)) elements.designerFieldSelect.value = previous;
+}
+
+
+const DESIGNER_PALETTE_GROUPS = [
+  { id: "game", label: "Game Information" },
+  { id: "away-team", label: "Away Team Information" },
+  { id: "home-team", label: "Home Team Information" },
+  { id: "away-lineup", label: "Away Starting Lineup" },
+  { id: "home-lineup", label: "Home Starting Lineup" },
+  { id: "away-bench", label: "Away Bench" },
+  { id: "home-bench", label: "Home Bench" },
+  { id: "away-bullpen", label: "Away Bullpen" },
+  { id: "home-bullpen", label: "Home Bullpen" },
+  { id: "umpires", label: "Umpires" },
+  { id: "custom", label: "Custom / Composite Text" }
+];
+
+function designerPaletteGroupForField(definition) {
+  const id = String(definition?.id || "");
+  if (id.startsWith("away.lineup")) return "away-lineup";
+  if (id.startsWith("home.lineup")) return "home-lineup";
+  if (id.startsWith("away.bench")) return "away-bench";
+  if (id.startsWith("home.bench")) return "home-bench";
+  if (id.startsWith("away.bullpen")) return "away-bullpen";
+  if (id.startsWith("home.bullpen")) return "home-bullpen";
+  if (id.startsWith("away.")) return "away-team";
+  if (id.startsWith("home.")) return "home-team";
+  if (id.startsWith("game.umpires")) return "umpires";
+  return "game";
+}
+
+function initializeDesignerPalette(layout) {
+  if (!layout) return;
+  if (!Array.isArray(layout.designerPaletteGroups)) {
+    layout.designerPaletteGroups = DESIGNER_PALETTE_GROUPS.map((group) => group.id);
+  }
+  elements.designerPaletteChooser.hidden = layout.designerPaletteConfigured !== false;
+  renderDesignerPaletteChooser();
+  populateDesignerFieldSelect();
+  populateDesignerTemplateFieldSelect();
+}
+
+function activeDesignerPaletteGroups() {
+  const layout = selectedLayout();
+  const configured = Array.isArray(layout?.designerPaletteGroups) ? layout.designerPaletteGroups : DESIGNER_PALETTE_GROUPS.map((group) => group.id);
+  return new Set(configured);
+}
+
+function toggleDesignerPaletteChooser() {
+  elements.designerPaletteChooser.hidden = !elements.designerPaletteChooser.hidden;
+  if (!elements.designerPaletteChooser.hidden) renderDesignerPaletteChooser();
+}
+
+function renderDesignerPaletteChooser() {
+  const layout = selectedLayout();
+  if (!layout || !elements.designerPaletteChooser) return;
+  const active = activeDesignerPaletteGroups();
+  elements.designerPaletteChooser.replaceChildren();
+  for (const group of DESIGNER_PALETTE_GROUPS) {
+    const label = document.createElement("label");
+    label.className = "designer-palette-check";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = active.has(group.id);
+    input.addEventListener("change", async () => {
+      const next = activeDesignerPaletteGroups();
+      if (input.checked) next.add(group.id); else next.delete(group.id);
+      layout.designerPaletteGroups = Array.from(next);
+      layout.designerPaletteConfigured = true;
+      layout.updatedAt = new Date().toISOString();
+      try { await saveLayout(layout); } catch (error) { setDesignerMessage(errorMessage(error, "Palette choices could not be saved."), true); }
+      populateDesignerFieldSelect();
+      populateDesignerTemplateFieldSelect();
+      renderDesignerPalette();
+    });
+    const text = document.createElement("span");
+    text.textContent = group.label;
+    label.append(input, text);
+    elements.designerPaletteChooser.append(label);
+  }
+}
+
+function designerPaletteItems() {
+  const active = activeDesignerPaletteGroups();
+  const items = [];
+  for (const definition of getSupportedFields({ cardinality: "single" })) {
+    const groupId = designerPaletteGroupForField(definition);
+    if (!active.has(groupId)) continue;
+    items.push({ kind: "field", id: definition.id, groupId, label: definition.label });
+  }
+  const collections = [
+    ["away.lineup", "Away starting lineup", "away-lineup"], ["home.lineup", "Home starting lineup", "home-lineup"],
+    ["away.bench", "Away bench", "away-bench"], ["home.bench", "Home bench", "home-bench"],
+    ["away.bullpen", "Away bullpen", "away-bullpen"], ["home.bullpen", "Home bullpen", "home-bullpen"],
+    ["game.umpires.crew", "Umpire crew", "umpires"]
+  ];
+  for (const [collection, label, groupId] of collections) if (active.has(groupId)) items.push({ kind: "collection", id: collection, groupId, label });
+  if (active.has("custom")) items.push({ kind: "custom", id: "custom", groupId: "custom", label: "Composite / Free Text" });
+  return items;
+}
+
+function isDesignerPaletteItemPlaced(item, layout) {
+  if (item.kind === "field") return (layout.mappings || []).some((mapping) => mapping.content?.type !== "template" && canonicalFieldId(mapping.field) === canonicalFieldId(item.id));
+  if (item.kind === "custom") return (layout.mappings || []).some((mapping) => mapping.content?.type === "template");
+  return (layout.repeatedBlocks || []).some((block) => block.collection === item.id) || (layout.individualMappings || []).some((mapping) => mapping.collection === item.id);
+}
+
+function renderDesignerPalette() {
+  const layout = selectedLayout();
+  if (!layout || !elements.designerUnplacedList) return;
+  const unplaced = [], placed = [];
+  for (const item of designerPaletteItems()) (isDesignerPaletteItemPlaced(item, layout) ? placed : unplaced).push(item);
+  elements.designerUnplacedCount.textContent = String(unplaced.length);
+  elements.designerPlacedCount.textContent = String(placed.length);
+  renderDesignerPaletteList(elements.designerUnplacedList, unplaced, false);
+  renderDesignerPaletteList(elements.designerPlacedList, placed, true);
+}
+
+function renderDesignerPaletteList(container, items, placed) {
+  container.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("p"); empty.className = "subtle"; empty.textContent = placed ? "Nothing placed from the selected palette yet." : "Everything in the selected palette is placed."; container.append(empty); return;
+  }
+  for (const item of items) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `designer-palette-item${placed ? " placed" : ""}`;
+    button.textContent = item.label;
+    button.addEventListener("click", () => activateDesignerPaletteItem(item, placed));
+    container.append(button);
+  }
+}
+
+function activateDesignerPaletteItem(item, placed) {
+  if (item.kind === "field") {
+    if (Array.from(elements.designerFieldSelect.options).some((option) => option.value === item.id)) elements.designerFieldSelect.value = item.id;
+    const section = elements.designerFieldSelect.closest("details"); if (section) section.open = true;
+    if (placed) {
+      const mapping = (selectedLayout()?.mappings || []).find((entry) => entry.content?.type !== "template" && canonicalFieldId(entry.field) === canonicalFieldId(item.id));
+      if (mapping) showDesignerMapping(mapping);
+    } else setDesignerMessage(`Ready to place ${item.label}. Choose font size, then select Place Field.`);
+    return;
+  }
+  if (item.kind === "custom") {
+    const section = elements.designerTemplateText.closest("details"); if (section) section.open = true;
+    if (placed) {
+      const mapping = (selectedLayout()?.mappings || []).find((entry) => entry.content?.type === "template");
+      if (mapping) showDesignerMapping(mapping);
+    }
+    return;
+  }
+  const block = (selectedLayout()?.repeatedBlocks || []).find((entry) => entry.collection === item.id);
+  if (block && placed) {
+    elements.designerBlockSelect.value = block.id; syncDesignerBlockControls(); selectDesignerObject({ kind: "block", blockId: block.id });
+  } else {
+    const section = elements.designerLineupSide.closest("details"); if (section) section.open = true;
+    if (Array.from(elements.designerLineupSide.options).some((option) => option.value === item.id)) elements.designerLineupSide.value = item.id;
+    populateDesignerColumnFieldSelect();
+    setDesignerMessage(`Ready to configure ${item.label}. Choose an arrangement and create the repeated block.`);
+  }
+}
+
+function locateDesignerObject(selection = state.designerSelection) {
+  const layout = selectedLayout();
+  if (!layout || !selection) return null;
+  if (selection.kind === "mapping") return (layout.mappings || []).find((item) => item.id === selection.id) || null;
+  if (selection.kind === "individual") return (layout.individualMappings || []).find((item) => item.id === selection.id) || null;
+  if (selection.kind === "block") return (layout.repeatedBlocks || []).find((item) => item.id === selection.blockId) || null;
+  if (selection.kind === "repeatedColumn") {
+    const block = (layout.repeatedBlocks || []).find((item) => item.id === selection.blockId);
+    const column = block?.columns?.find((item) => item.id === selection.columnId);
+    return block && column ? { block, column } : null;
+  }
+  return null;
+}
+
+function designerSelectionLabel(selection, object) {
+  if (!selection || !object) return "Nothing selected";
+  if (selection.kind === "mapping") return object.content?.type === "template" ? "Composite / Free Text" : designerFieldLabel(object.field);
+  if (selection.kind === "individual") return `${designerFieldLabel(object.field)} • ${individualSelectorLabel(object)}`;
+  if (selection.kind === "block") return blockLabel(object);
+  if (selection.kind === "repeatedColumn") return `${blockLabel(object.block)} • ${designerFieldLabel(object.column.field)}`;
+  return "Selected object";
+}
+
+function selectDesignerObject(selection, options = {}) {
+  state.designerSelection = selection;
+  if (options.renderOverlay !== false) renderDesignerOverlay();
+  renderDesignerSelectionInspector();
+}
+
+function clearDesignerSelection(options = {}) {
+  state.designerSelection = null;
+  if (options.render !== false && elements.designerOverlay) renderDesignerOverlay();
+  if (elements.designerSelectionTitle) renderDesignerSelectionInspector();
+}
+
+function designerSelectionAnchor(selection, object) {
+  const width = state.designerPageWidthPoints || 1, height = state.designerPageHeightPoints || 1;
+  if (selection.kind === "mapping" || selection.kind === "individual") return { x: Number(object.xPercent || 0) * width, y: Number(object.yPercent || 0) * height, canX: true, canY: true };
+  if (selection.kind === "block") {
+    const g = object.geometry || {};
+    if (isSlotGridGeometry(object)) return { x: Number(g.firstXPercent || 0) * width, y: Number(g.firstYPercent || 0) * height, canX: true, canY: true };
+    return { x: null, y: Number(g.firstYPercent || 0) * height, canX: false, canY: true };
+  }
+  if (selection.kind === "repeatedColumn") {
+    const { block, column } = object;
+    const x = isSlotGridGeometry(block) ? (Number(block.geometry?.firstXPercent || 0) * width) + Number(column.xOffsetPoints || 0) : Number(column.xPercent || 0) * width;
+    const y = Number(block.geometry?.firstYPercent || 0) * height;
+    return { x, y, canX: true, canY: false };
+  }
+  return { x: null, y: null, canX: false, canY: false };
+}
+
+function renderDesignerSelectionInspector() {
+  if (!elements.designerSelectionTitle) return;
+  const selection = state.designerSelection;
+  const object = locateDesignerObject(selection);
+  const active = Boolean(selection && object);
+  elements.designerSelectionControls.hidden = !active;
+  elements.designerSelectionClearButton.disabled = !active;
+  elements.designerSelectionTitle.textContent = designerSelectionLabel(selection, object);
+  elements.designerSelectionHelp.textContent = active ? "Changes here update the Designer preview immediately." : "Click a placed field on the scorecard to adjust it without deleting and replacing it.";
+  if (!active) return;
+  const anchor = designerSelectionAnchor(selection, object);
+  elements.designerSelectionX.value = anchor.x == null ? "" : anchor.x.toFixed(1);
+  elements.designerSelectionY.value = anchor.y == null ? "" : anchor.y.toFixed(1);
+  elements.designerSelectionX.disabled = !anchor.canX;
+  elements.designerSelectionY.disabled = !anchor.canY;
+  const target = selection.kind === "repeatedColumn" ? object.column : object;
+  const hasFont = selection.kind !== "block";
+  elements.designerSelectionFontSize.disabled = !hasFont;
+  elements.designerSelectionFontSize.value = hasFont ? Number(target.fontSize || 10) : "";
+  const supportsAlignment = hasFont && !(selection.kind === "mapping" && target.content?.type !== "template");
+  elements.designerSelectionAlignment.disabled = !supportsAlignment;
+  elements.designerSelectionAlignment.value = supportsAlignment ? (target.alignment || "left") : "left";
+  const isTemplate = selection.kind === "mapping" && target.content?.type === "template";
+  elements.designerSelectionTemplateWrap.hidden = !isTemplate;
+  elements.designerSelectionTemplate.value = isTemplate ? (target.content.template || "") : "";
+}
+
+function applyDesignerInspectorPosition() {
+  const selection = state.designerSelection, object = locateDesignerObject(selection);
+  if (!selection || !object) return;
+  const width = state.designerPageWidthPoints || 1, height = state.designerPageHeightPoints || 1;
+  const x = Number(elements.designerSelectionX.value), y = Number(elements.designerSelectionY.value);
+  if (selection.kind === "mapping" || selection.kind === "individual") {
+    if (Number.isFinite(x)) object.xPercent = clamp(x / width, 0, 1);
+    if (Number.isFinite(y)) object.yPercent = clamp(y / height, 0, 1);
+  } else if (selection.kind === "block") {
+    if (object.geometry && Number.isFinite(y)) {
+      const nextY = clamp(y / height, 0, 1), delta = nextY - Number(object.geometry.firstYPercent || 0);
+      object.geometry.firstYPercent = nextY;
+      if (Number.isFinite(Number(object.geometry.lastYPercent))) object.geometry.lastYPercent = clamp(Number(object.geometry.lastYPercent) + delta, 0, 1);
+    }
+    if (isSlotGridGeometry(object) && Number.isFinite(x)) {
+      const nextX = clamp(x / width, 0, 1), delta = nextX - Number(object.geometry.firstXPercent || 0);
+      object.geometry.firstXPercent = nextX;
+      if (Number.isFinite(Number(object.geometry.lastXPercent))) object.geometry.lastXPercent = clamp(Number(object.geometry.lastXPercent) + delta, 0, 1);
+    }
+  } else if (selection.kind === "repeatedColumn" && Number.isFinite(x)) {
+    if (isSlotGridGeometry(object.block)) object.column.xOffsetPoints = x - (Number(object.block.geometry.firstXPercent || 0) * width);
+    else object.column.xPercent = clamp(x / width, 0, 1);
+  }
+  markDesignerObjectChanged();
+}
+
+function applyDesignerInspectorFormatting() {
+  const selection = state.designerSelection, object = locateDesignerObject(selection);
+  if (!selection || !object || selection.kind === "block") return;
+  const target = selection.kind === "repeatedColumn" ? object.column : object;
+  const size = Number(elements.designerSelectionFontSize.value);
+  if (Number.isFinite(size) && size > 0) target.fontSize = size;
+  if (!(selection.kind === "mapping" && target.content?.type !== "template")) {
+    const alignment = elements.designerSelectionAlignment.value;
+    if (["left", "center", "right"].includes(alignment)) { target.alignment = alignment; target.anchor = `baseline-${alignment}`; }
+  }
+  markDesignerObjectChanged();
+}
+
+function applyDesignerInspectorTemplate() {
+  const selection = state.designerSelection, object = locateDesignerObject(selection);
+  if (selection?.kind !== "mapping" || object?.content?.type !== "template") return;
+  object.content.template = elements.designerSelectionTemplate.value;
+  markDesignerObjectChanged();
+}
+
+function markDesignerObjectChanged() {
+  const layout = selectedLayout(); if (!layout) return;
+  layout.updatedAt = new Date().toISOString();
+  renderDesignerOverlay();
+  renderDesignerMappingList();
+  renderDesignerBlockList();
+  renderDesignerIndividualList();
+  renderDesignerPalette();
+  scheduleDesignerSave();
+}
+
+function scheduleDesignerSave() {
+  window.clearTimeout(state.designerSaveTimer);
+  state.designerSaveTimer = window.setTimeout(async () => {
+    const layout = selectedLayout(); if (!layout) return;
+    try { await saveLayout(layout); }
+    catch (error) { setDesignerMessage(errorMessage(error, "Designer changes could not be saved."), true); }
+  }, 250);
+}
+
+function wireDesignerMarker(marker, selection) {
+  marker.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject(selection); });
+  marker.addEventListener("pointerdown", (event) => beginDesignerDrag(event, selection));
+}
+
+function beginDesignerDrag(event, selection) {
+  if (state.designerPlacing || event.button !== 0) return;
+  const object = locateDesignerObject(selection); if (!object) return;
+  event.stopPropagation(); event.preventDefault();
+  selectDesignerObject(selection);
+  const anchor = designerSelectionAnchor(selection, object);
+  if (!anchor.canX && !anchor.canY) return;
+  state.designerDrag = { selection: { ...selection }, startClientX: event.clientX, startClientY: event.clientY, startX: anchor.x, startY: anchor.y, canX: anchor.canX, canY: anchor.canY };
+  document.addEventListener("pointermove", handleDesignerDragMove);
+  document.addEventListener("pointerup", endDesignerDrag, { once: true });
+}
+
+function handleDesignerDragMove(event) {
+  const drag = state.designerDrag; if (!drag) return;
+  const scale = Math.max(state.designerRenderScale, .0001);
+  if (drag.canX && drag.startX != null) elements.designerSelectionX.value = (drag.startX + ((event.clientX - drag.startClientX) / scale)).toFixed(1);
+  if (drag.canY && drag.startY != null) elements.designerSelectionY.value = (drag.startY + ((event.clientY - drag.startClientY) / scale)).toFixed(1);
+  applyDesignerInspectorPosition();
+}
+
+function endDesignerDrag() {
+  document.removeEventListener("pointermove", handleDesignerDragMove);
+  state.designerDrag = null;
+  scheduleDesignerSave();
+}
+
+function handleDesignerKeyboard(event) {
+  const designer = document.querySelector('[data-view="designer"]');
+  if (!designer || designer.hidden || !state.designerSelection) return;
+  const tag = document.activeElement?.tagName;
+  if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+  if (event.key === "Escape") { event.preventDefault(); clearDesignerSelection(); return; }
+  if (event.key === "Delete" || event.key === "Backspace") { event.preventDefault(); deleteSelectedDesignerObject(); return; }
+  const deltas = { ArrowLeft: [-1,0], ArrowRight: [1,0], ArrowUp: [0,-1], ArrowDown: [0,1] };
+  if (!deltas[event.key]) return;
+  event.preventDefault();
+  const step = event.shiftKey ? 5 : 0.5;
+  const [dx,dy] = deltas[event.key];
+  const anchor = designerSelectionAnchor(state.designerSelection, locateDesignerObject());
+  if (anchor.canX && anchor.x != null) elements.designerSelectionX.value = (anchor.x + dx*step).toFixed(1);
+  if (anchor.canY && anchor.y != null) elements.designerSelectionY.value = (anchor.y + dy*step).toFixed(1);
+  applyDesignerInspectorPosition();
+}
+
+async function deleteSelectedDesignerObject() {
+  const selection = state.designerSelection; if (!selection) return;
+  if (selection.kind === "mapping") return deleteDesignerMapping(selection.id);
+  if (selection.kind === "individual") return deleteDesignerIndividualMapping(selection.id);
+  if (selection.kind === "repeatedColumn") return deleteDesignerBlockColumn(selection.blockId, selection.columnId);
+  if (selection.kind === "block") {
+    if (elements.designerBlockSelect) elements.designerBlockSelect.value = selection.blockId;
+    return deleteSelectedDesignerBlock();
   }
 }
 

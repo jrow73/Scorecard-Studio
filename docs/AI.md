@@ -958,3 +958,53 @@ Examples:
 - Future conditional formatting may color a whole record or selected content according to data, such as a user-selected blue for right-handed throwers and red for left-handed throwers. The architecture should not assume particular colors or require color at all.
 
 The eventual Designer UX should therefore organize these concepts as compatible choices rather than forcing the user to choose between repeated block, composite text, and individual placement as exclusive features.
+
+---
+
+## Build 015 — Designer Workspace Foundation
+
+Build 015 begins the Layout Designer UX consolidation after the placement engine was validated through Build 014.
+
+### UX direction
+
+The Designer is a dedicated full-screen workspace. When the Designer is open, normal Scorecard Studio navigation and page chrome are hidden so the PDF and editing tools receive the available browser real estate. Returning to Layouts exits Designer mode.
+
+The workspace uses three independently managed areas:
+
+- **Field Palette:** scorecard-specific data inventory with configurable categories and Placed / Unplaced organization.
+- **PDF Canvas:** persistent PDF viewport with page controls and PDF-only zoom; it does not scroll away when the user scrolls editing controls.
+- **Inspector / Tools:** selected-object properties plus progressively disclosed placement tools.
+
+For a newly created layout, the scorecard-data chooser opens on the first Designer visit so the user can decide which categories are relevant. These choices filter the working palette rather than permanently forbidding fields; categories can be added or removed later.
+
+### Live Object Editing
+
+A placed object should remain editable rather than forcing the user to delete and recreate it. Build 015 establishes this behavior for scalar/composite mappings, individual mappings, repeated-block columns, and repeated-block geometry where the underlying model permits the adjustment.
+
+Supported interaction principles include:
+
+- click a placed object to select it;
+- edit X/Y coordinates, font size, alignment, or composite template where applicable;
+- see supported changes redraw immediately in the Designer;
+- drag scalar/composite and individual mappings directly on the PDF;
+- use Arrow keys for fine nudging and Shift+Arrow for larger nudging;
+- Delete/Backspace removes the selected object;
+- Escape clears selection.
+
+Repeated-block field columns can be selected to edit font size/alignment and horizontal anchor. Repeated-block geometry can be selected to move the block origin where supported. Vertical position of an individual repeated column remains controlled by the block geometry rather than by a separate per-column Y offset.
+
+### Composable model remains authoritative
+
+The UX must preserve the composable architecture documented after Build 014:
+
+**Collection → Arrangement → Content → Formatting**
+
+Individual placement adds identification by list order or semantic role. Repeated blocks, composite/free-text content, and individual placement must not become mutually exclusive concepts merely because the UI presents them in different editing tools.
+
+### Deferred UX items
+
+- Undo/Redo remains a required future Designer capability. Build 015 deliberately avoids introducing a partial history model while the workspace interaction model is still settling.
+- Synthetic sample data should eventually fill all configured collection slots so the user can judge a fully populated block even when the current sample model contains fewer records.
+- Unusually large block capacities should eventually use a soft warning rather than an MLB-specific hard limit.
+- Generation success/warning messages should eventually move to a clearer post-generation notification/popup.
+- Static and conditional color formatting remains deferred.

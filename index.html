@@ -3,7 +3,7 @@
   Scorecard Studio
   Layout Management
   Version: 0.2.0-dev
-  Build: 013
+  Build: 015
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=013-multiline-preview-hotfix1" />
+  <link rel="stylesheet" href="./css/styles.css?v=015" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 014</p>
+          <p>0.2.0-dev • Build 015</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 014</p>
+          <p class="section-label">Build 015</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 014</p>
+              <p class="section-label">Build 015</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,14 +309,89 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 014 • Composite / Free Text</p>
+              <p class="section-label">Build 015 • Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
             <button class="secondary-button" id="designer-back-btn" type="button">Back to Layouts</button>
           </div>
           <div class="designer-grid">
+            <aside class="designer-palette" aria-label="Scorecard data palette">
+              <div class="designer-panel-heading">
+                <div><p class="section-label">Scorecard Data</p><h4>Field Palette</h4></div>
+                <button class="secondary-button compact-button" id="designer-palette-edit-btn" type="button">Choose Data</button>
+              </div>
+              <p class="subtle designer-help">Show only the data this scorecard uses. You can add categories again at any time.</p>
+              <div id="designer-palette-chooser" class="designer-palette-chooser" hidden></div>
+              <div class="designer-palette-section">
+                <div class="designer-panel-heading compact"><strong>Unplaced</strong><span class="pill neutral" id="designer-unplaced-count">0</span></div>
+                <div id="designer-unplaced-list" class="designer-palette-list"></div>
+              </div>
+              <div class="designer-palette-section">
+                <div class="designer-panel-heading compact"><strong>Placed</strong><span class="pill neutral" id="designer-placed-count">0</span></div>
+                <div id="designer-placed-list" class="designer-palette-list"></div>
+              </div>
+            </aside>
+            <div class="designer-stage-panel">
+              <div class="pdf-toolbar">
+                <button class="secondary-button" id="designer-prev-btn" type="button">Previous</button>
+                <strong id="designer-page-label">Page 1 of 1</strong>
+                <button class="secondary-button" id="designer-next-btn" type="button">Next</button>
+                <span class="designer-zoom-controls" aria-label="PDF zoom controls">
+                  <button class="secondary-button compact-button" id="designer-zoom-out-btn" type="button" aria-label="Zoom out">−</button>
+                  <select id="designer-zoom-select" aria-label="PDF zoom">
+                    <option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option>
+                    <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
+                  </select>
+                  <button class="secondary-button compact-button" id="designer-zoom-in-btn" type="button" aria-label="Zoom in">+</button>
+                </span>
+              </div>
+              <div class="designer-stage-scroll" id="designer-stage-scroll">
+                <div class="designer-stage" id="designer-stage">
+                  <canvas id="designer-pdf-canvas" aria-label="PDF page used for field mapping"></canvas>
+                  <div class="designer-overlay" id="designer-overlay" aria-label="Mapped fields"></div>
+                </div>
+              </div>
+            </div>
             <aside class="designer-controls" aria-label="Mapping controls">
+              <section class="designer-live-inspector" id="designer-live-inspector">
+                <div class="designer-panel-heading">
+                  <div><p class="section-label">Selected Object</p><h4 id="designer-selection-title">Nothing selected</h4></div>
+                  <button class="secondary-button compact-button" id="designer-selection-clear-btn" type="button">Deselect</button>
+                </div>
+                <p class="subtle" id="designer-selection-help">Click a placed field on the scorecard to adjust it without deleting and replacing it.</p>
+                <div id="designer-selection-controls" hidden>
+                  <div class="designer-column-grid">
+                    <label for="designer-selection-x">X (pt)
+                      <input id="designer-selection-x" type="number" step="0.5" />
+                    </label>
+                    <label for="designer-selection-y">Y (pt)
+                      <input id="designer-selection-y" type="number" step="0.5" />
+                    </label>
+                  </div>
+                  <div class="designer-column-grid">
+                    <label for="designer-selection-font-size">Font size (pt)
+                      <input id="designer-selection-font-size" type="number" min="1" max="144" step="0.5" />
+                    </label>
+                    <label for="designer-selection-alignment">Alignment
+                      <select id="designer-selection-alignment">
+                        <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label id="designer-selection-template-wrap" for="designer-selection-template" hidden>Template
+                    <textarea id="designer-selection-template" rows="3"></textarea>
+                  </label>
+                  <div class="designer-selection-actions">
+                    <button class="danger-button" id="designer-selection-delete-btn" type="button">Delete Selected</button>
+                  </div>
+                  <p class="subtle designer-help">Drag the selected item on the PDF, or use arrow keys to nudge it. Shift+Arrow makes a larger nudge.</p>
+                </div>
+              </section>
+
+              <details class="designer-tool-section" open>
+                <summary>Place scalar field</summary>
+                <div class="designer-tool-body">
               <label for="designer-field-select">Field
                 <select id="designer-field-select" aria-label="Scorecard field"></select>
               </label>
@@ -325,11 +400,12 @@
               </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
               <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Existing scalar mappings remain baseline-left.</p>
-
-              <div class="designer-composite-panel">
-                <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 014</p><h4>Composite / Free Text</h4></div>
                 </div>
+              </details>
+
+              <details class="designer-tool-section">
+                <summary>Composite / Free Text</summary>
+                <div class="designer-tool-body designer-composite-panel">
                 <label for="designer-template-text">Text template
                   <textarea id="designer-template-text" rows="3" placeholder="Example: Weather: [Temperature]°F, [Conditions]"></textarea>
                 </label>
@@ -354,13 +430,13 @@
                 <div class="composite-preview"><span>Preview</span><strong id="designer-template-preview">Enter text or insert a field.</strong></div>
                 <button class="primary-button" id="designer-template-place-btn" type="button">Place Composite Text</button>
                 <p class="subtle designer-help">Type ordinary text and insert supported game fields wherever needed. The template is stored exactly as written; unavailable field values render blank.</p>
-              </div>
-
-              <div class="designer-repeat-panel">
-                <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 014</p><h4>Repeated Player Block</h4></div>
-                  <span class="pill neutral" id="designer-block-count">0</span>
                 </div>
+              </details>
+
+              <details class="designer-tool-section">
+                <summary>Repeated collection</summary>
+                <div class="designer-tool-body designer-repeat-panel">
+                <div class="designer-repeat-heading"><strong>Repeated blocks</strong><span class="pill neutral" id="designer-block-count">0</span></div>
                 <label for="designer-lineup-side">Collection
                   <select id="designer-lineup-side">
                     <option value="away.lineup">Away starting lineup</option>
@@ -413,13 +489,13 @@
                 <button class="danger-button" id="designer-delete-block-btn" type="button">Delete Selected Block</button>
                 <p class="subtle designer-help">Choose a vertical list, horizontal list, or grid. Place the outer slot anchors to establish spacing, then place each field on the first slot. Scorecard Studio repeats that field position through every slot while preserving its font size and alignment.</p>
                 <div id="designer-block-list" class="designer-block-list"></div>
-              </div>
-
-              <div class="designer-repeat-panel">
-                <div class="designer-repeat-heading">
-                  <div><p class="section-label">Build 014</p><h4>Individual Collection Placement</h4></div>
-                  <span class="pill neutral" id="designer-individual-count">0</span>
                 </div>
+              </details>
+
+              <details class="designer-tool-section">
+                <summary>Individual collection placement</summary>
+                <div class="designer-tool-body designer-repeat-panel">
+                <div class="designer-repeat-heading"><strong>Individual mappings</strong><span class="pill neutral" id="designer-individual-count">0</span></div>
                 <label for="designer-individual-collection">Collection
                   <select id="designer-individual-collection">
                     <option value="away.lineup">Away starting lineup</option>
@@ -461,7 +537,8 @@
                 <button class="primary-button" id="designer-individual-place-btn" type="button">Place Individual Item</button>
                 <p class="subtle designer-help">Place one collection member independently by slot/order, or by semantic role when the collection supports it. Role placement is available for starting-lineup defensive positions and umpire assignments.</p>
                 <div id="designer-individual-list" class="designer-block-list"></div>
-              </div>
+                </div>
+              </details>
 
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
               <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
@@ -476,27 +553,6 @@
                 <div id="designer-mapping-list" class="designer-mapping-list"></div>
               </div>
             </aside>
-            <div class="designer-stage-panel">
-              <div class="pdf-toolbar">
-                <button class="secondary-button" id="designer-prev-btn" type="button">Previous</button>
-                <strong id="designer-page-label">Page 1 of 1</strong>
-                <button class="secondary-button" id="designer-next-btn" type="button">Next</button>
-                <span class="designer-zoom-controls" aria-label="PDF zoom controls">
-                  <button class="secondary-button compact-button" id="designer-zoom-out-btn" type="button" aria-label="Zoom out">−</button>
-                  <select id="designer-zoom-select" aria-label="PDF zoom">
-                    <option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option>
-                    <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
-                  </select>
-                  <button class="secondary-button compact-button" id="designer-zoom-in-btn" type="button" aria-label="Zoom in">+</button>
-                </span>
-              </div>
-              <div class="designer-stage-scroll" id="designer-stage-scroll">
-              <div class="designer-stage" id="designer-stage">
-                <canvas id="designer-pdf-canvas" aria-label="PDF page used for field mapping"></canvas>
-                <div class="designer-overlay" id="designer-overlay" aria-label="Mapped fields"></div>
-              </div>
-              </div>
-            </div>
           </div>
         </section>
       </section>
@@ -505,6 +561,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=014"></script>
+  <script type="module" src="./js/app.js?v=015"></script>
 </body>
 </html>
