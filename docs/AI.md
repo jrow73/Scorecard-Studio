@@ -1008,3 +1008,60 @@ Individual placement adds identification by list order or semantic role. Repeate
 - Unusually large block capacities should eventually use a soft warning rather than an MLB-specific hard limit.
 - Generation success/warning messages should eventually move to a clearer post-generation notification/popup.
 - Static and conditional color formatting remains deferred.
+
+
+## Build 016 - Designer Interaction Model
+- Exactly one placed Designer object is selected at a time; PDF and palette selection are synchronized and empty-canvas/Escape deselects.
+- The right inspector is contextual; user-facing terminology is **Single Item** and **Text Template** (internal scalar/composite terminology may remain in code/schema).
+- Scalar mappings now support left/center/right alignment using the same baseline-anchor model as templates and collection fields. Legacy scalar mappings default to left.
+- Palette usage recognizes scalar fields referenced inside Text Templates as used while allowing reuse.
+- The development-style Mappings panel is removed from the end-user Designer.
+- Desktop Ctrl/Cmd+mouse-wheel zoom and two-finger pinch zoom supplement the existing zoom controls.
+- The longstanding Designer width/stretch path is constrained at the workspace level; acceptance testing must confirm the post-generation stretch no longer occurs.
+- Starting Pitcher remains a follow-up for Build 017: model it as a record exposing number/name/throws/stat attributes rather than name-only.
+- Undo/redo remains the next editing-history requirement; Build 016 prioritizes selection-state correctness and contextual editing before snapshot history.
+
+## Build 016.1 Interaction-model correction
+- Browser testing of the first Build 016 pass showed that the live inspector was still layered over persistent legacy placement controls. Build 016.1 changes the Designer to a Data item -> Instance -> Inspector workflow.
+- The right panel is contextual: nothing selected means no placement/editor controls; a palette or PDF selection becomes the single authoritative selection.
+- Palette data items can own multiple placed instances. Existing instances are selectable children; Create New Instance supports repeated placement across pages/locations.
+- Unplaced single-value data asks Single Item vs Text Template. Unplaced collections ask Repeated Layout vs Individual Placement.
+- New repeated blocks enter a temporary two-click geometry placement mode with instructions above the PDF; geometry setup controls are not intended to remain as permanent end-user UI.
+
+## Build 016.2 - Designer UX Cleanup
+- Designer palette categories are navigation, not category-level intent checkboxes. **Available does not mean required.** Browsing a category creates no unfinished work.
+- The palette uses expandable categories, search, and a Used-only filter. A data item becomes used only after direct placement or reference inside a Text Template, and used data remains reusable.
+- Creation uses progressive disclosure. Usage choices collapse after selection and expose only the next relevant controls.
+- Repeated Layout creation follows: select collection -> Repeated Layout -> arrangement/capacity -> Set Placement -> temporary two-point PDF instructions -> add slot fields. Redundant collection/block selectors are hidden from the normal end-user workflow.
+- Typed X/Y/font/template edits are drafts until Enter/Tab/blur; intermediate keystrokes do not move or resize objects. Discrete actions such as alignment, drag, and nudge remain live.
+- PDF zoom is focal-point aware: wheel zoom preserves the pointer target, pinch zoom preserves the two-touch midpoint, and preset/+/- zoom preserves the current viewport center.
+- Build 016.2 adds further min-width/message-wrapping constraints to the Designer to address the longstanding post-generation width/stretch defect; browser acceptance determines whether the issue is fully resolved.
+- Starting Pitcher remains Build 017 work and should become a record exposing name, jersey number, throws, and pitching-stat attributes rather than a name-only scalar.
+
+
+### Build 016.2 Interaction Hotfix
+- Restored native wheel/trackpad scrolling in the PDF viewport. Scorecard Studio no longer intercepts wheel, Ctrl+wheel, or touch pinch gestures.
+- Browser/device zoom gestures are left to the browser. PDF-only zoom remains available through the explicit minus, percentage, and plus controls; those controls preserve the visible viewport center.
+- Added a conventional disclosure chevron to palette category headers so collapsed and expanded state is visually obvious while the full header remains clickable.
+
+### Build 016.2 umpire repeated-layout hotfix
+- Fixed an Umpire Crew-only routing fallback where creating a repeated umpire layout incorrectly created an Away Starting Lineup block.
+- Cause: the legacy compatibility collection selector and repeated-block allow-list omitted `game.umpires.crew`. Both now recognize the umpire collection.
+
+
+### Build 016.2 consolidated UX candidate (Sep 14, 2026)
+Start-to-finish Designer testing produced a consolidated refinement pass: simple 5% Ctrl/Cmd+wheel PDF-only zoom with passive status/reset; normal wheel scrolling; task-oriented palette hierarchy (Umpires under Game Information, player collections/SP under Away/Home Players); Text Template preview adjacent to editor and Insert Field available during edit; typed numeric edits commit on finish while deliberate spinner/arrow increments remain live; compact top-stacked inspector; and empty repeated layouts skip overflow/rendering with a non-blocking notice. Confirmed Umpire Crew routing hotfix is preserved. Starting Pitcher record expansion remains Build 017.
+
+### Build 016.2 final interaction behavior
+
+The Designer intentionally uses a simple legacy-style viewport model: ordinary wheel/trackpad input scrolls; Ctrl/Cmd+wheel performs PDF-only zoom in 10% steps; touch gestures are not custom-intercepted; the passive zoom indicator/reset remain. Selecting a placed Palette instance must navigate to its page and scroll the corresponding rendered object into view.
+
+
+
+### Build 016.2 final Designer UX acceptance candidate
+- New Text Template drafts are isolated per creation flow; no prior template text carries forward.
+- Palette expansion is user-controlled session state; selection/deselection does not collapse categories.
+- Palette uses fixed hierarchy/status columns and a child rail.
+- Mapping anchors use a precision crosshair.
+- Individual Placement is an ongoing collection-level workspace with progress and nested role/slot children; it advances to the next unplaced selector when possible.
+- Final Interaction Hotfix navigation and legacy-style zoom/pan behavior remain baseline requirements.

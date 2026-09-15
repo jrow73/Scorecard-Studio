@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=015" />
+  <link rel="stylesheet" href="./css/styles.css?v=0162finalux" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 015</p>
+          <p>0.2.0-dev • Build 016.2</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 015</p>
+          <p class="section-label">Build 016.2</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 015</p>
+              <p class="section-label">Build 016.2</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,26 +309,36 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 015 • Designer Workspace</p>
+              <p class="section-label">Build 016.2 • Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
-            <button class="secondary-button" id="designer-back-btn" type="button">Back to Layouts</button>
+            <div class="designer-header-actions">
+              <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
+              <button class="secondary-button" id="designer-back-btn" type="button">Back to Layouts</button>
+            </div>
           </div>
           <div class="designer-grid">
             <aside class="designer-palette" aria-label="Scorecard data palette">
               <div class="designer-panel-heading">
                 <div><p class="section-label">Scorecard Data</p><h4>Field Palette</h4></div>
-                <button class="secondary-button compact-button" id="designer-palette-edit-btn" type="button">Choose Data</button>
+                <button class="secondary-button compact-button" id="designer-palette-edit-btn" type="button" hidden>Customize</button>
               </div>
-              <p class="subtle designer-help">Show only the data this scorecard uses. You can add categories again at any time.</p>
+              <p class="subtle designer-help">Browse what is available. A field is only considered used after you place it or reference it in a Text Template.</p>
+              <div class="designer-palette-tools">
+                <input id="designer-palette-search" type="search" placeholder="Search fields…" aria-label="Search scorecard fields" />
+                <select id="designer-palette-filter" aria-label="Filter scorecard fields">
+                  <option value="all">All data</option>
+                  <option value="used">Used only</option>
+                </select>
+              </div>
               <div id="designer-palette-chooser" class="designer-palette-chooser" hidden></div>
               <div class="designer-palette-section">
-                <div class="designer-panel-heading compact"><strong>Unplaced</strong><span class="pill neutral" id="designer-unplaced-count">0</span></div>
+                <div class="designer-panel-heading compact"><strong>Available Data</strong><span class="pill neutral" id="designer-unplaced-count">0</span></div>
                 <div id="designer-unplaced-list" class="designer-palette-list"></div>
               </div>
-              <div class="designer-palette-section">
-                <div class="designer-panel-heading compact"><strong>Placed</strong><span class="pill neutral" id="designer-placed-count">0</span></div>
+              <div class="designer-palette-section designer-legacy-placed-section" hidden>
+                <div class="designer-panel-heading compact"><strong>Used</strong><span class="pill neutral" id="designer-placed-count">0</span></div>
                 <div id="designer-placed-list" class="designer-palette-list"></div>
               </div>
             </aside>
@@ -337,15 +347,12 @@
                 <button class="secondary-button" id="designer-prev-btn" type="button">Previous</button>
                 <strong id="designer-page-label">Page 1 of 1</strong>
                 <button class="secondary-button" id="designer-next-btn" type="button">Next</button>
-                <span class="designer-zoom-controls" aria-label="PDF zoom controls">
-                  <button class="secondary-button compact-button" id="designer-zoom-out-btn" type="button" aria-label="Zoom out">−</button>
-                  <select id="designer-zoom-select" aria-label="PDF zoom">
-                    <option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option>
-                    <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
-                  </select>
-                  <button class="secondary-button compact-button" id="designer-zoom-in-btn" type="button" aria-label="Zoom in">+</button>
+                <span class="designer-zoom-status" aria-label="PDF zoom status">
+                  <span id="designer-zoom-status">Zoom: 100%</span>
+                  <button class="secondary-button compact-button" id="designer-zoom-reset-btn" type="button" disabled>Reset</button>
                 </span>
               </div>
+              <div class="designer-placement-banner" id="designer-placement-banner" hidden></div>
               <div class="designer-stage-scroll" id="designer-stage-scroll">
                 <div class="designer-stage" id="designer-stage">
                   <canvas id="designer-pdf-canvas" aria-label="PDF page used for field mapping"></canvas>
@@ -379,18 +386,30 @@
                       </select>
                     </label>
                   </div>
-                  <label id="designer-selection-template-wrap" for="designer-selection-template" hidden>Template
-                    <textarea id="designer-selection-template" rows="3"></textarea>
-                  </label>
+                  <div id="designer-selection-template-wrap" class="designer-selection-template-editor" hidden>
+                    <label for="designer-selection-template">Template
+                      <textarea id="designer-selection-template" rows="3"></textarea>
+                    </label>
+                    <div class="composite-preview"><span>Preview</span><strong id="designer-selection-template-preview">Enter text or insert a field.</strong></div>
+                    <div class="designer-column-grid">
+                      <label for="designer-selection-template-field">Insert field
+                        <select id="designer-selection-template-field"></select>
+                      </label>
+                      <button class="secondary-button composite-insert-button" id="designer-selection-template-insert-btn" type="button">Insert Field</button>
+                    </div>
+                  </div>
                   <div class="designer-selection-actions">
+                    <button class="secondary-button" id="designer-selection-new-instance-btn" type="button">Create New Instance</button>
                     <button class="danger-button" id="designer-selection-delete-btn" type="button">Delete Selected</button>
                   </div>
                   <p class="subtle designer-help">Drag the selected item on the PDF, or use arrow keys to nudge it. Shift+Arrow makes a larger nudge.</p>
                 </div>
               </section>
 
-              <details class="designer-tool-section" open>
-                <summary>Place scalar field</summary>
+              <section class="designer-new-item-panel" id="designer-new-item-panel" hidden></section>
+              <div id="designer-context-tools" hidden>
+              <details class="designer-tool-section" id="designer-single-item-tool">
+                <summary>Single Item</summary>
                 <div class="designer-tool-body">
               <label for="designer-field-select">Field
                 <select id="designer-field-select" aria-label="Scorecard field"></select>
@@ -398,17 +417,23 @@
               <label for="designer-font-size">Font size (pt)
                 <input id="designer-font-size" type="number" min="1" max="144" step="0.5" value="10" />
               </label>
+              <label for="designer-field-alignment">Alignment
+                <select id="designer-field-alignment">
+                  <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+                </select>
+              </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
-              <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Existing scalar mappings remain baseline-left.</p>
+              <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Choose a single item, set its font size and alignment, then place its alignment anchor on the scorecard.</p>
                 </div>
               </details>
 
-              <details class="designer-tool-section">
-                <summary>Composite / Free Text</summary>
+              <details class="designer-tool-section" id="designer-text-template-tool">
+                <summary>Text Template</summary>
                 <div class="designer-tool-body designer-composite-panel">
                 <label for="designer-template-text">Text template
                   <textarea id="designer-template-text" rows="3" placeholder="Example: Weather: [Temperature]°F, [Conditions]"></textarea>
                 </label>
+                <div class="composite-preview"><span>Preview</span><strong id="designer-template-preview">Enter text or insert a field.</strong></div>
                 <div class="designer-column-grid">
                   <label for="designer-template-field">Insert field
                     <select id="designer-template-field"></select>
@@ -427,14 +452,13 @@
                     <input id="designer-template-font-size" type="number" min="1" max="144" step="0.5" value="10" />
                   </label>
                 </div>
-                <div class="composite-preview"><span>Preview</span><strong id="designer-template-preview">Enter text or insert a field.</strong></div>
-                <button class="primary-button" id="designer-template-place-btn" type="button">Place Composite Text</button>
+                <button class="primary-button" id="designer-template-place-btn" type="button">Place Text Template</button>
                 <p class="subtle designer-help">Type ordinary text and insert supported game fields wherever needed. The template is stored exactly as written; unavailable field values render blank.</p>
                 </div>
               </details>
 
-              <details class="designer-tool-section">
-                <summary>Repeated collection</summary>
+              <details class="designer-tool-section" id="designer-repeated-tool">
+                <summary>Repeated Layout</summary>
                 <div class="designer-tool-body designer-repeat-panel">
                 <div class="designer-repeat-heading"><strong>Repeated blocks</strong><span class="pill neutral" id="designer-block-count">0</span></div>
                 <label for="designer-lineup-side">Collection
@@ -445,6 +469,7 @@
                     <option value="home.bench">Home bench</option>
                     <option value="away.bullpen">Away bullpen</option>
                     <option value="home.bullpen">Home bullpen</option>
+                    <option value="game.umpires.crew">Umpire crew</option>
                   </select>
                 </label>
                 <label for="designer-block-arrangement">Arrangement
@@ -465,35 +490,38 @@
                     <input id="designer-grid-columns" type="number" min="1" max="30" step="1" value="2" />
                   </label>
                 </div>
-                <button class="secondary-button" id="designer-create-block-btn" type="button">Create Repeated Block</button>
+                <button class="primary-button" id="designer-create-block-btn" type="button">Set Placement</button>
                 <label for="designer-block-select">Edit block
                   <select id="designer-block-select" aria-label="Repeated player block"></select>
                 </label>
-                <button class="secondary-button" id="designer-place-rows-btn" type="button">Place First & Last Slots</button>
-                <div class="designer-column-grid">
-                  <label for="designer-column-field">Slot field
-                    <select id="designer-column-field"></select>
+                <button class="secondary-button" id="designer-place-rows-btn" type="button" hidden>Change Placement</button>
+                <div id="designer-slot-fields-panel" class="designer-slot-fields-panel" hidden>
+                  <div class="designer-repeat-heading"><strong>Fields in each slot</strong><span class="subtle">Add fields after the layout bounds are set.</span></div>
+                  <div class="designer-column-grid">
+                    <label for="designer-column-field">Slot field
+                      <select id="designer-column-field"></select>
+                    </label>
+                    <label for="designer-column-alignment">Alignment
+                      <select id="designer-column-alignment">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label for="designer-column-font-size">Field font size (pt)
+                    <input id="designer-column-font-size" type="number" min="1" max="144" step="0.5" value="10" />
                   </label>
-                  <label for="designer-column-alignment">Alignment
-                    <select id="designer-column-alignment">
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </label>
+                  <button class="primary-button" id="designer-place-column-btn" type="button">Add Slot Field</button>
+                  <button class="danger-button" id="designer-delete-block-btn" type="button">Delete Repeated Layout</button>
                 </div>
-                <label for="designer-column-font-size">Field font size (pt)
-                  <input id="designer-column-font-size" type="number" min="1" max="144" step="0.5" value="10" />
-                </label>
-                <button class="primary-button" id="designer-place-column-btn" type="button">Place Slot Field</button>
-                <button class="danger-button" id="designer-delete-block-btn" type="button">Delete Selected Block</button>
                 <p class="subtle designer-help">Choose a vertical list, horizontal list, or grid. Place the outer slot anchors to establish spacing, then place each field on the first slot. Scorecard Studio repeats that field position through every slot while preserving its font size and alignment.</p>
                 <div id="designer-block-list" class="designer-block-list"></div>
                 </div>
               </details>
 
-              <details class="designer-tool-section">
-                <summary>Individual collection placement</summary>
+              <details class="designer-tool-section" id="designer-individual-tool">
+                <summary>Individual Placement</summary>
                 <div class="designer-tool-body designer-repeat-panel">
                 <div class="designer-repeat-heading"><strong>Individual mappings</strong><span class="pill neutral" id="designer-individual-count">0</span></div>
                 <label for="designer-individual-collection">Collection
@@ -539,20 +567,13 @@
                 <div id="designer-individual-list" class="designer-block-list"></div>
                 </div>
               </details>
+              </div>
 
-              <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
-              <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
-              <div class="message-panel generate-message" id="generate-message" role="status" aria-live="polite">
-                Generated PDFs use the currently selected game on Home.
-              </div>
-              <div class="designer-mapping-panel">
-                <div class="card-header-row compact-header">
-                  <h4>Mappings</h4>
-                  <span class="pill neutral" id="designer-mapping-count">0</span>
-                </div>
-                <div id="designer-mapping-list" class="designer-mapping-list"></div>
-              </div>
             </aside>
+          </div>
+          <div class="designer-status-row">
+            <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
+            <div class="message-panel generate-message" id="generate-message" role="status" aria-live="polite">Generated PDFs use the currently selected game on Home.</div>
           </div>
         </section>
       </section>
@@ -561,6 +582,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=015"></script>
+  <script type="module" src="./js/app.js?v=0162finalux"></script>
 </body>
 </html>
