@@ -1,6 +1,8 @@
 # Scorecard Studio — Field Registry
 
-Status: Build 011 accepted contract. Build 009 scalar registry, Build 010 lineup repeated-block foundation, and Build 011 variable-length bench/bullpen repeated-field slices are accepted. Target: complete v0.2.0 traditional pregame field library. Registry schema version: 1.
+Status: **Post-Build 016 accepted contract.** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016, including repeated vertical/horizontal/grid geometry, Text Templates, Individual Placement, and the Umpire Crew collection. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
+
+**Next implementation slice:** Build 017 expands Away/Home Starting Pitcher from the current name-oriented Designer exposure into the existing single player-record contract, including player identity/handedness and supported pitching season/YTD fields. This is an implementation/UI expansion of the established registry family, not a new data model.
 
 ## 1. Authority and evidence
 

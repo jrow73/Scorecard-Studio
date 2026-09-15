@@ -1,7 +1,8 @@
 # Scorecard Studio --- Pregame Data Inventory
 
-**Status:** Draft\
+**Status:** Post-Build 016 working inventory\
 **Target milestone:** v0.2.0 --- Complete Field Mapping & Formatting\
+**Current state:** Core Designer placement architecture is accepted through Build 016. Remaining work is tracked in `DESIGNER_COMPLETION_INVENTORY.md`; Build 017 begins with Starting Pitcher record expansion.\
 **Purpose:** Define the pregame data Scorecard Studio may make available
 to layouts, independent of which MLB API request supplies it.
 
@@ -433,6 +434,24 @@ Still open for later refinement:
 - Final grid/horizontal repeated-block interaction and continuation-block UX.
 - Which supplemental personnel/standings categories Game Day should hydrate
   automatically versus only when required by a mapped layout.
+
+## 14A. Post-Build 016 Designer status
+
+The placement architecture described above is no longer merely planned. Through Build 016, the Designer now supports Single Items, general Text Templates, reusable vertical/horizontal/grid Repeated Layouts, Individual Placement by slot/order and supported semantic roles, contextual object editing, synchronized Palette/PDF selection, multiple instances of the same data item, and PDF-only zoom/navigation.
+
+The principal remaining Designer-completion work is:
+
+- Build 017 Starting Pitcher record expansion;
+- audit of canonical registry fields versus fields actually exposed by the Designer;
+- player name-format controls;
+- static color and a scoped decision on conditional/data-driven color;
+- an intentional long-text/fit policy;
+- deterministic synthetic preview data that fills configured collection capacities;
+- full Designer Undo/Redo history;
+- clearer collection-capacity and post-generation warning UX; and
+- a final end-to-end Designer completion/polish pass.
+
+Advanced matchup/situational research remains outside the v1.0 Designer requirement.
 
 ## 15. Scope Boundary: Advanced Matchup & Situational Data
 

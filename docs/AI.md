@@ -826,6 +826,21 @@ The philosophy should remain:
 
 ---
 
+## Post-Build 016 Designer Completion Roadmap
+
+Build 016 is accepted and establishes the current Designer interaction baseline. The Designer now has a dedicated workspace; synchronized Palette/PDF/Inspector selection; reusable Single Item and Text Template instances; vertical, horizontal, and grid Repeated Layouts; Individual Placement by slot/order and supported semantic roles; contextual live editing; page navigation; and stable PDF-relative placement semantics. Do not reopen these foundations without a demonstrated defect or a requirement from a real scorecard workflow.
+
+The remaining v0.2.0 Designer work should be driven by `docs/DESIGNER_COMPLETION_INVENTORY.md`. Current expected sequence is deliberately provisional:
+
+- **Build 017 — Starting Pitcher Record Expansion.** Expose the established Starting Pitcher player record in the Designer: name, jersey number, throws, and supported pitching season/YTD fields. Preserve Home/Away symmetry and the normalized resolver/formatter contract.
+- **Following build — Field & Player-Format Coverage.** Audit the canonical registry against fields actually exposed in the Designer, close traditional-field gaps, and add user-facing player name-format selection. Exact build number/scope should be chosen after the Build 017 audit.
+- **Following build — Designer Formatting.** Add basic static color and make an explicit v1 decision on handedness/data-driven conditional color and long-text fit behavior. Avoid a generalized rules engine unless real scorecard requirements justify it.
+- **Following build — Undo/Redo.** Add full Designer editing history after the accepted Build 016 interaction model. Prefer coherent Designer-state snapshot history over unrelated one-off inverse commands.
+- **Following build — Preview & Collection Robustness.** Fill configured collection capacities with deterministic synthetic sample data, add soft capacity guidance where useful, and refine overflow feedback.
+- **Final Designer completion pass.** Improve generation-result/warning presentation and perform complete scorecard-design acceptance testing before declaring the v0.2.0 Designer complete.
+
+Build numbers after 017 remain intentionally flexible. Advanced matchup/situational research, one-click favorite-layout generation, backup/export/import, and broader Game Day research are not prerequisites for completing the Designer.
+
 ## Versioning
 
 **v0.1.0** is the completed browser-architecture milestone.

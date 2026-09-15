@@ -1,6 +1,6 @@
 # Build 016.2 Acceptance Test Report
 
-Status: Browser acceptance required.
+Status: **ACCEPTED** — final Local/Online Designer acceptance completed after the Build 016.2 interaction and UX cleanup passes.
 
 ## 1. Empty selection and synchronized selection
 1. Open Designer. The right panel should show only `Nothing selected`; no creation/editing tools should be visible.

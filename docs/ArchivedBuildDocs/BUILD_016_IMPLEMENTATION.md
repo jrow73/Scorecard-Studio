@@ -109,3 +109,10 @@ Five acceptance findings were addressed without changing stored PDF coordinates 
 - Individual Placement is treated as an ongoing collection usage. The palette groups its child mappings beneath an `Individual Placement • N of M placed` entry; selecting that entry reopens the placement workspace, placement advances to the next unplaced role/slot when possible, and the inspector no longer presents `Create New Instance` as though it would create another selected role.
 
 The previously accepted Palette-to-PDF navigation and legacy-style zoom/pan behavior are preserved.
+
+
+## Final acceptance
+
+Build 016 is **ACCEPTED**. The final accepted interaction model is the Build 016.2 state documented above, including the final interaction hotfixes and Designer UX cleanup. Subsequent Designer work should treat this behavior as the baseline and should not reintroduce the superseded intermediate zoom/selection variants described earlier in this implementation history.
+
+The next planned implementation milestone is **Build 017 — Starting Pitcher Record Expansion**. Full Undo/Redo, broader formatting, synthetic collection preview data, and generation-result polish remain follow-up Designer-completion work.
