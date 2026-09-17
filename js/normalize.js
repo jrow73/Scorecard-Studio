@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 014
+ * Build: 017
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
@@ -176,10 +176,16 @@ function normalizeStats(seasonStats) {
   const pitching = seasonStats?.pitching || {};
   return {
     gamesPlayed: numberOrNull(batting.gamesPlayed ?? pitching.gamesPlayed),
+    gamesPitched: numberOrNull(pitching.gamesPitched), gamesStarted: numberOrNull(pitching.gamesStarted),
     avg: decimalOrNull(batting.avg), obp: decimalOrNull(batting.obp), slg: decimalOrNull(batting.slg), ops: decimalOrNull(batting.ops),
     homeRuns: numberOrNull(batting.homeRuns ?? pitching.homeRuns), rbi: numberOrNull(batting.rbi),
     wins: numberOrNull(pitching.wins), losses: numberOrNull(pitching.losses), era: decimalOrNull(pitching.era), whip: decimalOrNull(pitching.whip),
-    inningsPitched: pitching.inningsPitched ?? null, strikeouts: numberOrNull(pitching.strikeOuts), saves: numberOrNull(pitching.saves), holds: numberOrNull(pitching.holds)
+    inningsPitched: pitching.inningsPitched ?? null, hits: numberOrNull(pitching.hits), runs: numberOrNull(pitching.runs),
+    earnedRuns: numberOrNull(pitching.earnedRuns), walks: numberOrNull(pitching.baseOnBalls), strikeouts: numberOrNull(pitching.strikeOuts),
+    saves: numberOrNull(pitching.saves), saveOpportunities: numberOrNull(pitching.saveOpportunities), holds: numberOrNull(pitching.holds), blownSaves: numberOrNull(pitching.blownSaves),
+    winPercentage: decimalOrNull(pitching.winPercentage), strikeoutWalkRatio: decimalOrNull(pitching.strikeoutWalkRatio),
+    strikeoutsPer9Inn: decimalOrNull(pitching.strikeoutsPer9Inn), walksPer9Inn: decimalOrNull(pitching.walksPer9Inn),
+    hitsPer9Inn: decimalOrNull(pitching.hitsPer9Inn), homeRunsPer9: decimalOrNull(pitching.homeRunsPer9), pitchesPerInning: decimalOrNull(pitching.pitchesPerInning)
   };
 }
 

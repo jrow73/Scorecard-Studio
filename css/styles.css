@@ -1593,3 +1593,89 @@ body.designer-mode .designer-view > .card,
     linear-gradient(rgb(220,38,38), rgb(220,38,38)) center / 1px 10px no-repeat,
     linear-gradient(rgb(220,38,38), rgb(220,38,38)) center / 10px 1px no-repeat;
 }
+
+
+/* Build 017.1 acceptance refinements */
+.designer-object-actions { display:flex; gap:.4rem; flex-wrap:wrap; justify-content:flex-end; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item { list-style-position:inside; cursor:pointer; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::marker { font-size:.85em; }
+
+/* Build 017.2 acceptance hotfix: stable parent inspector + one subordinate workspace. */
+.designer-parent-secondary-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: .5rem;
+}
+.designer-subordinate-workspace {
+  display: grid;
+  gap: .7rem;
+  padding: .8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+.designer-subordinate-workspace[hidden] { display: none !important; }
+.designer-workspace-heading {
+  display: grid;
+  gap: 2px;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--line);
+}
+.designer-workspace-heading h4 { margin: 0; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 14px 18px minmax(0, 1fr) auto;
+  column-gap: 7px;
+  align-items: center;
+  cursor: pointer;
+}
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::-webkit-details-marker { display: none; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::before {
+  content: "\25B6";
+  grid-column: 1;
+  width: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+}
+.designer-record-fields.designer-record-direct[open] > summary.designer-palette-item::before { content: "\25BC"; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item .designer-palette-status-icon { grid-column: 2; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item .designer-palette-item-label { grid-column: 3; }
+.designer-record-fields.designer-record-direct > summary.designer-palette-item small { grid-column: 4; }
+.designer-record-use-item { font-weight: 700; }
+
+/* Build 017.3 acceptance hotfix: capability visibility, child scoping, and true progressive reveal. */
+#designer-field-name-format-wrap[hidden],
+#designer-column-name-format-wrap[hidden],
+#designer-selection-name-format-wrap[hidden],
+#designer-individual-name-format-wrap[hidden],
+#designer-column-field-wrap[hidden],
+#designer-column-template-wrap[hidden],
+#designer-slot-fields-panel [hidden],
+.designer-child-workspace-actions[hidden],
+#designer-block-list[hidden] {
+  display: none !important;
+}
+.designer-child-workspace-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: .15rem;
+}
+#designer-context-tools.scoped-child-workspace #designer-block-list,
+#designer-context-tools.scoped-child-workspace .designer-tool-body > .designer-repeat-heading:first-child,
+#designer-context-tools.scoped-child-workspace #designer-delete-block-btn {
+  display: none !important;
+}
+#designer-place-column-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+
+/* Build 017.4 hotfix: Record Layout is one anchored record, never a repeated arrangement. */
+#designer-context-tools.creating-record label:has(#designer-block-arrangement),
+#designer-context-tools.creating-record #designer-capacity-wrap,
+#designer-context-tools.creating-record #designer-grid-dimensions {
+  display: none !important;
+}

@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Canonical pregame field registry
  * Version: 0.2.0-dev
- * Build: 014
+ * Build: 017.1
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
@@ -41,7 +41,7 @@ const sideFields = ["away", "home"].flatMap((side) => {
       `${side}.team.record.wins`, `${side}.team.record.losses`
     ], ["gamePack"]),
     field(`${side}.manager.name`, `${label} Manager`, `${label} / Personnel`, "text", "atomic", `${side}.manager.name`, ["coaches"]),
-    field(`${side}.startingPitcher.player.name`, `${label} Starting Pitcher`, `${label} / Pitching`, "text", "atomic", `${side}.startingPitcher.player.name`, ["gamePack"])
+    ...startingPitcherFields(side, label)
   ];
 });
 
@@ -109,6 +109,14 @@ const umpireFields = [
 
 const repeatedFields = [...lineupFields, ...benchFields, ...bullpenFields, ...umpireFields];
 
+// Build 017.1: player-name formatting is a field capability, not a Starting-Pitcher special case.
+for (const entry of repeatedFields) {
+  if (entry.rowPath === "player.name") {
+    entry.formatKind = "playerName";
+    entry.formatSourcePath = "player";
+  }
+}
+
 export const FIELD_REGISTRY = Object.freeze([...gameFields, ...sideFields, ...repeatedFields].map((entry, index) => Object.freeze({
   ...entry,
   order: index + 1,
@@ -157,19 +165,22 @@ export function resolveField(model, fieldId, selector = null) {
       if (!row) return { value: null, state: "missing", reason: `Collection slot ${slot} is not available.`, fieldId: canonicalId };
     }
     const value = readPath(row, definition.rowPath);
+    const formatSource = definition.formatSourcePath ? readPath(row, definition.formatSourcePath) : null;
     return value === null || value === undefined || value === ""
-      ? { value: null, state: "missing", reason: "Value is not available.", fieldId: canonicalId }
-      : { value, state: "available", reason: "", fieldId: canonicalId };
+      ? { value: null, state: "missing", reason: "Value is not available.", fieldId: canonicalId, formatSource }
+      : { value, state: "available", reason: "", fieldId: canonicalId, formatSource };
   }
 
   if (definition.kind === "atomic") {
     const value = readPath(model, definition.path);
+    const formatSource = definition.formatSourcePath ? readPath(model, definition.formatSourcePath) : null;
     return value === null || value === undefined || value === ""
-      ? { value: null, state: "missing", reason: "Value is not available.", fieldId: canonicalId }
-      : { value, state: "available", reason: "", fieldId: canonicalId };
+      ? { value: null, state: "missing", reason: "Value is not available.", fieldId: canonicalId, formatSource }
+      : { value, state: "available", reason: "", fieldId: canonicalId, formatSource };
   }
 
   if (definition.resolver === "record") return resolveRecord(model, definition);
+  if (definition.resolver === "pitchingCompact") return resolvePitchingCompact(model, definition);
   if (definition.resolver === "weatherSummary") return resolveWeather(model, definition);
   return { value: null, state: "unsupported", reason: "Resolver is not implemented.", fieldId: canonicalId };
 }
@@ -202,6 +213,21 @@ function resolveRecord(model, definition) {
   const values = definition.dependencies.map((id) => resolveField(model, id));
   if (values.some((item) => item.state !== "available")) return { value: null, state: "missing", reason: "Both wins and losses are required.", fieldId: definition.id };
   return { value: `${values[0].value}-${values[1].value}`, state: "available", reason: "", fieldId: definition.id };
+}
+
+function resolvePitchingCompact(model, definition) {
+  const values = Object.fromEntries(definition.dependencies.map((id) => [id.split(".").at(-1), resolveField(model, id)]));
+  const parts = [];
+  if (values.record?.state === "available") parts.push(String(values.record.value));
+  if (values.era?.state === "available") parts.push(`${twoDecimals(values.era.value)} ERA`);
+  if (values.whip?.state === "available") parts.push(`${twoDecimals(values.whip.value)} WHIP`);
+  if (!parts.length) return { value: null, state: "missing", reason: "Pitching summary is not available.", fieldId: definition.id };
+  return { value: parts.join(" • "), state: parts.length === 3 ? "available" : "partial", reason: parts.length === 3 ? "" : "Pitching summary is partial.", fieldId: definition.id };
+}
+
+function twoDecimals(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toFixed(2) : String(value);
 }
 
 function resolveWeather(model, definition) {
@@ -249,4 +275,47 @@ function composite(id, label, category, resolver, dependencies, sourceRequiremen
 
 function repeatedField(id, label, category, valueType, collection, rowPath, defaultFormat = {}) {
   return { id, label, category, valueType, kind: "atomic", cardinality: "repeated", collection, rowPath, sourceRequirements: ["gamePack"], defaultFormat };
+}
+
+function startingPitcherFields(side, label) {
+  const root = `${side}.startingPitcher`;
+  const category = `${label} / Starting Pitcher`;
+  const entries = [
+    field(`${root}.player.name`, `${label} Starting Pitcher — Player Name`, category, "text", "atomic", `${root}.player.name`, ["gamePack"]),
+    field(`${root}.player.number`, `${label} Starting Pitcher — Jersey #`, category, "text", "atomic", `${root}.player.number`, ["gamePack"]),
+    field(`${root}.player.throws`, `${label} Starting Pitcher — Throws`, category, "text", "atomic", `${root}.player.throws`, ["gamePack"]),
+    field(`${root}.stats.gamesPlayed`, `${label} Starting Pitcher — Games`, category, "integer", "atomic", `${root}.stats.gamesPlayed`, ["gamePack"]),
+    field(`${root}.stats.gamesPitched`, `${label} Starting Pitcher — Games Pitched`, category, "integer", "atomic", `${root}.stats.gamesPitched`, ["gamePack"]),
+    field(`${root}.stats.gamesStarted`, `${label} Starting Pitcher — Games Started`, category, "integer", "atomic", `${root}.stats.gamesStarted`, ["gamePack"]),
+    field(`${root}.stats.wins`, `${label} Starting Pitcher — Wins`, category, "integer", "atomic", `${root}.stats.wins`, ["gamePack"]),
+    field(`${root}.stats.losses`, `${label} Starting Pitcher — Losses`, category, "integer", "atomic", `${root}.stats.losses`, ["gamePack"]),
+    composite(`${root}.stats.record`, `${label} Starting Pitcher — W-L`, category, "record", [`${root}.stats.wins`, `${root}.stats.losses`], ["gamePack"]),
+    field(`${root}.stats.era`, `${label} Starting Pitcher — ERA`, category, "decimal", "atomic", `${root}.stats.era`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.whip`, `${label} Starting Pitcher — WHIP`, category, "decimal", "atomic", `${root}.stats.whip`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.inningsPitched`, `${label} Starting Pitcher — IP`, category, "text", "atomic", `${root}.stats.inningsPitched`, ["gamePack"]),
+    field(`${root}.stats.hits`, `${label} Starting Pitcher — Hits`, category, "integer", "atomic", `${root}.stats.hits`, ["gamePack"]),
+    field(`${root}.stats.runs`, `${label} Starting Pitcher — Runs`, category, "integer", "atomic", `${root}.stats.runs`, ["gamePack"]),
+    field(`${root}.stats.earnedRuns`, `${label} Starting Pitcher — Earned Runs`, category, "integer", "atomic", `${root}.stats.earnedRuns`, ["gamePack"]),
+    field(`${root}.stats.homeRuns`, `${label} Starting Pitcher — Home Runs`, category, "integer", "atomic", `${root}.stats.homeRuns`, ["gamePack"]),
+    field(`${root}.stats.walks`, `${label} Starting Pitcher — Walks`, category, "integer", "atomic", `${root}.stats.walks`, ["gamePack"]),
+    field(`${root}.stats.strikeouts`, `${label} Starting Pitcher — Strikeouts`, category, "integer", "atomic", `${root}.stats.strikeouts`, ["gamePack"]),
+    field(`${root}.stats.saves`, `${label} Starting Pitcher — Saves`, category, "integer", "atomic", `${root}.stats.saves`, ["gamePack"]),
+    field(`${root}.stats.saveOpportunities`, `${label} Starting Pitcher — Save Opportunities`, category, "integer", "atomic", `${root}.stats.saveOpportunities`, ["gamePack"]),
+    field(`${root}.stats.holds`, `${label} Starting Pitcher — Holds`, category, "integer", "atomic", `${root}.stats.holds`, ["gamePack"]),
+    field(`${root}.stats.blownSaves`, `${label} Starting Pitcher — Blown Saves`, category, "integer", "atomic", `${root}.stats.blownSaves`, ["gamePack"]),
+    field(`${root}.stats.winPercentage`, `${label} Starting Pitcher — Win Percentage`, category, "decimal", "atomic", `${root}.stats.winPercentage`, ["gamePack"], { precision: 3 }),
+    field(`${root}.stats.strikeoutWalkRatio`, `${label} Starting Pitcher — K/BB`, category, "decimal", "atomic", `${root}.stats.strikeoutWalkRatio`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.strikeoutsPer9Inn`, `${label} Starting Pitcher — K/9`, category, "decimal", "atomic", `${root}.stats.strikeoutsPer9Inn`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.walksPer9Inn`, `${label} Starting Pitcher — BB/9`, category, "decimal", "atomic", `${root}.stats.walksPer9Inn`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.hitsPer9Inn`, `${label} Starting Pitcher — H/9`, category, "decimal", "atomic", `${root}.stats.hitsPer9Inn`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.homeRunsPer9`, `${label} Starting Pitcher — HR/9`, category, "decimal", "atomic", `${root}.stats.homeRunsPer9`, ["gamePack"], { precision: 2 }),
+    field(`${root}.stats.pitchesPerInning`, `${label} Starting Pitcher — Pitches/Inning`, category, "decimal", "atomic", `${root}.stats.pitchesPerInning`, ["gamePack"], { precision: 2 }),
+    composite(`${root}.stats.compact`, `${label} Starting Pitcher — Pitching Summary`, category, "pitchingCompact", [`${root}.stats.record`, `${root}.stats.era`, `${root}.stats.whip`], ["gamePack"])
+  ];
+  for (const entry of entries) entry.record = root;
+  const name = entries[0];
+  name.formatKind = "playerName";
+  name.formatSourcePath = `${root}.player`;
+  name.legacyLabels = [`${label} Starting Pitcher`];
+  return entries;
 }

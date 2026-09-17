@@ -65,6 +65,8 @@ During development and acceptance testing:
 
 Major builds should be acceptance-tested in both environments when practical.
 
+During development, the Readme.md describes the intended v1.0 final state, and discrepancies between it and intermediate builds are not reasons to edit it. The reconciliation will happen during final v1.0 release preparation.
+
 ---
 
 ## Tech Stack
@@ -778,7 +780,7 @@ parentheses or dangling separators.
 
 After the v0.2.0 field/formatting milestone, likely areas include:
 
-- Backup/export/import and cross-device portability.
+- Backup/export/import and cross-device portability including optional cloud synchronization.
 - Improved layout-management tooling.
 - More polished scorecard generation workflow.
 - MLB/MiLB league and team selection.
@@ -788,6 +790,53 @@ After the v0.2.0 field/formatting milestone, likely areas include:
 - UI/UX polish.
 - Documentation and onboarding.
 - Other features discovered through regular scorekeeping use.
+
+### Future architecture — Optional cloud synchronization
+
+Scorecard Studio should remain **local-first and serverless**. IndexedDB remains
+the primary local datastore so normal application use and Designer work remain
+fast, offline-capable, and independent of a Scorecard Studio-hosted account,
+database, or storage service.
+
+A future enhancement may allow users to **opt in** to synchronization through
+their own supported cloud-storage provider, such as Google Drive, Dropbox, or
+OneDrive. Cloud storage is a synchronization and portability layer; it does not
+replace the local datastore.
+
+Architectural principles for this future capability:
+
+- **Opt-in only.** Local IndexedDB operation remains the default.
+- **Local-first saves.** Application changes save locally first. Cloud
+  synchronization follows asynchronously and should not delay normal editing.
+- **Offline-capable.** Loss of Internet access, provider availability, or
+  authorization must not prevent normal local use.
+- **Provider-independent.** Define a common synchronization-provider interface
+  so layouts and application logic are not coupled to Google Drive, Dropbox,
+  OneDrive, or any other specific service.
+- **User-owned cloud storage.** Where practical, the browser should communicate
+  directly with the selected provider through its supported OAuth/API
+  mechanisms. Scorecard Studio should not require its own hosted user-data
+  service merely to provide synchronization.
+- **Conflict-safe.** Concurrent edits from multiple devices must never silently
+  overwrite one another. An initial conflict workflow may offer **Keep Local**,
+  **Keep Cloud**, and **Keep Both** rather than attempting automatic
+  object-level merging.
+- **Stable identity and revision metadata.** Existing UUID-based objects provide
+  a foundation for synchronization. Synchronizable objects may require revision
+  identifiers, modification timestamps, and device/source metadata to detect
+  divergent edits safely.
+- **Backup remains separate.** Manual Export/Import remains available for
+  backup, recovery, and portability. Cloud synchronization complements rather
+  than replaces that mechanism.
+
+Potential synchronization scope includes layouts, application settings and
+preferences, and other portable user-created Scorecard Studio data. Exact
+provider support, authorization behavior, synchronization packaging, conflict
+detection, and data scope should be defined when this feature becomes an active
+development milestone.
+
+This is **future post-v0.2.0 work** and must not interrupt completion of the
+current Designer milestone.
 
 ### v1.0 scope boundary
 
@@ -826,20 +875,19 @@ The philosophy should remain:
 
 ---
 
-## Post-Build 016 Designer Completion Roadmap
+## Post-Build 017 Designer Completion Roadmap
 
-Build 016 is accepted and establishes the current Designer interaction baseline. The Designer now has a dedicated workspace; synchronized Palette/PDF/Inspector selection; reusable Single Item and Text Template instances; vertical, horizontal, and grid Repeated Layouts; Individual Placement by slot/order and supported semantic roles; contextual live editing; page navigation; and stable PDF-relative placement semantics. Do not reopen these foundations without a demonstrated defect or a requirement from a real scorecard workflow.
+Build 017 is accepted, including hotfixes through Build 017.4. The accepted Designer baseline now includes Starting Pitcher record expansion; reusable single-anchor Record Layouts with mixed Field/Text Template children; contextual Text Template labels and tokens; capability-gated Name Format; strict parent/child Inspector scoping; progressive-reveal creation flows; and persistent child-content creation while editing containers or existing children. These behaviors should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
 
-The remaining v0.2.0 Designer work should be driven by `docs/DESIGNER_COMPLETION_INVENTORY.md`. Current expected sequence is deliberately provisional:
+The remaining v0.2.0 Designer work is governed by `docs/DESIGNER_COMPLETION_INVENTORY.md`. The current expected sequence is:
 
-- **Build 017 — Starting Pitcher Record Expansion.** Expose the established Starting Pitcher player record in the Designer: name, jersey number, throws, and supported pitching season/YTD fields. Preserve Home/Away symmetry and the normalized resolver/formatter contract.
-- **Following build — Field & Player-Format Coverage.** Audit the canonical registry against fields actually exposed in the Designer, close traditional-field gaps, and add user-facing player name-format selection. Exact build number/scope should be chosen after the Build 017 audit.
-- **Following build — Designer Formatting.** Add basic static color and make an explicit v1 decision on handedness/data-driven conditional color and long-text fit behavior. Avoid a generalized rules engine unless real scorecard requirements justify it.
-- **Following build — Undo/Redo.** Add full Designer editing history after the accepted Build 016 interaction model. Prefer coherent Designer-state snapshot history over unrelated one-off inverse commands.
+- **Build 018 — Field & Player-Format Coverage Audit/Completion.** Compare the canonical registry with actual Designer exposure, close traditional pregame field gaps, verify Home/Away symmetry, and complete Name Format coverage/fallback behavior for applicable person-name fields.
+- **Following build — Designer Formatting.** Add basic static text color and make an explicit v1 decision on narrowly scoped handedness/data-driven color and long-text fit. Avoid a generalized rules engine unless real scorecard requirements justify it.
+- **Following build — Undo/Redo.** Add coherent Designer editing history across the accepted Build 017 object and Inspector model.
 - **Following build — Preview & Collection Robustness.** Fill configured collection capacities with deterministic synthetic sample data, add soft capacity guidance where useful, and refine overflow feedback.
-- **Final Designer completion pass.** Improve generation-result/warning presentation and perform complete scorecard-design acceptance testing before declaring the v0.2.0 Designer complete.
+- **Final Designer completion pass.** Improve generation-result/warning presentation and perform complete scorecard-design regression/acceptance testing before declaring v0.2.0 complete.
 
-Build numbers after 017 remain intentionally flexible. Advanced matchup/situational research, one-click favorite-layout generation, backup/export/import, and broader Game Day research are not prerequisites for completing the Designer.
+Build numbers after 018 remain intentionally flexible. Advanced matchup/situational research, one-click favorite-layout generation, backup/export/import, and broader Game Day research are not prerequisites for completing the Designer.
 
 ## Versioning
 
@@ -1033,7 +1081,7 @@ Individual placement adds identification by list order or semantic role. Repeate
 - The development-style Mappings panel is removed from the end-user Designer.
 - Desktop Ctrl/Cmd+mouse-wheel zoom and two-finger pinch zoom supplement the existing zoom controls.
 - The longstanding Designer width/stretch path is constrained at the workspace level; acceptance testing must confirm the post-generation stretch no longer occurs.
-- Starting Pitcher remains a follow-up for Build 017: model it as a record exposing number/name/throws/stat attributes rather than name-only.
+- Starting Pitcher record expansion was completed and accepted in Build 017; this historical Build 016 note is superseded by the current roadmap above.
 - Undo/redo remains the next editing-history requirement; Build 016 prioritizes selection-state correctness and contextual editing before snapshot history.
 
 ## Build 016.1 Interaction-model correction
@@ -1051,7 +1099,7 @@ Individual placement adds identification by list order or semantic role. Repeate
 - Typed X/Y/font/template edits are drafts until Enter/Tab/blur; intermediate keystrokes do not move or resize objects. Discrete actions such as alignment, drag, and nudge remain live.
 - PDF zoom is focal-point aware: wheel zoom preserves the pointer target, pinch zoom preserves the two-touch midpoint, and preset/+/- zoom preserves the current viewport center.
 - Build 016.2 adds further min-width/message-wrapping constraints to the Designer to address the longstanding post-generation width/stretch defect; browser acceptance determines whether the issue is fully resolved.
-- Starting Pitcher remains Build 017 work and should become a record exposing name, jersey number, throws, and pitching-stat attributes rather than a name-only scalar.
+- Starting Pitcher record expansion was completed and accepted in Build 017; this historical Build 016.2 note is superseded by the current roadmap above.
 
 
 ### Build 016.2 Interaction Hotfix
@@ -1065,7 +1113,7 @@ Individual placement adds identification by list order or semantic role. Repeate
 
 
 ### Build 016.2 consolidated UX candidate (Sep 14, 2026)
-Start-to-finish Designer testing produced a consolidated refinement pass: simple 5% Ctrl/Cmd+wheel PDF-only zoom with passive status/reset; normal wheel scrolling; task-oriented palette hierarchy (Umpires under Game Information, player collections/SP under Away/Home Players); Text Template preview adjacent to editor and Insert Field available during edit; typed numeric edits commit on finish while deliberate spinner/arrow increments remain live; compact top-stacked inspector; and empty repeated layouts skip overflow/rendering with a non-blocking notice. Confirmed Umpire Crew routing hotfix is preserved. Starting Pitcher record expansion remains Build 017.
+Start-to-finish Designer testing produced a consolidated refinement pass: simple 5% Ctrl/Cmd+wheel PDF-only zoom with passive status/reset; normal wheel scrolling; task-oriented palette hierarchy (Umpires under Game Information, player collections/SP under Away/Home Players); Text Template preview adjacent to editor and Insert Field available during edit; typed numeric edits commit on finish while deliberate spinner/arrow increments remain live; compact top-stacked inspector; and empty repeated layouts skip overflow/rendering with a non-blocking notice. Confirmed Umpire Crew routing hotfix is preserved. Starting Pitcher record expansion was subsequently completed and accepted in Build 017.
 
 ### Build 016.2 final interaction behavior
 

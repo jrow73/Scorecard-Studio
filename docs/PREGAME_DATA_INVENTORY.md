@@ -1,8 +1,8 @@
 # Scorecard Studio --- Pregame Data Inventory
 
-**Status:** Post-Build 016 working inventory\
+**Status:** Post-Build 017 working inventory\
 **Target milestone:** v0.2.0 --- Complete Field Mapping & Formatting\
-**Current state:** Core Designer placement architecture is accepted through Build 016. Remaining work is tracked in `DESIGNER_COMPLETION_INVENTORY.md`; Build 017 begins with Starting Pitcher record expansion.\
+**Current state:** Designer placement architecture and Build 017 are accepted through hotfix Build 017.4. Starting Pitcher record expansion, Record Layout, contextual slot Text Templates, capability-gated Name Format, progressive reveal, and parent/child Inspector scoping are baseline behavior. Remaining v0.2.0 work is tracked in `DESIGNER_COMPLETION_INVENTORY.md`.\
 **Purpose:** Define the pregame data Scorecard Studio may make available
 to layouts, independent of which MLB API request supplies it.
 

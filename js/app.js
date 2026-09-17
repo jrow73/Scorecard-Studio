@@ -2,17 +2,18 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 016.2 final UX cleanup
+ * Build: 017.4
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0162";
-import { normalizePregameData } from "./normalize.js?v=0162";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=0162";
-import { formatFieldValue } from "./formatter.js?v=0162";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=017.4";
+import { normalizePregameData } from "./normalize.js?v=017.4";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=017.4";
+import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=017.4";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=017.4";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=0162";
+} from "./storage.js?v=017.4";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -41,6 +42,7 @@ const state = {
   designerSelection: null,
   designerPaletteSelection: null,
   designerPendingMode: null,
+  designerCollectionInspectorMode: null,
   designerPaletteExpanded: new Set(),
   designerDrag: null,
   designerSaveTimer: null,
@@ -133,6 +135,8 @@ const elements = {
   designerFieldSelect: document.querySelector("#designer-field-select"),
   designerFontSize: document.querySelector("#designer-font-size"),
   designerFieldAlignment: document.querySelector("#designer-field-alignment"),
+  designerFieldNameFormatWrap: document.querySelector("#designer-field-name-format-wrap"),
+  designerFieldNameFormat: document.querySelector("#designer-field-name-format"),
   designerPlaceButton: document.querySelector("#designer-place-btn"),
   designerTemplateText: document.querySelector("#designer-template-text"),
   designerTemplateField: document.querySelector("#designer-template-field"),
@@ -153,8 +157,17 @@ const elements = {
   designerBlockSelect: document.querySelector("#designer-block-select"),
   designerPlaceRowsButton: document.querySelector("#designer-place-rows-btn"),
   designerColumnField: document.querySelector("#designer-column-field"),
+  designerColumnContentType: document.querySelector("#designer-column-content-type"),
+  designerColumnFieldWrap: document.querySelector("#designer-column-field-wrap"),
   designerColumnAlignment: document.querySelector("#designer-column-alignment"),
   designerColumnFontSize: document.querySelector("#designer-column-font-size"),
+  designerColumnNameFormatWrap: document.querySelector("#designer-column-name-format-wrap"),
+  designerColumnNameFormat: document.querySelector("#designer-column-name-format"),
+  designerColumnTemplateWrap: document.querySelector("#designer-column-template-wrap"),
+  designerColumnTemplate: document.querySelector("#designer-column-template"),
+  designerColumnTemplatePreview: document.querySelector("#designer-column-template-preview"),
+  designerColumnTemplateField: document.querySelector("#designer-column-template-field"),
+  designerColumnTemplateInsertButton: document.querySelector("#designer-column-template-insert-btn"),
   designerPlaceColumnButton: document.querySelector("#designer-place-column-btn"),
   designerDeleteBlockButton: document.querySelector("#designer-delete-block-btn"),
   designerBlockList: document.querySelector("#designer-block-list"),
@@ -168,6 +181,8 @@ const elements = {
   designerIndividualField: document.querySelector("#designer-individual-field"),
   designerIndividualAlignment: document.querySelector("#designer-individual-alignment"),
   designerIndividualFontSize: document.querySelector("#designer-individual-font-size"),
+  designerIndividualNameFormatWrap: document.querySelector("#designer-individual-name-format-wrap"),
+  designerIndividualNameFormat: document.querySelector("#designer-individual-name-format"),
   designerIndividualPlaceButton: document.querySelector("#designer-individual-place-btn"),
   designerIndividualList: document.querySelector("#designer-individual-list"),
   designerGenerateButton: document.querySelector("#designer-generate-btn"),
@@ -196,10 +211,14 @@ const elements = {
   designerSelectionHelp: document.querySelector("#designer-selection-help"),
   designerSelectionControls: document.querySelector("#designer-selection-controls"),
   designerSelectionClearButton: document.querySelector("#designer-selection-clear-btn"),
+  designerSelectionPositionControls: document.querySelector("#designer-selection-position-controls"),
+  designerSelectionFormatControls: document.querySelector("#designer-selection-format-controls"),
   designerSelectionX: document.querySelector("#designer-selection-x"),
   designerSelectionY: document.querySelector("#designer-selection-y"),
   designerSelectionFontSize: document.querySelector("#designer-selection-font-size"),
   designerSelectionAlignment: document.querySelector("#designer-selection-alignment"),
+  designerSelectionNameFormatWrap: document.querySelector("#designer-selection-name-format-wrap"),
+  designerSelectionNameFormat: document.querySelector("#designer-selection-name-format"),
   designerSelectionTemplateWrap: document.querySelector("#designer-selection-template-wrap"),
   designerSelectionTemplate: document.querySelector("#designer-selection-template"),
   designerSelectionTemplatePreview: document.querySelector("#designer-selection-template-preview"),
@@ -207,6 +226,14 @@ const elements = {
   designerSelectionTemplateInsertButton: document.querySelector("#designer-selection-template-insert-btn"),
   designerSelectionDeleteButton: document.querySelector("#designer-selection-delete-btn"),
   designerSelectionNewInstanceButton: document.querySelector("#designer-selection-new-instance-btn"),
+  designerSelectionRemoveItemButton: document.querySelector("#designer-selection-remove-item-btn"),
+  designerSubordinateWorkspace: document.querySelector("#designer-subordinate-workspace"),
+  designerWorkspaceLabel: document.querySelector("#designer-workspace-label"),
+  designerWorkspaceTitle: document.querySelector("#designer-workspace-title"),
+  designerWorkspaceLayoutButton: document.querySelector("#designer-workspace-layout-btn"),
+  designerWorkspaceNewButton: document.querySelector("#designer-workspace-new-btn"),
+  designerChildWorkspaceActions: document.querySelector("#designer-child-workspace-actions"),
+  designerBlockLayoutControls: document.querySelector("#designer-block-layout-controls"),
   designerNewItemPanel: document.querySelector("#designer-new-item-panel"),
   designerContextTools: document.querySelector("#designer-context-tools"),
   designerSingleItemTool: document.querySelector("#designer-single-item-tool"),
@@ -215,6 +242,7 @@ const elements = {
   designerIndividualTool: document.querySelector("#designer-individual-tool"),
   designerPlacementBanner: document.querySelector("#designer-placement-banner"),
   designerSlotFieldsPanel: document.querySelector("#designer-slot-fields-panel"),
+  designerBlockToolTitle: document.querySelector("#designer-block-tool-title"),
   appStatusText: document.querySelector("#app-status-text"),
   appStatusDot: document.querySelector("#app-status-dot")
 };
@@ -226,6 +254,7 @@ async function initialize() {
   updateSelectedDateUi(today);
   populateDesignerFieldSelect();
   populateDesignerTemplateFieldSelect();
+  populateNameFormatSelects();
   updateDesignerTemplatePreview();
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today));
@@ -254,13 +283,22 @@ async function initialize() {
   elements.designerTemplatePlaceButton.addEventListener("click", beginDesignerTemplatePlacement);
   elements.designerCreateBlockButton.addEventListener("click", createDesignerRepeatedBlock);
   elements.designerBlockSelect.addEventListener("change", syncDesignerBlockControls);
-  elements.designerLineupSide.addEventListener("change", populateDesignerColumnFieldSelect);
+  elements.designerLineupSide.addEventListener("change", () => { syncDesignerArrangementInputs(); populateDesignerColumnFieldSelect(); syncDesignerSlotContentControls(); });
   elements.designerBlockArrangement.addEventListener("change", syncDesignerArrangementInputs);
   elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
   elements.designerPlaceColumnButton.addEventListener("click", beginDesignerBlockColumnPlacement);
+  elements.designerColumnContentType.addEventListener("change", () => { resetDesignerSlotBranchForType(); syncDesignerSlotContentControls(); });
+  elements.designerColumnField.addEventListener("change", syncDesignerSlotContentControls);
+  elements.designerColumnAlignment.addEventListener("change", syncDesignerSlotContentControls);
+  elements.designerColumnFontSize.addEventListener("input", syncDesignerSlotContentControls);
+  elements.designerColumnNameFormat.addEventListener("change", syncDesignerSlotContentControls);
+  elements.designerColumnTemplate.addEventListener("input", () => { updateDesignerSlotTemplatePreview(); syncDesignerSlotContentControls(); });
+  elements.designerColumnTemplateInsertButton.addEventListener("click", insertDesignerSlotTemplateField);
+  elements.designerFieldSelect.addEventListener("change", syncDesignerSingleNameFormatControl);
   elements.designerDeleteBlockButton.addEventListener("click", deleteSelectedDesignerBlock);
   elements.designerIndividualCollection.addEventListener("change", syncDesignerIndividualControls);
   elements.designerIndividualStrategy.addEventListener("change", syncDesignerIndividualControls);
+  elements.designerIndividualField.addEventListener("change", syncDesignerIndividualNameFormatControl);
   elements.designerIndividualPlaceButton.addEventListener("click", beginDesignerIndividualPlacement);
   elements.designerGenerateButton.addEventListener("click", generateTestPdf);
   elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
@@ -274,10 +312,14 @@ async function initialize() {
   elements.designerSelectionClearButton.addEventListener("click", clearDesignerSelection);
   elements.designerSelectionDeleteButton.addEventListener("click", deleteSelectedDesignerObject);
   elements.designerSelectionNewInstanceButton.addEventListener("click", beginNewInstanceFromSelection);
+  elements.designerSelectionRemoveItemButton?.addEventListener("click", removeSelectedDesignerChild);
+  elements.designerWorkspaceLayoutButton?.addEventListener("click", () => setCollectionInspectorMode("layout"));
+  elements.designerWorkspaceNewButton?.addEventListener("click", () => setCollectionInspectorMode("new"));
   wireCommittedInspectorInput(elements.designerSelectionX, applyDesignerInspectorPosition);
   wireCommittedInspectorInput(elements.designerSelectionY, applyDesignerInspectorPosition);
   wireCommittedInspectorInput(elements.designerSelectionFontSize, applyDesignerInspectorFormatting);
   elements.designerSelectionAlignment.addEventListener("change", applyDesignerInspectorFormatting);
+  elements.designerSelectionNameFormat.addEventListener("change", applyDesignerInspectorFormatting);
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
   elements.designerSelectionTemplate?.addEventListener("input", updateDesignerSelectionTemplatePreview);
   elements.designerSelectionTemplateInsertButton?.addEventListener("click", insertDesignerSelectionTemplateField);
@@ -1253,16 +1295,42 @@ function beginDesignerPlacement() {
   const size = Number(elements.designerFontSize.value);
   if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Font size must be between 1 and 144 points.", true);
   const alignment = ["left", "center", "right"].includes(elements.designerFieldAlignment?.value) ? elements.designerFieldAlignment.value : "left";
-  setDesignerPlacement({ mode: "scalar", alignment });
+  const definition = getFieldDefinition(elements.designerFieldSelect.value);
+  const format = definition?.formatKind === "playerName" ? { nameFormat: elements.designerFieldNameFormat.value || "full" } : {};
+  setDesignerPlacement({ mode: "scalar", alignment, format });
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(elements.designerFieldSelect.value)}.`);
 }
 
-function populateDesignerTemplateFieldSelect() {
+function populateNameFormatSelects() {
+  for (const select of [elements.designerFieldNameFormat, elements.designerColumnNameFormat, elements.designerSelectionNameFormat, elements.designerIndividualNameFormat]) {
+    if (!select) continue;
+    select.replaceChildren();
+    if (select === elements.designerColumnNameFormat) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Choose name format…";
+      select.append(placeholder);
+    }
+    for (const entry of PLAYER_NAME_FORMATS) {
+      const option = document.createElement("option"); option.value = entry.value; option.textContent = entry.label; select.append(option);
+    }
+  }
+  syncDesignerSingleNameFormatControl();
+  syncDesignerIndividualNameFormatControl();
+}
+
+function syncDesignerSingleNameFormatControl() {
+  const definition = getFieldDefinition(elements.designerFieldSelect?.value);
+  if (elements.designerFieldNameFormatWrap) elements.designerFieldNameFormatWrap.hidden = definition?.formatKind !== "playerName";
+}
+
+function populateDesignerTemplateFieldSelect(context = null) {
   if (!elements.designerTemplateField) return;
   elements.designerTemplateField.replaceChildren();
   const groups = new Map();
   const activeGroups = activeDesignerPaletteGroups();
-  for (const definition of getSupportedFields({ cardinality: "single" })) {
+  const definitions = context ? fieldsForRecordContext(context) : getSupportedFields({ cardinality: "single" });
+  for (const definition of definitions) {
     if (selectedLayout() && !activeGroups.has(designerPaletteGroupForField(definition))) continue;
     if (!groups.has(definition.category)) groups.set(definition.category, []);
     groups.get(definition.category).push(definition);
@@ -1273,7 +1341,7 @@ function populateDesignerTemplateFieldSelect() {
     for (const definition of definitions) {
       const option = document.createElement("option");
       option.value = definition.id;
-      option.textContent = definition.label;
+      option.textContent = context ? slotFieldShortLabel(definition) : definition.label;
       group.append(option);
     }
     elements.designerTemplateField.append(group);
@@ -1291,11 +1359,12 @@ function templateFieldIdByToken(tokenText) {
   const token = String(tokenText || "").trim();
   const direct = getFieldDefinition(token);
   if (direct?.cardinality === "single") return direct.id;
-  const definition = getSupportedFields({ cardinality: "single" }).find((entry) => entry.label === token);
+  const definition = getSupportedFields({ cardinality: "single" }).find((entry) => entry.label === token || entry.legacyLabels?.includes(token));
   return definition?.id || null;
 }
 
-function templateFieldIds(template) {
+function templateFieldIds(template, context = null) {
+  if (context) return slotContentFieldIds({ type: "template", template }, context);
   const ids = [];
   const seen = new Set();
   const regex = /\[([^\[\]]+)\]/g;
@@ -1307,7 +1376,8 @@ function templateFieldIds(template) {
   return ids;
 }
 
-function resolveTemplateText(template, model) {
+function resolveTemplateText(template, model, context = null) {
+  if (context) return resolveSlotContent({ type: "template", template }, model, context);
   return String(template || "").replace(/\[([^\[\]]+)\]/g, (_whole, token) => {
     const fieldId = templateFieldIdByToken(token);
     if (!fieldId) return "";
@@ -1319,7 +1389,8 @@ function resolveTemplateText(template, model) {
 
 function insertDesignerTemplateField() {
   const fieldId = elements.designerTemplateField.value;
-  const token = templateTokenForField(fieldId);
+  const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
+  const token = context ? templateTokenForContextField(fieldId) : templateTokenForField(fieldId);
   if (!token) return;
   const textarea = elements.designerTemplateText;
   const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
@@ -1334,7 +1405,8 @@ function insertDesignerTemplateField() {
 function updateDesignerTemplatePreview() {
   if (!elements.designerTemplatePreview) return;
   const template = elements.designerTemplateText.value;
-  const preview = resolveTemplateText(template, DESIGNER_SAMPLE_MODEL);
+  const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
+  const preview = resolveTemplateText(template, DESIGNER_SAMPLE_MODEL, context);
   elements.designerTemplatePreview.textContent = preview || "Enter text or insert a field.";
 }
 
@@ -1345,18 +1417,24 @@ function beginDesignerTemplatePlacement() {
   const size = Number(elements.designerTemplateFontSize.value);
   if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Composite font size must be between 1 and 144 points.", true);
   const alignment = ["left", "center", "right"].includes(elements.designerTemplateAlignment.value) ? elements.designerTemplateAlignment.value : "left";
-  setDesignerPlacement({ mode: "template", template, fontSize: size, alignment });
+  const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
+  setDesignerPlacement({ mode: "template", template, fontSize: size, alignment, context });
   setDesignerMessage(`Click the ${alignment}-alignment baseline anchor for the text template.`);
 }
 
 async function createDesignerRepeatedBlock() {
   const layout = selectedLayout();
   if (!layout) return setDesignerMessage("Open a layout first.", true);
-  const arrangement = ["vertical", "horizontal", "grid"].includes(elements.designerBlockArrangement.value)
+  const requestedContext = String(elements.designerLineupSide.value || "away.lineup");
+  const isRecord = isRecordContext(requestedContext);
+  const arrangement = isRecord ? "grid" : ["vertical", "horizontal", "grid"].includes(elements.designerBlockArrangement.value)
     ? elements.designerBlockArrangement.value : "vertical";
   let rows;
   let columns;
-  if (arrangement === "grid") {
+  if (isRecord) {
+    rows = 1;
+    columns = 1;
+  } else if (arrangement === "grid") {
     rows = Number(elements.designerGridRows.value);
     columns = Number(elements.designerGridColumns.value);
     if (!Number.isInteger(rows) || rows < 1 || rows > 30 || !Number.isInteger(columns) || columns < 1 || columns > 30) {
@@ -1372,13 +1450,13 @@ async function createDesignerRepeatedBlock() {
     columns = arrangement === "horizontal" ? slotCount : 1;
   }
   const capacity = rows * columns;
-  const requestedCollection = String(elements.designerLineupSide.value || "away.lineup");
+  const requestedCollection = requestedContext;
   const supportedCollections = new Set(["away.lineup", "home.lineup", "away.bench", "home.bench", "away.bullpen", "home.bullpen", "game.umpires.crew"]);
-  const collection = supportedCollections.has(requestedCollection) ? requestedCollection : "away.lineup";
+  const collection = supportedCollections.has(requestedCollection) ? requestedCollection : null;
   const block = {
     id: makeMappingId(),
-    type: "repeated",
-    collection,
+    type: isRecord ? "record" : "repeated",
+    ...(isRecord ? { record: requestedContext } : { collection: collection || "away.lineup" }),
     capacity,
     arrangement,
     slotRows: rows,
@@ -1389,7 +1467,7 @@ async function createDesignerRepeatedBlock() {
   };
   layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
   layout.repeatedBlocks.push(block);
-  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 4);
+  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, isRecord ? 7 : 4);
   layout.updatedAt = new Date().toISOString();
   try {
     await saveLayout(layout);
@@ -1410,6 +1488,10 @@ async function createDesignerRepeatedBlock() {
 function beginDesignerBlockGeometryPlacement() {
   const block = selectedDesignerBlock();
   if (!block) return setDesignerMessage("Create or select a repeated block first.", true);
+  if (isRecordBlock(block)) {
+    setDesignerPlacement({ mode: "blockGeometrySingle", blockId: block.id });
+    return setDesignerMessage(`Click the baseline origin for the ${blockLabel(block)}.`);
+  }
   if (block.capacity < 2) return setDesignerMessage("A repeated block needs at least two slots to infer spacing from its outer anchors.", true);
   const { rows, columns } = blockDimensions(block);
   setDesignerPlacement({ mode: "blockGeometryFirst", blockId: block.id });
@@ -1427,12 +1509,26 @@ function beginDesignerBlockColumnPlacement() {
   }
   const size = Number(elements.designerColumnFontSize.value);
   if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Column font size must be between 1 and 144 points.", true);
+  const contentType = elements.designerColumnContentType.value;
+  if (!['field', 'template'].includes(contentType)) return setDesignerMessage("Choose Field or Text Template before placing slot content.", true);
   const field = elements.designerColumnField.value;
   const definition = getFieldDefinition(field);
-  if (!definition || definition.cardinality !== "repeated" || definition.collection !== block.collection) return setDesignerMessage("Choose a field that belongs to the selected block.", true);
-  const alignment = ["left", "center", "right"].includes(elements.designerColumnAlignment.value) ? elements.designerColumnAlignment.value : "left";
-  setDesignerPlacement({ mode: "blockColumn", blockId: block.id, field, fontSize: size, alignment });
-  setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} in slot 1. Scorecard Studio will repeat that offset through the block.`);
+  let content;
+  if (contentType === "template") {
+    const template = elements.designerColumnTemplate.value;
+    if (!template.trim()) return setDesignerMessage("Enter a Text Template before placing it.", true);
+    content = { type: "template", template };
+  } else {
+    if (!definition || !fieldsForRecordContext(blockContext(block)).some((entry) => entry.id === definition.id)) return setDesignerMessage("Choose a field that belongs to the selected layout.", true);
+    content = { type: "field", field };
+    if (definition.formatKind === "playerName") content.format = { nameFormat: elements.designerColumnNameFormat.value };
+  }
+  const alignment = elements.designerColumnAlignment.value;
+  if (!["left", "center", "right"].includes(alignment)) return setDesignerMessage("Choose an alignment before adding slot content.", true);
+  if (contentType === "field" && definition?.formatKind === "playerName" && !elements.designerColumnNameFormat.value) return setDesignerMessage("Choose a name format before adding the player-name field.", true);
+  setDesignerPlacement({ mode: "blockColumn", blockId: block.id, field: content.field || null, content, fontSize: size, alignment });
+  const label = content.type === "template" ? "the Text Template" : designerFieldLabel(field);
+  setDesignerMessage(`Click the ${alignment}-alignment anchor for ${label} in slot 1.${isRecordBlock(block) ? "" : " Scorecard Studio will repeat that offset through the block."}`);
 }
 
 const INDIVIDUAL_ROLE_OPTIONS = {
@@ -1464,6 +1560,7 @@ function syncDesignerIndividualControls() {
 function populateDesignerIndividualFieldSelect() {
   if (!elements.designerIndividualField) return;
   const collection = elements.designerIndividualCollection.value || "away.lineup";
+  const previous = elements.designerIndividualField.value;
   elements.designerIndividualField.replaceChildren();
   for (const definition of getSupportedFields({ cardinality: "repeated", collection })) {
     const option = document.createElement("option");
@@ -1471,6 +1568,13 @@ function populateDesignerIndividualFieldSelect() {
     option.textContent = definition.label.replace(/^(Away|Home) (Lineup|Bench|Bullpen) — /, "").replace(/^Umpire Crew — /, "");
     elements.designerIndividualField.append(option);
   }
+  if (previous && Array.from(elements.designerIndividualField.options).some((option) => option.value === previous)) elements.designerIndividualField.value = previous;
+  syncDesignerIndividualNameFormatControl();
+}
+
+function syncDesignerIndividualNameFormatControl() {
+  const definition = getFieldDefinition(elements.designerIndividualField?.value);
+  if (elements.designerIndividualNameFormatWrap) elements.designerIndividualNameFormatWrap.hidden = definition?.formatKind !== "playerName";
 }
 
 function individualSelectorLabel(mapping) {
@@ -1510,7 +1614,8 @@ function beginDesignerIndividualPlacement() {
   const fontSize = Number(elements.designerIndividualFontSize.value);
   if (!Number.isFinite(fontSize) || fontSize < 1 || fontSize > 144) return setDesignerMessage("Individual field font size must be between 1 and 144 points.", true);
   const alignment = ["left", "center", "right"].includes(elements.designerIndividualAlignment.value) ? elements.designerIndividualAlignment.value : "left";
-  setDesignerPlacement({ mode: "individual", collection, strategy, selector, field, fontSize, alignment });
+  const format = definition.formatKind === "playerName" ? { nameFormat: elements.designerIndividualNameFormat?.value || "full" } : {};
+  setDesignerPlacement({ mode: "individual", collection, strategy, selector, field, fontSize, alignment, format });
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} • ${individualSelectorLabel({ collection, strategy, selector })}.`);
 }
 
@@ -1532,7 +1637,7 @@ async function handleDesignerStageClick(event) {
     const mapping = {
       id: makeMappingId(),
       field,
-      content: { type: "field", field },
+      content: { type: "field", field, ...(Object.keys(placement.format || {}).length ? { format: placement.format } : {}) },
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
@@ -1564,7 +1669,7 @@ async function handleDesignerStageClick(event) {
     const mapping = {
       id: makeMappingId(),
       field: null,
-      content: { type: "template", template: placement.template },
+      content: { type: "template", template: placement.template, ...(placement.context ? { context: placement.context } : {}) },
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
@@ -1600,7 +1705,7 @@ async function handleDesignerStageClick(event) {
       strategy: placement.strategy,
       selector: { ...placement.selector },
       field: placement.field,
-      content: { type: "field", field: placement.field },
+      content: { type: "field", field: placement.field, ...(Object.keys(placement.format || {}).length ? { format: placement.format } : {}) },
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
@@ -1635,6 +1740,24 @@ async function handleDesignerStageClick(event) {
 
   const block = findDesignerBlock(placement.blockId);
   if (!block) return cancelDesignerPlacement();
+
+  if (placement.mode === "blockGeometrySingle") {
+    block.pageIndex = state.designerPageNumber - 1;
+    block.geometry = {
+      mode: "slot-grid-v1", firstXPercent: xPercent, firstYPercent: yPercent,
+      lastXPercent: xPercent, lastYPercent: yPercent, rowSpacingPoints: 0, columnSpacingPoints: 0
+    };
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 7);
+    layout.updatedAt = new Date().toISOString();
+    try {
+      await saveLayout(layout);
+      cancelDesignerPlacement(); renderDesignerOverlay(); renderDesignerBlockList(); renderDesignerPalette();
+      selectDesignerObject({ kind: "block", blockId: block.id }, { renderOverlay: true });
+      setDesignerMessage(`Placed the ${blockLabel(block)}. Add fields or a Text Template to its slot.`);
+      await refreshLayouts(); state.selectedLayoutId = layout.id;
+    } catch (error) { setDesignerMessage(errorMessage(error, "The Record Layout placement could not be saved."), true); }
+    return;
+  }
 
   if (placement.mode === "blockGeometryFirst") {
     const { rows, columns } = blockDimensions(block);
@@ -1702,7 +1825,7 @@ async function handleDesignerStageClick(event) {
     const column = {
       id: makeMappingId(),
       field,
-      content: { type: "field", field },
+      content: placement.content || { type: "field", field },
       xPercent,
       fontSize: placement.fontSize,
       alignment,
@@ -1715,7 +1838,7 @@ async function handleDesignerStageClick(event) {
     }
     block.columns = Array.isArray(block.columns) ? block.columns : [];
     block.columns.push(column);
-    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, isSlotGridGeometry(block) ? 4 : 3);
+    layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, placement.content?.type === "template" || isRecordBlock(block) ? 7 : (isSlotGridGeometry(block) ? 4 : 3));
     layout.updatedAt = new Date().toISOString();
     try {
       await saveLayout(layout);
@@ -1724,7 +1847,8 @@ async function handleDesignerStageClick(event) {
       renderDesignerBlockList();
       renderDesignerPalette();
       selectDesignerObject({ kind: "repeatedColumn", blockId: block.id, columnId: column.id }, { renderOverlay: true });
-      setDesignerMessage(`Placed ${designerFieldLabel(field)} as a ${alignment}-aligned repeated slot field.`);
+      const label = placement.content?.type === "template" ? "Text Template" : designerFieldLabel(field);
+      setDesignerMessage(`Placed ${label} as ${alignment}-aligned slot content.`);
       await refreshLayouts();
       state.selectedLayoutId = layout.id;
     } catch (error) {
@@ -1778,7 +1902,7 @@ function renderDesignerOverlay() {
     const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
     marker.style.fontSize = `${previewFontPx}px`;
     marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-    marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL) || "[blank composite]") : designerFieldPreview(mapping.field);
+    marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL, mapping.content.context) || "[blank composite]") : designerFieldPreview(mapping.field, null, mapping.content?.format);
     marker.title = `${isTemplate ? "Text template" : designerFieldLabel(mapping.field)} • click to edit • drag to move`;
     if (state.designerSelection?.kind === "mapping" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
     wireDesignerMarker(marker, { kind: "mapping", id: mapping.id });
@@ -1804,15 +1928,16 @@ function renderDesignerOverlay() {
         for (const column of block.columns || []) {
           const marker = document.createElement("span");
           const alignment = ["left", "center", "right"].includes(column.alignment) ? column.alignment : "left";
-          marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(column.field) ? "" : " unsupported"}`;
+          const isTemplate = column.content?.type === "template";
+          marker.className = `mapping-marker repeated-marker${isTemplate ? " template-marker" : ""} align-${alignment}${!isTemplate && !getFieldDefinition(column.field) ? " unsupported" : ""}`;
           const anchorXPercent = slot.xPercent + ((Number(column.xOffsetPoints) || 0) / pageWidthPoints);
           marker.style.left = `${anchorXPercent * 100}%`;
           marker.style.top = `${slot.yPercent * 100}%`;
           const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
           marker.style.fontSize = `${previewFontPx}px`;
           marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-          marker.textContent = designerFieldPreview(column.field, { slot: slotIndex + 1 });
-          marker.title = `${designerFieldLabel(column.field)} • slot ${slotIndex + 1} • ${alignment} • click to edit column`;
+          marker.textContent = designerSlotContentPreview(block, column, slotIndex + 1);
+          marker.title = `${blockContentLabel(column)} • slot ${slotIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
           marker.dataset.columnId = column.id;
           if (state.designerSelection?.kind === "repeatedColumn" && state.designerSelection.blockId === block.id && state.designerSelection.columnId === column.id) marker.classList.add("selected-object");
@@ -1833,14 +1958,15 @@ function renderDesignerOverlay() {
         for (const column of block.columns || []) {
           const marker = document.createElement("span");
           const alignment = ["left", "center", "right"].includes(column.alignment) ? column.alignment : "left";
-          marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(column.field) ? "" : " unsupported"}`;
+          const isTemplate = column.content?.type === "template";
+          marker.className = `mapping-marker repeated-marker${isTemplate ? " template-marker" : ""} align-${alignment}${!isTemplate && !getFieldDefinition(column.field) ? " unsupported" : ""}`;
           marker.style.left = `${column.xPercent * 100}%`;
           marker.style.top = `${yPercent * 100}%`;
           const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
           marker.style.fontSize = `${previewFontPx}px`;
           marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-          marker.textContent = designerFieldPreview(column.field, { slot: rowIndex + 1 });
-          marker.title = `${designerFieldLabel(column.field)} • row ${rowIndex + 1} • ${alignment} • click to edit column`;
+          marker.textContent = designerSlotContentPreview(block, column, rowIndex + 1);
+          marker.title = `${blockContentLabel(column)} • row ${rowIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
           marker.dataset.columnId = column.id;
           if (state.designerSelection?.kind === "repeatedColumn" && state.designerSelection.blockId === block.id && state.designerSelection.columnId === column.id) marker.classList.add("selected-object");
@@ -1863,7 +1989,7 @@ function renderDesignerOverlay() {
     const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
     marker.style.fontSize = `${previewFontPx}px`;
     marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-    marker.textContent = designerFieldPreview(mapping.field, mapping.selector) || `[${individualSelectorLabel(mapping)}]`;
+    marker.textContent = designerFieldPreview(mapping.field, mapping.selector, mapping.content?.format || {}) || `[${individualSelectorLabel(mapping)}]`;
     marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to edit • drag to move`;
     if (state.designerSelection?.kind === "individual" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
     wireDesignerMarker(marker, { kind: "individual", id: mapping.id });
@@ -1892,7 +2018,7 @@ function renderDesignerIndividualList() {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "secondary-button compact-button";
-    remove.textContent = "Delete";
+    remove.textContent = "Remove Item";
     remove.addEventListener("click", () => deleteDesignerIndividualMapping(mapping.id));
     row.append(text, remove);
     elements.designerIndividualList.append(row);
@@ -1965,7 +2091,7 @@ function renderDesignerBlockList() {
   if (!blocks.length) {
     const empty = document.createElement("p");
     empty.className = "subtle";
-    empty.textContent = "No repeated blocks yet.";
+    empty.textContent = "No Repeated or Record Layouts yet.";
     elements.designerBlockList.append(empty);
     return;
   }
@@ -1973,27 +2099,29 @@ function renderDesignerBlockList() {
     const card = document.createElement("div");
     card.className = "designer-block-card";
     const strong = document.createElement("strong");
-    strong.textContent = `${blockLabel(block)} • ${block.capacity} slots • ${blockArrangementLabel(block)}`;
+    strong.textContent = isRecordBlock(block) ? `${blockLabel(block)} • Record Layout` : `${blockLabel(block)} • ${block.capacity} slots • ${blockArrangementLabel(block)}`;
     const meta = document.createElement("span");
     if (block.geometry && Number.isInteger(block.pageIndex)) {
       if (isSlotGridGeometry(block)) {
         const rowText = Number(block.geometry.rowSpacingPoints || 0).toFixed(2);
         const columnText = Number(block.geometry.columnSpacingPoints || 0).toFixed(2);
-        meta.textContent = `Page ${block.pageIndex + 1} • row ${rowText} pt • column ${columnText} pt spacing • ${(block.columns || []).length} field(s)`;
+        meta.textContent = isRecordBlock(block)
+          ? `Page ${block.pageIndex + 1} • ${(block.columns || []).length} content item(s)`
+          : `Page ${block.pageIndex + 1} • row ${rowText} pt • column ${columnText} pt spacing • ${(block.columns || []).length} content item(s)`;
       } else {
-        meta.textContent = `Page ${block.pageIndex + 1} • ${Number(block.geometry.rowSpacingPoints || 0).toFixed(2)} pt row spacing • ${(block.columns || []).length} field(s) • legacy vertical`;
+        meta.textContent = `Page ${block.pageIndex + 1} • ${Number(block.geometry.rowSpacingPoints || 0).toFixed(2)} pt row spacing • ${(block.columns || []).length} content item(s) • legacy vertical`;
       }
-    } else meta.textContent = `Geometry not placed • ${(block.columns || []).length} field(s)`;
+    } else meta.textContent = `Placement not set • ${(block.columns || []).length} content item(s)`;
     card.append(strong, meta);
     for (const column of block.columns || []) {
       const row = document.createElement("div");
       row.className = "designer-block-column-row";
       const text = document.createElement("span");
-      text.textContent = `${designerFieldLabel(column.field)} • ${column.fontSize} pt • ${column.alignment || "left"}`;
+      text.textContent = `${blockContentLabel(column)} • ${column.fontSize} pt • ${column.alignment || "left"}`;
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "secondary-button compact-button";
-      remove.textContent = "Delete";
+      remove.textContent = "Remove Item";
       remove.addEventListener("click", () => deleteDesignerBlockColumn(block.id, column.id));
       row.append(text, remove);
       card.append(row);
@@ -2071,7 +2199,7 @@ async function deleteSelectedDesignerBlock() {
   const layout = selectedLayout();
   const block = selectedDesignerBlock();
   if (!layout || !block) return setDesignerMessage("Select a repeated block first.", true);
-  if (!window.confirm(`Delete the ${blockLabel(block)} and all of its columns?`)) return;
+  if (!window.confirm(`Delete the ${blockLabel(block)} and all of its slot content?`)) return;
   layout.repeatedBlocks = (layout.repeatedBlocks || []).filter((item) => item.id !== block.id);
   layout.updatedAt = new Date().toISOString();
   try {
@@ -2084,7 +2212,7 @@ async function deleteSelectedDesignerBlock() {
     clearDesignerSelection({ render: false });
     renderDesignerPalette();
     renderDesignerSelectionInspector();
-    setDesignerMessage("Repeated block deleted.");
+    setDesignerMessage(isRecordBlock(block) ? "Record Layout deleted." : "Repeated Layout deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
   } catch (error) {
@@ -2109,22 +2237,115 @@ function populateDesignerBlockSelect(preferredId = null) {
   blocks.forEach((block, index) => {
     const option = document.createElement("option");
     option.value = block.id;
-    option.textContent = `${blockLabel(block)} ${index + 1} • ${block.capacity} slots • ${blockArrangementLabel(block)}`;
+    option.textContent = isRecordBlock(block) ? `${blockLabel(block)} ${index + 1} • Record Layout` : `${blockLabel(block)} ${index + 1} • ${block.capacity} slots • ${blockArrangementLabel(block)}`;
     elements.designerBlockSelect.append(option);
   });
   if (blocks.some((block) => block.id === prior)) elements.designerBlockSelect.value = prior;
 }
 
 function populateDesignerColumnFieldSelect() {
-  const block = selectedDesignerBlock();
-  const collection = block?.collection || String(elements.designerLineupSide.value || "away.lineup");
+  const block = state.designerPaletteSelection && state.designerPendingMode ? null : selectedDesignerBlock();
+  const context = blockContext(block) || String(elements.designerLineupSide.value || "away.lineup");
+  const previous = elements.designerColumnField.value;
+  const previousTemplate = elements.designerColumnTemplateField.value;
   elements.designerColumnField.replaceChildren();
-  for (const definition of getSupportedFields({ cardinality: "repeated", collection })) {
+  elements.designerColumnTemplateField.replaceChildren();
+
+  const fieldPlaceholder = document.createElement("option");
+  fieldPlaceholder.value = "";
+  fieldPlaceholder.textContent = "Choose field…";
+  elements.designerColumnField.append(fieldPlaceholder);
+
+  const templatePlaceholder = document.createElement("option");
+  templatePlaceholder.value = "";
+  templatePlaceholder.textContent = "Choose field to insert…";
+  elements.designerColumnTemplateField.append(templatePlaceholder);
+
+  for (const definition of fieldsForRecordContext(context)) {
     const option = document.createElement("option");
     option.value = definition.id;
-    option.textContent = definition.label.replace(/^(Away|Home) (Lineup|Bench|Bullpen) — /, "");
+    option.textContent = slotFieldShortLabel(definition);
     elements.designerColumnField.append(option);
+    const templateOption = option.cloneNode(true);
+    elements.designerColumnTemplateField.append(templateOption);
   }
+  if (previous && Array.from(elements.designerColumnField.options).some((option) => option.value === previous)) elements.designerColumnField.value = previous;
+  if (previousTemplate && Array.from(elements.designerColumnTemplateField.options).some((option) => option.value === previousTemplate)) elements.designerColumnTemplateField.value = previousTemplate;
+  syncDesignerSlotContentControls();
+}
+
+function slotFieldShortLabel(definition) {
+  return definition.label
+    .replace(/^(Away|Home) (Lineup|Bench|Bullpen|Starting Pitcher) — /, "")
+    .replace(/^Umpire Crew — /, "");
+}
+
+function resetDesignerSlotConfiguration() {
+  if (elements.designerColumnContentType) elements.designerColumnContentType.value = "";
+  if (elements.designerColumnField) elements.designerColumnField.value = "";
+  if (elements.designerColumnAlignment) elements.designerColumnAlignment.value = "";
+  if (elements.designerColumnFontSize) elements.designerColumnFontSize.value = "";
+  if (elements.designerColumnNameFormat) elements.designerColumnNameFormat.value = "";
+  if (elements.designerColumnTemplate) elements.designerColumnTemplate.value = "";
+  if (elements.designerColumnTemplateField) elements.designerColumnTemplateField.value = "";
+}
+
+function resetDesignerSlotBranchForType() {
+  if (elements.designerColumnField) elements.designerColumnField.value = "";
+  if (elements.designerColumnAlignment) elements.designerColumnAlignment.value = "";
+  if (elements.designerColumnFontSize) elements.designerColumnFontSize.value = "";
+  if (elements.designerColumnNameFormat) elements.designerColumnNameFormat.value = "";
+  if (elements.designerColumnTemplate) elements.designerColumnTemplate.value = "";
+  if (elements.designerColumnTemplateField) elements.designerColumnTemplateField.value = "";
+}
+
+function syncDesignerSlotContentControls() {
+  const contentType = elements.designerColumnContentType?.value || "";
+  const isField = contentType === "field";
+  const isTemplate = contentType === "template";
+  const hasType = isField || isTemplate;
+  const definition = isField ? getFieldDefinition(elements.designerColumnField?.value) : null;
+  const hasField = Boolean(definition);
+  const needsNameFormat = isField && definition?.formatKind === "playerName";
+  const hasAlignment = ["left", "center", "right"].includes(elements.designerColumnAlignment?.value);
+  const fontSize = Number(elements.designerColumnFontSize?.value);
+  const hasFontSize = String(elements.designerColumnFontSize?.value || "").trim() !== "" && Number.isFinite(fontSize) && fontSize >= 1 && fontSize <= 144;
+  const hasNameFormat = !needsNameFormat || Boolean(elements.designerColumnNameFormat?.value);
+  const hasTemplate = isTemplate && Boolean(String(elements.designerColumnTemplate?.value || "").trim());
+
+  if (elements.designerColumnFieldWrap) elements.designerColumnFieldWrap.hidden = !isField;
+  if (elements.designerColumnTemplateWrap) elements.designerColumnTemplateWrap.hidden = !isTemplate;
+  const alignmentLabel = elements.designerColumnAlignment?.closest("label");
+  const fontSizeLabel = elements.designerColumnFontSize?.closest("label");
+  if (alignmentLabel) alignmentLabel.hidden = !hasType;
+  if (fontSizeLabel) fontSizeLabel.hidden = !hasType;
+  if (elements.designerColumnNameFormatWrap) elements.designerColumnNameFormatWrap.hidden = !needsNameFormat;
+  if (elements.designerPlaceColumnButton) {
+    elements.designerPlaceColumnButton.hidden = !hasType;
+    elements.designerPlaceColumnButton.disabled = isField
+      ? !(hasField && hasAlignment && hasFontSize && hasNameFormat)
+      : !(hasTemplate && hasAlignment && hasFontSize);
+  }
+  updateDesignerSlotTemplatePreview();
+}
+
+function updateDesignerSlotTemplatePreview() {
+  if (!elements.designerColumnTemplatePreview) return;
+  const block = state.designerPaletteSelection && state.designerPendingMode ? null : selectedDesignerBlock();
+  const context = blockContext(block) || String(elements.designerLineupSide?.value || "");
+  const preview = resolveSlotContent({ type: "template", template: elements.designerColumnTemplate?.value || "" }, DESIGNER_SAMPLE_MODEL, context, { slot: 1 });
+  elements.designerColumnTemplatePreview.textContent = preview || "Enter text or insert a field.";
+}
+
+function insertDesignerSlotTemplateField() {
+  const token = templateTokenForContextField(elements.designerColumnTemplateField?.value);
+  const textarea = elements.designerColumnTemplate;
+  if (!token || !textarea) return;
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? start;
+  textarea.setRangeText(token, start, end, "end");
+  updateDesignerSlotTemplatePreview();
+  textarea.focus();
 }
 
 function syncDesignerBlockControls() {
@@ -2133,9 +2354,10 @@ function syncDesignerBlockControls() {
   elements.designerPlaceRowsButton.disabled = disabled;
   elements.designerPlaceColumnButton.disabled = disabled;
   elements.designerDeleteBlockButton.disabled = disabled;
+  elements.designerDeleteBlockButton.textContent = block && isRecordBlock(block) ? "Delete Record Layout" : "Delete Repeated Layout";
   if (block) {
     const { rows, columns } = blockDimensions(block);
-    elements.designerLineupSide.value = block.collection;
+    elements.designerLineupSide.value = blockContext(block);
     elements.designerBlockArrangement.value = blockArrangement(block);
     elements.designerLineupCapacity.value = block.capacity;
     elements.designerGridRows.value = rows;
@@ -2147,10 +2369,14 @@ function syncDesignerBlockControls() {
 }
 
 function syncDesignerArrangementInputs() {
+  const isRecord = isRecordContext(String(elements.designerLineupSide?.value || ""));
   const arrangement = elements.designerBlockArrangement.value || "vertical";
   const isGrid = arrangement === "grid";
-  elements.designerCapacityWrap.hidden = isGrid;
-  elements.designerGridDimensions.hidden = !isGrid;
+  elements.designerBlockArrangement.closest("label").hidden = isRecord;
+  elements.designerCapacityWrap.hidden = isRecord || isGrid;
+  elements.designerGridDimensions.hidden = isRecord || !isGrid;
+  if (elements.designerBlockToolTitle) elements.designerBlockToolTitle.textContent = isRecord ? "Record Layout" : "Repeated Layout";
+  if (elements.designerCreateBlockButton) elements.designerCreateBlockButton.textContent = isRecord ? "Place Record Layout" : "Set Placement";
 }
 
 function selectedDesignerBlock() {
@@ -2169,10 +2395,20 @@ function blockLabel(block) {
     "away.bench": "Away bench",
     "home.bench": "Home bench",
     "away.bullpen": "Away bullpen",
-    "home.bullpen": "Home bullpen"
+    "home.bullpen": "Home bullpen",
+    "away.startingPitcher": "Away starting pitcher record",
+    "home.startingPitcher": "Home starting pitcher record",
+    "game.umpires.crew": "Umpire crew"
   };
-  return labels[block?.collection] || String(block?.collection || "Repeated block");
+  return labels[blockContext(block)] || String(blockContext(block) || "Layout block");
 }
+
+function isRecordContext(context) {
+  return context === "away.startingPitcher" || context === "home.startingPitcher";
+}
+
+function isRecordBlock(block) { return block?.type === "record" || Boolean(block?.record); }
+function blockContext(block) { return block?.record || block?.collection || ""; }
 
 function blockArrangement(block) {
   if (["vertical", "horizontal", "grid"].includes(block?.arrangement)) return block.arrangement;
@@ -2197,6 +2433,15 @@ function blockArrangementLabel(block) {
   if (columns === 1 && rows > 1) return `vertical ${rows}-slot list`;
   if (rows === 1 && columns === 1) return "single slot";
   return `${rows} × ${columns} grid`;
+}
+
+function blockContentLabel(column) {
+  return column?.content?.type === "template" ? `Text Template: ${column.content.template || ""}` : designerFieldLabel(column?.field || column?.content?.field);
+}
+
+function designerSlotContentPreview(block, column, slot) {
+  const content = column.content || { type: "field", field: column.field };
+  return resolveSlotContent(content, DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot }) || "[blank]";
 }
 
 function isSlotGridGeometry(block) {
@@ -2246,6 +2491,7 @@ function updateDesignerPlacementBanner() {
   let text = "Click the scorecard to place this item. Press Escape to cancel.";
   if (p.mode === "blockGeometryFirst") text = "1 of 2 — Click the first slot anchor on the scorecard. Press Escape to cancel.";
   if (p.mode === "blockGeometryLast") text = "2 of 2 — Click the opposite/final slot anchor on the same page. Press Escape to cancel.";
+  if (p.mode === "blockGeometrySingle") text = "Click the one-record slot anchor on the scorecard. Press Escape to cancel.";
   if (p.mode === "blockColumn") text = "Click the field anchor in slot 1; it will repeat through the block. Press Escape to cancel.";
   elements.designerPlacementBanner.textContent = text;
   elements.designerPlacementBanner.hidden = false;
@@ -2304,20 +2550,21 @@ function designerFieldLabel(field) {
   return definition?.label || `Unsupported: ${field}`;
 }
 
-function designerFieldPreview(field, selector = null) {
+function designerFieldPreview(field, selector = null, format = {}) {
   const definition = getFieldDefinition(field);
   if (!definition) return `[Unsupported: ${field}]`;
   const resolution = resolveField(DESIGNER_SAMPLE_MODEL, field, selector);
-  return formatFieldValue(definition, resolution, DESIGNER_SAMPLE_MODEL) || (definition.cardinality === "repeated" ? "" : definition.label);
+  return formatFieldValue(definition, resolution, DESIGNER_SAMPLE_MODEL, format) || (definition.cardinality === "repeated" ? "" : definition.label);
 }
 
-function populateDesignerFieldSelect() {
+function populateDesignerFieldSelect(context = null) {
   if (!elements.designerFieldSelect) return;
   const previous = elements.designerFieldSelect.value;
   elements.designerFieldSelect.replaceChildren();
   const activeGroups = activeDesignerPaletteGroups();
   const groups = new Map();
-  for (const definition of getSupportedFields({ cardinality: "single" })) {
+  const definitions = context ? fieldsForRecordContext(context) : getSupportedFields({ cardinality: "single" });
+  for (const definition of definitions) {
     const paletteGroup = designerPaletteGroupForField(definition);
     if (!activeGroups.has(paletteGroup)) continue;
     if (!groups.has(definition.category)) groups.set(definition.category, []);
@@ -2335,6 +2582,7 @@ function populateDesignerFieldSelect() {
     elements.designerFieldSelect.append(group);
   }
   if (previous && Array.from(elements.designerFieldSelect.options).some((option) => option.value === previous)) elements.designerFieldSelect.value = previous;
+  syncDesignerSingleNameFormatControl();
 }
 
 
@@ -2384,11 +2632,16 @@ function renderDesignerPaletteChooser() {
 function designerPaletteItems() {
   const items = [];
   for (const definition of getSupportedFields({ cardinality: "single" })) {
+    if (definition.record) continue;
     const groupId = designerPaletteGroupForField(definition);
     let label = definition.label;
     if ((groupId === "away-players" || groupId === "home-players") && String(definition.id).includes("startingPitcher")) label = "Starting Pitcher";
     items.push({ kind: "field", id: definition.id, groupId, label });
   }
+  items.push(
+    { kind: "record", id: "away.startingPitcher", groupId: "away-players", label: "Starting Pitcher", fields: fieldsForRecordContext("away.startingPitcher") },
+    { kind: "record", id: "home.startingPitcher", groupId: "home-players", label: "Starting Pitcher", fields: fieldsForRecordContext("home.startingPitcher") }
+  );
   const collections = [
     ["away.lineup", "Starting Lineup", "away-players"], ["home.lineup", "Starting Lineup", "home-players"],
     ["away.bench", "Bench", "away-players"], ["home.bench", "Bench", "home-players"],
@@ -2401,9 +2654,10 @@ function designerPaletteItems() {
 }
 
 function templateUsesField(layout, fieldId) {
-  const label = getFieldDefinition(fieldId)?.label;
-  if (!label) return false;
-  return (layout.mappings || []).some((mapping) => mapping.content?.type === "template" && String(mapping.content.template || "").includes(`[${label}]`));
+  const definition = getFieldDefinition(fieldId);
+  const labels = [definition?.label, ...(definition?.legacyLabels || [])].filter(Boolean);
+  if (!labels.length) return false;
+  return (layout.mappings || []).some((mapping) => mapping.content?.type === "template" && labels.some((label) => String(mapping.content.template || "").includes(`[${label}]`)));
 }
 
 function designerInstancesForItem(item, layout = selectedLayout()) {
@@ -2418,8 +2672,20 @@ function designerInstancesForItem(item, layout = selectedLayout()) {
         if (label && String(mapping.content.template || "").includes(`[${label}]`)) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Used in Text Template`, reference: true });
       }
     }
+  } else if (item.kind === "record") {
+    for (const mapping of layout.mappings || []) {
+      const definition = getFieldDefinition(mapping.field);
+      if (definition?.record === item.id) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • ${slotFieldShortLabel(definition)}` });
+      else if (mapping.content?.type === "template" && mapping.content.context === item.id) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Text Template` });
+    }
+    let n = 0;
+    for (const block of layout.repeatedBlocks || []) if (blockContext(block) === item.id && isRecordBlock(block)) {
+      n += 1;
+      const page = Number.isInteger(block.pageIndex) ? `Page ${block.pageIndex + 1}` : "Placement not set";
+      instances.push({ selection: { kind: "block", blockId: block.id }, label: `Record Layout • ${page} • ${(block.columns || []).length} content item(s) • Instance ${n}` });
+    }
   } else if (item.kind === "custom") {
-    for (const mapping of layout.mappings || []) if (mapping.content?.type === "template") instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Text Template` });
+    for (const mapping of layout.mappings || []) if (mapping.content?.type === "template" && !mapping.content.context) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Text Template` });
   } else if (item.kind === "collection") {
     let n = 0;
     for (const block of layout.repeatedBlocks || []) if (block.collection === item.id) {
@@ -2510,7 +2776,29 @@ function renderDesignerPaletteItem(item) {
   status.textContent = directInstances.length ? `${directInstances.length} instance${directInstances.length === 1 ? "" : "s"}` : (references.length ? "Used in template" : "Available");
   button.replaceChildren(check, label, status);
   button.addEventListener("click", () => activateDesignerPaletteItem(item, directInstances.length > 0));
-  group.append(button);
+  if (item.kind === "record" && item.fields?.length) {
+    const details = document.createElement("details"); details.className = "designer-record-fields designer-record-direct";
+    const summary = document.createElement("summary");
+    summary.append(check, label, status);
+    summary.className = button.className;
+    summary.title = "Expand or collapse Starting Pitcher fields";
+    details.append(summary);
+    const list = document.createElement("div"); list.className = "designer-instance-list";
+    const useRecord = document.createElement("button"); useRecord.type = "button"; useRecord.className = "designer-instance-item designer-record-use-item";
+    useRecord.textContent = `Use ${item.label} record`;
+    useRecord.addEventListener("click", (event) => { event.stopPropagation(); activateDesignerPaletteItem(item, directInstances.length > 0); });
+    list.append(useRecord);
+    for (const definition of item.fields) {
+      const child = document.createElement("button"); child.type = "button"; child.className = "designer-instance-item";
+      child.textContent = slotFieldShortLabel(definition);
+      child.addEventListener("click", (event) => { event.stopPropagation(); activateDesignerPaletteItem({ kind: "field", id: definition.id, groupId: item.groupId, label: slotFieldShortLabel(definition) }); });
+      list.append(child);
+    }
+    details.append(list);
+    group.append(details);
+  } else {
+    group.append(button);
+  }
   if (directInstances.length || references.length) {
     const children = document.createElement("div"); children.className = "designer-instance-list";
     directInstances.forEach((instance, index) => {
@@ -2558,7 +2846,11 @@ function designerPaletteItemMatchesSelection(item, selection) {
   if (!selection || !object) return false;
   if (item.kind === "field" && selection.kind === "mapping" && object.content?.type !== "template") return canonicalFieldId(object.field) === canonicalFieldId(item.id);
   if (item.kind === "field" && selection.kind === "mapping" && object.content?.type === "template") return false;
-  if (item.kind === "custom" && selection.kind === "mapping") return object.content?.type === "template";
+  if (item.kind === "custom" && selection.kind === "mapping") return object.content?.type === "template" && !object.content.context;
+  if (item.kind === "record") {
+    if (selection.kind === "mapping") return getFieldDefinition(object.field)?.record === item.id || object.content?.context === item.id;
+    return (selection.kind === "block" && blockContext(object) === item.id) || (selection.kind === "repeatedColumn" && blockContext(object.block) === item.id);
+  }
   if (item.kind === "collection") return (selection.kind === "block" && object.collection === item.id) || (selection.kind === "individual" && object.collection === item.id) || (selection.kind === "individualWorkspace" && object.collection === item.id) || (selection.kind === "repeatedColumn" && object.block.collection === item.id);
   return false;
 }
@@ -2567,18 +2859,20 @@ function paletteItemForSelection(selection = state.designerSelection) {
   const object = locateDesignerObject(selection);
   if (!selection || !object) return null;
   if (selection.kind === "mapping") {
-    if (object.content?.type === "template") return { kind:"custom", id:"custom", label:"Text Template" };
+    if (object.content?.type === "template") return object.content.context
+      ? { kind:"record", id:object.content.context, label:collectionDisplayLabel(object.content.context) }
+      : { kind:"custom", id:"custom", label:"Text Template" };
     const def = getFieldDefinition(object.field); return def ? { kind:"field", id:def.id, label:def.label } : null;
   }
-  if (selection.kind === "block") return { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
+  if (selection.kind === "block") return isRecordBlock(object) ? { kind:"record", id:blockContext(object), label: collectionDisplayLabel(blockContext(object)) } : { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
   if (selection.kind === "individual") return { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
   if (selection.kind === "individualWorkspace") return { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
-  if (selection.kind === "repeatedColumn") return { kind:"collection", id:object.block.collection, label: collectionDisplayLabel(object.block.collection) };
+  if (selection.kind === "repeatedColumn") return isRecordBlock(object.block) ? { kind:"record", id:blockContext(object.block), label: collectionDisplayLabel(blockContext(object.block)) } : { kind:"collection", id:object.block.collection, label: collectionDisplayLabel(object.block.collection) };
   return null;
 }
 
 function collectionDisplayLabel(collection) {
-  return ({"away.lineup":"Away starting lineup","home.lineup":"Home starting lineup","away.bench":"Away bench","home.bench":"Home bench","away.bullpen":"Away bullpen","home.bullpen":"Home bullpen","game.umpires.crew":"Umpire crew"})[collection] || collection;
+  return ({"away.lineup":"Away starting lineup","home.lineup":"Home starting lineup","away.bench":"Away bench","home.bench":"Home bench","away.bullpen":"Away bullpen","home.bullpen":"Home bullpen","game.umpires.crew":"Umpire crew","away.startingPitcher":"Away starting pitcher","home.startingPitcher":"Home starting pitcher"})[collection] || collection;
 }
 
 function activateDesignerPaletteItem(item, placed) {
@@ -2604,12 +2898,20 @@ function activateDesignerPaletteItem(item, placed) {
 
 function configureControlsForPaletteItem(item) {
   if (item.kind === "field") {
+    populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect();
     if (Array.from(elements.designerFieldSelect.options).some((o)=>o.value===item.id)) elements.designerFieldSelect.value=item.id;
     elements.designerTemplateField.value = item.id;
+    syncDesignerSingleNameFormatControl();
+  } else if (item.kind === "record") {
+    populateDesignerFieldSelect(item.id); populateDesignerTemplateFieldSelect(item.id);
+    elements.designerLineupSide.value = item.id;
+    populateDesignerColumnFieldSelect(); syncDesignerArrangementInputs();
   } else if (item.kind === "collection") {
     if (Array.from(elements.designerLineupSide.options).some((o)=>o.value===item.id)) elements.designerLineupSide.value=item.id;
     if (Array.from(elements.designerIndividualCollection.options).some((o)=>o.value===item.id)) elements.designerIndividualCollection.value=item.id;
     populateDesignerColumnFieldSelect(); syncDesignerIndividualControls();
+  } else if (item.kind === "custom") {
+    populateDesignerTemplateFieldSelect();
   }
 }
 
@@ -2667,10 +2969,10 @@ function locateDesignerObject(selection = state.designerSelection) {
 function designerSelectionLabel(selection, object) {
   if (!selection || !object) return "Nothing selected";
   if (selection.kind === "mapping") return object.content?.type === "template" ? "Text Template" : designerFieldLabel(object.field);
-  if (selection.kind === "individual") return `${designerFieldLabel(object.field)} • ${individualSelectorLabel(object)}`;
+  if (selection.kind === "individual") return `${collectionDisplayLabel(object.collection)} — Individual Placement`;
   if (selection.kind === "individualWorkspace") return `${collectionDisplayLabel(object.collection)} — Individual Placement`;
   if (selection.kind === "block") return blockLabel(object);
-  if (selection.kind === "repeatedColumn") return `${blockLabel(object.block)} • ${designerFieldLabel(object.column.field)}`;
+  if (selection.kind === "repeatedColumn") return blockLabel(object.block);
   return "Selected object";
 }
 
@@ -2686,6 +2988,11 @@ function selectDesignerObject(selection, options = {}) {
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
   state.designerSelection = selection;
+  if (options.inspectorMode) state.designerCollectionInspectorMode = options.inspectorMode;
+  else if (["block"].includes(selection?.kind)) state.designerCollectionInspectorMode = "layout";
+  else if (["repeatedColumn", "individual"].includes(selection?.kind)) state.designerCollectionInspectorMode = "item";
+  else if (selection?.kind === "individualWorkspace") state.designerCollectionInspectorMode = "new";
+  else state.designerCollectionInspectorMode = null;
   const object = locateDesignerObject(selection);
   const pageIndex = selection?.kind === "repeatedColumn" ? object?.block?.pageIndex : object?.pageIndex;
   if (Number.isInteger(pageIndex) && pageIndex + 1 !== state.designerPageNumber && state.designerPdfDocument) {
@@ -2707,6 +3014,7 @@ function clearDesignerSelection(options = {}) {
   state.designerSelection = null;
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
+  state.designerCollectionInspectorMode = null;
   if (options.render !== false && elements.designerOverlay) renderDesignerOverlay();
   if (elements.designerSelectionTitle) renderDesignerSelectionInspector();
   renderDesignerPalette();
@@ -2729,6 +3037,149 @@ function designerSelectionAnchor(selection, object) {
   return { x: null, y: null, canX: false, canY: false };
 }
 
+function isCollectionDesignerSelection(selection = state.designerSelection) {
+  return ["block", "repeatedColumn", "individual", "individualWorkspace"].includes(selection?.kind);
+}
+
+function collectionParentForSelection(selection = state.designerSelection, object = locateDesignerObject(selection)) {
+  if (!selection || !object) return null;
+  if (selection.kind === "repeatedColumn") return { kind: "block", blockId: object.block.id };
+  if (selection.kind === "block") return { kind: "block", blockId: object.id };
+  if (selection.kind === "individual" || selection.kind === "individualWorkspace") return { kind: "individualWorkspace", collection: object.collection };
+  return selection;
+}
+
+function designerParentLabel(selection = state.designerSelection, object = locateDesignerObject(selection)) {
+  if (!selection || !object) return "Nothing selected";
+  if (selection.kind === "repeatedColumn") return blockLabel(object.block);
+  if (selection.kind === "block") return blockLabel(object);
+  if (selection.kind === "individual" || selection.kind === "individualWorkspace") return `${collectionDisplayLabel(object.collection)} — Individual Placement`;
+  return designerSelectionLabel(selection, object);
+}
+
+function designerChildLabel(selection = state.designerSelection, object = locateDesignerObject(selection)) {
+  if (!selection || !object) return "Item";
+  if (selection.kind === "repeatedColumn") {
+    const content = object.column.content || { type: "field", field: object.column.field };
+    if (content.type === "template") return "Text Template";
+    const definition = getFieldDefinition(content.field || object.column.field);
+    return definition ? slotFieldShortLabel(definition) : "Slot Content";
+  }
+  if (selection.kind === "individual") {
+    const definition = getFieldDefinition(object.content?.field || object.field);
+    const fieldLabel = definition ? slotFieldShortLabel(definition) : "Item";
+    return `${individualSelectorLabel(object)} — ${fieldLabel}`;
+  }
+  if (selection.kind === "mapping") {
+    if (object.content?.type === "template") return "Text Template";
+    return designerFieldLabel(object.field);
+  }
+  return designerSelectionLabel(selection, object);
+}
+
+function setCollectionInspectorMode(mode) {
+  if (!isCollectionDesignerSelection()) return;
+  const selection = state.designerSelection;
+  const object = locateDesignerObject(selection);
+  const parentSelection = collectionParentForSelection(selection, object);
+  if (mode === "layout") {
+    if (parentSelection?.kind !== "block") return;
+    state.designerCollectionInspectorMode = "layout";
+    if (!designerSelectionsEqual(selection, parentSelection)) return selectDesignerObject(parentSelection, { inspectorMode: "layout" });
+  } else if (mode === "new") {
+    if (!parentSelection) return;
+    state.designerCollectionInspectorMode = "new";
+    if (parentSelection.kind === "block") resetDesignerSlotConfiguration();
+    if (!designerSelectionsEqual(selection, parentSelection)) return selectDesignerObject(parentSelection, { inspectorMode: "new" });
+  } else {
+    state.designerCollectionInspectorMode = mode;
+  }
+  renderDesignerSelectionInspector();
+}
+
+function setDesignerWorkspaceHeading(label, title) {
+  if (elements.designerWorkspaceLabel) elements.designerWorkspaceLabel.textContent = label;
+  if (elements.designerWorkspaceTitle) elements.designerWorkspaceTitle.textContent = title;
+}
+
+function resetDesignerInspectorSurfaces() {
+  elements.designerSelectionControls.hidden = true;
+  elements.designerNewItemPanel.hidden = true;
+  elements.designerContextTools.hidden = true;
+  if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = true;
+  if (elements.designerSelectionPositionControls) elements.designerSelectionPositionControls.hidden = false;
+  if (elements.designerSelectionFormatControls) elements.designerSelectionFormatControls.hidden = false;
+  if (elements.designerBlockLayoutControls) elements.designerBlockLayoutControls.hidden = false;
+  if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = true;
+  if (elements.designerSelectionNameFormatWrap) elements.designerSelectionNameFormatWrap.hidden = true;
+  if (elements.designerSelectionTemplateWrap) elements.designerSelectionTemplateWrap.hidden = true;
+  if (elements.designerSelectionRemoveItemButton) elements.designerSelectionRemoveItemButton.hidden = true;
+  elements.designerContextTools.classList.remove("editing-existing-block", "geometry-ready", "creating-repeated", "creating-record", "scoped-child-workspace");
+  if (elements.designerBlockList) elements.designerBlockList.hidden = false;
+}
+
+function renderPendingDesignerCreation(pending, pendingMode) {
+  if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = false;
+  setDesignerWorkspaceHeading("New Object", pending.label);
+  elements.designerNewItemPanel.hidden = false;
+  elements.designerNewItemPanel.replaceChildren();
+  const instances = designerInstancesForItem(pending);
+
+  if (!pendingMode) {
+    const title = document.createElement("strong");
+    title.textContent = instances.length ? "Create a new instance" : "How would you like to use this?";
+    elements.designerNewItemPanel.append(title);
+    const actions = document.createElement("div"); actions.className = "designer-choice-grid";
+    const add = (label, desc, mode) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "designer-choice-button";
+      b.innerHTML = `<strong>${label}</strong><span>${desc}</span>`;
+      b.addEventListener("click", () => chooseDesignerPendingMode(mode)); actions.append(b);
+    };
+    if (pending.kind === "field") {
+      add("Single Item", "Place this value directly on the scorecard.", "single");
+      add("Text Template", "Combine this value with labels or other fields.", "template");
+    } else if (pending.kind === "record") {
+      add("Single Item", "Place one record attribute directly.", "single");
+      add("Text Template", "Combine attributes from this record.", "template");
+      add("Record Layout", "Arrange several attributes in one one-record slot.", "record");
+    } else if (pending.kind === "collection") {
+      add("Repeated Layout", "Arrange records as a list, row, or grid.", "repeated");
+      add("Individual Placement", "Place records independently by order or role.", "individual");
+    } else {
+      add("Text Template", "Create or place a text template.", "template");
+    }
+    elements.designerNewItemPanel.append(actions);
+    return;
+  }
+
+  const summary = document.createElement("div"); summary.className = "designer-choice-summary";
+  const names = { single:"Single Item", template:"Text Template", repeated:"Repeated Layout", record:"Record Layout", individual:"Individual Placement" };
+  const summaryText = document.createElement("div");
+  summaryText.innerHTML = `<span>Usage</span><strong>${names[pendingMode] || pendingMode}</strong>`;
+  const change = document.createElement("button"); change.type = "button"; change.className = "secondary-button compact-button"; change.textContent = "Change";
+  change.addEventListener("click", () => { state.designerPendingMode = null; renderDesignerSelectionInspector(); });
+  summary.append(summaryText, change);
+  elements.designerNewItemPanel.append(summary);
+
+  configureControlsForPaletteItem(pending);
+  if (pendingMode === "single") showOnlyDesignerTool(elements.designerSingleItemTool);
+  else if (pendingMode === "template") showOnlyDesignerTool(elements.designerTextTemplateTool);
+  else if (pendingMode === "individual") showOnlyDesignerTool(elements.designerIndividualTool);
+  else if (pendingMode === "repeated" || pendingMode === "record") {
+    showOnlyDesignerTool(elements.designerRepeatedTool);
+    elements.designerContextTools.classList.add("creating-repeated");
+    elements.designerContextTools.classList.toggle("creating-record", pendingMode === "record");
+    // A Record Layout is inherently one record / one anchor. Arrangement and slot-count
+    // choices belong only to Repeated Layouts and must never be part of this workflow.
+    if (pendingMode === "record") {
+      elements.designerBlockArrangement.closest("label").hidden = true;
+      elements.designerCapacityWrap.hidden = true;
+      elements.designerGridDimensions.hidden = true;
+    }
+    if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = true;
+  }
+}
+
 function renderDesignerSelectionInspector() {
   if (!elements.designerSelectionTitle) return;
   const selection = state.designerSelection;
@@ -2736,14 +3187,16 @@ function renderDesignerSelectionInspector() {
   const pending = state.designerPaletteSelection;
   const pendingMode = state.designerPendingMode;
   const active = Boolean(selection && object);
-  elements.designerSelectionControls.hidden = !active;
+
+  resetDesignerInspectorSurfaces();
   elements.designerSelectionClearButton.disabled = !(active || pending);
   elements.designerSelectionClearButton.hidden = !(active || pending);
+  elements.designerSelectionClearButton.textContent = active ? "Deselect" : "Cancel";
+  elements.designerSelectionDeleteButton.hidden = !active;
   elements.designerSelectionNewInstanceButton.hidden = !active;
-  elements.designerContextTools.hidden = true;
-  elements.designerNewItemPanel.hidden = true;
-  elements.designerContextTools.classList.remove("editing-existing-block", "geometry-ready", "creating-repeated");
-  if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = true;
+  elements.designerWorkspaceLayoutButton.hidden = true;
+  elements.designerWorkspaceNewButton.hidden = true;
+  if (elements.designerChildWorkspaceActions) elements.designerChildWorkspaceActions.hidden = true;
 
   if (!active && !pending) {
     elements.designerSelectionTitle.textContent = "Nothing selected";
@@ -2753,65 +3206,95 @@ function renderDesignerSelectionInspector() {
 
   if (!active && pending) {
     elements.designerSelectionTitle.textContent = pending.label;
-    const instances = designerInstancesForItem(pending);
-    elements.designerSelectionHelp.textContent = instances.length
-      ? "This data is already used. Choose an instance on the left, or create another use of it."
+    elements.designerSelectionHelp.textContent = designerInstancesForItem(pending).length
+      ? "This data is already used. Choose an existing instance on the left, or create another use of it."
       : "Choose how you want to use this data item.";
-    elements.designerNewItemPanel.hidden = false;
-    elements.designerNewItemPanel.replaceChildren();
+    elements.designerSelectionDeleteButton.hidden = true;
+    elements.designerSelectionNewInstanceButton.hidden = true;
+    renderPendingDesignerCreation(pending, pendingMode);
+    return;
+  }
 
-    if (!pendingMode) {
-      const title = document.createElement("strong");
-      title.textContent = instances.length ? "Create a new instance" : "How would you like to use this?";
-      elements.designerNewItemPanel.append(title);
-      const actions = document.createElement("div"); actions.className = "designer-choice-grid";
-      const add = (label, desc, mode) => {
-        const b = document.createElement("button"); b.type = "button"; b.className = "designer-choice-button";
-        b.innerHTML = `<strong>${label}</strong><span>${desc}</span>`;
-        b.addEventListener("click", () => chooseDesignerPendingMode(mode)); actions.append(b);
-      };
-      if (pending.kind === "field") {
-        add("Single Item", "Place this value directly on the scorecard.", "single");
-        add("Text Template", "Combine this value with labels or other fields.", "template");
-      } else if (pending.kind === "collection") {
-        add("Repeated Layout", "Arrange records as a list, row, or grid.", "repeated");
-        add("Individual Placement", "Place records independently by order or role.", "individual");
-      } else {
-        add("Text Template", "Create or place a text template.", "template");
-      }
-      elements.designerNewItemPanel.append(actions);
-      return;
-    }
+  const parentLabel = designerParentLabel(selection, object);
+  elements.designerSelectionTitle.textContent = parentLabel;
+  elements.designerSelectionHelp.textContent = "Parent actions apply to the complete object shown here. Child editing appears in the workspace below.";
+  if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = false;
 
-    const summary = document.createElement("div"); summary.className = "designer-choice-summary";
-    const names = { single:"Single Item", template:"Text Template", repeated:"Repeated Layout", individual:"Individual Placement" };
-    const summaryText = document.createElement("div");
-    summaryText.innerHTML = `<span>Usage</span><strong>${names[pendingMode] || pendingMode}</strong>`;
-    const change = document.createElement("button"); change.type = "button"; change.className = "secondary-button compact-button"; change.textContent = "Change";
-    change.addEventListener("click", () => { state.designerPendingMode = null; renderDesignerSelectionInspector(); });
-    summary.append(summaryText, change);
-    elements.designerNewItemPanel.append(summary);
+  const isRepeated = selection.kind === "block" || selection.kind === "repeatedColumn";
+  const isIndividual = selection.kind === "individual" || selection.kind === "individualWorkspace";
+  const parentBlock = selection.kind === "repeatedColumn" ? object.block : (selection.kind === "block" ? object : null);
+  const hasEstablishedGeometry = Boolean(parentBlock?.geometry);
+  if (isRepeated) {
+    elements.designerWorkspaceLayoutButton.hidden = false;
+  } else if (isIndividual) {
+    elements.designerWorkspaceNewButton.hidden = true;
+    const mappings = (selectedLayout()?.individualMappings || []).filter((mapping) => mapping.collection === object.collection);
+    elements.designerSelectionDeleteButton.hidden = !mappings.length;
+  }
 
-    configureControlsForPaletteItem(pending);
-    if (pendingMode === "single") showOnlyDesignerTool(elements.designerSingleItemTool);
-    else if (pendingMode === "template") showOnlyDesignerTool(elements.designerTextTemplateTool);
-    else if (pendingMode === "individual") showOnlyDesignerTool(elements.designerIndividualTool);
-    else if (pendingMode === "repeated") {
+  const mode = state.designerCollectionInspectorMode;
+  const editingLayout = isRepeated && selection.kind === "block" && mode === "layout";
+  const placingNew = isCollectionDesignerSelection(selection) && mode === "new";
+  const editingChild = selection.kind === "repeatedColumn" || selection.kind === "individual";
+
+  if (placingNew) {
+    setDesignerWorkspaceHeading("Place New Item", isRepeated ? "Add slot content" : "Add individual item");
+    elements.designerSelectionControls.hidden = true;
+    if (isRepeated) {
+      elements.designerBlockSelect.value = parentBlock.id;
+      syncDesignerBlockControls();
+      resetDesignerSlotConfiguration();
       showOnlyDesignerTool(elements.designerRepeatedTool);
-      elements.designerContextTools.classList.add("creating-repeated");
-      if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = true;
+      elements.designerContextTools.classList.add("scoped-child-workspace");
+      elements.designerBlockLayoutControls.hidden = true;
+      elements.designerSlotFieldsPanel.hidden = !hasEstablishedGeometry;
+      elements.designerDeleteBlockButton.hidden = true;
+      elements.designerBlockList.hidden = true;
+      syncDesignerSlotContentControls();
+    } else if (isIndividual) {
+      const collection = object.collection;
+      state.designerPaletteSelection = { kind: "collection", id: collection, label: collectionDisplayLabel(collection) };
+      state.designerPendingMode = "individual";
+      configureControlsForPaletteItem(state.designerPaletteSelection);
+      selectNextUnplacedIndividualSelector(collection);
+      showOnlyDesignerTool(elements.designerIndividualTool);
+    }
+    return;
+  }
+
+  if (editingLayout) {
+    setDesignerWorkspaceHeading("Edit Layout", parentLabel);
+    elements.designerBlockSelect.value = object.id;
+    syncDesignerBlockControls();
+    const anchor = designerSelectionAnchor(selection, object);
+    elements.designerSelectionX.value = anchor.x == null ? "" : anchor.x.toFixed(1);
+    elements.designerSelectionY.value = anchor.y == null ? "" : anchor.y.toFixed(1);
+    elements.designerSelectionX.disabled = !anchor.canX;
+    elements.designerSelectionY.disabled = !anchor.canY;
+    elements.designerSelectionControls.hidden = false;
+    elements.designerSelectionPositionControls.hidden = false;
+    elements.designerSelectionFormatControls.hidden = true;
+    elements.designerSelectionNameFormatWrap.hidden = true;
+    elements.designerSelectionTemplateWrap.hidden = true;
+    elements.designerSelectionRemoveItemButton.hidden = true;
+    showOnlyDesignerTool(elements.designerRepeatedTool);
+    elements.designerContextTools.classList.add("editing-existing-block");
+    if (object.geometry) elements.designerContextTools.classList.add("geometry-ready");
+    elements.designerBlockLayoutControls.hidden = false;
+    elements.designerSlotFieldsPanel.hidden = true;
+    elements.designerPlaceRowsButton.hidden = !object.geometry;
+    elements.designerDeleteBlockButton.hidden = true;
+    if (hasEstablishedGeometry) {
+      elements.designerWorkspaceNewButton.hidden = false;
+      if (elements.designerChildWorkspaceActions) elements.designerChildWorkspaceActions.hidden = false;
     }
     return;
   }
 
   if (selection.kind === "individualWorkspace") {
+    state.designerCollectionInspectorMode = "new";
+    setDesignerWorkspaceHeading("Place New Item", "Add individual item");
     const collection = object.collection;
-    const mappings = (selectedLayout()?.individualMappings || []).filter((mapping) => mapping.collection === collection);
-    const total = INDIVIDUAL_ROLE_OPTIONS[collection]?.length || 0;
-    elements.designerSelectionTitle.textContent = designerSelectionLabel(selection, object);
-    elements.designerSelectionHelp.textContent = total ? `${mappings.length} of ${total} roles placed. Choose the next role below and continue placing this Individual Placement.` : `${mappings.length} items placed. Continue placing members below.`;
-    elements.designerSelectionControls.hidden = true;
-    elements.designerSelectionNewInstanceButton.hidden = true;
     state.designerPaletteSelection = { kind: "collection", id: collection, label: collectionDisplayLabel(collection) };
     state.designerPendingMode = "individual";
     configureControlsForPaletteItem(state.designerPaletteSelection);
@@ -2820,36 +3303,38 @@ function renderDesignerSelectionInspector() {
     return;
   }
 
-  elements.designerSelectionTitle.textContent = designerSelectionLabel(selection, object);
-  elements.designerSelectionHelp.textContent = "Edit the selected instance. Typed values apply when you press Enter, Tab, or leave the field.";
+  setDesignerWorkspaceHeading("Selected Item", designerChildLabel(selection, object));
+  elements.designerSelectionControls.hidden = false;
+  elements.designerContextTools.hidden = true;
+
   const anchor = designerSelectionAnchor(selection, object);
   elements.designerSelectionX.value = anchor.x == null ? "" : anchor.x.toFixed(1);
   elements.designerSelectionY.value = anchor.y == null ? "" : anchor.y.toFixed(1);
   elements.designerSelectionX.disabled = !anchor.canX;
   elements.designerSelectionY.disabled = !anchor.canY;
   const target = selection.kind === "repeatedColumn" ? object.column : object;
-  const hasFont = selection.kind !== "block";
-  elements.designerSelectionFontSize.disabled = !hasFont;
-  elements.designerSelectionFontSize.value = hasFont ? Number(target.fontSize || 10) : "";
-  elements.designerSelectionAlignment.disabled = !hasFont;
-  elements.designerSelectionAlignment.value = hasFont ? (target.alignment || "left") : "left";
-  const isTemplate = selection.kind === "mapping" && target.content?.type === "template";
+  elements.designerSelectionFontSize.disabled = false;
+  elements.designerSelectionFontSize.value = Number(target.fontSize || 10);
+  elements.designerSelectionAlignment.disabled = false;
+  elements.designerSelectionAlignment.value = target.alignment || "left";
+  const isTemplate = (selection.kind === "mapping" || selection.kind === "repeatedColumn") && target.content?.type === "template";
   elements.designerSelectionTemplateWrap.hidden = !isTemplate;
   elements.designerSelectionTemplate.value = isTemplate ? (target.content.template || "") : "";
+  const definition = getFieldDefinition(target.content?.field || target.field);
+  const hasNameFormat = !isTemplate && definition?.formatKind === "playerName";
+  elements.designerSelectionNameFormatWrap.hidden = !hasNameFormat;
+  elements.designerSelectionNameFormat.value = hasNameFormat ? (target.content?.format?.nameFormat || "full") : "full";
+  elements.designerSelectionRemoveItemButton.hidden = !editingChild;
+  // Keep the add-child loop available while an existing child is selected. This is a
+  // child-workspace action, not a parent-card action, and applies to both Repeated and
+  // single-record Record Layout containers.
+  if (editingChild && isRepeated && parentBlock?.geometry) {
+    elements.designerWorkspaceNewButton.hidden = false;
+    if (elements.designerChildWorkspaceActions) elements.designerChildWorkspaceActions.hidden = false;
+  }
   if (isTemplate) {
     populateDesignerSelectionTemplateFieldSelect();
     updateDesignerSelectionTemplatePreview();
-  }
-
-  if (selection.kind === "block" || selection.kind === "repeatedColumn") {
-    const block = selection.kind === "block" ? object : object.block;
-    elements.designerBlockSelect.value = block.id;
-    syncDesignerBlockControls();
-    showOnlyDesignerTool(elements.designerRepeatedTool);
-    elements.designerContextTools.classList.add("editing-existing-block");
-    if (block.geometry) elements.designerContextTools.classList.add("geometry-ready");
-    if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = !block.geometry;
-    elements.designerPlaceRowsButton.hidden = !block.geometry;
   }
 }
 
@@ -2858,10 +3343,13 @@ function populateDesignerSelectionTemplateFieldSelect() {
   if (!select) return;
   const previous = select.value;
   select.replaceChildren();
-  for (const definition of getSupportedFields({ cardinality: "single" })) {
+  const selected = locateDesignerObject();
+  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
+  const definitions = context ? fieldsForRecordContext(context) : getSupportedFields({ cardinality: "single" });
+  for (const definition of definitions) {
     const option = document.createElement("option");
     option.value = definition.id;
-    option.textContent = definition.label;
+    option.textContent = context ? slotFieldShortLabel(definition) : definition.label;
     select.append(option);
   }
   if (previous && Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
@@ -2871,7 +3359,12 @@ function updateDesignerSelectionTemplatePreview() {
   const preview = elements.designerSelectionTemplatePreview;
   if (!preview || elements.designerSelectionTemplateWrap?.hidden) return;
   const template = elements.designerSelectionTemplate.value || "";
-  preview.textContent = resolveTemplateText(template, DESIGNER_SAMPLE_MODEL) || "Enter text or insert a field.";
+  const selected = locateDesignerObject();
+  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
+  const selector = state.designerSelection?.kind === "repeatedColumn" && !isRecordBlock(selected?.block) ? { slot: 1 } : null;
+  preview.textContent = context
+    ? (resolveSlotContent({ type: "template", template }, DESIGNER_SAMPLE_MODEL, context, selector) || "Enter text or insert a field.")
+    : (resolveTemplateText(template, DESIGNER_SAMPLE_MODEL) || "Enter text or insert a field.");
 }
 
 function insertDesignerSelectionTemplateField() {
@@ -2879,7 +3372,9 @@ function insertDesignerSelectionTemplateField() {
   const field = elements.designerSelectionTemplateField?.value;
   const definition = getFieldDefinition(field);
   if (!textarea || !definition) return;
-  const token = `[${definition.label}]`;
+  const selected = locateDesignerObject();
+  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
+  const token = context ? templateTokenForContextField(field) : `[${definition.label}]`;
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? start;
   textarea.setRangeText(token, start, end, "end");
@@ -2963,13 +3458,19 @@ function applyDesignerInspectorFormatting() {
   if (Number.isFinite(size) && size > 0) target.fontSize = size;
   const alignment = elements.designerSelectionAlignment.value;
   if (["left", "center", "right"].includes(alignment)) { target.alignment = alignment; target.anchor = `baseline-${alignment}`; }
+  const definition = getFieldDefinition(target.field || target.content?.field);
+  if (definition?.formatKind === "playerName") {
+    target.content = target.content || { type: "field", field: target.field };
+    target.content.format = { ...(target.content.format || {}), nameFormat: elements.designerSelectionNameFormat.value || "full" };
+  }
   markDesignerObjectChanged();
 }
 
 function applyDesignerInspectorTemplate() {
   const selection = state.designerSelection, object = locateDesignerObject(selection);
-  if (selection?.kind !== "mapping" || object?.content?.type !== "template") return;
-  object.content.template = elements.designerSelectionTemplate.value;
+  const target = selection?.kind === "repeatedColumn" ? object?.column : object;
+  if (!["mapping", "repeatedColumn"].includes(selection?.kind) || target?.content?.type !== "template") return;
+  target.content.template = elements.designerSelectionTemplate.value;
   markDesignerObjectChanged();
 }
 
@@ -3046,11 +3547,43 @@ function handleDesignerKeyboard(event) {
 async function deleteSelectedDesignerObject() {
   const selection = state.designerSelection; if (!selection) return;
   if (selection.kind === "mapping") return deleteDesignerMapping(selection.id);
-  if (selection.kind === "individual") return deleteDesignerIndividualMapping(selection.id);
-  if (selection.kind === "repeatedColumn") return deleteDesignerBlockColumn(selection.blockId, selection.columnId);
-  if (selection.kind === "block") {
-    if (elements.designerBlockSelect) elements.designerBlockSelect.value = selection.blockId;
+  if (selection.kind === "individual" || selection.kind === "individualWorkspace") {
+    const object = locateDesignerObject(selection);
+    return deleteDesignerIndividualWorkspace(object?.collection);
+  }
+  if (selection.kind === "repeatedColumn" || selection.kind === "block") {
+    const blockId = selection.kind === "block" ? selection.blockId : selection.blockId;
+    if (elements.designerBlockSelect) elements.designerBlockSelect.value = blockId;
     return deleteSelectedDesignerBlock();
+  }
+}
+
+async function removeSelectedDesignerChild() {
+  const selection = state.designerSelection;
+  if (selection?.kind === "repeatedColumn") return deleteDesignerBlockColumn(selection.blockId, selection.columnId);
+  if (selection?.kind === "individual") return deleteDesignerIndividualMapping(selection.id);
+}
+
+async function deleteDesignerIndividualWorkspace(collection) {
+  const layout = selectedLayout();
+  if (!layout || !collection) return;
+  const count = (layout.individualMappings || []).filter((mapping) => mapping.collection === collection).length;
+  if (!count) return;
+  if (!window.confirm(`Delete the ${collectionDisplayLabel(collection)} Individual Placement and all ${count} placed item${count === 1 ? "" : "s"}?`)) return;
+  layout.individualMappings = (layout.individualMappings || []).filter((mapping) => mapping.collection !== collection);
+  layout.updatedAt = new Date().toISOString();
+  try {
+    await saveLayout(layout);
+    renderDesignerOverlay();
+    renderDesignerIndividualList();
+    clearDesignerSelection({ render: false });
+    renderDesignerPalette();
+    renderDesignerSelectionInspector();
+    setDesignerMessage("Individual Placement deleted.");
+    await refreshLayouts();
+    state.selectedLayoutId = layout.id;
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The Individual Placement could not be deleted."), true);
   }
 }
 
@@ -3091,24 +3624,32 @@ const DESIGNER_SAMPLE_MODEL = {
   },
   away: {
     team: { name: "Tampa Bay Devil Rays", locationName: "St. Petersburg", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB", record: { wins: 78, losses: 64, pct: 0.549 } },
-    manager: { name: "Kevin Cash" }, startingPitcher: { player: { name: "Shane Baz" } },
+    manager: { name: "Kevin Cash" }, startingPitcher: sampleStarter("Shane Baz", "Shane", "Baz", "S. Baz", "11", "R", 10, 5, 3.19, 1.08, "152.1", 162),
     lineup: sampleLineup(["Yandy Díaz", "Brandon Lowe", "Junior Caminero", "Jonathan Aranda", "Josh Lowe", "Christopher Morel", "Jake Mangum", "Nick Fortes", "Taylor Walls"], ["1B", "2B", "3B", "DH", "RF", "LF", "CF", "C", "SS"], ["R", "L", "R", "L", "L", "R", "S", "R", "S"]),
     bench: sampleBench(["Kameron Misner", "José Caballero", "Ben Rortvedt", "Curtis Mead"], ["OF", "IF", "C", "IF"], ["L", "R", "L", "R"]),
     bullpen: sampleBullpen(["Pete Fairbanks", "Garrett Cleavinger", "Mason Montgomery", "Edwin Uceta", "Kevin Kelly", "Manuel Rodríguez"], ["R", "L", "L", "R", "R", "R"])
   },
   home: {
     team: { name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA", record: { wins: 81, losses: 61, pct: 0.570 } },
-    manager: { name: "Dan Wilson" }, startingPitcher: { player: { name: "Logan Gilbert" } },
+    manager: { name: "Dan Wilson" }, startingPitcher: sampleStarter("Logan Gilbert", "Logan", "Gilbert", "L. Gilbert", "36", "R", 11, 7, 3.42, 1.08, "154.2", 171),
     lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "3B"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"]),
     bench: sampleBench(["Mitch Garver", "Leo Rivas", "Luke Raley", "Austin Shenton"], ["C", "IF", "OF", "IF"], ["R", "S", "L", "L"]),
     bullpen: sampleBullpen(["Andrés Muñoz", "Matt Brash", "Gabe Speier", "Eduard Bazardo", "Carlos Vargas", "Casey Legumina"], ["R", "R", "L", "R", "R", "R"])
   }
 };
 
+function sampleStarter(name, firstName, lastName, initLastName, number, throws, wins, losses, era, whip, inningsPitched, strikeouts) {
+  return {
+    player: { name, firstName, lastName, useName: firstName, useLastName: lastName, initLastName, number, throws },
+    position: { abbreviation: "P", name: "Pitcher" },
+    stats: { gamesPlayed: 27, gamesPitched: 27, gamesStarted: 27, wins, losses, era, whip, inningsPitched, strikeouts, walks: 39, hits: 132, runs: 61, earnedRuns: 58, homeRuns: 17, saves: 0, holds: 0 }
+  };
+}
+
 function sampleLineup(names, positions, bats) {
   return names.map((name, index) => ({
     battingOrder: index + 1,
-    player: { id: 1000 + index, name, number: String(index + 1), bats: bats[index] },
+    player: { id: 1000 + index, ...samplePlayerName(name), number: String(index + 1), bats: bats[index] },
     position: { abbreviation: positions[index] },
     stats: { avg: .250 + index / 1000, obp: .325 + index / 1000, slg: .410 + index / 1000, ops: .735 + index / 1000, homeRuns: 8 + index, rbi: 40 + index * 3 }
   }));
@@ -3116,15 +3657,29 @@ function sampleLineup(names, positions, bats) {
 
 function sampleBench(names, positions, bats) {
   return names.map((name, index) => ({
-    player: { id: 2000 + index, name, number: String(20 + index), bats: bats[index] },
+    player: { id: 2000 + index, ...samplePlayerName(name), number: String(20 + index), bats: bats[index] },
     position: { abbreviation: positions[index] },
     stats: { avg: .238 + index / 1000, obp: .310 + index / 1000, slg: .390 + index / 1000, ops: .700 + index / 1000, homeRuns: 4 + index, rbi: 18 + index * 4 }
   }));
 }
 
+function samplePlayerName(name) {
+  const parts = String(name || "").trim().split(/\s+/);
+  const firstName = parts[0] || "";
+  const lastName = parts.length > 1 ? parts.at(-1) : "";
+  return {
+    name,
+    firstName: firstName || null,
+    lastName: lastName || null,
+    useName: firstName || null,
+    useLastName: lastName || null,
+    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}` : name
+  };
+}
+
 function sampleBullpen(names, throws) {
   return names.map((name, index) => ({
-    player: { id: 3000 + index, name, number: String(30 + index), throws: throws[index] },
+    player: { id: 3000 + index, ...samplePlayerName(name), number: String(30 + index), throws: throws[index] },
     position: { abbreviation: "P" },
     stats: { wins: 2 + index, losses: 1 + (index % 3), era: 2.35 + index / 10, whip: 1.02 + index / 100, inningsPitched: `${42 + index}.1`, strikeouts: 48 + index * 5, saves: index === 0 ? 31 : 0, holds: index === 0 ? 0 : 6 + index }
   }));
@@ -3182,7 +3737,7 @@ async function generateTestPdf() {
       const page = pages[mapping.pageIndex];
       if (!page) { skipped.push(mapping.content?.type === "template" ? "text template" : mapping.field); continue; }
       if (mapping.content?.type === "template") {
-        const text = resolveTemplateText(mapping.content.template, model);
+      const text = resolveTemplateText(mapping.content.template, model, mapping.content.context);
         if (!text) continue;
         drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
         continue;
@@ -3190,7 +3745,7 @@ async function generateTestPdf() {
       const definition = getFieldDefinition(mapping.field);
       if (!definition) { skipped.push(mapping.field); continue; }
       const resolution = resolveField(model, mapping.field);
-      const text = formatFieldValue(definition, resolution, model);
+      const text = formatFieldValue(definition, resolution, model, mapping.content?.format || {});
       if (!text) {
         if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
         else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
@@ -3205,20 +3760,22 @@ async function generateTestPdf() {
       if (!(block.columns || []).length) { emptyBlocks.push(blockLabel(block)); continue; }
       const page = pages[block.pageIndex];
       if (!page) { skipped.push(`${block.collection} block page`); continue; }
-      if (collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
+      if (!isRecordBlock(block) && collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
       const { width, height } = page.getSize();
       for (let slotIndex = 0; slotIndex < block.capacity; slotIndex += 1) {
         const slot = isSlotGridGeometry(block)
           ? repeatedSlotPosition(block, slotIndex, width, height)
           : { xPercent: null, yPercent: repeatedRowYPercent(block, slotIndex, height) };
         for (const column of block.columns || []) {
-          const definition = getFieldDefinition(column.field);
-          if (!definition || definition.collection !== block.collection) { skipped.push(column.field || "repeated field"); continue; }
-          const resolution = resolveField(model, column.field, { slot: slotIndex + 1 });
-          const text = formatFieldValue(definition, resolution, model);
+          const content = column.content || { type: "field", field: column.field };
+          const selector = isRecordBlock(block) ? null : { slot: slotIndex + 1 };
+          const definition = content.type === "field" ? getFieldDefinition(content.field || column.field) : null;
+          if (content.type === "field" && (!definition || !fieldsForRecordContext(blockContext(block)).some((entry) => entry.id === definition.id))) { skipped.push(content.field || column.field || "slot field"); continue; }
+          const resolution = definition ? resolveField(model, definition.id, selector) : null;
+          const text = resolveSlotContent(content, model, blockContext(block), selector);
           if (!text) {
-            if (["unsupported", "error"].includes(resolution.state)) skipped.push(column.field);
-            else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+            if (resolution && ["unsupported", "error"].includes(resolution.state)) skipped.push(definition.id);
+            else if (resolution && ["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
             continue;
           }
           const xPercent = isSlotGridGeometry(block)
@@ -3235,7 +3792,7 @@ async function generateTestPdf() {
       const definition = getFieldDefinition(mapping.field);
       if (!definition || definition.cardinality !== "repeated" || definition.collection !== mapping.collection) { skipped.push(mapping.field || "individual field"); continue; }
       const resolution = resolveField(model, mapping.field, mapping.selector);
-      const text = formatFieldValue(definition, resolution, model);
+      const text = formatFieldValue(definition, resolution, model, mapping.content?.format || {});
       if (!text) {
         if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
         else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
@@ -3285,10 +3842,10 @@ function drawAlignedPdfText(page, font, text, fontSize, xPercent, yPercent, alig
 function collectLayoutFieldIds(layout) {
   const ids = [];
   for (const mapping of layout?.mappings || []) {
-    if (mapping.content?.type === "template") ids.push(...templateFieldIds(mapping.content.template));
+    if (mapping.content?.type === "template") ids.push(...templateFieldIds(mapping.content.template, mapping.content.context));
     else if (mapping.field) ids.push(canonicalFieldId(mapping.field));
   }
-  for (const block of layout?.repeatedBlocks || []) for (const column of block.columns || []) if (column.field) ids.push(canonicalFieldId(column.field));
+  for (const block of layout?.repeatedBlocks || []) for (const column of block.columns || []) ids.push(...slotContentFieldIds(column.content || { type: "field", field: column.field }, blockContext(block)));
   for (const mapping of layout?.individualMappings || []) if (mapping.field) ids.push(canonicalFieldId(mapping.field));
   return ids;
 }

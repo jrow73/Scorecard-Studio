@@ -1,8 +1,8 @@
 # Scorecard Studio — Field Registry
 
-Status: **Post-Build 016 accepted contract.** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016, including repeated vertical/horizontal/grid geometry, Text Templates, Individual Placement, and the Umpire Crew collection. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
+Status: **Build 017 accepted contract (through Build 017.4).** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016 and the Build 017 Starting Pitcher record, Record Layout, contextual slot-template, and initial player-name-format implementation. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
 
-**Next implementation slice:** Build 017 expands Away/Home Starting Pitcher from the current name-oriented Designer exposure into the existing single player-record contract, including player identity/handedness and supported pitching season/YTD fields. This is an implementation/UI expansion of the established registry family, not a new data model.
+**Accepted implementation slice:** Build 017 expands Away/Home Starting Pitcher from name-oriented Designer exposure into the existing single player-record contract, including player identity/handedness and supported pitching season/YTD fields. It also reuses the slot-content contract for one-record Record Layouts and allows `field` or contextual `template` content in both Record Layout and Repeated Layout slots.
 
 ## 1. Authority and evidence
 

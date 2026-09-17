@@ -3,7 +3,7 @@
   Scorecard Studio
   Layout Management
   Version: 0.2.0-dev
-  Build: 015
+  Build: 017.4
 -->
 <html lang="en">
 <head>
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=0162finalux" />
+  <link rel="stylesheet" href="./css/styles.css?v=017.4" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +20,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 016.2</p>
+          <p>0.2.0-dev • Build 017.4</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 016.2</p>
+          <p class="section-label">Build 017.4</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -231,7 +231,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 016.2</p>
+              <p class="section-label">Build 017.4</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -309,7 +309,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 016.2 • Designer Workspace</p>
+              <p class="section-label">Build 017.4 • Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -364,11 +364,23 @@
               <section class="designer-live-inspector" id="designer-live-inspector">
                 <div class="designer-panel-heading">
                   <div><p class="section-label">Selected Object</p><h4 id="designer-selection-title">Nothing selected</h4></div>
-                  <button class="secondary-button compact-button" id="designer-selection-clear-btn" type="button">Deselect</button>
+                  <div class="designer-object-actions">
+                    <button class="secondary-button compact-button" id="designer-selection-clear-btn" type="button">Deselect</button>
+                    <button class="danger-button compact-button" id="designer-selection-delete-btn" type="button" hidden>Delete</button>
+                    <button class="secondary-button compact-button" id="designer-selection-new-instance-btn" type="button" hidden>New Instance</button>
+                    <button class="secondary-button compact-button" id="designer-workspace-layout-btn" type="button" hidden>Edit Layout</button>
+                  </div>
                 </div>
-                <p class="subtle" id="designer-selection-help">Click a placed field on the scorecard to adjust it without deleting and replacing it.</p>
+                <p class="subtle" id="designer-selection-help">Select a data item on the left or a placed object on the scorecard.</p>
+              </section>
+
+              <section class="designer-subordinate-workspace" id="designer-subordinate-workspace" hidden>
+                <div class="designer-workspace-heading">
+                  <p class="section-label" id="designer-workspace-label">Selected Item</p>
+                  <h4 id="designer-workspace-title">Item</h4>
+                </div>
                 <div id="designer-selection-controls" hidden>
-                  <div class="designer-column-grid">
+                  <div class="designer-column-grid" id="designer-selection-position-controls">
                     <label for="designer-selection-x">X (pt)
                       <input id="designer-selection-x" type="number" step="0.5" />
                     </label>
@@ -376,7 +388,7 @@
                       <input id="designer-selection-y" type="number" step="0.5" />
                     </label>
                   </div>
-                  <div class="designer-column-grid">
+                  <div class="designer-column-grid" id="designer-selection-format-controls">
                     <label for="designer-selection-font-size">Font size (pt)
                       <input id="designer-selection-font-size" type="number" min="1" max="144" step="0.5" />
                     </label>
@@ -386,6 +398,9 @@
                       </select>
                     </label>
                   </div>
+                  <label id="designer-selection-name-format-wrap" for="designer-selection-name-format" hidden>Name format
+                    <select id="designer-selection-name-format"></select>
+                  </label>
                   <div id="designer-selection-template-wrap" class="designer-selection-template-editor" hidden>
                     <label for="designer-selection-template">Template
                       <textarea id="designer-selection-template" rows="3"></textarea>
@@ -399,15 +414,12 @@
                     </div>
                   </div>
                   <div class="designer-selection-actions">
-                    <button class="secondary-button" id="designer-selection-new-instance-btn" type="button">Create New Instance</button>
-                    <button class="danger-button" id="designer-selection-delete-btn" type="button">Delete Selected</button>
+                    <button class="danger-button" id="designer-selection-remove-item-btn" type="button" hidden>Remove Item</button>
                   </div>
                   <p class="subtle designer-help">Drag the selected item on the PDF, or use arrow keys to nudge it. Shift+Arrow makes a larger nudge.</p>
                 </div>
-              </section>
-
-              <section class="designer-new-item-panel" id="designer-new-item-panel" hidden></section>
-              <div id="designer-context-tools" hidden>
+                <section class="designer-new-item-panel" id="designer-new-item-panel" hidden></section>
+                <div id="designer-context-tools" hidden>
               <details class="designer-tool-section" id="designer-single-item-tool">
                 <summary>Single Item</summary>
                 <div class="designer-tool-body">
@@ -421,6 +433,9 @@
                 <select id="designer-field-alignment">
                   <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
                 </select>
+              </label>
+              <label id="designer-field-name-format-wrap" for="designer-field-name-format" hidden>Name format
+                <select id="designer-field-name-format"></select>
               </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
               <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Choose a single item, set its font size and alignment, then place its alignment anchor on the scorecard.</p>
@@ -458,10 +473,11 @@
               </details>
 
               <details class="designer-tool-section" id="designer-repeated-tool">
-                <summary>Repeated Layout</summary>
+                <summary id="designer-block-tool-title">Repeated Layout</summary>
                 <div class="designer-tool-body designer-repeat-panel">
-                <div class="designer-repeat-heading"><strong>Repeated blocks</strong><span class="pill neutral" id="designer-block-count">0</span></div>
-                <label for="designer-lineup-side">Collection
+                <div id="designer-block-layout-controls">
+                <div class="designer-repeat-heading"><strong>Layout blocks</strong><span class="pill neutral" id="designer-block-count">0</span></div>
+                <label for="designer-lineup-side">Data source
                   <select id="designer-lineup-side">
                     <option value="away.lineup">Away starting lineup</option>
                     <option value="home.lineup">Home starting lineup</option>
@@ -470,6 +486,8 @@
                     <option value="away.bullpen">Away bullpen</option>
                     <option value="home.bullpen">Home bullpen</option>
                     <option value="game.umpires.crew">Umpire crew</option>
+                    <option value="away.startingPitcher">Away starting pitcher</option>
+                    <option value="home.startingPitcher">Home starting pitcher</option>
                   </select>
                 </label>
                 <label for="designer-block-arrangement">Arrangement
@@ -495,27 +513,51 @@
                   <select id="designer-block-select" aria-label="Repeated player block"></select>
                 </label>
                 <button class="secondary-button" id="designer-place-rows-btn" type="button" hidden>Change Placement</button>
+                </div>
                 <div id="designer-slot-fields-panel" class="designer-slot-fields-panel" hidden>
-                  <div class="designer-repeat-heading"><strong>Fields in each slot</strong><span class="subtle">Add fields after the layout bounds are set.</span></div>
+                  <div class="designer-repeat-heading"><strong>Content in each slot</strong><span class="subtle">Add fields or a Text Template after placement is set.</span></div>
+                  <label for="designer-column-content-type">Content type
+                    <select id="designer-column-content-type">
+                      <option value="">Choose content type…</option>
+                      <option value="field">Field</option>
+                      <option value="template">Text Template</option>
+                    </select>
+                  </label>
                   <div class="designer-column-grid">
-                    <label for="designer-column-field">Slot field
+                    <label id="designer-column-field-wrap" for="designer-column-field">Slot field
                       <select id="designer-column-field"></select>
                     </label>
                     <label for="designer-column-alignment">Alignment
                       <select id="designer-column-alignment">
+                        <option value="">Choose alignment…</option>
                         <option value="left">Left</option>
                         <option value="center">Center</option>
                         <option value="right">Right</option>
                       </select>
                     </label>
                   </div>
-                  <label for="designer-column-font-size">Field font size (pt)
-                    <input id="designer-column-font-size" type="number" min="1" max="144" step="0.5" value="10" />
+                  <label for="designer-column-font-size">Content font size (pt)
+                    <input id="designer-column-font-size" type="number" min="1" max="144" step="0.5" placeholder="Enter font size…" />
                   </label>
-                  <button class="primary-button" id="designer-place-column-btn" type="button">Add Slot Field</button>
-                  <button class="danger-button" id="designer-delete-block-btn" type="button">Delete Repeated Layout</button>
+                  <label id="designer-column-name-format-wrap" for="designer-column-name-format" hidden>Name format
+                    <select id="designer-column-name-format"></select>
+                  </label>
+                  <div id="designer-column-template-wrap" hidden>
+                    <label for="designer-column-template">Text template
+                      <textarea id="designer-column-template" rows="3" placeholder="Example: ([Throws]) [Player Name] ([W-L], [ERA] ERA)"></textarea>
+                    </label>
+                    <div class="composite-preview"><span>Preview</span><strong id="designer-column-template-preview">Enter text or insert a field.</strong></div>
+                    <div class="designer-column-grid">
+                      <label for="designer-column-template-field">Insert field
+                        <select id="designer-column-template-field"></select>
+                      </label>
+                      <button class="secondary-button composite-insert-button" id="designer-column-template-insert-btn" type="button">Insert Field</button>
+                    </div>
+                  </div>
+                  <button class="primary-button" id="designer-place-column-btn" type="button">Add Slot Content</button>
+                  <button class="danger-button" id="designer-delete-block-btn" type="button" hidden>Delete Repeated Layout</button>
                 </div>
-                <p class="subtle designer-help">Choose a vertical list, horizontal list, or grid. Place the outer slot anchors to establish spacing, then place each field on the first slot. Scorecard Studio repeats that field position through every slot while preserving its font size and alignment.</p>
+                <p class="subtle designer-help">Repeated Layouts use outer anchors to establish spacing. Record Layouts use one anchor for their single record. Add fields or Text Templates in the first slot; repeated layouts copy each position through every slot.</p>
                 <div id="designer-block-list" class="designer-block-list"></div>
                 </div>
               </details>
@@ -562,12 +604,19 @@
                 <label for="designer-individual-font-size">Font size (pt)
                   <input id="designer-individual-font-size" type="number" min="1" max="144" step="0.5" value="10" />
                 </label>
+                <label id="designer-individual-name-format-wrap" for="designer-individual-name-format" hidden>Name format
+                  <select id="designer-individual-name-format"></select>
+                </label>
                 <button class="primary-button" id="designer-individual-place-btn" type="button">Place Individual Item</button>
                 <p class="subtle designer-help">Place one collection member independently by slot/order, or by semantic role when the collection supports it. Role placement is available for starting-lineup defensive positions and umpire assignments.</p>
                 <div id="designer-individual-list" class="designer-block-list"></div>
                 </div>
               </details>
               </div>
+                <div class="designer-child-workspace-actions" id="designer-child-workspace-actions" hidden>
+                  <button class="secondary-button compact-button" id="designer-workspace-new-btn" type="button" hidden>Place New Item</button>
+                </div>
+              </section>
 
             </aside>
           </div>
@@ -582,6 +631,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0162finalux"></script>
+  <script type="module" src="./js/app.js?v=017.4"></script>
 </body>
 </html>

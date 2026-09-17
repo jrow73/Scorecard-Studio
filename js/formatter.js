@@ -2,13 +2,23 @@
  * Scorecard Studio
  * Shared field formatting
  * Version: 0.2.0-dev
- * Build: 010
+ * Build: 017
  */
 
-export function formatFieldValue(definition, resolution, model) {
+export const PLAYER_NAME_FORMATS = Object.freeze([
+  { value: "full", label: "Full Name" },
+  { value: "first-initial-last", label: "First Initial + Last Name" },
+  { value: "last", label: "Last Name" },
+  { value: "first", label: "First Name" },
+  { value: "use", label: "Use Name + Last Name" }
+]);
+
+export function formatFieldValue(definition, resolution, model, format = {}) {
   if (!definition || !resolution || !["available", "partial"].includes(resolution.state)) return "";
   const value = resolution.value;
   if (value === null || value === undefined || value === "") return "";
+
+  if (definition.formatKind === "playerName") return formatPlayerName(resolution.formatSource, value, format.nameFormat);
 
   switch (definition.valueType) {
     case "integer":
@@ -22,6 +32,26 @@ export function formatFieldValue(definition, resolution, model) {
     default:
       return String(value);
   }
+}
+
+function formatPlayerName(player, fallback, nameFormat = "full") {
+  const full = text(player?.name) || String(fallback);
+  if (nameFormat === "last") return text(player?.useLastName) || text(player?.lastName) || full;
+  if (nameFormat === "first") return text(player?.useName) || text(player?.firstName) || full;
+  if (nameFormat === "use") {
+    const first = text(player?.useName);
+    const last = text(player?.useLastName);
+    return first && last ? `${first} ${last}` : full;
+  }
+  if (nameFormat === "first-initial-last") {
+    return text(player?.initLastName) || full;
+  }
+  return full;
+}
+
+function text(value) {
+  const result = String(value ?? "").trim();
+  return result || "";
 }
 
 function formatDecimal(value, precision) {
