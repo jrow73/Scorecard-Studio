@@ -875,9 +875,9 @@ The philosophy should remain:
 
 ---
 
-## Post-Build 017 Designer Completion Roadmap
+## Post-Build 018 Designer Completion Roadmap
 
-Build 017 is accepted, including hotfixes through Build 017.4. The accepted Designer baseline now includes Starting Pitcher record expansion; reusable single-anchor Record Layouts with mixed Field/Text Template children; contextual Text Template labels and tokens; capability-gated Name Format; strict parent/child Inspector scoping; progressive-reveal creation flows; and persistent child-content creation while editing containers or existing children. These behaviors should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
+Build 018 is the current field-catalog completion build. The accepted Designer baseline from Build 017 still includes Starting Pitcher record expansion; reusable single-anchor Record Layouts with mixed Field/Text Template children; contextual Text Template labels and tokens; capability-gated Name Format; strict parent/child Inspector scoping; progressive-reveal creation flows; and persistent child-content creation while editing containers or existing children. These behaviors should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
 
 The remaining v0.2.0 Designer work is governed by `docs/DESIGNER_COMPLETION_INVENTORY.md`. The current expected sequence is:
 

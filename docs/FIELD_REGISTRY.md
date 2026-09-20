@@ -1,8 +1,38 @@
 # Scorecard Studio — Field Registry
 
-Status: **Build 017 accepted contract (through Build 017.4).** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016 and the Build 017 Starting Pitcher record, Record Layout, contextual slot-template, and initial player-name-format implementation. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
+Status: **Build 018.3 active field-catalog contract.** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016 and the Build 017 Starting Pitcher record, Record Layout, contextual slot-template, and initial player-name-format implementation. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
 
-**Accepted implementation slice:** Build 017 expands Away/Home Starting Pitcher from name-oriented Designer exposure into the existing single player-record contract, including player identity/handedness and supported pitching season/YTD fields. It also reuses the slot-content contract for one-record Record Layouts and allows `field` or contextual `template` content in both Record Layout and Repeated Layout slots.
+**Accepted implementation slice:** Build 018 reconciled the runtime registry with the v1 scorecard field catalog, added `visibilityTier: standard | custom`, preserved superseded Build 017 field IDs as compatibility-only (`catalog: false`), closed normalized-but-hidden field gaps, added selected derived/stat fields, and extended Player Name Format with Boxscore Name. Build 018.1 adds concise `description` and deterministic `exampleValue` metadata to every active catalog field and establishes a shared representative sample model for Designer preview/testing. The future Standard-vs-Custom scorecard setup UI is not implemented yet.
+
+## Build 018 / 018.1 active-catalog overlay
+
+The exhaustive family descriptions later in this document remain useful source/discovery context, but the **active v1 Designer catalog** is now intentionally narrower. Build 018 introduces two independent registry concepts:
+
+- `availability`: whether a field is supported by the field contract;
+- `visibilityTier`: `standard` or `custom` for supported, selectable fields.
+
+A third compatibility flag, `catalog: false`, keeps older Build 017 field IDs resolvable for saved layouts without continuing to advertise them in the Designer. User-facing field selectors consume the active catalog; direct resolution and legacy template parsing continue to recognize compatibility-only IDs.
+
+Build 018.1 adds two user-facing metadata properties to each active catalog field:
+
+- `description`: concise explanatory text suitable for a tooltip, info icon, or field browser;
+- `exampleValue`: a deterministic display example suitable for preview/help and future Custom-field selection.
+
+`exampleValue` is descriptive metadata only. It must never be substituted into a generated scorecard when live game data is missing.
+
+Key Build 018 decisions:
+
+- Standard game fields: Game Date, Scheduled Start, Venue Name, Weather Summary. Day/Night and game-of-day Game Number are Custom.
+- Venue city/state/country/capacity/turf/roof are Custom. Venue time zone remains application metadata, not a Designer field.
+- Full Team Name, Club Name, Abbreviation, Games Played, W-L Record, and Manager Name are Standard; other accepted team/standings details are Custom.
+- Starting Pitcher active stats: GS, W-L, ERA (Standard); W, L, WHIP (Custom). Older pitching leaves remain compatibility-only.
+- Lineup/Bench active batting stats: AVG (Standard); OBP, SLG, OPS, HR, RBI, GP, PA, SB, Slash Line (Custom).
+- Bullpen active stats: W-L, ERA, WHIP (Standard); GS, W, L (Custom). Older bullpen IP/SO/Saves/Holds remain compatibility-only.
+- Today's Position supports abbreviation (Standard), full name (Custom), and derived defensive number (Custom). Primary Position is distinct and available.
+- Player Name Format includes Full Name, First Initial + Last Name, Last Name, First Name, Use Name + Last Name, and Boxscore Name.
+- Umpires support both the repeated crew collection and fixed HP/1B/2B/3B scalar names.
+
+See `BUILD_018_FIELD_REVIEW_CHECKLIST.md`, `BUILD_018_FIELD_COVERAGE_AUDIT.md`, `BUILD_018_IMPLEMENTATION.md`, and `BUILD_018_1_IMPLEMENTATION.md` for the decision record, technical reconciliation, field-catalog implementation, and representative-preview follow-up.
 
 ## 1. Authority and evidence
 
@@ -28,6 +58,9 @@ Each definition contains:
 |---|---|
 | `id` | Stable canonical identifier; never an API path or translated UI label |
 | `label`, `category`, `order` | Human label, grouped catalog category, deterministic display order |
+| `description` | Concise user-facing explanation of the field; active catalog fields must provide one |
+| `exampleValue` | Deterministic user-facing sample value; active catalog fields must provide one and generated PDFs must never treat it as live data |
+| `catalog`, `visibilityTier` | Whether the field is offered in the active catalog and, if active, whether its default exposure tier is `standard` or `custom` |
 | `valueType` | `text`, `integer`, `decimal`, `boolean`, `date`, `instant`, `innings`, or `gamesBack` |
 | `kind` | `atomic`, `derived`, or `composite` |
 | `cardinality` | `single` or `repeated`; repeated is independent of kind |
@@ -383,3 +416,20 @@ claim semantic role selectors. Missing slots or roles render blank through the n
 field-resolution path. Existing scalar mappings, composite/free-text mappings, and
 Build 010-012 repeated-block geometry require no migration. Layouts containing an
 individual mapping advance to schema version 6.
+
+## Build 018.2 live-coverage verification overlay
+
+Build 018.2 adds an on-screen developer diagnostic that evaluates every active `catalog: true` definition against the currently selected real game. The diagnostic shows the field's Standard/Custom tier, representative `exampleValue`, live formatted value, required source, and a status of Available, Partial, Missing, Source unavailable, or Error. Repeated fields are evaluated across every applicable live member and report resolved/applicable coverage (for example `9/9`).
+
+Selected-game hydration is shared by diagnostic and PDF-generation paths. When requested field IDs require supplemental `coaches` or `standings` sources, those sources are fetched before normalization. Representative `exampleValue` metadata remains help/test data only and is never substituted for unavailable live data.
+
+The lineup `position.number` field is text-valued because traditional defensive numbers are `1` through `9`, while a Designated Hitter intentionally displays `DH`. The derived live normalizer and representative sample model follow the same rule.
+
+Representative Boxscore Name data now models the source field rather than a formatting algorithm: normal examples generally use the recognizable surname, with occasional disambiguated source-style values where useful. Boxscore Name remains a Player Name Format backed by source metadata.
+
+
+## Build 018.3 final normalization refinements
+
+Build 018.3 closes the field-diagnostic acceptance findings from Build 018.2 without changing the active catalog scope. Representative metadata now uses title-cased Day/Night values, realistic fixed-umpire names, and long-form division names that match the live normalized model.
+
+For posted starting-lineup assignments, `position.name` is now derived from the specific `position.abbreviation` when Scorecard Studio recognizes that abbreviation. This prevents generic source labels such as `Outfielder` from appearing for a posted `LF`, `CF`, or `RF` assignment. `player.primaryPosition.name` remains source-backed and may correctly stay generic (for example, `Outfielder`). Position-number behavior remains derived from the same posted-game abbreviation, including `DH` for designated hitter.

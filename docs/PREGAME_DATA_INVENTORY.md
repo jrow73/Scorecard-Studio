@@ -1,3 +1,8 @@
+
+## Build 018 catalog decision overlay
+
+Build 018 converts the broad discovery inventory into a deliberately smaller active v1 Designer catalog. The detailed candidate lists below remain discovery/history context; they do **not** imply that every source-backed stat is selectable. The accepted Standard/Custom decisions are recorded in `BUILD_018_FIELD_REVIEW_CHECKLIST.md`, while `FIELD_REGISTRY.md` is authoritative for runtime field identity. Deferred items include Game Type, venue dimensions, coach collections, Opponent Batting Average, pronunciation, a dedicated defensive-alignment data family, and the full Division Standings block.
+
 # Scorecard Studio --- Pregame Data Inventory
 
 **Status:** Post-Build 017 working inventory\

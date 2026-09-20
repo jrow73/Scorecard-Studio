@@ -1,6 +1,6 @@
 # Scorecard Studio — Designer Completion Inventory
 
-**Baseline:** Build 017 accepted (including hotfixes through Build 017.4)  
+**Baseline:** Build 018.3 final field-catalog closure accepted  
 **Milestone:** v0.2.0 — Complete Field Mapping & Formatting  
 **Purpose:** Authoritative inventory of remaining work before the Layout Designer is functionally complete for the traditional pregame scorecard v1 scope.
 
@@ -12,7 +12,7 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 
 ## Current inventory
 
-| Designer area | Build 017 state | v1 classification | Remaining action |
+| Designer area | Current state | v1 classification | Remaining action |
 |---|---|---|---|
 | PDF/layout workspace | Complete | Required / done | Freeze unless a demonstrated defect appears |
 | Data Palette/navigation | Complete | Required / done | Freeze interaction model |
@@ -23,13 +23,13 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 | Individual Placement | Complete | Required / done | No planned structural work |
 | Starting Pitcher | Complete | Required / done | Build 017 accepted |
 | Parent/child Inspector workflow | Complete | Required / done | Preserve scoped child workspace and persistent Place New Item action |
-| Canonical field coverage | Needs audit | Required | **Next build candidate** |
-| Player name formatting | Initial support implemented | Required / partial | Audit all applicable person-name fields and fallback behavior |
+| Canonical field coverage | Build 018.3 live diagnostic and normalization closure complete | Complete for Build 018 | Field catalog verified against representative and live selected-game data |
+| Player name formatting | Boxscore Name representative behavior verified | Complete for Build 018 | Source-like compact names retained, including occasional disambiguation |
 | Font size/alignment | Complete | Required / done | Preserve |
 | Static text color | Not implemented | Required | Add in formatting build |
 | Conditional/data-driven color | Not implemented | Scope decision | Prefer narrow handedness use case over generalized rules engine |
 | Long-text fit behavior | Unresolved | Scope decision | Define intentional v1 policy |
-| Synthetic collection preview data | Not implemented | Required | Fill configured capacities deterministically |
+| Representative preview data | Build 018.3-05 depth/realism pass complete | Complete for Build 018 | 9 lineup / 6 bench / 14 bullpen / 6 umpire representative members with mixed-width jersey numbers |
 | Capacity/overflow behavior | Functional | Required / refine | Keep under-capacity normal; improve preview guidance/warnings |
 | Undo/Redo | Missing | Required | Add full Designer history |
 | Generation-result UX | Functional | v1 polish | Separate success from warnings/notices clearly |
@@ -61,6 +61,14 @@ Builds 006–017.4 establish the accepted Designer foundation:
 - Palette search, Used-only filtering, task-oriented categories, and child instances;
 - page navigation/scroll-to-selected-instance behavior; and
 - Designer-only zoom that does not change persisted or generated PDF geometry.
+
+## Build 018 / 018.1 field-catalog result
+
+Build 018 reconciles the active v1 field catalog, assigns Standard/Custom visibility metadata, preserves older resolvable IDs as compatibility-only, and closes the accepted Game/Team/Player/Umpire field gaps. Build 018.1 adds concise per-field descriptions, deterministic example values, and a shared representative Designer sample model.
+
+The representative model is a preview/test fixture only. Generated scorecards continue to use selected-game data and must remain blank when a requested live value is unavailable. The field descriptions/example values are intended to support both current Designer understanding and a future Custom Fields selector without creating a wall of explanatory text.
+
+Browser acceptance remains required before these builds are considered closed.
 
 ## Build 017 accepted result
 
@@ -137,3 +145,19 @@ The following should not delay v0.2.0 Designer completion unless a real scorecar
 - one-click favorite-team/favorite-layout generation;
 - backup/export/import and cross-device portability; and
 - broader Game Day/application polish.
+
+
+## Build 018.2 live-data closure pass
+
+Build 018.2 adds a developer-facing Field Coverage Diagnostic that resolves every active catalog definition against the selected real game, displays representative vs live values, identifies required sources, and reports repeated-field coverage across all applicable members. This is now the primary acceptance tool for closing Build 018 field coverage.
+
+The diagnostic also exposes whether a blank comes from genuine missing game data, a missing supplemental source, partial repeated coverage, or a resolver error. PDF generation now shares the same field-driven supplemental hydration path, including Standings when a mapped field requires it.
+
+Two Build 018.1 acceptance defects are included: DH maps to `DH` in the derived Position Number field rather than blank, and representative Boxscore Name values model MLB-style compact source names rather than mechanically formatting every player as `Lastname, F`.
+
+
+## Build 018.3 final acceptance closure
+
+Build 018.3 closes the four remaining findings from the Build 018.2 Field Diagnostic review: Day/Night representative/live casing parity, realistic fixed-umpire examples, long-form division examples, and deterministic full names for today's posted defensive positions. The live diagnostic otherwise reported all active fields Available with complete repeated-field coverage in the acceptance game, and freshly generated PDFs populated the supplemental standings values that had been blank in Build 018.1.
+
+A final 018.3-05 acceptance cleanup expands representative repeated collections to 9 lineup / 6 bench / 14 bullpen / 6 umpires and replaces sequential jersey samples with deterministic mixed single- and double-digit values. With these fixes, Build 018 field coverage is considered complete. Future work may build the user-facing Standard/Custom field-selection workflow on top of the registry metadata, but that interface is not part of Build 018.

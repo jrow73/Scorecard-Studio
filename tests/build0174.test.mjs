@@ -6,8 +6,8 @@ const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../css/styles.css", import.meta.url), "utf8");
 
 // 1. Build identity advances without changing the v0.2.0 development milestone.
-assert.match(html, /Build 017\.4/);
-assert.match(app, /Build: 017\.4/);
+assert.match(html, /Build (?:017\.4|018\.[0-3])/);
+assert.match(app, /Build: (?:017\.4|018\.[0-3])/);
 
 // 2. Record Layout is one record / one anchor and does not expose repeated arrangement choices.
 assert.match(app, /const isRecord = isRecordContext\(requestedContext\)/);

@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 017
+ * Build: 018.3
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
@@ -22,7 +22,11 @@ export function normalizePregameData(feed, supplemental = {}, scheduleGame = nul
     away: null,
     home: null,
     standings: { groups: [] },
-    meta: { sources: { gamePack: Boolean(feed), coaches: Boolean(supplemental.coaches), standings: Boolean(supplemental.standingsPayloads) } }
+    meta: { sources: {
+      gamePack: Boolean(feed),
+      coaches: Boolean(supplemental.coaches?.away || supplemental.coaches?.home),
+      standings: Array.isArray(supplemental.standingsPayloads) && supplemental.standingsPayloads.length > 0
+    } }
   };
 
   model.away = normalizeSide(feed, "away", supplemental.coaches?.away, supplemental.standingsPayloads);
@@ -38,7 +42,7 @@ function normalizeGame(gd, live) {
   return {
     date: gd.datetime?.officialDate ?? null,
     startTime: gd.datetime?.dateTime ?? null,
-    dayNight: gd.datetime?.dayNight ?? null,
+    dayNight: normalizeDayNight(gd.datetime?.dayNight),
     type: gd.game?.type ?? null,
     number: numberOrNull(gd.game?.gameNumber),
     venue: {
@@ -165,7 +169,8 @@ function normalizeBoxPlayer(feed, side, id, battingOrder = null, fallbackPerson 
     player,
     position: {
       abbreviation: boxPlayer.position?.abbreviation ?? null,
-      name: boxPlayer.position?.name ?? null
+      name: defensivePositionName(boxPlayer.position?.abbreviation) ?? boxPlayer.position?.name ?? null,
+      number: defensivePositionNumber(boxPlayer.position?.abbreviation)
     },
     stats: normalizeStats(boxPlayer.seasonStats)
   };
@@ -178,8 +183,10 @@ function normalizeStats(seasonStats) {
     gamesPlayed: numberOrNull(batting.gamesPlayed ?? pitching.gamesPlayed),
     gamesPitched: numberOrNull(pitching.gamesPitched), gamesStarted: numberOrNull(pitching.gamesStarted),
     avg: decimalOrNull(batting.avg), obp: decimalOrNull(batting.obp), slg: decimalOrNull(batting.slg), ops: decimalOrNull(batting.ops),
+    plateAppearances: numberOrNull(batting.plateAppearances), stolenBases: numberOrNull(batting.stolenBases),
+    slashLine: slashLine(batting.avg, batting.obp, batting.slg),
     homeRuns: numberOrNull(batting.homeRuns ?? pitching.homeRuns), rbi: numberOrNull(batting.rbi),
-    wins: numberOrNull(pitching.wins), losses: numberOrNull(pitching.losses), era: decimalOrNull(pitching.era), whip: decimalOrNull(pitching.whip),
+    wins: numberOrNull(pitching.wins), losses: numberOrNull(pitching.losses), record: winLossRecord(pitching.wins, pitching.losses), era: decimalOrNull(pitching.era), whip: decimalOrNull(pitching.whip),
     inningsPitched: pitching.inningsPitched ?? null, hits: numberOrNull(pitching.hits), runs: numberOrNull(pitching.runs),
     earnedRuns: numberOrNull(pitching.earnedRuns), walks: numberOrNull(pitching.baseOnBalls), strikeouts: numberOrNull(pitching.strikeOuts),
     saves: numberOrNull(pitching.saves), saveOpportunities: numberOrNull(pitching.saveOpportunities), holds: numberOrNull(pitching.holds), blownSaves: numberOrNull(pitching.blownSaves),
@@ -233,6 +240,33 @@ function findStanding(payloads, teamId) {
     if (match) return match;
   }
   return null;
+}
+
+function defensivePositionNumber(value) {
+  const key = String(value || "").trim().toUpperCase();
+  return ({ P: 1, C: 2, "1B": 3, "2B": 4, "3B": 5, SS: 6, LF: 7, CF: 8, RF: 9, DH: "DH" })[key] ?? null;
+}
+
+function defensivePositionName(value) {
+  const key = String(value || "").trim().toUpperCase();
+  return ({ P: "Pitcher", C: "Catcher", "1B": "First Base", "2B": "Second Base", "3B": "Third Base", SS: "Shortstop", LF: "Left Field", CF: "Center Field", RF: "Right Field", DH: "Designated Hitter", OF: "Outfielder", IF: "Infielder", PH: "Pinch Hitter", PR: "Pinch Runner" })[key] ?? null;
+}
+
+function normalizeDayNight(value) {
+  const text = String(value || "").trim().toLowerCase();
+  if (text === "day") return "Day";
+  if (text === "night") return "Night";
+  return value ?? null;
+}
+
+function winLossRecord(winsValue, lossesValue) {
+  const wins = numberOrNull(winsValue), losses = numberOrNull(lossesValue);
+  return wins != null && losses != null ? `${wins}-${losses}` : null;
+}
+
+function slashLine(avgValue, obpValue, slgValue) {
+  const values = [avgValue, obpValue, slgValue].map((value) => value == null || value === "" ? "" : String(value).trim().replace(/^0(?=\.)/, ""));
+  return values.every(Boolean) ? values.join("/") : null;
 }
 
 function numberOrNull(value) {

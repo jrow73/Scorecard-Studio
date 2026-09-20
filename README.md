@@ -23,6 +23,7 @@ An interactive, browser-based web application that allows baseball fans, scoreke
 - **Live MLB Data Fetching:** Automatically fetches daily game schedules, rosters, and player stats directly from the official, free MLB Stats API.
 - **One-Click Generation:** Easily generate "Today's Scorecard" based on pre-selected favorite team, favorite scorecard, and today's game data. 
 - **Backup & Portability:** Export and import saved layout profiles and PDF templates via `.json` backup files. Prevents needing to start over in the event you completely clear your browser or want to use a different browser or different/multiple device(s). (Since data is not stored in the cloud, each browser and each device maintains its own scorecard data and settings)
+- **Optional Cloud Storage and Synchornization:** Optionally configure your own cloud storage service, such as Google Drive, Dropbox, etc., to host saved layout profiles and app settings, keeping multiple devices and/or browsers synced with latest changes automatically. All authorization is conducted and stored in the local browser - no information is sent to nor processed by Scorecard Studio. If configured, this setting does not replace manual backup and portability capability.
 
 ---
 

@@ -2,18 +2,20 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 017.4
+ * Build: 018.3
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=017.4";
-import { normalizePregameData } from "./normalize.js?v=017.4";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=017.4";
-import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=017.4";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=017.4";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
+import { normalizePregameData } from "./normalize.js?v=0183";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=0183";
+import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=018";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=018305";
+import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=0183";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=018";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=017.4";
+} from "./storage.js?v=018";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -49,6 +51,8 @@ const state = {
   designerPageWidthPoints: 0,
   designerPageHeightPoints: 0,
   normalizedPregame: null,
+  fieldDiagnosticRows: [],
+  fieldDiagnosticLoadToken: 0,
   gameDayLoadToken: 0
 };
 
@@ -81,6 +85,20 @@ const elements = {
   homeLineup: document.querySelector("#home-lineup"),
   navHome: document.querySelector("#nav-home"),
   navGameDay: document.querySelector("#nav-gameday"),
+  navFieldDiagnostic: document.querySelector("#nav-field-diagnostic"),
+  refreshFieldDiagnosticButton: document.querySelector("#refresh-field-diagnostic-btn"),
+  fieldDiagnosticSubtitle: document.querySelector("#field-diagnostic-subtitle"),
+  fieldDiagnosticMessage: document.querySelector("#field-diagnostic-message"),
+  fieldDiagnosticSources: document.querySelector("#field-diagnostic-sources"),
+  diagnosticGamePackSourcePill: document.querySelector("#diagnostic-gamepack-source-pill"),
+  diagnosticCoachesSourcePill: document.querySelector("#diagnostic-coaches-source-pill"),
+  diagnosticStandingsSourcePill: document.querySelector("#diagnostic-standings-source-pill"),
+  fieldDiagnosticContent: document.querySelector("#field-diagnostic-content"),
+  fieldDiagnosticSummary: document.querySelector("#field-diagnostic-summary"),
+  fieldDiagnosticSearch: document.querySelector("#field-diagnostic-search"),
+  fieldDiagnosticTierFilter: document.querySelector("#field-diagnostic-tier-filter"),
+  fieldDiagnosticStatusFilter: document.querySelector("#field-diagnostic-status-filter"),
+  fieldDiagnosticTableBody: document.querySelector("#field-diagnostic-table-body"),
   refreshGameDayButton: document.querySelector("#refresh-gameday-btn"),
   gameDaySubtitle: document.querySelector("#gameday-subtitle"),
   gameDayMessage: document.querySelector("#gameday-message"),
@@ -262,6 +280,11 @@ async function initialize() {
   elements.gameDateTodayButton.addEventListener("click", () => setSelectedGameDate(getLocalDateString()));
   elements.navHome.addEventListener("click", () => showView("home"));
   elements.navGameDay.addEventListener("click", openGameDay);
+  elements.navFieldDiagnostic.addEventListener("click", openFieldDiagnostic);
+  elements.refreshFieldDiagnosticButton.addEventListener("click", () => loadFieldDiagnostic(true));
+  elements.fieldDiagnosticSearch.addEventListener("input", renderFieldDiagnosticTable);
+  elements.fieldDiagnosticTierFilter.addEventListener("change", renderFieldDiagnosticTable);
+  elements.fieldDiagnosticStatusFilter.addEventListener("change", renderFieldDiagnosticTable);
   elements.refreshGameDayButton.addEventListener("click", () => loadGameDay(true));
   elements.navLayouts.addEventListener("click", () => showView("layouts"));
   elements.navDesigner.addEventListener("click", () => {
@@ -640,6 +663,133 @@ async function loadGameDay(forceSupplemental = false) {
   } finally {
     if (token === state.gameDayLoadToken) elements.refreshGameDayButton.disabled = false;
   }
+}
+
+
+async function openFieldDiagnostic() {
+  showView("field-diagnostic");
+  await loadFieldDiagnostic(false);
+}
+
+async function loadFieldDiagnostic(force = false) {
+  const feed = state.selectedFeed;
+  const game = currentScheduleGame();
+  if (!feed || !game) {
+    elements.fieldDiagnosticContent.hidden = true;
+    elements.fieldDiagnosticSources.hidden = true;
+    elements.fieldDiagnosticMessage.hidden = false;
+    elements.fieldDiagnosticMessage.classList.remove("error");
+    elements.fieldDiagnosticMessage.textContent = "No game is selected. Return Home and select a game first.";
+    return;
+  }
+
+  const token = ++state.fieldDiagnosticLoadToken;
+  const gd = feed.gameData || {};
+  const officialDate = gd.datetime?.officialDate || game.officialDate || getLocalDateString();
+  const away = gd.teams?.away?.name || game.awayTeam || "Away";
+  const home = gd.teams?.home?.name || game.homeTeam || "Home";
+  elements.fieldDiagnosticSubtitle.textContent = `${away} at ${home} • ${formatDisplayDate(officialDate)}`;
+  elements.fieldDiagnosticMessage.hidden = false;
+  elements.fieldDiagnosticMessage.classList.remove("error");
+  elements.fieldDiagnosticMessage.textContent = "Resolving every active field against the selected Game Pack and required supplemental sources…";
+  elements.fieldDiagnosticContent.hidden = true;
+  elements.fieldDiagnosticSources.hidden = false;
+  elements.refreshFieldDiagnosticButton.disabled = true;
+  elements.diagnosticGamePackSourcePill.textContent = "Game Pack: loaded";
+  elements.diagnosticGamePackSourcePill.className = "pill ready";
+  elements.diagnosticCoachesSourcePill.textContent = "Coaches API: loading…";
+  elements.diagnosticCoachesSourcePill.className = "pill neutral";
+  elements.diagnosticStandingsSourcePill.textContent = "Standings API: loading…";
+  elements.diagnosticStandingsSourcePill.className = "pill neutral";
+
+  try {
+    const fieldIds = getCatalogFields().map((definition) => definition.id);
+    const model = await hydrateSelectedGameModel(fieldIds, String(game.gamePk));
+    if (token !== state.fieldDiagnosticLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
+    state.fieldDiagnosticRows = buildFieldDiagnosticRows(model);
+    renderFieldDiagnosticSummary(state.fieldDiagnosticRows);
+    renderFieldDiagnosticTable();
+    renderDiagnosticSourcePills(model);
+    elements.fieldDiagnosticContent.hidden = false;
+    const summary = summarizeDiagnosticRows(state.fieldDiagnosticRows);
+    elements.fieldDiagnosticMessage.textContent = `Diagnostic complete: ${summary.available} available, ${summary.partial} partial, ${summary.missing} missing, ${summary.sourceUnavailable} source unavailable, ${summary.error} error.`;
+  } catch (error) {
+    if (token !== state.fieldDiagnosticLoadToken) return;
+    console.error("Field diagnostic failed:", error);
+    elements.fieldDiagnosticMessage.classList.add("error");
+    elements.fieldDiagnosticMessage.textContent = errorMessage(error, "Field diagnostic could not be completed.");
+  } finally {
+    if (token === state.fieldDiagnosticLoadToken) elements.refreshFieldDiagnosticButton.disabled = false;
+  }
+}
+
+function renderDiagnosticSourcePills(model) {
+  const sources = model?.meta?.sources || {};
+  setDiagnosticSourcePill(elements.diagnosticGamePackSourcePill, "Game Pack", sources.gamePack);
+  setDiagnosticSourcePill(elements.diagnosticCoachesSourcePill, "Coaches API", sources.coaches);
+  setDiagnosticSourcePill(elements.diagnosticStandingsSourcePill, "Standings API", sources.standings);
+}
+
+function setDiagnosticSourcePill(element, label, loaded) {
+  element.textContent = `${label}: ${loaded ? "loaded" : "unavailable"}`;
+  element.className = `pill ${loaded ? "ready" : "error"}`;
+}
+
+function renderFieldDiagnosticSummary(rows) {
+  const summary = summarizeDiagnosticRows(rows);
+  const parts = [
+    ["Total", summary.total, "neutral"],
+    ["Available", summary.available, "ready"],
+    ["Partial", summary.partial, "warning"],
+    ["Missing", summary.missing, "neutral"],
+    ["Source unavailable", summary.sourceUnavailable, "error"],
+    ["Error", summary.error, "error"]
+  ];
+  elements.fieldDiagnosticSummary.replaceChildren(...parts.map(([label, count, tone]) => {
+    const pill = document.createElement("span");
+    pill.className = `pill ${tone}`;
+    pill.textContent = `${label}: ${count}`;
+    return pill;
+  }));
+}
+
+function renderFieldDiagnosticTable() {
+  const query = String(elements.fieldDiagnosticSearch?.value || "").trim().toLowerCase();
+  const tier = elements.fieldDiagnosticTierFilter?.value || "all";
+  const status = elements.fieldDiagnosticStatusFilter?.value || "all";
+  const rows = (state.fieldDiagnosticRows || []).filter((row) => {
+    if (tier !== "all" && row.visibilityTier !== tier) return false;
+    if (status !== "all" && row.status !== status) return false;
+    if (!query) return true;
+    return [row.label, row.id, row.category, row.description, row.liveValue, row.exampleValue].some((value) => String(value || "").toLowerCase().includes(query));
+  });
+
+  elements.fieldDiagnosticTableBody.replaceChildren();
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+    tr.className = `diagnostic-row-${row.status}`;
+    const sources = row.sourceRequirements.join(" + ");
+    tr.innerHTML = `<td>${escapeHtml(row.category)}</td>
+      <td title="${escapeHtml(row.description)}"><span class="diagnostic-field-label">${escapeHtml(row.label)}</span><span class="diagnostic-field-id">${escapeHtml(row.id)}</span></td>
+      <td>${escapeHtml(capitalize(row.visibilityTier || ""))}</td>
+      <td class="diagnostic-value">${escapeHtml(row.exampleValue || "—")}</td>
+      <td class="diagnostic-value">${escapeHtml(row.liveValue || "—")}</td>
+      <td>${escapeHtml(row.coverage || "—")}</td>
+      <td>${escapeHtml(sources || "—")}</td>
+      <td><span class="diagnostic-status ${escapeHtml(row.status)}" title="${escapeHtml(row.reason || row.statusLabel)}">${escapeHtml(row.statusLabel)}</span></td>`;
+    elements.fieldDiagnosticTableBody.append(tr);
+  }
+
+  if (!rows.length) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td colspan="8" class="gameday-empty">No fields match the current filters.</td>';
+    elements.fieldDiagnosticTableBody.append(tr);
+  }
+}
+
+function capitalize(value) {
+  const text = String(value || "");
+  return text ? text[0].toUpperCase() + text.slice(1) : text;
 }
 
 function renderGameDay(model) {
@@ -1052,13 +1202,16 @@ function showView(view) {
   });
   elements.navHome.classList.toggle("active", view === "home");
   elements.navGameDay.classList.toggle("active", view === "gameday");
+  elements.navFieldDiagnostic.classList.toggle("active", view === "field-diagnostic");
   elements.navLayouts.classList.toggle("active", view === "layouts");
   elements.navDesigner.classList.toggle("active", view === "designer");
   elements.navHome.toggleAttribute("aria-current", view === "home");
+  elements.navGameDay.toggleAttribute("aria-current", view === "gameday");
+  elements.navFieldDiagnostic.toggleAttribute("aria-current", view === "field-diagnostic");
   elements.navLayouts.toggleAttribute("aria-current", view === "layouts");
   elements.navDesigner.toggleAttribute("aria-current", view === "designer");
-  elements.pageTitle.textContent = view === "home" ? "Home" : view === "gameday" ? "Game Day" : view === "layouts" ? "Layouts" : "Layout Designer";
-  elements.pageEyebrow.textContent = view === "home" ? "Scorecard Studio • Pregame" : view === "layouts" ? "Scorecard Studio • Layout Management" : "Scorecard Studio • Field Mapping";
+  elements.pageTitle.textContent = view === "home" ? "Home" : view === "gameday" ? "Game Day" : view === "field-diagnostic" ? "Field Diagnostic" : view === "layouts" ? "Layouts" : "Layout Designer";
+  elements.pageEyebrow.textContent = view === "home" ? "Scorecard Studio • Pregame" : view === "gameday" ? "Scorecard Studio • Game Reference" : view === "field-diagnostic" ? "Scorecard Studio • Developer Diagnostic" : view === "layouts" ? "Scorecard Studio • Layout Management" : "Scorecard Studio • Field Mapping";
   elements.refreshButton.hidden = view !== "home";
 }
 
@@ -1329,7 +1482,7 @@ function populateDesignerTemplateFieldSelect(context = null) {
   elements.designerTemplateField.replaceChildren();
   const groups = new Map();
   const activeGroups = activeDesignerPaletteGroups();
-  const definitions = context ? fieldsForRecordContext(context) : getSupportedFields({ cardinality: "single" });
+  const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
   for (const definition of definitions) {
     if (selectedLayout() && !activeGroups.has(designerPaletteGroupForField(definition))) continue;
     if (!groups.has(definition.category)) groups.set(definition.category, []);
@@ -1562,7 +1715,7 @@ function populateDesignerIndividualFieldSelect() {
   const collection = elements.designerIndividualCollection.value || "away.lineup";
   const previous = elements.designerIndividualField.value;
   elements.designerIndividualField.replaceChildren();
-  for (const definition of getSupportedFields({ cardinality: "repeated", collection })) {
+  for (const definition of getCatalogFields({ cardinality: "repeated", collection })) {
     const option = document.createElement("option");
     option.value = definition.id;
     option.textContent = definition.label.replace(/^(Away|Home) (Lineup|Bench|Bullpen) — /, "").replace(/^Umpire Crew — /, "");
@@ -2261,7 +2414,7 @@ function populateDesignerColumnFieldSelect() {
   templatePlaceholder.textContent = "Choose field to insert…";
   elements.designerColumnTemplateField.append(templatePlaceholder);
 
-  for (const definition of fieldsForRecordContext(context)) {
+  for (const definition of fieldsForRecordContext(context, { catalogOnly: true })) {
     const option = document.createElement("option");
     option.value = definition.id;
     option.textContent = slotFieldShortLabel(definition);
@@ -2563,7 +2716,7 @@ function populateDesignerFieldSelect(context = null) {
   elements.designerFieldSelect.replaceChildren();
   const activeGroups = activeDesignerPaletteGroups();
   const groups = new Map();
-  const definitions = context ? fieldsForRecordContext(context) : getSupportedFields({ cardinality: "single" });
+  const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
   for (const definition of definitions) {
     const paletteGroup = designerPaletteGroupForField(definition);
     if (!activeGroups.has(paletteGroup)) continue;
@@ -2631,16 +2784,16 @@ function renderDesignerPaletteChooser() {
 
 function designerPaletteItems() {
   const items = [];
-  for (const definition of getSupportedFields({ cardinality: "single" })) {
+  for (const definition of getCatalogFields({ cardinality: "single" })) {
     if (definition.record) continue;
     const groupId = designerPaletteGroupForField(definition);
     let label = definition.label;
     if ((groupId === "away-players" || groupId === "home-players") && String(definition.id).includes("startingPitcher")) label = "Starting Pitcher";
-    items.push({ kind: "field", id: definition.id, groupId, label });
+    items.push({ kind: "field", id: definition.id, groupId, label, description: definition.description, exampleValue: definition.exampleValue });
   }
   items.push(
-    { kind: "record", id: "away.startingPitcher", groupId: "away-players", label: "Starting Pitcher", fields: fieldsForRecordContext("away.startingPitcher") },
-    { kind: "record", id: "home.startingPitcher", groupId: "home-players", label: "Starting Pitcher", fields: fieldsForRecordContext("home.startingPitcher") }
+    { kind: "record", id: "away.startingPitcher", groupId: "away-players", label: "Starting Pitcher", fields: fieldsForRecordContext("away.startingPitcher", { catalogOnly: true }) },
+    { kind: "record", id: "home.startingPitcher", groupId: "home-players", label: "Starting Pitcher", fields: fieldsForRecordContext("home.startingPitcher", { catalogOnly: true }) }
   );
   const collections = [
     ["away.lineup", "Starting Lineup", "away-players"], ["home.lineup", "Starting Lineup", "home-players"],
@@ -2775,6 +2928,7 @@ function renderDesignerPaletteItem(item) {
   const status = document.createElement("small");
   status.textContent = directInstances.length ? `${directInstances.length} instance${directInstances.length === 1 ? "" : "s"}` : (references.length ? "Used in template" : "Available");
   button.replaceChildren(check, label, status);
+  if (item.description) button.title = item.exampleValue ? `${item.description} Example: ${item.exampleValue}` : item.description;
   button.addEventListener("click", () => activateDesignerPaletteItem(item, directInstances.length > 0));
   if (item.kind === "record" && item.fields?.length) {
     const details = document.createElement("details"); details.className = "designer-record-fields designer-record-direct";
@@ -2791,7 +2945,8 @@ function renderDesignerPaletteItem(item) {
     for (const definition of item.fields) {
       const child = document.createElement("button"); child.type = "button"; child.className = "designer-instance-item";
       child.textContent = slotFieldShortLabel(definition);
-      child.addEventListener("click", (event) => { event.stopPropagation(); activateDesignerPaletteItem({ kind: "field", id: definition.id, groupId: item.groupId, label: slotFieldShortLabel(definition) }); });
+      if (definition.description) child.title = definition.exampleValue ? `${definition.description} Example: ${definition.exampleValue}` : definition.description;
+      child.addEventListener("click", (event) => { event.stopPropagation(); activateDesignerPaletteItem({ kind: "field", id: definition.id, groupId: item.groupId, label: slotFieldShortLabel(definition), description: definition.description, exampleValue: definition.exampleValue }); });
       list.append(child);
     }
     details.append(list);
@@ -3345,7 +3500,7 @@ function populateDesignerSelectionTemplateFieldSelect() {
   select.replaceChildren();
   const selected = locateDesignerObject();
   const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
-  const definitions = context ? fieldsForRecordContext(context) : getSupportedFields({ cardinality: "single" });
+  const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
   for (const definition of definitions) {
     const option = document.createElement("option");
     option.value = definition.id;
@@ -3602,89 +3757,6 @@ function ensureMappingIds(layout) {
   return changed;
 }
 
-const DESIGNER_SAMPLE_MODEL = {
-  schemaVersion: 1,
-  game: {
-    date: "2026-09-08", startTime: "2026-09-08T23:10:00Z",
-    venue: { name: "T-Mobile Park", timeZone: "America/Los_Angeles" },
-    weather: { temperature: 72, condition: "Partly Cloudy", wind: "7 mph, Out To RF" },
-    umpires: {
-      home: { id: 4001, name: "Sample Umpire", role: "Home Plate" },
-      first: { id: 4002, name: "Sample Umpire", role: "First Base" },
-      second: { id: 4003, name: "Sample Umpire", role: "Second Base" },
-      third: { id: 4004, name: "Sample Umpire", role: "Third Base" },
-      additional: [],
-      crew: [
-        { id: 4001, name: "Sample Umpire", role: "Home Plate" },
-        { id: 4002, name: "Sample Umpire", role: "First Base" },
-        { id: 4003, name: "Sample Umpire", role: "Second Base" },
-        { id: 4004, name: "Sample Umpire", role: "Third Base" }
-      ]
-    }
-  },
-  away: {
-    team: { name: "Tampa Bay Devil Rays", locationName: "St. Petersburg", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB", record: { wins: 78, losses: 64, pct: 0.549 } },
-    manager: { name: "Kevin Cash" }, startingPitcher: sampleStarter("Shane Baz", "Shane", "Baz", "S. Baz", "11", "R", 10, 5, 3.19, 1.08, "152.1", 162),
-    lineup: sampleLineup(["Yandy Díaz", "Brandon Lowe", "Junior Caminero", "Jonathan Aranda", "Josh Lowe", "Christopher Morel", "Jake Mangum", "Nick Fortes", "Taylor Walls"], ["1B", "2B", "3B", "DH", "RF", "LF", "CF", "C", "SS"], ["R", "L", "R", "L", "L", "R", "S", "R", "S"]),
-    bench: sampleBench(["Kameron Misner", "José Caballero", "Ben Rortvedt", "Curtis Mead"], ["OF", "IF", "C", "IF"], ["L", "R", "L", "R"]),
-    bullpen: sampleBullpen(["Pete Fairbanks", "Garrett Cleavinger", "Mason Montgomery", "Edwin Uceta", "Kevin Kelly", "Manuel Rodríguez"], ["R", "L", "L", "R", "R", "R"])
-  },
-  home: {
-    team: { name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA", record: { wins: 81, losses: 61, pct: 0.570 } },
-    manager: { name: "Dan Wilson" }, startingPitcher: sampleStarter("Logan Gilbert", "Logan", "Gilbert", "L. Gilbert", "36", "R", 11, 7, 3.42, 1.08, "154.2", 171),
-    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "3B"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"]),
-    bench: sampleBench(["Mitch Garver", "Leo Rivas", "Luke Raley", "Austin Shenton"], ["C", "IF", "OF", "IF"], ["R", "S", "L", "L"]),
-    bullpen: sampleBullpen(["Andrés Muñoz", "Matt Brash", "Gabe Speier", "Eduard Bazardo", "Carlos Vargas", "Casey Legumina"], ["R", "R", "L", "R", "R", "R"])
-  }
-};
-
-function sampleStarter(name, firstName, lastName, initLastName, number, throws, wins, losses, era, whip, inningsPitched, strikeouts) {
-  return {
-    player: { name, firstName, lastName, useName: firstName, useLastName: lastName, initLastName, number, throws },
-    position: { abbreviation: "P", name: "Pitcher" },
-    stats: { gamesPlayed: 27, gamesPitched: 27, gamesStarted: 27, wins, losses, era, whip, inningsPitched, strikeouts, walks: 39, hits: 132, runs: 61, earnedRuns: 58, homeRuns: 17, saves: 0, holds: 0 }
-  };
-}
-
-function sampleLineup(names, positions, bats) {
-  return names.map((name, index) => ({
-    battingOrder: index + 1,
-    player: { id: 1000 + index, ...samplePlayerName(name), number: String(index + 1), bats: bats[index] },
-    position: { abbreviation: positions[index] },
-    stats: { avg: .250 + index / 1000, obp: .325 + index / 1000, slg: .410 + index / 1000, ops: .735 + index / 1000, homeRuns: 8 + index, rbi: 40 + index * 3 }
-  }));
-}
-
-function sampleBench(names, positions, bats) {
-  return names.map((name, index) => ({
-    player: { id: 2000 + index, ...samplePlayerName(name), number: String(20 + index), bats: bats[index] },
-    position: { abbreviation: positions[index] },
-    stats: { avg: .238 + index / 1000, obp: .310 + index / 1000, slg: .390 + index / 1000, ops: .700 + index / 1000, homeRuns: 4 + index, rbi: 18 + index * 4 }
-  }));
-}
-
-function samplePlayerName(name) {
-  const parts = String(name || "").trim().split(/\s+/);
-  const firstName = parts[0] || "";
-  const lastName = parts.length > 1 ? parts.at(-1) : "";
-  return {
-    name,
-    firstName: firstName || null,
-    lastName: lastName || null,
-    useName: firstName || null,
-    useLastName: lastName || null,
-    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}` : name
-  };
-}
-
-function sampleBullpen(names, throws) {
-  return names.map((name, index) => ({
-    player: { id: 3000 + index, ...samplePlayerName(name), number: String(30 + index), throws: throws[index] },
-    position: { abbreviation: "P" },
-    stats: { wins: 2 + index, losses: 1 + (index % 3), era: 2.35 + index / 10, whip: 1.02 + index / 100, inningsPitched: `${42 + index}.1`, strikeouts: 48 + index * 5, saves: index === 0 ? 31 : 0, holds: index === 0 ? 0 : 6 + index }
-  }));
-}
-
 function makeMappingId() {
   return globalThis.crypto?.randomUUID?.() || `mapping-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
@@ -3851,29 +3923,43 @@ function collectLayoutFieldIds(layout) {
 }
 
 async function buildModelForMappings(fieldIds, expectedGameKey) {
+  return hydrateSelectedGameModel(fieldIds, expectedGameKey);
+}
+
+async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
   const requirements = sourceRequirementsForFields(fieldIds);
   const game = currentScheduleGame();
   const feed = state.selectedFeed;
   if (!feed || !game) throw new Error("No selected game data is available.");
-  if (!requirements.has("coaches")) {
-    const model = normalizePregameData(feed, {}, game);
-    state.normalizedPregame = model;
-    return model;
-  }
 
   const gd = feed.gameData || {};
   const officialDate = gd.datetime?.officialDate || game.officialDate || state.selectedDate || getLocalDateString();
   const season = Number(gd.game?.season || officialDate.slice(0, 4));
-  const neededSides = new Set(fieldIds.filter((id) => id.endsWith(".manager.name")).map((id) => id.split(".")[0]));
-  const coaches = {};
-  await Promise.all([...neededSides].map(async (side) => {
-    const teamId = gd.teams?.[side]?.id || game?.[`${side}TeamId`];
-    if (!teamId) return;
-    try { coaches[side] = await fetchTeamCoaches(teamId, officialDate, season); }
-    catch (error) { console.warn(`Manager hydration failed for ${side}:`, error); coaches[side] = null; }
-  }));
-  if (String(state.selectedGamePk || "") !== expectedGameKey) throw new Error("Game selection changed during supplemental hydration.");
-  const model = normalizePregameData(feed, { coaches }, game);
+  const supplemental = {};
+
+  if (requirements.has("coaches")) {
+    const awayId = gd.teams?.away?.id || game.awayTeamId;
+    const homeId = gd.teams?.home?.id || game.homeTeamId;
+    const coachResults = await Promise.allSettled([
+      awayId ? fetchTeamCoaches(awayId, officialDate, season) : Promise.resolve(null),
+      homeId ? fetchTeamCoaches(homeId, officialDate, season) : Promise.resolve(null)
+    ]);
+    const coaches = {
+      away: coachResults[0]?.status === "fulfilled" ? coachResults[0].value : null,
+      home: coachResults[1]?.status === "fulfilled" ? coachResults[1].value : null
+    };
+    if (coaches.away || coaches.home) supplemental.coaches = coaches;
+  }
+
+  if (requirements.has("standings")) {
+    const leagueIds = [...new Set([gd.teams?.away?.league?.id, gd.teams?.home?.league?.id].filter(Boolean))];
+    const standingsResults = await Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, officialDate, season)));
+    const standingsPayloads = standingsResults.filter((result) => result.status === "fulfilled" && result.value).map((result) => result.value);
+    if (standingsPayloads.length) supplemental.standingsPayloads = standingsPayloads;
+  }
+
+  if (String(state.selectedGamePk || "") !== String(expectedGameKey)) throw new Error("Game selection changed during supplemental hydration.");
+  const model = normalizePregameData(feed, supplemental, game);
   state.normalizedPregame = model;
   return model;
 }

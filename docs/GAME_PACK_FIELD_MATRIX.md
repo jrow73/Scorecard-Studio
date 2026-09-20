@@ -1,3 +1,8 @@
+
+## Build 018 implementation notes
+
+Build 018 confirmed that `gameData.game.gameNumber` is the game number within the day's schedule (for example, Game 1/Game 2 of a doubleheader), while `{side}.team.record.gamesPlayed` is the season-to-date team game count. No new API request is required for the accepted venue details, team league/division, Games Played, Primary Position, Today's Position Full Name, Boxscore Name, or fixed umpire roles. Plate Appearances and Stolen Bases are normalized from the existing player `seasonStats.batting` object; Position Number, Slash Line, and bullpen W-L are derived locally. Standings scalars continue to depend on the existing standings hydration path and remain blank when that supplemental source is not requested or unavailable.
+
 # Scorecard Studio — Game Pack Field Matrix
 
 **Fixture:** MLB gamePk `822955` — Seattle Mariners at Tampa Bay Rays  

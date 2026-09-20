@@ -2,15 +2,15 @@
  * Scorecard Studio
  * Shared field/template resolution for repeated and single-record slots
  * Version: 0.2.0-dev
- * Build: 017.1
+ * Build: 018
  */
 
 import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js";
 import { formatFieldValue } from "./formatter.js";
 
-export function fieldsForRecordContext(context) {
+export function fieldsForRecordContext(context, options = {}) {
   const value = String(context || "");
-  return getSupportedFields().filter((definition) => definition.collection === value || definition.record === value);
+  return getSupportedFields().filter((definition) => (definition.collection === value || definition.record === value) && (!options.catalogOnly || definition.catalog !== false));
 }
 
 function contextualTokenLabel(definition) {
