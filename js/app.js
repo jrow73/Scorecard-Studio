@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 020.1
+ * Build: 021
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
@@ -44,6 +44,9 @@ const state = {
   designerHistoryApplying: false,
   designerHistoryLimit: 30,
   designerSelection: null,
+  designerMultiSelection: [],
+  designerLasso: null,
+  designerSuppressStageClick: false,
   designerPaletteSelection: null,
   designerPendingMode: null,
   designerCollectionInspectorMode: null,
@@ -247,6 +250,13 @@ const elements = {
   designerSelectionFormatRestore: document.querySelector("#designer-selection-format-restore"),
   designerSelectionFormatSummary: document.querySelector("#designer-selection-format-summary"),
   designerSelectionAlignment: document.querySelector("#designer-selection-alignment"),
+  designerMultiSelectionControls: document.querySelector("#designer-multi-selection-controls"),
+  designerMultiFontFace: document.querySelector("#designer-multi-font-face"),
+  designerMultiFontSize: document.querySelector("#designer-multi-font-size"),
+  designerMultiBold: document.querySelector("#designer-multi-bold"),
+  designerMultiItalic: document.querySelector("#designer-multi-italic"),
+  designerMultiColorPicker: document.querySelector("#designer-multi-color-picker"),
+  designerMultiFormatRestore: document.querySelector("#designer-multi-format-restore"),
   layoutFormattingDialog: document.querySelector("#layout-formatting-dialog"),
   layoutFormattingGrid: document.querySelector("#layout-formatting-grid"),
   layoutFormattingSaveButton: document.querySelector("#layout-formatting-save-btn"),
@@ -345,6 +355,7 @@ async function initialize() {
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
   elements.designerZoomResetButton?.addEventListener("click", () => setDesignerZoom(1));
   elements.designerStageScroll?.addEventListener("wheel", handleDesignerZoomWheel, { passive: false });
+  elements.designerStage.addEventListener("pointerdown", beginDesignerLasso);
   elements.designerStage.addEventListener("click", handleDesignerStageClick);
   if (elements.designerPaletteEditButton) elements.designerPaletteEditButton.addEventListener("click", toggleDesignerPaletteChooser);
   elements.designerPaletteSearch?.addEventListener("input", renderDesignerPalette);
@@ -352,7 +363,7 @@ async function initialize() {
   elements.designerUndoButton?.addEventListener("click", undoDesignerChange);
   elements.designerRedoButton?.addEventListener("click", redoDesignerChange);
   elements.designerSelectionClearButton.addEventListener("click", clearDesignerSelection);
-  elements.designerSelectionDeleteButton.addEventListener("click", deleteSelectedDesignerObject);
+  elements.designerSelectionDeleteButton.addEventListener("click", deleteActiveDesignerSelection);
   elements.designerSelectionNewInstanceButton.addEventListener("click", beginNewInstanceFromSelection);
   elements.designerSelectionRemoveItemButton?.addEventListener("click", removeSelectedDesignerChild);
   elements.designerWorkspaceLayoutButton?.addEventListener("click", () => setCollectionInspectorMode("layout"));
@@ -366,6 +377,12 @@ async function initialize() {
   elements.designerSelectionItalic?.addEventListener("click", () => toggleInlineFormattingProperty("italic"));
   elements.designerSelectionFormatRestore?.addEventListener("click", restoreInlineFormattingDefaults);
   wireFormattingFontSizeInput();
+  elements.designerMultiFontFace?.addEventListener("change", () => { if (elements.designerMultiFontFace.value) applyMultiFormattingProperty("fontFace", elements.designerMultiFontFace.value); releaseDesignerControlFocus(); });
+  elements.designerMultiBold?.addEventListener("click", () => toggleMultiFormattingProperty("bold"));
+  elements.designerMultiItalic?.addEventListener("click", () => toggleMultiFormattingProperty("italic"));
+  elements.designerMultiFormatRestore?.addEventListener("click", restoreMultiFormattingDefaults);
+  wireMultiFormattingFontSizeInput();
+  document.querySelectorAll("[data-multi-align]").forEach((button) => button.addEventListener("click", () => alignDesignerMultiSelection(button.dataset.multiAlign)));
   elements.layoutFormattingSaveButton?.addEventListener("click", saveLayoutFormattingDefaults);
   elements.layoutFormattingResetButton?.addEventListener("click", resetLayoutFormattingDefaults);
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
@@ -1795,7 +1812,83 @@ function beginDesignerIndividualPlacement() {
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} • ${individualSelectorLabel({ collection, strategy, selector })}.`);
 }
 
+const DESIGNER_LASSO_THRESHOLD_PX = 8;
+
+function cleanupDesignerLasso({ suppressClick = false } = {}) {
+  document.removeEventListener("pointermove", handleDesignerLassoMove);
+  document.removeEventListener("pointerup", endDesignerLasso);
+  document.removeEventListener("pointercancel", cancelDesignerLasso);
+  const lasso = state.designerLasso; state.designerLasso = null;
+  if (!lasso) return null;
+  if (lasso.captureTarget?.hasPointerCapture?.(lasso.pointerId)) {
+    try { lasso.captureTarget.releasePointerCapture(lasso.pointerId); } catch (_) { /* no-op */ }
+  }
+  lasso.captureTarget?.removeEventListener("lostpointercapture", cancelDesignerLasso);
+  if (lasso.box?.isConnected) lasso.box.remove();
+  if (suppressClick && lasso.moved) {
+    state.designerSuppressStageClick = true;
+    window.setTimeout(() => { state.designerSuppressStageClick = false; }, 0);
+  }
+  return lasso;
+}
+
+function cancelDesignerLasso() {
+  cleanupDesignerLasso({ suppressClick: true });
+}
+
+function beginDesignerLasso(event) {
+  if (state.designerPlacing || event.button !== 0 || event.pointerType !== "mouse" || event.isPrimary === false) return;
+  if (![elements.designerStage, elements.designerOverlay, elements.designerPdfCanvas].includes(event.target)) return;
+  cleanupDesignerLasso();
+  const stageRect = elements.designerStage.getBoundingClientRect();
+  const startX = clamp(event.clientX - stageRect.left, 0, stageRect.width);
+  const startY = clamp(event.clientY - stageRect.top, 0, stageRect.height);
+  const box = document.createElement("div"); box.className = "designer-lasso"; box.hidden = true; elements.designerStage.append(box);
+  const captureTarget = elements.designerStage;
+  state.designerLasso = { pointerId: event.pointerId, captureTarget, startClientX: event.clientX, startClientY: event.clientY, startX, startY, box, additive: event.ctrlKey || event.metaKey, moved: false };
+  try { captureTarget.setPointerCapture(event.pointerId); } catch (_) { /* pointer capture is defensive only */ }
+  captureTarget.addEventListener("lostpointercapture", cancelDesignerLasso, { once: true });
+  document.addEventListener("pointermove", handleDesignerLassoMove);
+  document.addEventListener("pointerup", endDesignerLasso, { once: true });
+  document.addEventListener("pointercancel", cancelDesignerLasso, { once: true });
+}
+
+function handleDesignerLassoMove(event) {
+  const lasso = state.designerLasso; if (!lasso || event.pointerId !== lasso.pointerId) return;
+  const stageRect = elements.designerStage.getBoundingClientRect();
+  const x = clamp(event.clientX - stageRect.left, 0, stageRect.width);
+  const y = clamp(event.clientY - stageRect.top, 0, stageRect.height);
+  const left = Math.min(lasso.startX, x), top = Math.min(lasso.startY, y);
+  const width = Math.abs(x - lasso.startX), height = Math.abs(y - lasso.startY);
+  if (width >= DESIGNER_LASSO_THRESHOLD_PX || height >= DESIGNER_LASSO_THRESHOLD_PX) lasso.moved = true;
+  if (!lasso.moved) return;
+  lasso.box.hidden = false; lasso.box.style.left = `${left}px`; lasso.box.style.top = `${top}px`; lasso.box.style.width = `${width}px`; lasso.box.style.height = `${height}px`;
+}
+
+function endDesignerLasso(event) {
+  const lasso = state.designerLasso;
+  if (!lasso || event.pointerId !== lasso.pointerId) return;
+  const boxRect = lasso.box.getBoundingClientRect();
+  const completed = cleanupDesignerLasso({ suppressClick: true });
+  if (!completed?.moved) return;
+  const found = []; const seen = new Set();
+  for (const marker of elements.designerOverlay.querySelectorAll(".mapping-marker[data-selection-key]")) {
+    const rect = marker.getBoundingClientRect();
+    const enclosed = rect.left >= boxRect.left && rect.right <= boxRect.right && rect.top >= boxRect.top && rect.bottom <= boxRect.bottom;
+    if (!enclosed) continue;
+    const selection = designerSelectionFromKey(marker.dataset.selectionKey);
+    const key = designerSelectionKey(selection);
+    if (!selection || seen.has(key)) continue;
+    seen.add(key); found.push(selection);
+  }
+  if (completed.additive) {
+    const base = designerMultiSelectionActive() ? state.designerMultiSelection : (isDesignerMultiSelectable(state.designerSelection) ? [state.designerSelection] : []);
+    setDesignerMultiSelection([...base, ...found]);
+  } else setDesignerMultiSelection(found);
+}
+
 async function handleDesignerStageClick(event) {
+  if (state.designerSuppressStageClick) { state.designerSuppressStageClick = false; return; }
   if (!state.designerPlacing || !state.designerPdfDocument || !state.designerPlacement) {
     if (event.target === elements.designerStage || event.target === elements.designerOverlay || event.target === elements.designerPdfCanvas) clearDesignerSelection();
     return;
@@ -2073,12 +2166,13 @@ function renderDesignerOverlay() {
     const alignment = ["left", "center", "right"].includes(mapping.alignment) ? mapping.alignment : "left";
     marker.className = `mapping-marker${isTemplate ? " template-marker" : ""} align-${alignment}${!isTemplate && !getFieldDefinition(mapping.field) ? " unsupported" : ""}`;
     marker.dataset.mappingId = mapping.id || "";
+    marker.dataset.selectionKey = designerSelectionKey({ kind: "mapping", id: mapping.id });
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
     applyPreviewFormatting(marker, effectiveFormatting(mapping));
     marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL, mapping.content.context) || "[blank composite]") : designerFieldPreview(mapping.field, null, mapping.content?.format);
     marker.title = `${isTemplate ? "Text template" : designerFieldLabel(mapping.field)} • click to edit • drag to move`;
-    if (state.designerSelection?.kind === "mapping" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
+    applyDesignerSelectionClass(marker, { kind: "mapping", id: mapping.id });
     wireDesignerMarker(marker, { kind: "mapping", id: mapping.id });
     elements.designerOverlay.append(marker);
   });
@@ -2113,8 +2207,9 @@ function renderDesignerOverlay() {
           marker.title = `${blockContentLabel(column)} • slot ${slotIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
           marker.dataset.columnId = column.id;
-          if (state.designerSelection?.kind === "repeatedColumn" && state.designerSelection.blockId === block.id && state.designerSelection.columnId === column.id) marker.classList.add("selected-object");
-          marker.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject({ kind: "repeatedColumn", blockId: block.id, columnId: column.id }); });
+          marker.dataset.selectionKey = designerSelectionKey({ kind: "repeatedColumn", blockId: block.id, columnId: column.id });
+          applyDesignerSelectionClass(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
+          wireDesignerMarker(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
           elements.designerOverlay.append(marker);
         }
       }
@@ -2141,8 +2236,9 @@ function renderDesignerOverlay() {
           marker.title = `${blockContentLabel(column)} • row ${rowIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
           marker.dataset.columnId = column.id;
-          if (state.designerSelection?.kind === "repeatedColumn" && state.designerSelection.blockId === block.id && state.designerSelection.columnId === column.id) marker.classList.add("selected-object");
-          marker.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject({ kind: "repeatedColumn", blockId: block.id, columnId: column.id }); });
+          marker.dataset.selectionKey = designerSelectionKey({ kind: "repeatedColumn", blockId: block.id, columnId: column.id });
+          applyDesignerSelectionClass(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
+          wireDesignerMarker(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
           elements.designerOverlay.append(marker);
         }
       }
@@ -2156,13 +2252,14 @@ function renderDesignerOverlay() {
     const alignment = ["left", "center", "right"].includes(mapping.alignment) ? mapping.alignment : "left";
     marker.className = `mapping-marker repeated-marker align-${alignment}${getFieldDefinition(mapping.field) ? "" : " unsupported"}`;
     marker.dataset.individualId = mapping.id || "";
+    marker.dataset.selectionKey = designerSelectionKey({ kind: "individual", id: mapping.id });
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
     const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, mapping.collection, mapping.selector);
     applyPreviewFormatting(marker, effectiveFormatting(mapping, { group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup }));
     marker.textContent = designerFieldPreview(mapping.field, mapping.selector, mapping.content?.format || {}) || `[${individualSelectorLabel(mapping)}]`;
     marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to edit • drag to move`;
-    if (state.designerSelection?.kind === "individual" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
+    applyDesignerSelectionClass(marker, { kind: "individual", id: mapping.id });
     wireDesignerMarker(marker, { kind: "individual", id: mapping.id });
     elements.designerOverlay.append(marker);
   }
@@ -2701,6 +2798,7 @@ async function changeDesignerPage(delta) {
   if (next < 1 || next > state.designerPdfDocument.numPages) return;
   state.designerPageNumber = next;
   cancelDesignerPlacement();
+  if (designerMultiSelectionActive()) clearDesignerSelection({ render: false });
   try { await renderDesignerPage(); }
   catch (error) { setDesignerMessage("That PDF page could not be rendered.", true); }
 }
@@ -2975,7 +3073,7 @@ function renderDesignerPaletteItem(item) {
     const children = document.createElement("div"); children.className = "designer-instance-list";
     directInstances.forEach((instance, index) => {
       const child = document.createElement("button"); child.type = "button"; child.className = "designer-instance-item";
-      if (designerSelectionsEqual(state.designerSelection, instance.selection)) child.classList.add("selected");
+      if (!designerMultiSelectionActive() && designerSelectionsEqual(state.designerSelection, instance.selection)) child.classList.add("selected");
       child.textContent = instance.label || `Instance ${index + 1}`;
       child.addEventListener("click", (event) => { event.stopPropagation(); state.designerPaletteSelection = null; state.designerPendingMode = null; selectDesignerObject(instance.selection, { scrollIntoView: true }); });
       children.append(child);
@@ -2983,7 +3081,7 @@ function renderDesignerPaletteItem(item) {
         const nested = document.createElement("div"); nested.className = "designer-instance-children";
         for (const entry of instance.children) {
           const nestedButton = document.createElement("button"); nestedButton.type = "button"; nestedButton.className = "designer-instance-item designer-instance-child";
-          if (designerSelectionsEqual(state.designerSelection, entry.selection)) nestedButton.classList.add("selected");
+          if (!designerMultiSelectionActive() && designerSelectionsEqual(state.designerSelection, entry.selection)) nestedButton.classList.add("selected");
           nestedButton.textContent = entry.label;
           nestedButton.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject(entry.selection, { scrollIntoView: true }); });
           nested.append(nestedButton);
@@ -3008,12 +3106,90 @@ function designerSelectionsEqual(a,b) {
   return false;
 }
 
+function designerSelectionKey(selection) {
+  if (!selection) return "";
+  if (selection.kind === "mapping" || selection.kind === "individual") return `${selection.kind}:${selection.id}`;
+  if (selection.kind === "repeatedColumn") return `repeatedColumn:${selection.blockId}:${selection.columnId}`;
+  if (selection.kind === "block") return `block:${selection.blockId}`;
+  return `${selection.kind || "unknown"}:`;
+}
+
+function designerSelectionFromKey(key) {
+  const parts = String(key || "").split(":");
+  if (parts[0] === "mapping" || parts[0] === "individual") return { kind: parts[0], id: parts.slice(1).join(":") };
+  if (parts[0] === "repeatedColumn") return { kind: "repeatedColumn", blockId: parts[1], columnId: parts.slice(2).join(":") };
+  return null;
+}
+
+function isDesignerMultiSelectable(selection) {
+  return ["mapping", "individual", "repeatedColumn"].includes(selection?.kind);
+}
+
+function designerMultiSelectionActive() {
+  return state.designerMultiSelection.length > 1;
+}
+
+function activeDesignerSelections() {
+  return designerMultiSelectionActive() ? state.designerMultiSelection : (state.designerSelection ? [state.designerSelection] : []);
+}
+
+function isDesignerSelectionSelected(selection) {
+  if (designerMultiSelectionActive()) return state.designerMultiSelection.some((entry) => designerSelectionsEqual(entry, selection));
+  return designerSelectionsEqual(state.designerSelection, selection);
+}
+
+function applyDesignerSelectionClass(element, selection) {
+  const selected = isDesignerSelectionSelected(selection);
+  element.classList.toggle("selected-object", selected && !designerMultiSelectionActive());
+  element.classList.toggle("multi-selected", selected && designerMultiSelectionActive());
+}
+
+function normalizeDesignerSelectionSet(selections) {
+  const result = [];
+  const seen = new Set();
+  for (const selection of selections || []) {
+    if (!isDesignerMultiSelectable(selection) || !locateDesignerObject(selection)) continue;
+    const key = designerSelectionKey(selection);
+    if (!key || seen.has(key)) continue;
+    seen.add(key); result.push({ ...selection });
+  }
+  return result;
+}
+
+function setDesignerMultiSelection(selections, options = {}) {
+  const normalized = normalizeDesignerSelectionSet(selections);
+  state.designerPaletteSelection = null;
+  state.designerPendingMode = null;
+  state.designerCollectionInspectorMode = null;
+  if (normalized.length <= 1) {
+    state.designerMultiSelection = [];
+    state.designerSelection = normalized[0] || null;
+  } else {
+    state.designerMultiSelection = normalized;
+    state.designerSelection = normalized.at(-1);
+  }
+  if (options.renderOverlay !== false) renderDesignerOverlay();
+  renderDesignerSelectionInspector();
+  renderDesignerPalette();
+}
+
+function toggleDesignerMultiSelection(selection) {
+  if (!isDesignerMultiSelectable(selection)) return selectDesignerObject(selection);
+  const current = designerMultiSelectionActive()
+    ? [...state.designerMultiSelection]
+    : (isDesignerMultiSelectable(state.designerSelection) ? [{ ...state.designerSelection }] : []);
+  const index = current.findIndex((entry) => designerSelectionsEqual(entry, selection));
+  if (index >= 0) current.splice(index, 1); else current.push({ ...selection });
+  setDesignerMultiSelection(current);
+}
+
 function designerPendingPaletteMatches(item) {
   const p = state.designerPaletteSelection;
   return Boolean(p && p.kind === item.kind && p.id === item.id);
 }
 
 function designerPaletteItemMatchesSelection(item, selection) {
+  if (designerMultiSelectionActive()) return false;
   const object = locateDesignerObject(selection);
   if (!selection || !object) return false;
   if (item.kind === "field" && selection.kind === "mapping" && object.content?.type !== "template") return canonicalFieldId(object.field) === canonicalFieldId(item.id);
@@ -3157,6 +3333,7 @@ function scrollSelectedDesignerObjectIntoView() {
 }
 
 function selectDesignerObject(selection, options = {}) {
+  state.designerMultiSelection = [];
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
   state.designerSelection = selection;
@@ -3184,6 +3361,7 @@ function selectDesignerObject(selection, options = {}) {
 
 function clearDesignerSelection(options = {}) {
   state.designerSelection = null;
+  state.designerMultiSelection = [];
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
   state.designerCollectionInspectorMode = null;
@@ -3281,6 +3459,7 @@ function resetDesignerInspectorSurfaces() {
   if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = true;
   if (elements.designerSelectionPositionControls) elements.designerSelectionPositionControls.hidden = false;
   if (elements.designerSelectionFormatControls) elements.designerSelectionFormatControls.hidden = false;
+  if (elements.designerMultiSelectionControls) elements.designerMultiSelectionControls.hidden = true;
   if (elements.designerBlockLayoutControls) elements.designerBlockLayoutControls.hidden = false;
   if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = true;
   if (elements.designerSelectionNameFormatWrap) elements.designerSelectionNameFormatWrap.hidden = true;
@@ -3352,6 +3531,67 @@ function renderPendingDesignerCreation(pending, pendingMode) {
   }
 }
 
+function multiFormattingTargets() {
+  return state.designerMultiSelection.map((selection) => {
+    const object = locateDesignerObject(selection);
+    if (!object) return null;
+    const target = selection.kind === "repeatedColumn" ? object.column : object;
+    const context = selection.kind === "repeatedColumn" ? blockContext(object.block) : target.collection || target.content?.context;
+    const selector = selection.kind === "individual" ? target.selector : selection.kind === "repeatedColumn" && !isRecordBlock(object.block) ? { slot: 1 } : null;
+    const handedness = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, context, selector);
+    return { selection, object, target, options: { selection, object, handednessGroup: handedness } };
+  }).filter(Boolean);
+}
+
+function commonMultiFormattingValue(prop, targets = multiFormattingTargets()) {
+  if (!targets.length) return { mixed: true, value: null };
+  const first = effectiveFormatting(targets[0].target, targets[0].options)[prop];
+  const mixed = targets.some((entry) => !formatsEqualValue(prop, effectiveFormatting(entry.target, entry.options)[prop], first));
+  return { mixed, value: mixed ? null : first };
+}
+
+function renderMultiColorPicker(container, common) {
+  if (!container) return;
+  if (!common.mixed) return renderColorPicker(container, common.value, (color) => applyMultiFormattingProperty("color", color));
+  container.replaceChildren();
+  const details = document.createElement("details"); details.className = "scorecard-color-picker";
+  const summary = document.createElement("summary"); summary.className = "scorecard-color-summary"; summary.title = "Mixed colors";
+  const chip = document.createElement("span"); chip.className = "scorecard-color-chip mixed";
+  const caret = document.createElement("span"); caret.className = "scorecard-color-caret"; caret.textContent = "▾"; summary.append(chip, caret);
+  const panel = document.createElement("div"); panel.className = "scorecard-color-panel";
+  const swatches = document.createElement("div"); swatches.className = "scorecard-color-swatches";
+  for (const swatch of COLOR_SWATCHES) {
+    const button = document.createElement("button"); button.type = "button"; button.className = "scorecard-color-swatch"; button.style.backgroundColor = swatch.value; button.title = swatch.name; button.setAttribute("aria-label", swatch.name);
+    button.addEventListener("click", () => { details.open = false; applyMultiFormattingProperty("color", swatch.value); }); swatches.append(button);
+  }
+  const custom = document.createElement("button"); custom.type = "button"; custom.className = "scorecard-color-custom"; custom.textContent = "Custom Color…";
+  const native = document.createElement("input"); native.type = "color"; native.value = "#000000"; native.className = "scorecard-color-native"; native.tabIndex = -1;
+  custom.addEventListener("click", () => native.click()); native.addEventListener("input", () => { details.open = false; applyMultiFormattingProperty("color", native.value); });
+  panel.append(swatches, custom, native); details.append(summary, panel); container.append(details);
+}
+
+function renderDesignerMultiSelectionInspector() {
+  const count = state.designerMultiSelection.length;
+  elements.designerSelectionTitle.textContent = `${count} Items Selected`;
+  elements.designerSelectionHelp.textContent = "Formatting, alignment, movement, and deletion apply to every selected item.";
+  elements.designerSelectionClearButton.hidden = false; elements.designerSelectionClearButton.disabled = false; elements.designerSelectionClearButton.textContent = "Deselect";
+  elements.designerSelectionDeleteButton.hidden = false; elements.designerSelectionDeleteButton.textContent = "Delete Selected";
+  elements.designerSelectionNewInstanceButton.hidden = true; elements.designerWorkspaceLayoutButton.hidden = true; elements.designerWorkspaceNewButton.hidden = true;
+  if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = false;
+  setDesignerWorkspaceHeading("Multiple Selection", "Common Formatting & Alignment");
+  elements.designerSelectionControls.hidden = false; elements.designerSelectionPositionControls.hidden = true; elements.designerSelectionFormatControls.hidden = true;
+  elements.designerMultiSelectionControls.hidden = false; elements.designerContextTools.hidden = true;
+  const targets = multiFormattingTargets();
+  const face = commonMultiFormattingValue("fontFace", targets); elements.designerMultiFontFace.value = face.mixed ? "" : String(face.value);
+  const size = commonMultiFormattingValue("fontSize", targets); if (document.activeElement !== elements.designerMultiFontSize) elements.designerMultiFontSize.value = size.mixed ? "" : String(size.value); elements.designerMultiFontSize.placeholder = size.mixed ? "Mixed" : "";
+  for (const [button, prop] of [[elements.designerMultiBold,"bold"],[elements.designerMultiItalic,"italic"]]) {
+    const common = commonMultiFormattingValue(prop, targets); button.classList.toggle("active", !common.mixed && Boolean(common.value)); button.classList.toggle("mixed", common.mixed); button.setAttribute("aria-pressed", common.mixed ? "mixed" : String(Boolean(common.value)));
+  }
+  renderMultiColorPicker(elements.designerMultiColorPicker, commonMultiFormattingValue("color", targets));
+  const verticalSupported = state.designerMultiSelection.every((selection) => designerSelectionAnchor(selection, locateDesignerObject(selection)).canY);
+  document.querySelectorAll('[data-multi-align="top"],[data-multi-align="middle"],[data-multi-align="bottom"]').forEach((button) => { button.disabled = !verticalSupported; });
+}
+
 function renderDesignerSelectionInspector() {
   if (!elements.designerSelectionTitle) return;
   const selection = state.designerSelection;
@@ -3361,10 +3601,12 @@ function renderDesignerSelectionInspector() {
   const active = Boolean(selection && object);
 
   resetDesignerInspectorSurfaces();
+  if (designerMultiSelectionActive()) { renderDesignerMultiSelectionInspector(); return; }
   elements.designerSelectionClearButton.disabled = !(active || pending);
   elements.designerSelectionClearButton.hidden = !(active || pending);
   elements.designerSelectionClearButton.textContent = active ? "Deselect" : "Cancel";
   elements.designerSelectionDeleteButton.hidden = !active;
+  elements.designerSelectionDeleteButton.textContent = "Delete";
   elements.designerSelectionNewInstanceButton.hidden = !active;
   elements.designerWorkspaceLayoutButton.hidden = true;
   elements.designerWorkspaceNewButton.hidden = true;
@@ -3665,6 +3907,90 @@ function restoreInlineFormattingDefaults() {
   delete found.target.formattingOverride;
   markDesignerObjectChanged();
   updateDesignerFormattingSummary(found.target, found.selection, found.object);
+}
+
+function applyMultiFormattingProperty(prop, value) {
+  if (!designerMultiSelectionActive()) return;
+  for (const found of multiFormattingTargets()) {
+    const defaults = defaultFormattingForTarget(found.target, found.options);
+    const override = { ...(found.target.formattingOverride || {}) };
+    const conditionalVariesByRow = found.selection.kind === "repeatedColumn" && found.options.handednessGroup && conditionalFormattingEnabled(selectedLayout() || {}, found.options.handednessGroup);
+    if (!conditionalVariesByRow && formatsEqualValue(prop, value, defaults[prop])) delete override[prop];
+    else override[prop] = prop === "fontSize" ? Number(value) : prop === "color" ? normalizeColor(value) : value;
+    if (Object.keys(override).length) found.target.formattingOverride = override; else delete found.target.formattingOverride;
+  }
+  markDesignerObjectChanged();
+  renderDesignerSelectionInspector();
+}
+
+function toggleMultiFormattingProperty(prop) {
+  const common = commonMultiFormattingValue(prop);
+  applyMultiFormattingProperty(prop, common.mixed ? true : !Boolean(common.value));
+}
+
+function restoreMultiFormattingDefaults() {
+  if (!designerMultiSelectionActive()) return;
+  for (const found of multiFormattingTargets()) delete found.target.formattingOverride;
+  markDesignerObjectChanged();
+  renderDesignerSelectionInspector();
+}
+
+function wireMultiFormattingFontSizeInput() {
+  const input = elements.designerMultiFontSize; if (!input) return;
+  const menu = document.querySelector("#designer-multi-font-size-menu");
+  let original = "";
+  input.addEventListener("focus", () => { original = input.value; });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") { event.preventDefault(); input.blur(); }
+    else if (event.key === "Escape") { event.preventDefault(); input.value = original; input.blur(); }
+  });
+  input.addEventListener("blur", () => {
+    if (!input.value.trim()) return;
+    const size = Number(input.value);
+    if (!Number.isFinite(size) || size <= 0 || size > 144) { renderDesignerSelectionInspector(); return; }
+    if (String(size) === String(Number(original))) return;
+    applyMultiFormattingProperty("fontSize", size);
+  });
+  menu?.querySelectorAll("[data-multi-font-size]").forEach((button) => button.addEventListener("click", () => {
+    const size = Number(button.dataset.multiFontSize); if (!Number.isFinite(size)) return;
+    input.value = String(size); menu.open = false; applyMultiFormattingProperty("fontSize", size);
+  }));
+}
+
+function designerMarkerForSelection(selection) {
+  const key = designerSelectionKey(selection);
+  return Array.from(elements.designerOverlay?.querySelectorAll(".mapping-marker[data-selection-key]") || []).find((marker) => marker.dataset.selectionKey === key) || null;
+}
+
+function alignDesignerMultiSelection(mode) {
+  if (!designerMultiSelectionActive()) return;
+  const entries = state.designerMultiSelection.map((selection) => {
+    const object = locateDesignerObject(selection), marker = designerMarkerForSelection(selection);
+    if (!object || !marker) return null;
+    return { selection, object, marker, rect: marker.getBoundingClientRect(), anchor: designerSelectionAnchor(selection, object) };
+  }).filter(Boolean);
+  if (entries.length < 2) return;
+  const horizontal = ["left","center","right"].includes(mode), vertical = ["top","middle","bottom"].includes(mode);
+  if (vertical && entries.some((entry) => !entry.anchor.canY)) return;
+  const left = Math.min(...entries.map((entry) => entry.rect.left));
+  const right = Math.max(...entries.map((entry) => entry.rect.right));
+  const top = Math.min(...entries.map((entry) => entry.rect.top));
+  const bottom = Math.max(...entries.map((entry) => entry.rect.bottom));
+  const target = mode === "left" ? left : mode === "right" ? right : mode === "center" ? (left + right) / 2 : mode === "top" ? top : mode === "bottom" ? bottom : (top + bottom) / 2;
+  const scale = Math.max(state.designerRenderScale, .0001);
+  for (const entry of entries) {
+    let deltaPx = 0;
+    if (mode === "left") deltaPx = target - entry.rect.left;
+    else if (mode === "right") deltaPx = target - entry.rect.right;
+    else if (mode === "center") deltaPx = target - ((entry.rect.left + entry.rect.right) / 2);
+    else if (mode === "top") deltaPx = target - entry.rect.top;
+    else if (mode === "bottom") deltaPx = target - entry.rect.bottom;
+    else deltaPx = target - ((entry.rect.top + entry.rect.bottom) / 2);
+    const x = horizontal && entry.anchor.canX && entry.anchor.x != null ? entry.anchor.x + deltaPx / scale : null;
+    const y = vertical && entry.anchor.canY && entry.anchor.y != null ? entry.anchor.y + deltaPx / scale : null;
+    setDesignerSelectionPosition(entry.selection, x, y);
+  }
+  markDesignerObjectChanged();
 }
 
 function wireFormattingFontSizeInput() {
@@ -4017,18 +4343,39 @@ function scheduleDesignerSave() {
 }
 
 function wireDesignerMarker(marker, selection) {
-  marker.addEventListener("click", (event) => { event.stopPropagation(); selectDesignerObject(selection); });
+  marker.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (event.ctrlKey || event.metaKey) toggleDesignerMultiSelection(selection);
+    else if (!designerMultiSelectionActive() || !isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
+  });
   marker.addEventListener("pointerdown", (event) => beginDesignerDrag(event, selection));
 }
 
+function setDesignerSelectionPosition(selection, x, y) {
+  const object = locateDesignerObject(selection);
+  if (!object) return;
+  const width = state.designerPageWidthPoints || 1, height = state.designerPageHeightPoints || 1;
+  if (selection.kind === "mapping" || selection.kind === "individual") {
+    if (Number.isFinite(x)) object.xPercent = clamp(x / width, 0, 1);
+    if (Number.isFinite(y)) object.yPercent = clamp(y / height, 0, 1);
+  } else if (selection.kind === "repeatedColumn" && Number.isFinite(x)) {
+    if (isSlotGridGeometry(object.block)) object.column.xOffsetPoints = x - (Number(object.block.geometry?.firstXPercent || 0) * width);
+    else object.column.xPercent = clamp(x / width, 0, 1);
+  }
+}
+
 function beginDesignerDrag(event, selection) {
-  if (state.designerPlacing || event.button !== 0) return;
+  if (state.designerPlacing || event.button !== 0 || event.ctrlKey || event.metaKey) return;
   const object = locateDesignerObject(selection); if (!object) return;
   event.stopPropagation(); event.preventDefault();
-  selectDesignerObject(selection);
-  const anchor = designerSelectionAnchor(selection, object);
-  if (!anchor.canX && !anchor.canY) return;
-  state.designerDrag = { selection: { ...selection }, startClientX: event.clientX, startClientY: event.clientY, startX: anchor.x, startY: anchor.y, canX: anchor.canX, canY: anchor.canY };
+  if (!designerMultiSelectionActive() || !isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
+  const selections = designerMultiSelectionActive() ? [...state.designerMultiSelection] : [selection];
+  const entries = selections.map((entry) => {
+    const target = locateDesignerObject(entry); const anchor = designerSelectionAnchor(entry, target);
+    return { selection: { ...entry }, startX: anchor.x, startY: anchor.y, canX: anchor.canX, canY: anchor.canY };
+  }).filter((entry) => entry.canX || entry.canY);
+  if (!entries.length) return;
+  state.designerDrag = { entries, startClientX: event.clientX, startClientY: event.clientY };
   document.addEventListener("pointermove", handleDesignerDragMove);
   document.addEventListener("pointerup", endDesignerDrag, { once: true });
 }
@@ -4036,9 +4383,17 @@ function beginDesignerDrag(event, selection) {
 function handleDesignerDragMove(event) {
   const drag = state.designerDrag; if (!drag) return;
   const scale = Math.max(state.designerRenderScale, .0001);
-  if (drag.canX && drag.startX != null) elements.designerSelectionX.value = (drag.startX + ((event.clientX - drag.startClientX) / scale)).toFixed(1);
-  if (drag.canY && drag.startY != null) elements.designerSelectionY.value = (drag.startY + ((event.clientY - drag.startClientY) / scale)).toFixed(1);
-  applyDesignerInspectorPosition();
+  const dx = (event.clientX - drag.startClientX) / scale, dy = (event.clientY - drag.startClientY) / scale;
+  for (const entry of drag.entries) {
+    const x = entry.canX && entry.startX != null ? entry.startX + dx : null;
+    const y = entry.canY && entry.startY != null ? entry.startY + dy : null;
+    setDesignerSelectionPosition(entry.selection, x, y);
+    if (drag.entries.length === 1 && !designerMultiSelectionActive()) {
+      if (x != null) elements.designerSelectionX.value = x.toFixed(1);
+      if (y != null) elements.designerSelectionY.value = y.toFixed(1);
+    }
+  }
+  markDesignerObjectChanged();
 }
 
 function endDesignerDrag() {
@@ -4064,16 +4419,48 @@ function handleDesignerKeyboard(event) {
   if (event.key === "Escape") { event.preventDefault(); if (state.designerPlacing) cancelDesignerPlacement(); clearDesignerSelection(); return; }
   if (!state.designerSelection) return;
   if (editingControl) return;
-  if (event.key === "Delete" || event.key === "Backspace") { event.preventDefault(); deleteSelectedDesignerObject(); return; }
+  if (event.key === "Delete" || event.key === "Backspace") { event.preventDefault(); deleteActiveDesignerSelection(); return; }
   const deltas = { ArrowLeft: [-1,0], ArrowRight: [1,0], ArrowUp: [0,-1], ArrowDown: [0,1] };
   if (!deltas[event.key]) return;
   event.preventDefault();
   const step = event.shiftKey ? 5 : 0.5;
   const [dx,dy] = deltas[event.key];
+  if (designerMultiSelectionActive()) {
+    for (const selection of state.designerMultiSelection) {
+      const object = locateDesignerObject(selection); if (!object) continue;
+      const anchor = designerSelectionAnchor(selection, object);
+      const x = anchor.canX && anchor.x != null ? anchor.x + dx*step : null;
+      const y = anchor.canY && anchor.y != null ? anchor.y + dy*step : null;
+      setDesignerSelectionPosition(selection, x, y);
+    }
+    markDesignerObjectChanged();
+    return;
+  }
   const anchor = designerSelectionAnchor(state.designerSelection, locateDesignerObject());
   if (anchor.canX && anchor.x != null) elements.designerSelectionX.value = (anchor.x + dx*step).toFixed(1);
   if (anchor.canY && anchor.y != null) elements.designerSelectionY.value = (anchor.y + dy*step).toFixed(1);
   applyDesignerInspectorPosition();
+}
+
+async function deleteActiveDesignerSelection() {
+  if (designerMultiSelectionActive()) return deleteDesignerMultiSelection();
+  return deleteSelectedDesignerObject();
+}
+
+async function deleteDesignerMultiSelection() {
+  const layout = selectedLayout(); if (!layout || !designerMultiSelectionActive()) return;
+  const selections = [...state.designerMultiSelection];
+  const mappingIds = new Set(selections.filter((s) => s.kind === "mapping").map((s) => s.id));
+  const individualIds = new Set(selections.filter((s) => s.kind === "individual").map((s) => s.id));
+  const columnKeys = new Set(selections.filter((s) => s.kind === "repeatedColumn").map((s) => `${s.blockId}:${s.columnId}`));
+  layout.mappings = (layout.mappings || []).filter((item) => !mappingIds.has(item.id));
+  layout.individualMappings = (layout.individualMappings || []).filter((item) => !individualIds.has(item.id));
+  for (const block of layout.repeatedBlocks || []) block.columns = (block.columns || []).filter((column) => !columnKeys.has(`${block.id}:${column.id}`));
+  clearDesignerSelection({ render: false });
+  layout.updatedAt = new Date().toISOString();
+  renderDesignerOverlay(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList(); renderDesignerPalette(); renderDesignerSelectionInspector();
+  try { await saveLayout(layout); setDesignerMessage(`Deleted ${selections.length} selected items.`); }
+  catch (error) { setDesignerMessage(errorMessage(error, "The selected items could not be deleted."), true); }
 }
 
 async function deleteSelectedDesignerObject() {

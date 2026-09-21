@@ -1779,3 +1779,29 @@ body.designer-mode .designer-view > .card,
 .designer-toolbar-actions + .designer-zoom-status {
   margin-left: 10px;
 }
+
+
+/* Build 021: multi-selection */
+.designer-stage { position: relative; }
+.designer-lasso {
+  position: absolute; z-index: 20; pointer-events: none;
+  border: 1px solid #7cc7ff; background: rgba(124,199,255,.13);
+  box-shadow: 0 0 0 1px rgba(124,199,255,.2);
+}
+.mapping-marker.multi-selected {
+  z-index: 6; outline: 2px solid #c084fc; outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(192,132,252,.22);
+}
+.designer-multi-selection-controls { display: grid; gap: 14px; }
+.designer-multi-selection-controls[hidden] { display: none !important; }
+.designer-multi-font-size { width: 54px; }
+.designer-format-toggle.mixed { border-style: dashed; color: var(--muted); }
+.designer-multi-align { display: grid; gap: 7px; }
+.designer-multi-align-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.designer-multi-align-grid button {
+  min-height: 32px; border: 1px solid var(--line); border-radius: 7px;
+  background: rgba(255,255,255,.035); color: var(--text); cursor: pointer; font-weight: 700;
+}
+.designer-multi-align-grid button:hover { border-color: rgba(124,199,255,.55); background: rgba(124,199,255,.08); }
+.designer-multi-align-grid button:disabled { opacity: .4; cursor: not-allowed; }
+.scorecard-color-chip.mixed { background: linear-gradient(135deg,#000 0 25%,#777 25% 50%,#1565c0 50% 75%,#d32f2f 75%); }

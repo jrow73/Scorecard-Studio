@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=0192" />
+  <link rel="stylesheet" href="./css/styles.css?v=0211" />
 </head>
 <body>
   <div class="app-shell">
@@ -358,7 +358,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 020.1 • Designer Workspace</p>
+              <p class="section-label">Build 021.1 • Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -442,6 +442,31 @@
                       <input id="designer-selection-y" type="number" step="0.5" />
                     </label>
                   </div>
+                  <section id="designer-multi-selection-controls" class="designer-multi-selection-controls" hidden>
+                    <div class="designer-inline-formatting">
+                      <div class="designer-format-default"><strong>Common Formatting</strong> <span class="subtle">Mixed values are left blank.</span></div>
+                      <div class="designer-format-toolbar" aria-label="Multi-selection formatting">
+                        <select id="designer-multi-font-face" aria-label="Font family"><option value="">Mixed</option><option>Helvetica</option><option>Times</option><option>Courier</option></select>
+                        <div class="designer-font-size-picker"><input id="designer-multi-font-size" class="designer-multi-font-size" type="text" inputmode="decimal" aria-label="Font size in points" placeholder="Mixed" /><details id="designer-multi-font-size-menu" class="designer-font-size-menu"><summary aria-label="Choose a common font size">▾</summary><div class="designer-font-size-options" role="listbox" aria-label="Common font sizes"><button type="button" data-multi-font-size="6">6</button><button type="button" data-multi-font-size="7">7</button><button type="button" data-multi-font-size="8">8</button><button type="button" data-multi-font-size="9">9</button><button type="button" data-multi-font-size="10">10</button><button type="button" data-multi-font-size="11">11</button><button type="button" data-multi-font-size="12">12</button><button type="button" data-multi-font-size="14">14</button><button type="button" data-multi-font-size="16">16</button><button type="button" data-multi-font-size="18">18</button><button type="button" data-multi-font-size="20">20</button><button type="button" data-multi-font-size="24">24</button><button type="button" data-multi-font-size="36">36</button></div></details></div>
+                        <button class="designer-format-toggle" id="designer-multi-bold" type="button" aria-label="Bold"><strong>B</strong></button>
+                        <button class="designer-format-toggle designer-format-italic" id="designer-multi-italic" type="button" aria-label="Italic">I</button>
+                        <div id="designer-multi-color-picker"></div>
+                        <button class="secondary-button compact-button designer-format-restore" id="designer-multi-format-restore" type="button">Restore Defaults</button>
+                      </div>
+                    </div>
+                    <div class="designer-multi-align">
+                      <strong>Align Selection</strong>
+                      <div class="designer-multi-align-grid" role="group" aria-label="Align selected items">
+                        <button type="button" data-multi-align="left" title="Align left edges">Left</button>
+                        <button type="button" data-multi-align="center" title="Align horizontal centers">Center</button>
+                        <button type="button" data-multi-align="right" title="Align right edges">Right</button>
+                        <button type="button" data-multi-align="top" title="Align top edges">Top</button>
+                        <button type="button" data-multi-align="middle" title="Align vertical centers">Middle</button>
+                        <button type="button" data-multi-align="bottom" title="Align bottom edges">Bottom</button>
+                      </div>
+                    </div>
+                    <p class="subtle designer-help">Drag any selected item to move the group, or use arrow keys to nudge everything together.</p>
+                  </section>
                   <div id="designer-selection-format-controls">
                     <label for="designer-selection-alignment">Alignment
                       <select id="designer-selection-alignment">
@@ -699,6 +724,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0201"></script>
+  <script type="module" src="./js/app.js?v=0211"></script>
 </body>
 </html>

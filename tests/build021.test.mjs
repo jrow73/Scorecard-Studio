@@ -1,0 +1,33 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const css = fs.readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+
+assert.match(html, /Build 021.1 • Designer Workspace/);
+assert.match(html, /id="designer-multi-selection-controls"/);
+assert.match(html, /id="designer-multi-font-face"/);
+assert.match(html, /id="designer-multi-font-size"/);
+assert.match(html, /data-multi-align="left"/);
+assert.match(html, /data-multi-align="middle"/);
+assert.match(html, /data-multi-align="bottom"/);
+assert.match(app, /designerMultiSelection:\s*\[\]/);
+assert.match(app, /function toggleDesignerMultiSelection/);
+assert.match(app, /function beginDesignerLasso/);
+assert.match(app, /function endDesignerLasso/);
+
+assert.match(app, /event\.pointerType !== "mouse"/);
+assert.match(app, /DESIGNER_LASSO_THRESHOLD_PX = 8/);
+assert.match(app, /pointercancel/);
+assert.match(app, /lostpointercapture/);
+assert.match(app, /cleanupDesignerLasso/);
+assert.match(app, /const enclosed =/);
+assert.match(app, /event\.ctrlKey \|\| event\.metaKey/);
+assert.match(app, /function applyMultiFormattingProperty/);
+assert.match(app, /function restoreMultiFormattingDefaults/);
+assert.match(app, /function alignDesignerMultiSelection/);
+assert.match(app, /function deleteDesignerMultiSelection/);
+assert.match(app, /if \(designerMultiSelectionActive\(\)\) \{/);
+assert.match(css, /\.designer-lasso/);
+assert.match(css, /\.mapping-marker\.multi-selected/);
+console.log('Build 021 multi-selection static regression checks passed.');
