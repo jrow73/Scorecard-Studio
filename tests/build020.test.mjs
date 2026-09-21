@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+assert.match(html, /id="designer-undo-btn"/);
+assert.match(html, /id="designer-redo-btn"/);
+assert.match(app, /designerHistoryLimit:\s*30/);
+assert.match(app, /async function undoDesignerChange/);
+assert.match(app, /async function redoDesignerChange/);
+assert.match(app, /recordDesignerHistory\(selectedLayout\(\)\)/);
+assert.match(app, /setTimeout\(async \(\) => \{[\s\S]*?\}, 450\)/);
+assert.match(app, /releaseDesignerControlFocus\(\)/);
+assert.match(app, /event\.shiftKey\) redoDesignerChange\(\)/);
+assert.match(app, /String\(event\.key\)\.toLowerCase\(\) === "y"/);
+console.log('Build 020 static regression checks passed.');

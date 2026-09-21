@@ -358,12 +358,11 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 019.2 • Designer Workspace</p>
+              <p class="section-label">Build 020.1 • Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
             <div class="designer-header-actions">
-              <button class="secondary-button" id="designer-layout-settings-btn" type="button">Layout Settings</button>
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
               <button class="secondary-button" id="designer-back-btn" type="button">Back to Layouts</button>
             </div>
@@ -397,6 +396,11 @@
                 <button class="secondary-button" id="designer-prev-btn" type="button">Previous</button>
                 <strong id="designer-page-label">Page 1 of 1</strong>
                 <button class="secondary-button" id="designer-next-btn" type="button">Next</button>
+                <span class="designer-toolbar-actions" aria-label="Designer actions">
+                  <button class="secondary-button designer-toolbar-icon" id="designer-undo-btn" type="button" disabled title="Undo (Ctrl/Cmd+Z)" aria-label="Undo">↶</button>
+                  <button class="secondary-button designer-toolbar-icon" id="designer-redo-btn" type="button" disabled title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" aria-label="Redo">↷</button>
+                  <button class="secondary-button designer-toolbar-icon" id="designer-layout-settings-btn" type="button" title="Layout Settings" aria-label="Layout Settings">⚙</button>
+                </span>
                 <span class="designer-zoom-status" aria-label="PDF zoom status">
                   <span id="designer-zoom-status">Zoom: 100%</span>
                   <button class="secondary-button compact-button" id="designer-zoom-reset-btn" type="button" disabled>Reset</button>
@@ -695,6 +699,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0192"></script>
+  <script type="module" src="./js/app.js?v=0201"></script>
 </body>
 </html>

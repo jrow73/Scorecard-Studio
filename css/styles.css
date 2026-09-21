@@ -1759,3 +1759,23 @@ body.designer-mode .designer-view > .card,
 .layout-formatting-row .scorecard-color-panel { left: 0; right: auto; }
 .formatting-dialog .scorecard-color-panel { background: #fff; color: #111; border-color: #cfd5dc; }
 .formatting-dialog .scorecard-color-custom { background: #f5f6f8; color: #111; border-color: #cfd5dc; }
+
+
+/* Build 020.1: compact Designer actions in the PDF toolbar */
+.designer-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.designer-toolbar-icon {
+  width: 40px;
+  min-width: 40px;
+  min-height: 36px;
+  padding: 6px;
+  font-size: 18px;
+  line-height: 1;
+}
+.designer-toolbar-actions + .designer-zoom-status {
+  margin-left: 10px;
+}

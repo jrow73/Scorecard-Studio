@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 019.2
+ * Build: 020.1
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
@@ -15,7 +15,7 @@ import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templa
 import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0192";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
-  listLayouts, saveLayout, savePdfTemplate, setSetting
+  listLayouts, saveLayout as persistLayout, savePdfTemplate, setSetting
 } from "./storage.js?v=018";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
@@ -42,6 +42,7 @@ const state = {
   designerHistory: [],
   designerFuture: [],
   designerHistoryApplying: false,
+  designerHistoryLimit: 30,
   designerSelection: null,
   designerPaletteSelection: null,
   designerPendingMode: null,
@@ -238,6 +239,8 @@ const elements = {
   designerSelectionY: document.querySelector("#designer-selection-y"),
   designerSelectionFontFace: document.querySelector("#designer-selection-font-face"),
   designerSelectionFontSize: document.querySelector("#designer-selection-font-size"),
+  designerUndoButton: document.querySelector("#designer-undo-btn"),
+  designerRedoButton: document.querySelector("#designer-redo-btn"),
   designerSelectionBold: document.querySelector("#designer-selection-bold"),
   designerSelectionItalic: document.querySelector("#designer-selection-italic"),
   designerSelectionColorPicker: document.querySelector("#designer-selection-color-picker"),
@@ -346,6 +349,8 @@ async function initialize() {
   if (elements.designerPaletteEditButton) elements.designerPaletteEditButton.addEventListener("click", toggleDesignerPaletteChooser);
   elements.designerPaletteSearch?.addEventListener("input", renderDesignerPalette);
   elements.designerPaletteFilter?.addEventListener("change", renderDesignerPalette);
+  elements.designerUndoButton?.addEventListener("click", undoDesignerChange);
+  elements.designerRedoButton?.addEventListener("click", redoDesignerChange);
   elements.designerSelectionClearButton.addEventListener("click", clearDesignerSelection);
   elements.designerSelectionDeleteButton.addEventListener("click", deleteSelectedDesignerObject);
   elements.designerSelectionNewInstanceButton.addEventListener("click", beginNewInstanceFromSelection);
@@ -354,9 +359,9 @@ async function initialize() {
   elements.designerWorkspaceNewButton?.addEventListener("click", () => setCollectionInspectorMode("new"));
   wireCommittedInspectorInput(elements.designerSelectionX, applyDesignerInspectorPosition);
   wireCommittedInspectorInput(elements.designerSelectionY, applyDesignerInspectorPosition);
-  elements.designerSelectionAlignment.addEventListener("change", applyDesignerInspectorFormatting);
-  elements.designerSelectionNameFormat.addEventListener("change", applyDesignerInspectorFormatting);
-  elements.designerSelectionFontFace?.addEventListener("change", () => applyInlineFormattingProperty("fontFace", elements.designerSelectionFontFace.value));
+  elements.designerSelectionAlignment.addEventListener("change", () => { applyDesignerInspectorFormatting(); releaseDesignerControlFocus(); });
+  elements.designerSelectionNameFormat.addEventListener("change", () => { applyDesignerInspectorFormatting(); releaseDesignerControlFocus(); });
+  elements.designerSelectionFontFace?.addEventListener("change", () => { applyInlineFormattingProperty("fontFace", elements.designerSelectionFontFace.value); releaseDesignerControlFocus(); });
   elements.designerSelectionBold?.addEventListener("click", () => toggleInlineFormattingProperty("bold"));
   elements.designerSelectionItalic?.addEventListener("click", () => toggleInlineFormattingProperty("italic"));
   elements.designerSelectionFormatRestore?.addEventListener("click", restoreInlineFormattingDefaults);
@@ -1458,6 +1463,7 @@ async function openDesigner() {
     initializeDesignerPalette(layout);
     renderDesignerPalette();
     renderDesignerSelectionInspector();
+    resetDesignerHistory(layout);
     setDesignerMessage("Select data from the palette, place it on the scorecard, then click any placed object to fine-tune it.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
@@ -3899,6 +3905,97 @@ function applyDesignerInspectorTemplate() {
   markDesignerObjectChanged();
 }
 
+function designerSnapshot(layout = selectedLayout()) {
+  if (!layout) return null;
+  return JSON.stringify(layout);
+}
+
+function updateDesignerHistoryButtons() {
+  if (elements.designerUndoButton) elements.designerUndoButton.disabled = state.designerHistory.length <= 1 || state.designerHistoryApplying;
+  if (elements.designerRedoButton) elements.designerRedoButton.disabled = state.designerFuture.length === 0 || state.designerHistoryApplying;
+}
+
+function resetDesignerHistory(layout = selectedLayout()) {
+  state.designerHistory = [];
+  state.designerFuture = [];
+  const snapshot = designerSnapshot(layout);
+  if (snapshot) state.designerHistory.push(snapshot);
+  updateDesignerHistoryButtons();
+}
+
+function recordDesignerHistory(layout = selectedLayout()) {
+  if (state.designerHistoryApplying || !layout) return;
+  const snapshot = designerSnapshot(layout);
+  if (!snapshot || state.designerHistory.at(-1) === snapshot) return;
+  state.designerHistory.push(snapshot);
+  if (state.designerHistory.length > state.designerHistoryLimit) state.designerHistory.shift();
+  state.designerFuture = [];
+  updateDesignerHistoryButtons();
+}
+
+function designerViewIsOpen() {
+  const designer = document.querySelector('[data-view="designer"]');
+  return Boolean(designer && !designer.hidden);
+}
+
+async function saveLayout(layout) {
+  const result = await persistLayout(layout);
+  if (designerViewIsOpen() && layout?.id === state.selectedLayoutId) recordDesignerHistory(layout);
+  return result;
+}
+
+async function restoreDesignerSnapshot(snapshot, message) {
+  if (!snapshot) return;
+  const restored = JSON.parse(snapshot);
+  const index = state.layouts.findIndex((layout) => layout.id === restored.id);
+  if (index < 0) return;
+  state.designerHistoryApplying = true;
+  state.layouts[index] = restored;
+  try {
+    await persistLayout(restored);
+    ensureRepeatedBlockIds(restored);
+    populateDesignerBlockSelect();
+    renderDesignerMappingList();
+    renderDesignerBlockList();
+    renderDesignerIndividualList();
+    initializeDesignerPalette(restored);
+    renderDesignerPalette();
+    const selected = locateDesignerObject(state.designerSelection);
+    if (!selected) clearDesignerSelection({ render: false });
+    renderDesignerOverlay();
+    renderDesignerSelectionInspector();
+    setDesignerMessage(message);
+  } catch (error) {
+    setDesignerMessage(errorMessage(error, "The Designer history state could not be restored."), true);
+  } finally {
+    state.designerHistoryApplying = false;
+    updateDesignerHistoryButtons();
+  }
+}
+
+async function undoDesignerChange() {
+  window.clearTimeout(state.designerSaveTimer);
+  if (state.designerHistoryApplying) return;
+  recordDesignerHistory(selectedLayout());
+  if (state.designerHistory.length <= 1) return;
+  const current = state.designerHistory.pop();
+  state.designerFuture.push(current);
+  await restoreDesignerSnapshot(state.designerHistory.at(-1), "Undid the last Designer change.");
+}
+
+async function redoDesignerChange() {
+  window.clearTimeout(state.designerSaveTimer);
+  if (state.designerHistoryApplying || !state.designerFuture.length) return;
+  const snapshot = state.designerFuture.pop();
+  state.designerHistory.push(snapshot);
+  await restoreDesignerSnapshot(snapshot, "Redid the Designer change.");
+}
+
+function releaseDesignerControlFocus() {
+  const active = document.activeElement;
+  if (active && ["SELECT", "BUTTON"].includes(active.tagName)) active.blur();
+}
+
 function markDesignerObjectChanged() {
   const layout = selectedLayout(); if (!layout) return;
   layout.updatedAt = new Date().toISOString();
@@ -3916,7 +4013,7 @@ function scheduleDesignerSave() {
     const layout = selectedLayout(); if (!layout) return;
     try { await saveLayout(layout); }
     catch (error) { setDesignerMessage(errorMessage(error, "Designer changes could not be saved."), true); }
-  }, 250);
+  }, 450);
 }
 
 function wireDesignerMarker(marker, selection) {
@@ -3954,9 +4051,19 @@ function handleDesignerKeyboard(event) {
   const designer = document.querySelector('[data-view="designer"]');
   if (!designer || designer.hidden) return;
   const tag = document.activeElement?.tagName;
+  const editingControl = ["INPUT", "TEXTAREA", "SELECT"].includes(tag);
+  const modifier = event.ctrlKey || event.metaKey;
+  if (!editingControl && modifier && !event.altKey && String(event.key).toLowerCase() === "z") {
+    event.preventDefault();
+    if (event.shiftKey) redoDesignerChange(); else undoDesignerChange();
+    return;
+  }
+  if (!editingControl && event.ctrlKey && !event.metaKey && !event.altKey && String(event.key).toLowerCase() === "y") {
+    event.preventDefault(); redoDesignerChange(); return;
+  }
   if (event.key === "Escape") { event.preventDefault(); if (state.designerPlacing) cancelDesignerPlacement(); clearDesignerSelection(); return; }
   if (!state.designerSelection) return;
-  if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+  if (editingControl) return;
   if (event.key === "Delete" || event.key === "Backspace") { event.preventDefault(); deleteSelectedDesignerObject(); return; }
   const deltas = { ArrowLeft: [-1,0], ArrowRight: [1,0], ArrowUp: [0,-1], ArrowDown: [0,1] };
   if (!deltas[event.key]) return;
