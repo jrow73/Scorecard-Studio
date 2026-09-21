@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 018.3
+ * Build: 019.2
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
@@ -12,6 +12,7 @@ import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=018";
 import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=018305";
 import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=0183";
 import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=018";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0192";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout, savePdfTemplate, setSetting
@@ -148,6 +149,8 @@ const elements = {
   pdfNextButton: document.querySelector("#pdf-next-btn"),
   navDesigner: document.querySelector("#nav-designer"),
   openDesignerButton: document.querySelector("#open-designer-btn"),
+  layoutFormattingButton: document.querySelector("#layout-formatting-btn"),
+  designerLayoutSettingsButton: document.querySelector("#designer-layout-settings-btn"),
   designerBackButton: document.querySelector("#designer-back-btn"),
   designerLayoutMeta: document.querySelector("#designer-layout-meta"),
   designerFieldSelect: document.querySelector("#designer-field-select"),
@@ -233,8 +236,18 @@ const elements = {
   designerSelectionFormatControls: document.querySelector("#designer-selection-format-controls"),
   designerSelectionX: document.querySelector("#designer-selection-x"),
   designerSelectionY: document.querySelector("#designer-selection-y"),
+  designerSelectionFontFace: document.querySelector("#designer-selection-font-face"),
   designerSelectionFontSize: document.querySelector("#designer-selection-font-size"),
+  designerSelectionBold: document.querySelector("#designer-selection-bold"),
+  designerSelectionItalic: document.querySelector("#designer-selection-italic"),
+  designerSelectionColorPicker: document.querySelector("#designer-selection-color-picker"),
+  designerSelectionFormatRestore: document.querySelector("#designer-selection-format-restore"),
+  designerSelectionFormatSummary: document.querySelector("#designer-selection-format-summary"),
   designerSelectionAlignment: document.querySelector("#designer-selection-alignment"),
+  layoutFormattingDialog: document.querySelector("#layout-formatting-dialog"),
+  layoutFormattingGrid: document.querySelector("#layout-formatting-grid"),
+  layoutFormattingSaveButton: document.querySelector("#layout-formatting-save-btn"),
+  layoutFormattingResetButton: document.querySelector("#layout-formatting-reset-btn"),
   designerSelectionNameFormatWrap: document.querySelector("#designer-selection-name-format-wrap"),
   designerSelectionNameFormat: document.querySelector("#designer-selection-name-format"),
   designerSelectionTemplateWrap: document.querySelector("#designer-selection-template-wrap"),
@@ -299,6 +312,8 @@ async function initialize() {
   elements.pdfPrevButton.addEventListener("click", () => changePdfPage(-1));
   elements.pdfNextButton.addEventListener("click", () => changePdfPage(1));
   elements.openDesignerButton.addEventListener("click", openDesigner);
+  elements.layoutFormattingButton?.addEventListener("click", openLayoutFormattingDialog);
+  elements.designerLayoutSettingsButton?.addEventListener("click", openLayoutFormattingDialog);
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
   elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
   elements.designerTemplateInsertButton.addEventListener("click", insertDesignerTemplateField);
@@ -313,7 +328,6 @@ async function initialize() {
   elements.designerColumnContentType.addEventListener("change", () => { resetDesignerSlotBranchForType(); syncDesignerSlotContentControls(); });
   elements.designerColumnField.addEventListener("change", syncDesignerSlotContentControls);
   elements.designerColumnAlignment.addEventListener("change", syncDesignerSlotContentControls);
-  elements.designerColumnFontSize.addEventListener("input", syncDesignerSlotContentControls);
   elements.designerColumnNameFormat.addEventListener("change", syncDesignerSlotContentControls);
   elements.designerColumnTemplate.addEventListener("input", () => { updateDesignerSlotTemplatePreview(); syncDesignerSlotContentControls(); });
   elements.designerColumnTemplateInsertButton.addEventListener("click", insertDesignerSlotTemplateField);
@@ -340,9 +354,15 @@ async function initialize() {
   elements.designerWorkspaceNewButton?.addEventListener("click", () => setCollectionInspectorMode("new"));
   wireCommittedInspectorInput(elements.designerSelectionX, applyDesignerInspectorPosition);
   wireCommittedInspectorInput(elements.designerSelectionY, applyDesignerInspectorPosition);
-  wireCommittedInspectorInput(elements.designerSelectionFontSize, applyDesignerInspectorFormatting);
   elements.designerSelectionAlignment.addEventListener("change", applyDesignerInspectorFormatting);
   elements.designerSelectionNameFormat.addEventListener("change", applyDesignerInspectorFormatting);
+  elements.designerSelectionFontFace?.addEventListener("change", () => applyInlineFormattingProperty("fontFace", elements.designerSelectionFontFace.value));
+  elements.designerSelectionBold?.addEventListener("click", () => toggleInlineFormattingProperty("bold"));
+  elements.designerSelectionItalic?.addEventListener("click", () => toggleInlineFormattingProperty("italic"));
+  elements.designerSelectionFormatRestore?.addEventListener("click", restoreInlineFormattingDefaults);
+  wireFormattingFontSizeInput();
+  elements.layoutFormattingSaveButton?.addEventListener("click", saveLayoutFormattingDefaults);
+  elements.layoutFormattingResetButton?.addEventListener("click", resetLayoutFormattingDefaults);
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
   elements.designerSelectionTemplate?.addEventListener("input", updateDesignerSelectionTemplatePreview);
   elements.designerSelectionTemplateInsertButton?.addEventListener("click", insertDesignerSelectionTemplateField);
@@ -1241,6 +1261,8 @@ async function createLayout() {
       mappings: [],
       designerPaletteGroups: [],
       designerPaletteConfigured: false,
+      formattingDefaults: appFormattingDefaults(),
+      conditionalFormatting: appConditionalFormattingDefaults(),
       name,
       description,
       pdfTemplateId: id,
@@ -1445,10 +1467,9 @@ async function openDesigner() {
 
 function beginDesignerPlacement() {
   if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
-  const size = Number(elements.designerFontSize.value);
-  if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Font size must be between 1 and 144 points.", true);
-  const alignment = ["left", "center", "right"].includes(elements.designerFieldAlignment?.value) ? elements.designerFieldAlignment.value : "left";
   const definition = getFieldDefinition(elements.designerFieldSelect.value);
+  const group = formattingGroupForFieldId(definition?.id);
+  const alignment = ["left", "center", "right"].includes(elements.designerFieldAlignment?.value) ? elements.designerFieldAlignment.value : "left";
   const format = definition?.formatKind === "playerName" ? { nameFormat: elements.designerFieldNameFormat.value || "full" } : {};
   setDesignerPlacement({ mode: "scalar", alignment, format });
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(elements.designerFieldSelect.value)}.`);
@@ -1567,11 +1588,11 @@ function beginDesignerTemplatePlacement() {
   if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
   const template = elements.designerTemplateText.value;
   if (!template.trim()) return setDesignerMessage("Enter text template before placing it.", true);
-  const size = Number(elements.designerTemplateFontSize.value);
-  if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Composite font size must be between 1 and 144 points.", true);
+  const origin = state.designerPaletteSelection;
+  const context = origin?.kind === "record" ? origin.id : null;
+  const formattingGroup = origin?.kind === "field" ? formattingGroupForFieldId(origin.id) : formattingGroupForContext(context);
   const alignment = ["left", "center", "right"].includes(elements.designerTemplateAlignment.value) ? elements.designerTemplateAlignment.value : "left";
-  const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
-  setDesignerPlacement({ mode: "template", template, fontSize: size, alignment, context });
+  setDesignerPlacement({ mode: "template", template, alignment, context, formattingGroup });
   setDesignerMessage(`Click the ${alignment}-alignment baseline anchor for the text template.`);
 }
 
@@ -1660,8 +1681,6 @@ function beginDesignerBlockColumnPlacement() {
     state.designerPageNumber = block.pageIndex + 1;
     renderDesignerPage().catch(() => setDesignerMessage("The repeated block page could not be rendered.", true));
   }
-  const size = Number(elements.designerColumnFontSize.value);
-  if (!Number.isFinite(size) || size < 1 || size > 144) return setDesignerMessage("Column font size must be between 1 and 144 points.", true);
   const contentType = elements.designerColumnContentType.value;
   if (!['field', 'template'].includes(contentType)) return setDesignerMessage("Choose Field or Text Template before placing slot content.", true);
   const field = elements.designerColumnField.value;
@@ -1679,7 +1698,7 @@ function beginDesignerBlockColumnPlacement() {
   const alignment = elements.designerColumnAlignment.value;
   if (!["left", "center", "right"].includes(alignment)) return setDesignerMessage("Choose an alignment before adding slot content.", true);
   if (contentType === "field" && definition?.formatKind === "playerName" && !elements.designerColumnNameFormat.value) return setDesignerMessage("Choose a name format before adding the player-name field.", true);
-  setDesignerPlacement({ mode: "blockColumn", blockId: block.id, field: content.field || null, content, fontSize: size, alignment });
+  setDesignerPlacement({ mode: "blockColumn", blockId: block.id, field: content.field || null, content, alignment, formattingGroup: formattingGroupForContext(blockContext(block)) });
   const label = content.type === "template" ? "the Text Template" : designerFieldLabel(field);
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${label} in slot 1.${isRecordBlock(block) ? "" : " Scorecard Studio will repeat that offset through the block."}`);
 }
@@ -1764,11 +1783,9 @@ function beginDesignerIndividualPlacement() {
   const field = elements.designerIndividualField.value;
   const definition = getFieldDefinition(field);
   if (!definition || definition.cardinality !== "repeated" || definition.collection !== collection) return setDesignerMessage("Choose a field that belongs to the selected collection.", true);
-  const fontSize = Number(elements.designerIndividualFontSize.value);
-  if (!Number.isFinite(fontSize) || fontSize < 1 || fontSize > 144) return setDesignerMessage("Individual field font size must be between 1 and 144 points.", true);
   const alignment = ["left", "center", "right"].includes(elements.designerIndividualAlignment.value) ? elements.designerIndividualAlignment.value : "left";
   const format = definition.formatKind === "playerName" ? { nameFormat: elements.designerIndividualNameFormat?.value || "full" } : {};
-  setDesignerPlacement({ mode: "individual", collection, strategy, selector, field, fontSize, alignment, format });
+  setDesignerPlacement({ mode: "individual", collection, strategy, selector, field, alignment, format, formattingGroup: formattingGroupForContext(collection) });
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(field)} • ${individualSelectorLabel({ collection, strategy, selector })}.`);
 }
 
@@ -1794,7 +1811,7 @@ async function handleDesignerStageClick(event) {
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
-      fontSize: Number(elements.designerFontSize.value),
+      formattingGroup: formattingGroupForFieldId(field),
       alignment: placement.alignment || "left",
       anchor: `baseline-${placement.alignment || "left"}`
     };
@@ -1826,7 +1843,7 @@ async function handleDesignerStageClick(event) {
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
-      fontSize: placement.fontSize,
+      formattingGroup: placement.formattingGroup || formattingGroupForContext(placement.context),
       alignment: placement.alignment,
       anchor: `baseline-${placement.alignment}`
     };
@@ -1862,7 +1879,7 @@ async function handleDesignerStageClick(event) {
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
-      fontSize: placement.fontSize,
+      formattingGroup: formattingGroupForContext(placement.collection),
       alignment: placement.alignment,
       anchor: `baseline-${placement.alignment}`
     };
@@ -1980,7 +1997,7 @@ async function handleDesignerStageClick(event) {
       field,
       content: placement.content || { type: "field", field },
       xPercent,
-      fontSize: placement.fontSize,
+      formattingGroup: formattingGroupForContext(blockContext(block)),
       alignment,
       anchor: `baseline-${alignment}`
     };
@@ -2052,9 +2069,7 @@ function renderDesignerOverlay() {
     marker.dataset.mappingId = mapping.id || "";
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
-    const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
-    marker.style.fontSize = `${previewFontPx}px`;
-    marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+    applyPreviewFormatting(marker, effectiveFormatting(mapping));
     marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL, mapping.content.context) || "[blank composite]") : designerFieldPreview(mapping.field, null, mapping.content?.format);
     marker.title = `${isTemplate ? "Text template" : designerFieldLabel(mapping.field)} • click to edit • drag to move`;
     if (state.designerSelection?.kind === "mapping" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
@@ -2086,9 +2101,8 @@ function renderDesignerOverlay() {
           const anchorXPercent = slot.xPercent + ((Number(column.xOffsetPoints) || 0) / pageWidthPoints);
           marker.style.left = `${anchorXPercent * 100}%`;
           marker.style.top = `${slot.yPercent * 100}%`;
-          const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
-          marker.style.fontSize = `${previewFontPx}px`;
-          marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+          const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot: slotIndex + 1 });
+          applyPreviewFormatting(marker, effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup }));
           marker.textContent = designerSlotContentPreview(block, column, slotIndex + 1);
           marker.title = `${blockContentLabel(column)} • slot ${slotIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
@@ -2115,9 +2129,8 @@ function renderDesignerOverlay() {
           marker.className = `mapping-marker repeated-marker${isTemplate ? " template-marker" : ""} align-${alignment}${!isTemplate && !getFieldDefinition(column.field) ? " unsupported" : ""}`;
           marker.style.left = `${column.xPercent * 100}%`;
           marker.style.top = `${yPercent * 100}%`;
-          const previewFontPx = Math.max(1, column.fontSize * state.designerRenderScale);
-          marker.style.fontSize = `${previewFontPx}px`;
-          marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+          const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot: rowIndex + 1 });
+          applyPreviewFormatting(marker, effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup }));
           marker.textContent = designerSlotContentPreview(block, column, rowIndex + 1);
           marker.title = `${blockContentLabel(column)} • row ${rowIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
@@ -2139,9 +2152,8 @@ function renderDesignerOverlay() {
     marker.dataset.individualId = mapping.id || "";
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
-    const previewFontPx = Math.max(1, mapping.fontSize * state.designerRenderScale);
-    marker.style.fontSize = `${previewFontPx}px`;
-    marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+    const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, mapping.collection, mapping.selector);
+    applyPreviewFormatting(marker, effectiveFormatting(mapping, { group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup }));
     marker.textContent = designerFieldPreview(mapping.field, mapping.selector, mapping.content?.format || {}) || `[${individualSelectorLabel(mapping)}]`;
     marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to edit • drag to move`;
     if (state.designerSelection?.kind === "individual" && state.designerSelection.id === mapping.id) marker.classList.add("selected-object");
@@ -2167,7 +2179,7 @@ function renderDesignerIndividualList() {
     const row = document.createElement("div");
     row.className = "designer-block-column-row";
     const text = document.createElement("span");
-    text.textContent = `${individualCollectionLabel(mapping.collection)} • ${individualSelectorLabel(mapping)} • ${designerFieldLabel(mapping.field)} • ${mapping.fontSize} pt • ${mapping.alignment || "left"}`;
+    text.textContent = `${individualCollectionLabel(mapping.collection)} • ${individualSelectorLabel(mapping)} • ${designerFieldLabel(mapping.field)} • ${effectiveFormatting(mapping, { selection: { kind: "individual" }, object: mapping }).fontSize} pt • ${mapping.alignment || "left"}`;
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "secondary-button compact-button";
@@ -2224,7 +2236,7 @@ function renderDesignerMappingList() {
     const isTemplate = mapping.content?.type === "template";
     strong.textContent = isTemplate ? `Composite: ${mapping.content.template}` : designerFieldLabel(mapping.field);
     const meta = document.createElement("span");
-    meta.textContent = `Page ${mapping.pageIndex + 1} • ${(mapping.xPercent * 100).toFixed(1)}%, ${(mapping.yPercent * 100).toFixed(1)}% • ${mapping.fontSize} pt • ${mapping.anchor || "legacy"}`;
+    meta.textContent = `Page ${mapping.pageIndex + 1} • ${(mapping.xPercent * 100).toFixed(1)}%, ${(mapping.yPercent * 100).toFixed(1)}% • ${effectiveFormatting(mapping, { selection: { kind: "mapping" }, object: mapping }).fontSize} pt • ${mapping.anchor || "baseline-left"}`;
     copy.append(strong, meta);
     const go = document.createElement("button");
     go.type = "button";
@@ -2270,7 +2282,7 @@ function renderDesignerBlockList() {
       const row = document.createElement("div");
       row.className = "designer-block-column-row";
       const text = document.createElement("span");
-      text.textContent = `${blockContentLabel(column)} • ${column.fontSize} pt • ${column.alignment || "left"}`;
+      text.textContent = `${blockContentLabel(column)} • ${effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)) }).fontSize} pt • ${column.alignment || "left"}`;
       const remove = document.createElement("button");
       remove.type = "button";
       remove.className = "secondary-button compact-button";
@@ -2461,8 +2473,7 @@ function syncDesignerSlotContentControls() {
   const hasField = Boolean(definition);
   const needsNameFormat = isField && definition?.formatKind === "playerName";
   const hasAlignment = ["left", "center", "right"].includes(elements.designerColumnAlignment?.value);
-  const fontSize = Number(elements.designerColumnFontSize?.value);
-  const hasFontSize = String(elements.designerColumnFontSize?.value || "").trim() !== "" && Number.isFinite(fontSize) && fontSize >= 1 && fontSize <= 144;
+  const hasFontSize = true;
   const hasNameFormat = !needsNameFormat || Boolean(elements.designerColumnNameFormat?.value);
   const hasTemplate = isTemplate && Boolean(String(elements.designerColumnTemplate?.value || "").trim());
 
@@ -3468,8 +3479,7 @@ function renderDesignerSelectionInspector() {
   elements.designerSelectionX.disabled = !anchor.canX;
   elements.designerSelectionY.disabled = !anchor.canY;
   const target = selection.kind === "repeatedColumn" ? object.column : object;
-  elements.designerSelectionFontSize.disabled = false;
-  elements.designerSelectionFontSize.value = Number(target.fontSize || 10);
+  updateDesignerFormattingSummary(target, selection, object);
   elements.designerSelectionAlignment.disabled = false;
   elements.designerSelectionAlignment.value = target.alignment || "left";
   const isTemplate = (selection.kind === "mapping" || selection.kind === "repeatedColumn") && target.content?.type === "template";
@@ -3537,6 +3547,268 @@ function insertDesignerSelectionTemplateField() {
   applyDesignerInspectorTemplate();
   textarea.focus();
 }
+
+
+function layoutFormattingDefaults(layout = selectedLayout()) {
+  return ensureLayoutFormattingDefaults(layout || {});
+}
+
+function layoutConditionalFormatting(layout = selectedLayout()) {
+  return ensureLayoutConditionalFormatting(layout || {});
+}
+
+function baseFormattingGroupForTarget(target, selection = state.designerSelection, object = locateDesignerObject(selection)) {
+  if (target?.formattingGroup) return target.formattingGroup;
+  if (selection?.kind === "repeatedColumn") return formattingGroupForContext(blockContext(object?.block));
+  if (selection?.kind === "individual") return formattingGroupForContext(target?.collection);
+  if (target?.content?.type === "template" && target.content.context) return formattingGroupForContext(target.content.context);
+  return formattingGroupForFieldId(target?.field || target?.content?.field);
+}
+
+function defaultFormattingForTarget(target, options = {}) {
+  const layout = options.layout || selectedLayout() || {};
+  const defaults = layoutFormattingDefaults(layout);
+  let group = options.group || baseFormattingGroupForTarget(target, options.selection, options.object);
+  if (options.handednessGroup && conditionalFormattingEnabled(layout, options.handednessGroup)) group = options.handednessGroup;
+  return defaults[group] || defaults.game;
+}
+
+function effectiveFormatting(target, options = {}) {
+  return mergeFormat(defaultFormattingForTarget(target, options), target?.formattingOverride || {});
+}
+
+function applyPreviewFormatting(marker, format) {
+  const previewFontPx = Math.max(1, Number(format.fontSize || 10) * state.designerRenderScale);
+  marker.style.fontSize = `${previewFontPx}px`;
+  marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
+  marker.style.fontFamily = format.fontFace === "Times" ? "Times New Roman, Times, serif" : format.fontFace === "Courier" ? "Courier New, Courier, monospace" : "Helvetica, Arial, sans-serif";
+  marker.style.fontWeight = format.bold ? "700" : "400";
+  marker.style.fontStyle = format.italic ? "italic" : "normal";
+  marker.style.color = format.color || "#000000";
+}
+
+function formattingSummary(format) {
+  const style = format.bold && format.italic ? "Bold Italic" : format.bold ? "Bold" : format.italic ? "Italic" : "Normal";
+  return `${format.fontFace}, ${format.fontSize} pt, ${colorDisplayName(format.color)}, ${style}`;
+}
+
+function currentInlineFormattingTarget() {
+  const selection = state.designerSelection;
+  const object = locateDesignerObject(selection);
+  if (!selection || !object || selection.kind === "block") return null;
+  return { selection, object, target: selection.kind === "repeatedColumn" ? object.column : object };
+}
+
+function updateDesignerFormattingSummary(target, selection = state.designerSelection, object = locateDesignerObject(selection)) {
+  if (!elements.designerSelectionFormatSummary || !target) return;
+  const handedness = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, selection?.kind === "repeatedColumn" ? blockContext(object?.block) : target?.collection || target?.content?.context, selection?.kind === "individual" ? target?.selector : selection?.kind === "repeatedColumn" && !isRecordBlock(object?.block) ? { slot: 1 } : null);
+  const defaults = defaultFormattingForTarget(target, { selection, object, handednessGroup: handedness });
+  const effective = effectiveFormatting(target, { selection, object, handednessGroup: handedness });
+  elements.designerSelectionFormatSummary.textContent = formattingSummary(defaults);
+  if (elements.designerSelectionFontFace) elements.designerSelectionFontFace.value = effective.fontFace;
+  if (elements.designerSelectionFontSize && document.activeElement !== elements.designerSelectionFontSize) elements.designerSelectionFontSize.value = String(effective.fontSize);
+  if (elements.designerSelectionBold) {
+    elements.designerSelectionBold.classList.toggle("active", effective.bold);
+    elements.designerSelectionBold.setAttribute("aria-pressed", String(effective.bold));
+  }
+  if (elements.designerSelectionItalic) {
+    elements.designerSelectionItalic.classList.toggle("active", effective.italic);
+    elements.designerSelectionItalic.setAttribute("aria-pressed", String(effective.italic));
+  }
+  if (elements.designerSelectionColorPicker) renderColorPicker(elements.designerSelectionColorPicker, effective.color, (color) => applyInlineFormattingProperty("color", color));
+}
+
+function formatsEqualValue(prop, a, b) {
+  if (prop === "color") return normalizeColor(a) === normalizeColor(b);
+  if (prop === "fontSize") return Number(a) === Number(b);
+  return a === b;
+}
+
+function inlineFormattingOptions(found) {
+  const { selection, object, target } = found;
+  const context = selection.kind === "repeatedColumn" ? blockContext(object?.block) : target?.collection || target?.content?.context;
+  const selector = selection.kind === "individual" ? target?.selector : selection.kind === "repeatedColumn" && !isRecordBlock(object?.block) ? { slot: 1 } : null;
+  return { selection, object, handednessGroup: conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, context, selector) };
+}
+
+function applyInlineFormattingProperty(prop, value) {
+  const found = currentInlineFormattingTarget();
+  if (!found) return;
+  const options = inlineFormattingOptions(found);
+  const defaults = defaultFormattingForTarget(found.target, options);
+  const override = { ...(found.target.formattingOverride || {}) };
+  const conditionalVariesByRow = found.selection.kind === "repeatedColumn" && options.handednessGroup && conditionalFormattingEnabled(selectedLayout() || {}, options.handednessGroup);
+  if (!conditionalVariesByRow && formatsEqualValue(prop, value, defaults[prop])) delete override[prop];
+  else override[prop] = prop === "fontSize" ? Number(value) : prop === "color" ? normalizeColor(value) : value;
+  if (Object.keys(override).length) found.target.formattingOverride = override;
+  else delete found.target.formattingOverride;
+  markDesignerObjectChanged();
+  updateDesignerFormattingSummary(found.target, found.selection, found.object);
+}
+
+function toggleInlineFormattingProperty(prop) {
+  const found = currentInlineFormattingTarget();
+  if (!found) return;
+  const current = effectiveFormatting(found.target, inlineFormattingOptions(found));
+  applyInlineFormattingProperty(prop, !current[prop]);
+}
+
+function restoreInlineFormattingDefaults() {
+  const found = currentInlineFormattingTarget();
+  if (!found) return;
+  delete found.target.formattingOverride;
+  markDesignerObjectChanged();
+  updateDesignerFormattingSummary(found.target, found.selection, found.object);
+}
+
+function wireFormattingFontSizeInput() {
+  const input = elements.designerSelectionFontSize;
+  if (!input) return;
+  const menu = document.querySelector("#designer-font-size-menu");
+  let original = "";
+  input.addEventListener("focus", () => { original = input.value; });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      input.blur();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      input.value = original;
+      input.blur();
+    }
+  });
+  input.addEventListener("blur", () => {
+    const size = Number(input.value);
+    if (!Number.isFinite(size) || size <= 0 || size > 144) {
+      const found = currentInlineFormattingTarget();
+      if (found) input.value = String(effectiveFormatting(found.target, inlineFormattingOptions(found)).fontSize);
+      return;
+    }
+    if (String(size) === String(Number(original))) return;
+    applyInlineFormattingProperty("fontSize", size);
+  });
+  menu?.querySelectorAll("[data-font-size]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const size = Number(button.dataset.fontSize);
+      if (!Number.isFinite(size)) return;
+      input.value = String(size);
+      menu.open = false;
+      applyInlineFormattingProperty("fontSize", size);
+    });
+  });
+}
+
+function renderColorPicker(container, value, onChange) {
+  if (!container) return;
+  const normalized = normalizeColor(value);
+  container.replaceChildren();
+  const details = document.createElement("details");
+  details.className = "scorecard-color-picker";
+  details.dataset.value = normalized;
+  const summary = document.createElement("summary");
+  summary.className = "scorecard-color-summary";
+  summary.setAttribute("aria-label", `Text color: ${colorDisplayName(normalized)}`);
+  const chip = document.createElement("span"); chip.className = "scorecard-color-chip"; chip.style.backgroundColor = normalized;
+  const caret = document.createElement("span"); caret.className = "scorecard-color-caret"; caret.textContent = "▾";
+  summary.append(chip, caret);
+  const panel = document.createElement("div"); panel.className = "scorecard-color-panel";
+  const swatches = document.createElement("div"); swatches.className = "scorecard-color-swatches";
+  for (const swatch of COLOR_SWATCHES) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "scorecard-color-swatch";
+    button.style.backgroundColor = swatch.value;
+    button.title = swatch.name;
+    button.setAttribute("aria-label", swatch.name);
+    button.classList.toggle("selected", swatch.value === normalized);
+    button.addEventListener("click", () => { details.open = false; onChange?.(swatch.value); });
+    swatches.append(button);
+  }
+  const custom = document.createElement("button"); custom.type = "button"; custom.className = "scorecard-color-custom"; custom.textContent = "Custom Color…";
+  const native = document.createElement("input"); native.type = "color"; native.value = normalized; native.className = "scorecard-color-native"; native.tabIndex = -1;
+  custom.addEventListener("click", () => native.click());
+  native.addEventListener("input", () => { details.open = false; onChange?.(native.value); });
+  panel.append(swatches, custom, native); details.append(summary, panel); container.append(details);
+}
+
+function createLayoutFormattingRow(group, value) {
+  const row = document.createElement("div"); row.className = "layout-formatting-row"; row.dataset.group = group.id;
+  const title = document.createElement("strong"); title.textContent = group.label; row.append(title);
+  const faceLabel = document.createElement("label"); faceLabel.textContent = "Font"; const face = document.createElement("select"); face.dataset.prop = "fontFace";
+  for (const name of FONT_FACES) { const option = document.createElement("option"); option.value = name; option.textContent = name; face.append(option); }
+  face.value = value.fontFace; faceLabel.append(face); row.append(faceLabel);
+  const sizeLabel = document.createElement("label"); sizeLabel.textContent = "Size"; const size = document.createElement("input"); size.type = "number"; size.min = "1"; size.max = "144"; size.step = "0.5"; size.value = value.fontSize; size.dataset.prop = "fontSize"; size.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); size.blur(); } }); sizeLabel.append(size); row.append(sizeLabel);
+  const colorLabel = document.createElement("label"); colorLabel.textContent = "Color"; const colorHost = document.createElement("div"); colorHost.dataset.prop = "color"; renderLayoutColorHost(colorHost, value.color); colorLabel.append(colorHost); row.append(colorLabel);
+  const boldLabel = document.createElement("label"); boldLabel.className = "check-row"; const bold = document.createElement("input"); bold.type = "checkbox"; bold.checked = value.bold; bold.dataset.prop = "bold"; boldLabel.append(bold, document.createTextNode("Bold")); row.append(boldLabel);
+  const italicLabel = document.createElement("label"); italicLabel.className = "check-row"; const italic = document.createElement("input"); italic.type = "checkbox"; italic.checked = value.italic; italic.dataset.prop = "italic"; italicLabel.append(italic, document.createTextNode("Italic")); row.append(italicLabel);
+  return row;
+}
+
+function renderLayoutColorHost(host, value) {
+  host.dataset.value = normalizeColor(value);
+  renderColorPicker(host, value, (next) => renderLayoutColorHost(host, next));
+}
+
+function createConditionalFormattingSection(kind, title, text, enabled, groups, values) {
+  const section = document.createElement("section"); section.className = "layout-conditional-section";
+  const heading = document.createElement("div"); heading.className = "layout-conditional-heading";
+  const copy = document.createElement("div"); const strong = document.createElement("strong"); strong.textContent = title; copy.append(strong);
+  const label = document.createElement("label"); label.className = "layout-conditional-toggle"; const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.dataset.conditional = kind; checkbox.checked = enabled; label.append(checkbox, document.createTextNode(text));
+  heading.append(copy, label); section.append(heading);
+  const rows = document.createElement("div"); rows.className = "layout-conditional-rows"; rows.hidden = !enabled;
+  for (const group of groups) rows.append(createLayoutFormattingRow(group, values[group.id]));
+  checkbox.addEventListener("change", () => { rows.hidden = !checkbox.checked; });
+  section.append(rows);
+  return section;
+}
+
+function renderLayoutFormattingEditor(values = layoutFormattingDefaults(), conditional = layoutConditionalFormatting()) {
+  if (!elements.layoutFormattingGrid) return;
+  elements.layoutFormattingGrid.replaceChildren();
+  for (const group of FORMAT_GROUPS.filter((item) => item.kind === "base")) elements.layoutFormattingGrid.append(createLayoutFormattingRow(group, values[group.id]));
+  elements.layoutFormattingGrid.append(createConditionalFormattingSection("hitters", "Hitter Conditional Formatting", "Format hitters according to their batting side (Left, Right, Switch)", conditional.hitters, FORMAT_GROUPS.filter((item) => item.kind === "hitter"), values));
+  elements.layoutFormattingGrid.append(createConditionalFormattingSection("pitchers", "Pitcher Conditional Formatting", "Format pitchers according to their throwing arm (Left, Right, Switch)", conditional.pitchers, FORMAT_GROUPS.filter((item) => item.kind === "pitcher"), values));
+}
+
+function openLayoutFormattingDialog() {
+  if (!selectedLayout()) return setLayoutMessage("Open a layout before changing Layout Settings.", true);
+  renderLayoutFormattingEditor();
+  elements.layoutFormattingDialog?.showModal();
+}
+
+function readLayoutFormattingEditor() {
+  const values = appFormattingDefaults();
+  for (const row of elements.layoutFormattingGrid?.querySelectorAll(".layout-formatting-row") || []) {
+    const id = row.dataset.group; const current = {};
+    for (const input of row.querySelectorAll("[data-prop]")) {
+      if (input.dataset.prop === "color") current.color = input.dataset.value;
+      else current[input.dataset.prop] = input.type === "checkbox" ? input.checked : input.type === "number" ? Number(input.value) : input.value;
+    }
+    values[id] = mergeFormat(values[id], current);
+  }
+  const conditional = appConditionalFormattingDefaults();
+  for (const input of elements.layoutFormattingGrid?.querySelectorAll("[data-conditional]") || []) conditional[input.dataset.conditional] = input.checked;
+  return { values, conditional };
+}
+
+async function saveLayoutFormattingDefaults() {
+  const layout = selectedLayout(); if (!layout) return;
+  const editor = readLayoutFormattingEditor();
+  layout.formattingDefaults = editor.values;
+  layout.conditionalFormatting = editor.conditional;
+  layout.updatedAt = new Date().toISOString(); await saveLayout(layout);
+  elements.layoutFormattingDialog?.close(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
+  setDesignerMessage("Layout formatting defaults saved.");
+}
+
+function resetLayoutFormattingDefaults() { renderLayoutFormattingEditor(appFormattingDefaults(), appConditionalFormattingDefaults()); }
+
+function handValueForContext(model, context, selector) {
+  let id=null;
+  if (context==="away.lineup") id="away.lineup[].player.bats"; else if(context==="home.lineup") id="home.lineup[].player.bats"; else if(context==="away.bench") id="away.bench[].player.bats"; else if(context==="home.bench") id="home.bench[].player.bats"; else if(context==="away.bullpen") id="away.bullpen[].player.throws"; else if(context==="home.bullpen") id="home.bullpen[].player.throws"; else if(context==="away.startingPitcher") id="away.startingPitcher.player.throws"; else if(context==="home.startingPitcher") id="home.startingPitcher.player.throws";
+  if(!id)return null; const resolution=resolveField(model,id,selector); return resolution?.value ?? null;
+}
+function conditionalFormattingGroup(model, context, selector){return handednessGroup(context,handValueForContext(model,context,selector));}
 
 function wireCommittedInspectorInput(element, apply, options = {}) {
   if (!element) return;
@@ -3609,8 +3881,6 @@ function applyDesignerInspectorFormatting() {
   const selection = state.designerSelection, object = locateDesignerObject(selection);
   if (!selection || !object || selection.kind === "block") return;
   const target = selection.kind === "repeatedColumn" ? object.column : object;
-  const size = Number(elements.designerSelectionFontSize.value);
-  if (Number.isFinite(size) && size > 0) target.fontSize = size;
   const alignment = elements.designerSelectionAlignment.value;
   if (["left", "center", "right"].includes(alignment)) { target.alignment = alignment; target.anchor = `baseline-${alignment}`; }
   const definition = getFieldDefinition(target.field || target.content?.field);
@@ -3799,7 +4069,7 @@ async function generateTestPdf() {
 
     const sourceBytes = await record.blob.arrayBuffer();
     const pdfDoc = await globalThis.PDFLib.PDFDocument.load(sourceBytes);
-    const font = await pdfDoc.embedFont(globalThis.PDFLib.StandardFonts.Helvetica);
+    const fontCache = await embedFormattingFonts(pdfDoc);
     const pages = pdfDoc.getPages();
     const skipped = [];
     const overflowBlocks = [];
@@ -3811,7 +4081,7 @@ async function generateTestPdf() {
       if (mapping.content?.type === "template") {
       const text = resolveTemplateText(mapping.content.template, model, mapping.content.context);
         if (!text) continue;
-        drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+        drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
         continue;
       }
       const definition = getFieldDefinition(mapping.field);
@@ -3823,7 +4093,7 @@ async function generateTestPdf() {
         else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
         continue;
       }
-      drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
     }
 
     const emptyBlocks = [];
@@ -3853,7 +4123,9 @@ async function generateTestPdf() {
           const xPercent = isSlotGridGeometry(block)
             ? slot.xPercent + ((Number(column.xOffsetPoints) || 0) / width)
             : column.xPercent;
-          drawAlignedPdfText(page, font, text, column.fontSize, xPercent, slot.yPercent, column.alignment || "left");
+          const conditionalGroup = conditionalFormattingGroup(model, blockContext(block), selector);
+          const format = effectiveFormatting(column, { layout, group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
+          drawAlignedPdfText(page, fontCache, text, format, xPercent, slot.yPercent, column.alignment || "left");
         }
       }
     }
@@ -3870,7 +4142,9 @@ async function generateTestPdf() {
         else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
         continue;
       }
-      drawAlignedPdfText(page, font, text, mapping.fontSize, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+      const conditionalGroup = conditionalFormattingGroup(model, mapping.collection, mapping.selector);
+      const format = effectiveFormatting(mapping, { layout, group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup });
+      drawAlignedPdfText(page, fontCache, text, format, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
     }
 
     const outputBytes = await pdfDoc.save();
@@ -3892,8 +4166,27 @@ async function generateTestPdf() {
   }
 }
 
-function drawAlignedPdfText(page, font, text, fontSize, xPercent, yPercent, alignment = "left") {
-  const size = Number(fontSize) || 10;
+async function embedFormattingFonts(pdfDoc) {
+  const S = globalThis.PDFLib.StandardFonts;
+  const specs = {
+    "Helvetica|0|0": S.Helvetica, "Helvetica|1|0": S.HelveticaBold, "Helvetica|0|1": S.HelveticaOblique, "Helvetica|1|1": S.HelveticaBoldOblique,
+    "Times|0|0": S.TimesRoman, "Times|1|0": S.TimesRomanBold, "Times|0|1": S.TimesRomanItalic, "Times|1|1": S.TimesRomanBoldItalic,
+    "Courier|0|0": S.Courier, "Courier|1|0": S.CourierBold, "Courier|0|1": S.CourierOblique, "Courier|1|1": S.CourierBoldOblique
+  };
+  const cache = {};
+  for (const [key, standardFont] of Object.entries(specs)) cache[key] = await pdfDoc.embedFont(standardFont);
+  return cache;
+}
+
+function pdfFontForFormat(fontCache, format) {
+  const key = `${format.fontFace || "Helvetica"}|${format.bold ? 1 : 0}|${format.italic ? 1 : 0}`;
+  return fontCache[key] || fontCache["Helvetica|0|0"];
+}
+
+function drawAlignedPdfText(page, fontCache, text, format, xPercent, yPercent, alignment = "left") {
+  const size = Number(format?.fontSize) || 10;
+  const font = pdfFontForFormat(fontCache, format || {});
+  const [r, g, b] = hexToRgb01(format?.color || "#000000");
   const { width, height } = page.getSize();
   const anchorX = width * clamp(Number(xPercent) || 0, 0, 1);
   const anchorY = height * (1 - clamp(Number(yPercent) || 0, 0, 1));
@@ -3901,13 +4194,11 @@ function drawAlignedPdfText(page, font, text, fontSize, xPercent, yPercent, alig
   const lineHeight = size * 1.2;
 
   lines.forEach((line, lineIndex) => {
-    // pdf-lib StandardFonts use WinAnsi encoding and cannot encode newline
-    // characters directly. Draw each template line independently instead.
     if (!line) return;
     const textWidth = font.widthOfTextAtSize(line, size);
     const x = alignment === "right" ? anchorX - textWidth : alignment === "center" ? anchorX - textWidth / 2 : anchorX;
     const y = anchorY - lineIndex * lineHeight;
-    page.drawText(line, { x, y, size, font, color: globalThis.PDFLib.rgb(0, 0, 0) });
+    page.drawText(line, { x, y, size, font, color: globalThis.PDFLib.rgb(r, g, b) });
   });
 }
 

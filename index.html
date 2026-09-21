@@ -3,7 +3,8 @@
   Scorecard Studio
   Layout Management
   Version: 0.2.0-dev
-  Build: 018.3
+  Build: 019.2
+  Previous baseline Build 018.3
 -->
 <html lang="en">
 <head>
@@ -11,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=0183" />
+  <link rel="stylesheet" href="./css/styles.css?v=0192" />
 </head>
 <body>
   <div class="app-shell">
@@ -20,7 +21,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 018.3</p>
+          <p>0.2.0-dev • Build 019.2</p>
         </div>
       </div>
 
@@ -53,7 +54,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 018.3</p>
+          <p class="section-label">Build 019.2</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -232,7 +233,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 018.3 • Live Coverage</p>
+              <p class="section-label">Build 019.2 • Live Coverage</p>
               <h3 id="field-diagnostic-heading">Field Coverage Diagnostic</h3>
               <p class="subtle" id="field-diagnostic-subtitle">Select a real game on Home, then open this diagnostic.</p>
             </div>
@@ -278,7 +279,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 018.3</p>
+              <p class="section-label">Build 019.2</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -334,6 +335,7 @@
           </div>
           <div class="layout-detail-actions">
             <button class="primary-button" id="open-designer-btn" type="button">Open Designer</button>
+            <button class="secondary-button" id="layout-formatting-btn" type="button">Layout Settings</button>
             <button class="secondary-button" id="save-layout-metadata-btn" type="button">Save Changes</button>
             <button class="secondary-button" id="duplicate-layout-btn" type="button">Duplicate</button>
             <button class="danger-button" id="delete-layout-btn" type="button">Delete Layout</button>
@@ -356,11 +358,12 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 018.3 • Designer Workspace</p>
+              <p class="section-label">Build 019.2 • Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
             <div class="designer-header-actions">
+              <button class="secondary-button" id="designer-layout-settings-btn" type="button">Layout Settings</button>
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
               <button class="secondary-button" id="designer-back-btn" type="button">Back to Layouts</button>
             </div>
@@ -435,15 +438,31 @@
                       <input id="designer-selection-y" type="number" step="0.5" />
                     </label>
                   </div>
-                  <div class="designer-column-grid" id="designer-selection-format-controls">
-                    <label for="designer-selection-font-size">Font size (pt)
-                      <input id="designer-selection-font-size" type="number" min="1" max="144" step="0.5" />
-                    </label>
+                  <div id="designer-selection-format-controls">
                     <label for="designer-selection-alignment">Alignment
                       <select id="designer-selection-alignment">
                         <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
                       </select>
                     </label>
+                    <div class="designer-inline-formatting">
+                      <div class="designer-format-default"><strong>Current Defaults:</strong> <span id="designer-selection-format-summary">Helvetica, 10 pt, Black, Normal</span></div>
+                      <div class="designer-format-toolbar" aria-label="Formatting">
+                        <select id="designer-selection-font-face" aria-label="Font family"><option>Helvetica</option><option>Times</option><option>Courier</option></select>
+                        <div class="designer-font-size-picker">
+                          <input id="designer-selection-font-size" type="text" inputmode="decimal" aria-label="Font size in points" />
+                          <details id="designer-font-size-menu" class="designer-font-size-menu">
+                            <summary aria-label="Choose a common font size">▾</summary>
+                            <div class="designer-font-size-options" role="listbox" aria-label="Common font sizes">
+                              <button type="button" data-font-size="6">6</button><button type="button" data-font-size="7">7</button><button type="button" data-font-size="8">8</button><button type="button" data-font-size="9">9</button><button type="button" data-font-size="10">10</button><button type="button" data-font-size="11">11</button><button type="button" data-font-size="12">12</button><button type="button" data-font-size="14">14</button><button type="button" data-font-size="16">16</button><button type="button" data-font-size="18">18</button><button type="button" data-font-size="20">20</button><button type="button" data-font-size="24">24</button><button type="button" data-font-size="36">36</button>
+                            </div>
+                          </details>
+                        </div>
+                        <button class="designer-format-toggle" id="designer-selection-bold" type="button" aria-label="Bold" aria-pressed="false"><strong>B</strong></button>
+                        <button class="designer-format-toggle designer-format-italic" id="designer-selection-italic" type="button" aria-label="Italic" aria-pressed="false">I</button>
+                        <div id="designer-selection-color-picker"></div>
+                        <button class="secondary-button compact-button designer-format-restore" id="designer-selection-format-restore" type="button">Restore Defaults</button>
+                      </div>
+                    </div>
                   </div>
                   <label id="designer-selection-name-format-wrap" for="designer-selection-name-format" hidden>Name format
                     <select id="designer-selection-name-format"></select>
@@ -472,9 +491,6 @@
                 <div class="designer-tool-body">
               <label for="designer-field-select">Field
                 <select id="designer-field-select" aria-label="Scorecard field"></select>
-              </label>
-              <label for="designer-font-size">Font size (pt)
-                <input id="designer-font-size" type="number" min="1" max="144" step="0.5" value="10" />
               </label>
               <label for="designer-field-alignment">Alignment
                 <select id="designer-field-alignment">
@@ -509,9 +525,6 @@
                       <option value="center">Center</option>
                       <option value="right">Right</option>
                     </select>
-                  </label>
-                  <label for="designer-template-font-size">Font size (pt)
-                    <input id="designer-template-font-size" type="number" min="1" max="144" step="0.5" value="10" />
                   </label>
                 </div>
                 <button class="primary-button" id="designer-template-place-btn" type="button">Place Text Template</button>
@@ -583,9 +596,6 @@
                       </select>
                     </label>
                   </div>
-                  <label for="designer-column-font-size">Content font size (pt)
-                    <input id="designer-column-font-size" type="number" min="1" max="144" step="0.5" placeholder="Enter font size…" />
-                  </label>
                   <label id="designer-column-name-format-wrap" for="designer-column-name-format" hidden>Name format
                     <select id="designer-column-name-format"></select>
                   </label>
@@ -648,9 +658,6 @@
                     </select>
                   </label>
                 </div>
-                <label for="designer-individual-font-size">Font size (pt)
-                  <input id="designer-individual-font-size" type="number" min="1" max="144" step="0.5" value="10" />
-                </label>
                 <label id="designer-individual-name-format-wrap" for="designer-individual-name-format" hidden>Name format
                   <select id="designer-individual-name-format"></select>
                 </label>
@@ -676,8 +683,18 @@
     </main>
   </div>
 
+
+  <dialog id="layout-formatting-dialog" class="formatting-dialog">
+    <form method="dialog" class="formatting-dialog-card">
+      <div class="card-header-row compact-header"><div><p class="section-label">Layout Settings</p><h3>Formatting Defaults</h3><p class="subtle">New objects inherit these settings. Existing objects without overrides update automatically.</p></div></div>
+      <div id="layout-formatting-grid" class="layout-formatting-grid"></div>
+      <div class="formatting-dialog-actions"><button class="secondary-button" id="layout-formatting-reset-btn" type="button">Reset to App Defaults</button><span class="dialog-spacer"></span><button class="secondary-button" value="cancel">Cancel</button><button class="primary-button" id="layout-formatting-save-btn" type="button">Save Layout Settings</button></div>
+    </form>
+  </dialog>
+
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=018305"></script>
+  <script type="module" src="./js/app.js?v=0192"></script>
 </body>
 </html>

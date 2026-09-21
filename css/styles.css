@@ -1702,3 +1702,60 @@ body.designer-mode .designer-view > .card,
 .diagnostic-status.sourceUnavailable, .diagnostic-status.error { background: rgba(224, 49, 49, .18); color: #ffa8a8; }
 .diagnostic-row-partial, .diagnostic-row-sourceUnavailable, .diagnostic-row-error { background: rgba(255,255,255,.018); }
 @media (max-width: 800px) { .diagnostic-toolbar { grid-template-columns: 1fr; } .diagnostic-table-wrap { max-height: none; } }
+
+/* Build 019 - formatting defaults and overrides */
+.designer-format-summary { display:flex; align-items:center; gap:.6rem; justify-content:space-between; }
+.formatting-dialog { border:0; padding:0; background:transparent; width:min(980px,92vw); max-height:90vh; }
+.formatting-dialog::backdrop { background:rgba(0,0,0,.45); }
+.formatting-dialog-card { background:var(--card-bg,#fff); color:inherit; border-radius:14px; padding:1rem; box-shadow:0 24px 80px rgba(0,0,0,.28); max-height:86vh; overflow:auto; }
+.layout-formatting-grid { display:grid; gap:.55rem; margin:1rem 0; }
+.layout-formatting-row { display:grid; grid-template-columns:minmax(180px,1.6fr) minmax(130px,1fr) 90px 90px 70px 70px; gap:.5rem; align-items:end; padding:.65rem; border:1px solid var(--border-color,#d7dbe0); border-radius:10px; }
+.layout-formatting-row strong { align-self:center; }
+.layout-formatting-row label { margin:0; }
+.field-formatting-grid { display:grid; grid-template-columns:repeat(2,minmax(180px,1fr)); gap:.75rem; margin:1rem 0; }
+.check-row { display:flex; gap:.5rem; align-items:center; }
+.formatting-dialog-actions { display:flex; align-items:center; gap:.6rem; margin-top:1rem; }
+.dialog-spacer { flex:1; }
+@media (max-width:800px){ .layout-formatting-row{grid-template-columns:1fr 1fr;} .layout-formatting-row strong{grid-column:1/-1;} .field-formatting-grid{grid-template-columns:1fr;} }
+
+/* Build 019.1 formatting controls */
+.designer-inline-formatting { margin-top: .55rem; }
+.designer-format-default { margin-bottom: .45rem; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.designer-format-default strong { color: var(--text); }
+.designer-format-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.designer-format-toolbar select,
+.designer-format-toolbar input { min-height: 34px; }
+#designer-selection-font-face { width: 108px; }
+#designer-selection-font-size { width: 48px; border-radius: 7px 0 0 7px; }
+.designer-font-size-picker { position: relative; display: inline-flex; align-items: stretch; }
+.designer-font-size-menu { position: relative; }
+.designer-font-size-menu > summary { list-style: none; width: 28px; min-height: 34px; display: grid; place-items: center; border: 1px solid var(--line); border-left: 0; border-radius: 0 7px 7px 0; background: rgba(255,255,255,.035); color: var(--text); cursor: pointer; }
+.designer-font-size-menu > summary::-webkit-details-marker { display: none; }
+.designer-font-size-options { position: absolute; z-index: 55; top: calc(100% + 5px); right: 0; width: 72px; max-height: 260px; overflow-y: auto; padding: 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); box-shadow: 0 14px 35px rgba(0,0,0,.35); }
+.designer-font-size-options button { width: 100%; padding: 6px 8px; border: 0; border-radius: 5px; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.designer-font-size-options button:hover, .designer-font-size-options button:focus-visible { background: rgba(124,199,255,.14); }
+.designer-format-toggle { width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.035); color: var(--text); font-size: 17px; cursor: pointer; }
+.designer-format-toggle:hover, .designer-format-toggle.active { background: rgba(124,199,255,.14); border-color: rgba(124,199,255,.55); }
+.designer-format-italic { font-family: Georgia, serif; font-style: italic; }
+.designer-format-restore { min-height: 34px; }
+.scorecard-color-picker { position: relative; display: inline-block; }
+.scorecard-color-summary { list-style: none; width: 46px; height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.035); cursor: pointer; }
+.scorecard-color-summary::-webkit-details-marker { display: none; }
+.scorecard-color-chip { width: 20px; height: 5px; border-radius: 1px; box-shadow: 0 0 0 1px rgba(255,255,255,.28); }
+.scorecard-color-caret { color: var(--muted); font-size: 10px; }
+.scorecard-color-panel { position: absolute; z-index: 40; top: calc(100% + 5px); right: 0; width: 176px; padding: 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: 0 14px 35px rgba(0,0,0,.35); }
+.scorecard-color-swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.scorecard-color-swatch { width: 42px; height: 30px; border: 2px solid transparent; border-radius: 6px; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.scorecard-color-swatch.selected { border-color: var(--accent); outline: 1px solid rgba(255,255,255,.8); }
+.scorecard-color-custom { width: 100%; margin-top: 9px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255,255,255,.05); color: var(--text); cursor: pointer; font-weight: 700; }
+.scorecard-color-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.layout-conditional-section { border: 1px solid var(--line); border-radius: 12px; padding: .7rem; }
+.layout-conditional-heading { display: flex; flex-wrap: wrap; gap: .5rem .8rem; align-items: center; }
+.layout-conditional-heading strong { font-size: 14px; white-space: nowrap; }
+.layout-conditional-toggle { display: flex; gap: .5rem; align-items: center; font-size: 12px; color: var(--text); }
+.layout-conditional-rows { display: grid; gap: .55rem; margin-top: .65rem; }
+.layout-conditional-rows[hidden] { display: none; }
+.designer-format-toolbar .scorecard-color-panel { left: 0; right: auto; }
+.layout-formatting-row .scorecard-color-panel { left: 0; right: auto; }
+.formatting-dialog .scorecard-color-panel { background: #fff; color: #111; border-color: #cfd5dc; }
+.formatting-dialog .scorecard-color-custom { background: #f5f6f8; color: #111; border-color: #cfd5dc; }
