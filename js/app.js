@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 021
+ * Build: 022.1
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
@@ -45,6 +45,7 @@ const state = {
   designerHistoryLimit: 30,
   designerSelection: null,
   designerMultiSelection: [],
+  designerCompleteBlockSelection: new Set(),
   designerLasso: null,
   designerSuppressStageClick: false,
   designerPaletteSelection: null,
@@ -53,6 +54,8 @@ const state = {
   designerPaletteExpanded: new Set(),
   designerDrag: null,
   designerSaveTimer: null,
+  designerClipboard: null,
+  designerPasteGhost: null,
   designerPageWidthPoints: 0,
   designerPageHeightPoints: 0,
   normalizedPregame: null,
@@ -270,6 +273,10 @@ const elements = {
   designerSelectionTemplateInsertButton: document.querySelector("#designer-selection-template-insert-btn"),
   designerSelectionDeleteButton: document.querySelector("#designer-selection-delete-btn"),
   designerSelectionNewInstanceButton: document.querySelector("#designer-selection-new-instance-btn"),
+  designerCopyButton: document.querySelector("#designer-copy-btn"),
+  designerPasteButton: document.querySelector("#designer-paste-btn"),
+  designerPasteAwayHomeButton: document.querySelector("#designer-paste-away-home-btn"),
+  designerPasteHomeAwayButton: document.querySelector("#designer-paste-home-away-btn"),
   designerSelectionRemoveItemButton: document.querySelector("#designer-selection-remove-item-btn"),
   designerSubordinateWorkspace: document.querySelector("#designer-subordinate-workspace"),
   designerWorkspaceLabel: document.querySelector("#designer-workspace-label"),
@@ -293,6 +300,7 @@ const elements = {
 
 async function initialize() {
   const today = getLocalDateString();
+  await loadAppMetadata();
   state.selectedDate = today;
   elements.gameDateInput.value = today;
   updateSelectedDateUi(today);
@@ -357,6 +365,8 @@ async function initialize() {
   elements.designerStageScroll?.addEventListener("wheel", handleDesignerZoomWheel, { passive: false });
   elements.designerStage.addEventListener("pointerdown", beginDesignerLasso);
   elements.designerStage.addEventListener("click", handleDesignerStageClick);
+  elements.designerStage.addEventListener("pointermove", updateDesignerPasteGhost);
+  elements.designerStage.addEventListener("pointerleave", hideDesignerPasteGhost);
   if (elements.designerPaletteEditButton) elements.designerPaletteEditButton.addEventListener("click", toggleDesignerPaletteChooser);
   elements.designerPaletteSearch?.addEventListener("input", renderDesignerPalette);
   elements.designerPaletteFilter?.addEventListener("change", renderDesignerPalette);
@@ -365,6 +375,10 @@ async function initialize() {
   elements.designerSelectionClearButton.addEventListener("click", clearDesignerSelection);
   elements.designerSelectionDeleteButton.addEventListener("click", deleteActiveDesignerSelection);
   elements.designerSelectionNewInstanceButton.addEventListener("click", beginNewInstanceFromSelection);
+  elements.designerCopyButton?.addEventListener("click", copyDesignerSelection);
+  elements.designerPasteButton?.addEventListener("click", () => beginDesignerClipboardPlacement("exact"));
+  elements.designerPasteAwayHomeButton?.addEventListener("click", () => beginDesignerClipboardPlacement("awayToHome"));
+  elements.designerPasteHomeAwayButton?.addEventListener("click", () => beginDesignerClipboardPlacement("homeToAway"));
   elements.designerSelectionRemoveItemButton?.addEventListener("click", removeSelectedDesignerChild);
   elements.designerWorkspaceLayoutButton?.addEventListener("click", () => setCollectionInspectorMode("layout"));
   elements.designerWorkspaceNewButton?.addEventListener("click", () => setCollectionInspectorMode("new"));
@@ -396,6 +410,23 @@ async function initialize() {
   await initializeFavoriteTeamSetting();
   await refreshLayouts();
   await loadFavoriteTeamPregame(today);
+}
+
+async function loadAppMetadata() {
+  try {
+    const response = await fetch(`./app-meta.json?ts=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const meta = await response.json();
+    const version = String(meta.version || "").trim();
+    const build = String(meta.build || "").trim();
+    const full = version && build ? `${version} • Build ${build}` : version || (build ? `Build ${build}` : "Scorecard Studio");
+    document.querySelectorAll("[data-app-version-label]").forEach((el) => { el.textContent = full; });
+    document.querySelectorAll("[data-app-build-label]").forEach((el) => { el.textContent = build ? `Build ${build}` : full; });
+    document.querySelectorAll("[data-app-build-prefix]").forEach((el) => { el.textContent = build ? `Build ${build} • ${el.dataset.appBuildPrefix}` : el.dataset.appBuildPrefix; });
+    document.querySelectorAll("[data-app-build-upper-prefix]").forEach((el) => { el.textContent = build ? `BUILD ${build} • ${el.dataset.appBuildUpperPrefix}` : el.dataset.appBuildUpperPrefix; });
+  } catch (error) {
+    console.warn("Unable to load app metadata:", error);
+  }
 }
 
 async function initializeFavoriteTeamSetting() {
@@ -1467,6 +1498,7 @@ async function openDesigner() {
     state.designerPdfDocument = await loadPdfDocument(record.blob);
     state.designerPageNumber = 1;
     state.designerSelection = null;
+    clearDesignerPasteGhost();
     state.designerPaletteSelection = null;
     cancelDesignerPlacement();
     ensureRepeatedBlockIds(layout);
@@ -1881,10 +1913,29 @@ function endDesignerLasso(event) {
     if (!selection || seen.has(key)) continue;
     seen.add(key); found.push(selection);
   }
+  const completeBlocks = new Set();
+  const blockMarkers = new Map();
+  for (const marker of elements.designerOverlay.querySelectorAll('.mapping-marker.repeated-marker[data-block-id]')) {
+    const blockId = marker.dataset.blockId;
+    if (!blockId) continue;
+    if (!blockMarkers.has(blockId)) blockMarkers.set(blockId, []);
+    blockMarkers.get(blockId).push(marker);
+  }
+  for (const [blockId, markers] of blockMarkers) {
+    if (!markers.length) continue;
+    const allEnclosed = markers.every((marker) => {
+      const rect = marker.getBoundingClientRect();
+      return rect.left >= boxRect.left && rect.right <= boxRect.right && rect.top >= boxRect.top && rect.bottom <= boxRect.bottom;
+    });
+    if (allEnclosed) completeBlocks.add(blockId);
+  }
   if (completed.additive) {
     const base = designerMultiSelectionActive() ? state.designerMultiSelection : (isDesignerMultiSelectable(state.designerSelection) ? [state.designerSelection] : []);
-    setDesignerMultiSelection([...base, ...found]);
-  } else setDesignerMultiSelection(found);
+    const priorComplete = completeDesignerBlockIds();
+    setDesignerMultiSelection([...base, ...found], { completeBlockIds: new Set([...priorComplete, ...completeBlocks]) });
+  } else {
+    setDesignerMultiSelection(found, { completeBlockIds: completeBlocks });
+  }
 }
 
 async function handleDesignerStageClick(event) {
@@ -1900,6 +1951,11 @@ async function handleDesignerStageClick(event) {
   const layout = selectedLayout();
   if (!layout) return;
   const placement = state.designerPlacement;
+
+  if (placement.mode === "clipboard") {
+    await commitDesignerClipboardPlacement(placement, xPercent, yPercent);
+    return;
+  }
 
   if (placement.mode === "scalar") {
     const field = elements.designerFieldSelect.value;
@@ -2745,6 +2801,7 @@ function repeatedRowYPercent(block, rowIndex, pageHeightPoints) {
 }
 
 function setDesignerPlacement(placement) {
+  if (placement && placement.mode !== "clipboard") clearDesignerClipboard();
   state.designerPlacement = placement;
   state.designerPlacing = Boolean(placement);
   elements.designerStage.classList.toggle("placing", Boolean(placement));
@@ -2760,12 +2817,16 @@ function updateDesignerPlacementBanner() {
   if (p.mode === "blockGeometryLast") text = "2 of 2 — Click the opposite/final slot anchor on the same page. Press Escape to cancel.";
   if (p.mode === "blockGeometrySingle") text = "Click the one-record slot anchor on the scorecard. Press Escape to cancel.";
   if (p.mode === "blockColumn") text = "Click the field anchor in slot 1; it will repeat through the block. Press Escape to cancel.";
+  if (p.mode === "clipboard") text = `${p.label || "Copied items"} — click inside the PDF to place. You can change pages, scroll, or zoom first. Press Escape to cancel.`;
   elements.designerPlacementBanner.textContent = text;
   elements.designerPlacementBanner.hidden = false;
 }
 
-function cancelDesignerPlacement() {
+function cancelDesignerPlacement(options = {}) {
+  const wasClipboard = state.designerPlacement?.mode === "clipboard";
+  clearDesignerPasteGhost();
   setDesignerPlacement(null);
+  if (wasClipboard && options.keepClipboard !== true) clearDesignerClipboard();
 }
 
 const DESIGNER_ZOOM_MIN = 0.5;
@@ -2797,7 +2858,9 @@ async function changeDesignerPage(delta) {
   const next = state.designerPageNumber + delta;
   if (next < 1 || next > state.designerPdfDocument.numPages) return;
   state.designerPageNumber = next;
-  cancelDesignerPlacement();
+  const keepClipboardPlacement = state.designerPlacement?.mode === "clipboard";
+  if (!keepClipboardPlacement) cancelDesignerPlacement();
+  else clearDesignerPasteGhost();
   if (designerMultiSelectionActive()) clearDesignerSelection({ render: false });
   try { await renderDesignerPage(); }
   catch (error) { setDesignerMessage("That PDF page could not be rendered.", true); }
@@ -3129,6 +3192,41 @@ function designerMultiSelectionActive() {
   return state.designerMultiSelection.length > 1;
 }
 
+function completeDesignerBlockIds() {
+  return state.designerCompleteBlockSelection instanceof Set ? state.designerCompleteBlockSelection : new Set();
+}
+
+function designerStructuralSelectionActive() {
+  return designerMultiSelectionActive() || completeDesignerBlockIds().size > 0;
+}
+
+function structuralDesignerSelections() {
+  const completeBlocks = completeDesignerBlockIds();
+  const result = [];
+  const seen = new Set();
+  for (const selection of activeDesignerSelections()) {
+    if (selection.kind === "repeatedColumn" && completeBlocks.has(selection.blockId)) continue;
+    const key = designerSelectionKey(selection);
+    if (!seen.has(key)) { seen.add(key); result.push({ ...selection }); }
+  }
+  for (const blockId of completeBlocks) {
+    const selection = { kind: "block", blockId };
+    if (!locateDesignerObject(selection)) continue;
+    const key = designerSelectionKey(selection);
+    if (!seen.has(key)) { seen.add(key); result.push(selection); }
+  }
+  return result;
+}
+
+function designerStructuralAnchor(selection, object) {
+  const anchor = designerSelectionAnchor(selection, object);
+  if (selection?.kind !== "block" || !object || isSlotGridGeometry(object)) return anchor;
+  const width = state.designerPageWidthPoints || 1;
+  const xs = (object.columns || []).map((column) => Number(column.xPercent)).filter(Number.isFinite);
+  if (!xs.length) return anchor;
+  return { ...anchor, x: Math.min(...xs) * width, canX: true };
+}
+
 function activeDesignerSelections() {
   return designerMultiSelectionActive() ? state.designerMultiSelection : (state.designerSelection ? [state.designerSelection] : []);
 }
@@ -3140,8 +3238,9 @@ function isDesignerSelectionSelected(selection) {
 
 function applyDesignerSelectionClass(element, selection) {
   const selected = isDesignerSelectionSelected(selection);
-  element.classList.toggle("selected-object", selected && !designerMultiSelectionActive());
-  element.classList.toggle("multi-selected", selected && designerMultiSelectionActive());
+  const structuralGroup = selected && designerStructuralSelectionActive();
+  element.classList.toggle("selected-object", selected && !structuralGroup);
+  element.classList.toggle("multi-selected", structuralGroup);
 }
 
 function normalizeDesignerSelectionSet(selections) {
@@ -3157,7 +3256,10 @@ function normalizeDesignerSelectionSet(selections) {
 }
 
 function setDesignerMultiSelection(selections, options = {}) {
+  if (!options.preserveClipboard) clearDesignerClipboard();
   const normalized = normalizeDesignerSelectionSet(selections);
+  if (options.completeBlockIds instanceof Set) state.designerCompleteBlockSelection = new Set(options.completeBlockIds);
+  else if (!options.preserveCompleteBlocks) state.designerCompleteBlockSelection = new Set();
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
   state.designerCollectionInspectorMode = null;
@@ -3333,7 +3435,9 @@ function scrollSelectedDesignerObjectIntoView() {
 }
 
 function selectDesignerObject(selection, options = {}) {
+  if (!options.preserveClipboard) clearDesignerClipboard();
   state.designerMultiSelection = [];
+  state.designerCompleteBlockSelection = new Set();
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
   state.designerSelection = selection;
@@ -3360,8 +3464,10 @@ function selectDesignerObject(selection, options = {}) {
 }
 
 function clearDesignerSelection(options = {}) {
+  if (!options.preserveClipboard) clearDesignerClipboard();
   state.designerSelection = null;
   state.designerMultiSelection = [];
+  state.designerCompleteBlockSelection = new Set();
   state.designerPaletteSelection = null;
   state.designerPendingMode = null;
   state.designerCollectionInspectorMode = null;
@@ -3571,6 +3677,7 @@ function renderMultiColorPicker(container, common) {
 }
 
 function renderDesignerMultiSelectionInspector() {
+  updateDesignerClipboardActions();
   const count = state.designerMultiSelection.length;
   elements.designerSelectionTitle.textContent = `${count} Items Selected`;
   elements.designerSelectionHelp.textContent = "Formatting, alignment, movement, and deletion apply to every selected item.";
@@ -3594,6 +3701,7 @@ function renderDesignerMultiSelectionInspector() {
 
 function renderDesignerSelectionInspector() {
   if (!elements.designerSelectionTitle) return;
+  updateDesignerClipboardActions();
   const selection = state.designerSelection;
   const object = locateDesignerObject(selection);
   const pending = state.designerPaletteSelection;
@@ -4231,6 +4339,225 @@ function applyDesignerInspectorTemplate() {
   markDesignerObjectChanged();
 }
 
+function deepCloneDesignerValue(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function selectedDesignerSelectionsForCopy() {
+  if (designerMultiSelectionActive()) return [...state.designerMultiSelection];
+  return state.designerSelection ? [state.designerSelection] : [];
+}
+
+function clipboardUnitFromSelection(selection) {
+  const object = locateDesignerObject(selection);
+  if (!selection || !object) return null;
+  if (selection.kind === "mapping") return { kind: "mapping", data: deepCloneDesignerValue(object) };
+  if (selection.kind === "individual") return { kind: "individual", data: deepCloneDesignerValue(object) };
+  if (selection.kind === "block") return { kind: "block", data: deepCloneDesignerValue(object) };
+  if (selection.kind === "repeatedColumn") return { kind: "block", data: deepCloneDesignerValue(object.block), expandedFromColumn: true };
+  return null;
+}
+
+function sideForDesignerString(value) {
+  const text = String(value || "");
+  if (/^away\./.test(text)) return "away";
+  if (/^home\./.test(text)) return "home";
+  return null;
+}
+
+function collectDesignerSides(value, sides = new Set()) {
+  if (typeof value === "string") { const side = sideForDesignerString(value); if (side) sides.add(side); return sides; }
+  if (Array.isArray(value)) { for (const item of value) collectDesignerSides(item, sides); return sides; }
+  if (value && typeof value === "object") for (const item of Object.values(value)) collectDesignerSides(item, sides);
+  return sides;
+}
+
+function clipboardTranslationEligibility(clipboard = state.designerClipboard) {
+  const sides = collectDesignerSides(clipboard?.units || []);
+  return { awayToHome: sides.has("away") && !sides.has("home"), homeToAway: sides.has("home") && !sides.has("away"), mixed: sides.has("away") && sides.has("home") };
+}
+
+function translateDesignerSideId(value, direction) {
+  if (typeof value !== "string") return value;
+  if (direction === "awayToHome" && value.startsWith("away.")) return `home.${value.slice(5)}`;
+  if (direction === "homeToAway" && value.startsWith("home.")) return `away.${value.slice(5)}`;
+  if (direction === "awayToHome" && value === "away-team") return "home-team";
+  if (direction === "homeToAway" && value === "home-team") return "away-team";
+  if (direction === "awayToHome" && value === "away-players") return "home-players";
+  if (direction === "homeToAway" && value === "home-players") return "away-players";
+  return value;
+}
+
+function translateDesignerTemplate(template, direction, context = null) {
+  if (!template || context) return template;
+  return String(template).replace(/\[([^\[\]]+)\]/g, (whole, token) => {
+    const fieldId = templateFieldIdByToken(token);
+    if (!fieldId) return whole;
+    const translatedId = translateDesignerSideId(fieldId, direction);
+    const translated = getFieldDefinition(translatedId);
+    return translated ? `[${translated.label}]` : whole;
+  });
+}
+
+function translateDesignerObjectSide(value, direction) {
+  const clone = deepCloneDesignerValue(value);
+  const walk = (node) => {
+    if (!node || typeof node !== "object") return;
+    for (const [key, val] of Object.entries(node)) {
+      if (key === "template" && typeof val === "string") { node[key] = translateDesignerTemplate(val, direction, node.context || null); continue; }
+      if (typeof val === "string" && ["field","collection","record","context","formattingGroup"].includes(key)) node[key] = translateDesignerSideId(val, direction);
+      else if (val && typeof val === "object") walk(val);
+    }
+  };
+  walk(clone);
+  return clone;
+}
+
+function clearDesignerClipboard() {
+  state.designerClipboard = null;
+  updateDesignerClipboardActions();
+}
+
+function designerUnitVisualBounds(unit) {
+  const scale = Math.max(state.designerRenderScale, .0001);
+  const stageRect = elements.designerStage?.getBoundingClientRect();
+  if (!stageRect) return null;
+  const anchor = clipboardUnitAnchor(unit);
+  let markers = [];
+  if (unit.kind === "mapping") markers = Array.from(elements.designerOverlay?.querySelectorAll(`[data-selection-key="mapping:${CSS.escape(unit.data.id)}"]`) || []);
+  else if (unit.kind === "individual") markers = Array.from(elements.designerOverlay?.querySelectorAll(`[data-selection-key="individual:${CSS.escape(unit.data.id)}"]`) || []);
+  else if (unit.kind === "block") markers = Array.from(elements.designerOverlay?.querySelectorAll(`.repeated-marker[data-block-id="${CSS.escape(unit.data.id)}"]`) || []);
+  if (!markers.length) return null;
+  const rects = markers.map((marker) => marker.getBoundingClientRect());
+  const left = Math.min(...rects.map((r) => r.left)), top = Math.min(...rects.map((r) => r.top));
+  const right = Math.max(...rects.map((r) => r.right)), bottom = Math.max(...rects.map((r) => r.bottom));
+  const anchorClientX = stageRect.left + anchor.x * scale, anchorClientY = stageRect.top + anchor.y * scale;
+  return { leftOffset: (left - anchorClientX) / scale, topOffset: (top - anchorClientY) / scale, width: Math.max(1, (right-left)/scale), height: Math.max(1, (bottom-top)/scale) };
+}
+
+function copyDesignerSelection() {
+  const selections = selectedDesignerSelectionsForCopy();
+  if (!selections.length) return setDesignerMessage("Select one or more Designer items to copy.", true);
+  const units = []; const blockIds = new Set(); let expandedColumns = false;
+  for (const selection of selections) {
+    const unit = clipboardUnitFromSelection(selection); if (!unit) continue;
+    if (unit.kind === "block") {
+      if (blockIds.has(unit.data.id)) continue; blockIds.add(unit.data.id); expandedColumns ||= Boolean(unit.expandedFromColumn);
+    }
+    units.push(unit);
+  }
+  if (!units.length) return setDesignerMessage("The current selection cannot be copied.", true);
+  for (const unit of units) unit.visualBounds = designerUnitVisualBounds(unit);
+  state.designerClipboard = { units, copiedAt: Date.now(), sourcePageIndex: state.designerPageNumber - 1 };
+  updateDesignerClipboardActions();
+  const note = expandedColumns ? " Repeated-layout content copies its complete parent layout." : "";
+  setDesignerMessage(`Copied ${units.length} item${units.length === 1 ? "" : "s"}.${note}`);
+}
+
+function updateDesignerClipboardActions() {
+  const hasSelection = selectedDesignerSelectionsForCopy().length > 0;
+  if (elements.designerCopyButton) elements.designerCopyButton.hidden = !hasSelection;
+  const hasClipboard = Boolean(state.designerClipboard?.units?.length);
+  if (elements.designerPasteButton) elements.designerPasteButton.hidden = !hasClipboard;
+  const eligible = clipboardTranslationEligibility();
+  if (elements.designerPasteAwayHomeButton) elements.designerPasteAwayHomeButton.hidden = !(hasClipboard && eligible.awayToHome);
+  if (elements.designerPasteHomeAwayButton) elements.designerPasteHomeAwayButton.hidden = !(hasClipboard && eligible.homeToAway);
+}
+
+function clipboardUnitAnchor(unit) {
+  const width = state.designerPageWidthPoints || 1, height = state.designerPageHeightPoints || 1;
+  if (unit.kind === "block") return { x: Number(unit.data.geometry?.firstXPercent || 0) * width, y: Number(unit.data.geometry?.firstYPercent || 0) * height };
+  return { x: Number(unit.data.xPercent || 0) * width, y: Number(unit.data.yPercent || 0) * height };
+}
+
+function beginDesignerClipboardPlacement(mode = "exact") {
+  const clipboard = state.designerClipboard;
+  if (!clipboard?.units?.length) return setDesignerMessage("Copy one or more Designer items first.", true);
+  const eligible = clipboardTranslationEligibility(clipboard);
+  if (mode === "awayToHome" && !eligible.awayToHome) return setDesignerMessage("Away → Home paste is available only when the copied items do not include Home data.", true);
+  if (mode === "homeToAway" && !eligible.homeToAway) return setDesignerMessage("Home → Away paste is available only when the copied items do not include Away data.", true);
+  const units = clipboard.units.map((unit) => ({ ...unit, data: mode === "exact" ? deepCloneDesignerValue(unit.data) : translateDesignerObjectSide(unit.data, mode) }));
+  const anchors = units.map(clipboardUnitAnchor);
+  const baseX = Math.min(...anchors.map((a) => a.x)), baseY = Math.min(...anchors.map((a) => a.y));
+  units.forEach((unit, i) => { unit.offsetX = anchors[i].x - baseX; unit.offsetY = anchors[i].y - baseY; });
+  const label = mode === "awayToHome" ? "Paste Away → Home" : mode === "homeToAway" ? "Paste Home → Away" : `Paste ${units.length} copied item${units.length === 1 ? "" : "s"}`;
+  setDesignerPlacement({ mode: "clipboard", pasteMode: mode, units, label });
+  setDesignerMessage(`${label}: move to the destination and click inside the PDF. Other Designer controls remain usable; Escape cancels.`);
+}
+
+function ensureDesignerPasteGhost() {
+  if (state.designerPasteGhost?.isConnected) return state.designerPasteGhost;
+  const ghost = document.createElement("div"); ghost.className = "designer-paste-ghost"; ghost.hidden = true; elements.designerStage.append(ghost); state.designerPasteGhost = ghost; return ghost;
+}
+
+function updateDesignerPasteGhost(event) {
+  const placement = state.designerPlacement; if (placement?.mode !== "clipboard") return;
+  const canvasRect = elements.designerPdfCanvas.getBoundingClientRect();
+  const ghost = ensureDesignerPasteGhost();
+  if (event.clientX < canvasRect.left || event.clientX > canvasRect.right || event.clientY < canvasRect.top || event.clientY > canvasRect.bottom) { ghost.hidden = true; return; }
+  const stageRect = elements.designerStage.getBoundingClientRect();
+  const scale = Math.max(state.designerRenderScale, .0001);
+  ghost.replaceChildren();
+  let minX = 0, minY = 0, maxX = 1, maxY = 1;
+  placement.units.forEach((unit) => {
+    const bounds = unit.visualBounds || { leftOffset: 0, topOffset: -12, width: 42 / scale, height: 18 / scale };
+    const left = (Number(unit.offsetX || 0) + Number(bounds.leftOffset || 0)) * scale;
+    const top = (Number(unit.offsetY || 0) + Number(bounds.topOffset || 0)) * scale;
+    const width = Math.max(2, Number(bounds.width || 1) * scale);
+    const height = Math.max(2, Number(bounds.height || 1) * scale);
+    minX = Math.min(minX, left); minY = Math.min(minY, top); maxX = Math.max(maxX, left + width); maxY = Math.max(maxY, top + height);
+    const item = document.createElement("div"); item.className = `designer-paste-ghost-item${unit.kind === "block" ? " block" : ""}`;
+    item.style.left = `${left}px`; item.style.top = `${top}px`; item.style.width = `${width}px`; item.style.height = `${height}px`; ghost.append(item);
+  });
+  ghost.style.left = `${event.clientX - stageRect.left}px`;
+  ghost.style.top = `${event.clientY - stageRect.top}px`;
+  ghost.style.width = `${Math.max(1, maxX - minX)}px`; ghost.style.height = `${Math.max(1, maxY - minY)}px`;
+  ghost.hidden = false;
+}
+function hideDesignerPasteGhost() { if (state.designerPasteGhost) state.designerPasteGhost.hidden = true; }
+function clearDesignerPasteGhost() { if (state.designerPasteGhost?.isConnected) state.designerPasteGhost.remove(); state.designerPasteGhost = null; }
+
+function freshenClipboardUnitIds(unit) {
+  const data = deepCloneDesignerValue(unit.data);
+  if (unit.kind === "block") { data.id = makeMappingId(); for (const column of data.columns || []) column.id = makeMappingId(); }
+  else data.id = makeMappingId();
+  return data;
+}
+
+async function commitDesignerClipboardPlacement(placement, xPercent, yPercent) {
+  const layout = selectedLayout(); if (!layout) return;
+  const width = state.designerPageWidthPoints || 1, height = state.designerPageHeightPoints || 1;
+  const baseX = xPercent * width, baseY = yPercent * height;
+  const addedSelections = [];
+  for (const unit of placement.units) {
+    const data = freshenClipboardUnitIds(unit);
+    const x = baseX + Number(unit.offsetX || 0), y = baseY + Number(unit.offsetY || 0);
+    if (unit.kind === "mapping") {
+      data.pageIndex = state.designerPageNumber - 1; data.xPercent = clamp(x / width, 0, 1); data.yPercent = clamp(y / height, 0, 1);
+      layout.mappings = Array.isArray(layout.mappings) ? layout.mappings : []; layout.mappings.push(data); addedSelections.push({ kind:"mapping", id:data.id });
+    } else if (unit.kind === "individual") {
+      data.pageIndex = state.designerPageNumber - 1; data.xPercent = clamp(x / width, 0, 1); data.yPercent = clamp(y / height, 0, 1);
+      layout.individualMappings = Array.isArray(layout.individualMappings) ? layout.individualMappings : []; layout.individualMappings.push(data); addedSelections.push({ kind:"individual", id:data.id });
+    } else if (unit.kind === "block") {
+      const priorX = Number(data.geometry?.firstXPercent || 0) * width, priorY = Number(data.geometry?.firstYPercent || 0) * height;
+      const dx = x - priorX, dy = y - priorY; data.pageIndex = state.designerPageNumber - 1;
+      if (data.geometry) {
+        data.geometry.firstXPercent = clamp(Number(data.geometry.firstXPercent || 0) + dx/width, 0, 1); data.geometry.lastXPercent = clamp(Number(data.geometry.lastXPercent || 0) + dx/width, 0, 1);
+        data.geometry.firstYPercent = clamp(Number(data.geometry.firstYPercent || 0) + dy/height, 0, 1); data.geometry.lastYPercent = clamp(Number(data.geometry.lastYPercent || 0) + dy/height, 0, 1);
+      }
+      layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : []; layout.repeatedBlocks.push(data); addedSelections.push({ kind:"block", blockId:data.id });
+    }
+  }
+  layout.updatedAt = new Date().toISOString(); layout.schemaVersion = Math.max(Number(layout.schemaVersion)||1, 7);
+  try {
+    await saveLayout(layout); cancelDesignerPlacement(); populateDesignerBlockSelect(); renderDesignerOverlay(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList(); renderDesignerPalette();
+    const selectable = addedSelections.filter(isDesignerMultiSelectable);
+    if (selectable.length > 1) setDesignerMultiSelection(selectable); else if (addedSelections.length === 1) selectDesignerObject(addedSelections[0], { renderOverlay:true }); else clearDesignerSelection({ render:false });
+    setDesignerMessage(`Pasted ${addedSelections.length} item${addedSelections.length === 1 ? "" : "s"} on page ${state.designerPageNumber}.`);
+    await refreshLayouts(); state.selectedLayoutId = layout.id;
+  } catch (error) { setDesignerMessage(errorMessage(error, "The copied items could not be pasted."), true); }
+}
+
 function designerSnapshot(layout = selectedLayout()) {
   if (!layout) return null;
   return JSON.stringify(layout);
@@ -4346,7 +4673,7 @@ function wireDesignerMarker(marker, selection) {
   marker.addEventListener("click", (event) => {
     event.stopPropagation();
     if (event.ctrlKey || event.metaKey) toggleDesignerMultiSelection(selection);
-    else if (!designerMultiSelectionActive() || !isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
+    else if (!isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
   });
   marker.addEventListener("pointerdown", (event) => beginDesignerDrag(event, selection));
 }
@@ -4358,6 +4685,24 @@ function setDesignerSelectionPosition(selection, x, y) {
   if (selection.kind === "mapping" || selection.kind === "individual") {
     if (Number.isFinite(x)) object.xPercent = clamp(x / width, 0, 1);
     if (Number.isFinite(y)) object.yPercent = clamp(y / height, 0, 1);
+  } else if (selection.kind === "block") {
+    if (object.geometry && Number.isFinite(y)) {
+      const nextY = clamp(y / height, 0, 1), delta = nextY - Number(object.geometry.firstYPercent || 0);
+      object.geometry.firstYPercent = nextY;
+      if (Number.isFinite(Number(object.geometry.lastYPercent))) object.geometry.lastYPercent = clamp(Number(object.geometry.lastYPercent) + delta, 0, 1);
+    }
+    if (isSlotGridGeometry(object) && Number.isFinite(x)) {
+      const nextX = clamp(x / width, 0, 1), delta = nextX - Number(object.geometry.firstXPercent || 0);
+      object.geometry.firstXPercent = nextX;
+      if (Number.isFinite(Number(object.geometry.lastXPercent))) object.geometry.lastXPercent = clamp(Number(object.geometry.lastXPercent) + delta, 0, 1);
+    } else if (Number.isFinite(x)) {
+      const columns = (object.columns || []).filter((column) => Number.isFinite(Number(column.xPercent)));
+      if (columns.length) {
+        const currentX = Math.min(...columns.map((column) => Number(column.xPercent))) * width;
+        const delta = (x - currentX) / width;
+        for (const column of columns) column.xPercent = clamp(Number(column.xPercent) + delta, 0, 1);
+      }
+    }
   } else if (selection.kind === "repeatedColumn" && Number.isFinite(x)) {
     if (isSlotGridGeometry(object.block)) object.column.xOffsetPoints = x - (Number(object.block.geometry?.firstXPercent || 0) * width);
     else object.column.xPercent = clamp(x / width, 0, 1);
@@ -4368,10 +4713,10 @@ function beginDesignerDrag(event, selection) {
   if (state.designerPlacing || event.button !== 0 || event.ctrlKey || event.metaKey) return;
   const object = locateDesignerObject(selection); if (!object) return;
   event.stopPropagation(); event.preventDefault();
-  if (!designerMultiSelectionActive() || !isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
-  const selections = designerMultiSelectionActive() ? [...state.designerMultiSelection] : [selection];
+  if (!isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
+  const selections = designerStructuralSelectionActive() ? structuralDesignerSelections() : [selection];
   const entries = selections.map((entry) => {
-    const target = locateDesignerObject(entry); const anchor = designerSelectionAnchor(entry, target);
+    const target = locateDesignerObject(entry); const anchor = designerStructuralAnchor(entry, target);
     return { selection: { ...entry }, startX: anchor.x, startY: anchor.y, canX: anchor.canX, canY: anchor.canY };
   }).filter((entry) => entry.canX || entry.canY);
   if (!entries.length) return;
@@ -4408,6 +4753,12 @@ function handleDesignerKeyboard(event) {
   const tag = document.activeElement?.tagName;
   const editingControl = ["INPUT", "TEXTAREA", "SELECT"].includes(tag);
   const modifier = event.ctrlKey || event.metaKey;
+  if (!editingControl && modifier && !event.altKey && String(event.key).toLowerCase() === "c") {
+    event.preventDefault(); copyDesignerSelection(); return;
+  }
+  if (!editingControl && modifier && !event.altKey && String(event.key).toLowerCase() === "v") {
+    event.preventDefault(); beginDesignerClipboardPlacement("exact"); return;
+  }
   if (!editingControl && modifier && !event.altKey && String(event.key).toLowerCase() === "z") {
     event.preventDefault();
     if (event.shiftKey) redoDesignerChange(); else undoDesignerChange();
@@ -4425,10 +4776,10 @@ function handleDesignerKeyboard(event) {
   event.preventDefault();
   const step = event.shiftKey ? 5 : 0.5;
   const [dx,dy] = deltas[event.key];
-  if (designerMultiSelectionActive()) {
-    for (const selection of state.designerMultiSelection) {
+  if (designerStructuralSelectionActive()) {
+    for (const selection of structuralDesignerSelections()) {
       const object = locateDesignerObject(selection); if (!object) continue;
-      const anchor = designerSelectionAnchor(selection, object);
+      const anchor = designerStructuralAnchor(selection, object);
       const x = anchor.canX && anchor.x != null ? anchor.x + dx*step : null;
       const y = anchor.canY && anchor.y != null ? anchor.y + dy*step : null;
       setDesignerSelectionPosition(selection, x, y);
@@ -4443,18 +4794,21 @@ function handleDesignerKeyboard(event) {
 }
 
 async function deleteActiveDesignerSelection() {
-  if (designerMultiSelectionActive()) return deleteDesignerMultiSelection();
+  if (designerStructuralSelectionActive()) return deleteDesignerMultiSelection();
   return deleteSelectedDesignerObject();
 }
 
 async function deleteDesignerMultiSelection() {
-  const layout = selectedLayout(); if (!layout || !designerMultiSelectionActive()) return;
-  const selections = [...state.designerMultiSelection];
-  const mappingIds = new Set(selections.filter((s) => s.kind === "mapping").map((s) => s.id));
-  const individualIds = new Set(selections.filter((s) => s.kind === "individual").map((s) => s.id));
-  const columnKeys = new Set(selections.filter((s) => s.kind === "repeatedColumn").map((s) => `${s.blockId}:${s.columnId}`));
+  const layout = selectedLayout(); if (!layout || !designerStructuralSelectionActive()) return;
+  const selections = activeDesignerSelections();
+  const structural = structuralDesignerSelections();
+  const mappingIds = new Set(structural.filter((s) => s.kind === "mapping").map((s) => s.id));
+  const individualIds = new Set(structural.filter((s) => s.kind === "individual").map((s) => s.id));
+  const blockIds = new Set(structural.filter((s) => s.kind === "block").map((s) => s.blockId));
+  const columnKeys = new Set(structural.filter((s) => s.kind === "repeatedColumn").map((s) => `${s.blockId}:${s.columnId}`));
   layout.mappings = (layout.mappings || []).filter((item) => !mappingIds.has(item.id));
   layout.individualMappings = (layout.individualMappings || []).filter((item) => !individualIds.has(item.id));
+  layout.repeatedBlocks = (layout.repeatedBlocks || []).filter((block) => !blockIds.has(block.id));
   for (const block of layout.repeatedBlocks || []) block.columns = (block.columns || []).filter((column) => !columnKeys.has(`${block.id}:${column.id}`));
   clearDesignerSelection({ render: false });
   layout.updatedAt = new Date().toISOString();

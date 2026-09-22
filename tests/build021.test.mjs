@@ -4,7 +4,7 @@ const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const css = fs.readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
 
-assert.match(html, /Build 021.1 • Designer Workspace/);
+assert.match(html, /data-app-build-upper-prefix="Designer Workspace"/);
 assert.match(html, /id="designer-multi-selection-controls"/);
 assert.match(html, /id="designer-multi-font-face"/);
 assert.match(html, /id="designer-multi-font-size"/);

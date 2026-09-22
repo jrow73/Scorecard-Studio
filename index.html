@@ -3,8 +3,8 @@
   Scorecard Studio
   Layout Management
   Version: 0.2.0-dev
-  Build: 019.2
-  Previous baseline Build 018.3
+  Build metadata: app-meta.json
+  Previous accepted baseline: Build 021.2
 -->
 <html lang="en">
 <head>
@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=0211" />
+  <link rel="stylesheet" href="./css/styles.css?v=0223" />
 </head>
 <body>
   <div class="app-shell">
@@ -21,7 +21,7 @@
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p>0.2.0-dev • Build 019.2</p>
+          <p data-app-version-label>Loading version…</p>
         </div>
       </div>
 
@@ -54,7 +54,7 @@
 
       <section class="hero-card card" data-view="home">
         <div class="hero-copy">
-          <p class="section-label">Build 019.2</p>
+          <p class="section-label" data-app-build-label>Loading build…</p>
           <h3>Pregame fields, normalized for every layout</h3>
           <p>
             Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
@@ -233,7 +233,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 019.2 • Live Coverage</p>
+              <p class="section-label" data-app-build-prefix="Live Coverage">Live Coverage</p>
               <h3 id="field-diagnostic-heading">Field Coverage Diagnostic</h3>
               <p class="subtle" id="field-diagnostic-subtitle">Select a real game on Home, then open this diagnostic.</p>
             </div>
@@ -279,7 +279,7 @@
         <section class="card layout-create-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 019.2</p>
+              <p class="section-label" data-app-build-label>Loading build…</p>
               <h3 id="layouts-heading">Layout Library</h3>
               <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
             </div>
@@ -358,7 +358,7 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 021.1 • Designer Workspace</p>
+              <p class="section-label" data-app-build-upper-prefix="Designer Workspace">Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -422,6 +422,10 @@
                     <button class="secondary-button compact-button" id="designer-selection-clear-btn" type="button">Deselect</button>
                     <button class="danger-button compact-button" id="designer-selection-delete-btn" type="button" hidden>Delete</button>
                     <button class="secondary-button compact-button" id="designer-selection-new-instance-btn" type="button" hidden>New Instance</button>
+                    <button class="secondary-button compact-button" id="designer-copy-btn" type="button" hidden title="Copy selected Designer item(s) (Ctrl/Cmd+C)">Copy</button>
+                    <button class="secondary-button compact-button" id="designer-paste-btn" type="button" hidden title="Paste copied item(s) (Ctrl/Cmd+V)">Paste</button>
+                    <button class="secondary-button compact-button" id="designer-paste-away-home-btn" type="button" hidden title="Paste copied Away items using Home data">Away → Home</button>
+                    <button class="secondary-button compact-button" id="designer-paste-home-away-btn" type="button" hidden title="Paste copied Home items using Away data">Home → Away</button>
                     <button class="secondary-button compact-button" id="designer-workspace-layout-btn" type="button" hidden>Edit Layout</button>
                   </div>
                 </div>
@@ -724,6 +728,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0211"></script>
+  <script type="module" src="./js/app.js?v=0223"></script>
 </body>
 </html>

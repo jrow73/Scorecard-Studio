@@ -1128,3 +1128,10 @@ The Designer intentionally uses a simple legacy-style viewport model: ordinary w
 - Mapping anchors use a precision crosshair.
 - Individual Placement is an ongoing collection-level workspace with progress and nested role/slot children; it advances to the next unplaced selector when possible.
 - Final Interaction Hotfix navigation and legacy-style zoom/pan behavior remain baseline requirements.
+
+
+## Build metadata and Designer clipboard (Build 022)
+
+- `app-meta.json` is the single source for the displayed app version/build label. Update it once per build; app surfaces should consume that metadata rather than hard-code independent build labels.
+- Designer Copy/Paste uses an in-memory session clipboard. Paste enters ghost-placement mode and commits only on a click inside the PDF canvas. Page navigation, scrolling, zooming, and other controls must remain usable while placement is pending.
+- Away→Home and Home→Away translated paste is offered only for one-sided team-specific selections; mixed Away+Home selections intentionally expose neither translation option.

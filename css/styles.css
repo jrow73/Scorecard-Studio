@@ -1805,3 +1805,26 @@ body.designer-mode .designer-view > .card,
 .designer-multi-align-grid button:hover { border-color: rgba(124,199,255,.55); background: rgba(124,199,255,.08); }
 .designer-multi-align-grid button:disabled { opacity: .4; cursor: not-allowed; }
 .scorecard-color-chip.mixed { background: linear-gradient(135deg,#000 0 25%,#777 25% 50%,#1565c0 50% 75%,#d32f2f 75%); }
+
+/* Build 022 — clipboard placement */
+.designer-paste-ghost { position:absolute; z-index:12; pointer-events:none; border:2px dashed #b36cff; background:rgba(179,108,255,.10); border-radius:6px; box-shadow:0 0 0 2px rgba(179,108,255,.08); }
+.designer-paste-ghost[hidden] { display:none !important; }
+
+/* Build 022.1: paste ghost uses the same logical anchor as final placement. */
+.designer-paste-ghost {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.designer-paste-ghost-item {
+  position: absolute;
+  pointer-events: none;
+  border: 2px dashed #b36cff;
+  background: rgba(179,108,255,.10);
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+.designer-paste-ghost-item.block {
+  background: rgba(179,108,255,.07);
+}

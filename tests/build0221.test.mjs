@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+const css = fs.readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+const meta = JSON.parse(fs.readFileSync(new URL('../app-meta.json', import.meta.url), 'utf8'));
+
+assert.equal(meta.version, '0.2.0-dev');
+assert.match(meta.build, /^022\.(?:1|2|3)$/);
+assert.match(app, /designerCompleteBlockSelection: new Set\(\)/);
+assert.match(app, /function structuralDesignerSelections\(\)/);
+assert.match(app, /allEnclosed/);
+assert.match(app, /structuralDesignerSelections\(\)/);
+assert.match(app, /layout\.repeatedBlocks = \(layout\.repeatedBlocks \|\| \[\]\)\.filter\(\(block\) => !blockIds\.has\(block\.id\)\)/);
+assert.match(app, /function clearDesignerClipboard\(\)/);
+assert.match(app, /if \(wasClipboard && options\.keepClipboard !== true\) clearDesignerClipboard\(\)/);
+assert.match(app, /function designerUnitVisualBounds\(unit\)/);
+assert.match(app, /unit\.visualBounds = designerUnitVisualBounds\(unit\)/);
+assert.match(app, /designer-paste-ghost-item/);
+assert.match(css, /\.designer-paste-ghost-item/);
+console.log('Build 022.1 single-use paste, parent-aware structural selection, and ghost fidelity checks passed.');
