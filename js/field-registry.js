@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Canonical pregame field registry
  * Version: 0.2.0-dev
- * Build: 018.3
+ * Build: 023
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
@@ -274,8 +274,8 @@ function fieldCatalogMetadata(entry) {
     "game.startTime": ["Scheduled first-pitch time.", "7:10 PM"],
     "game.dayNight": ["Whether the game is designated as a day or night game.", "Night"],
     "game.number": ["Game number within the day, such as Game 2 of a doubleheader.", "2"],
-    "game.venue.name": ["Ballpark or venue name.", "T-Mobile Park"],
-    "game.venue.city": ["City where the venue is located.", "Seattle"],
+    "game.venue.name": ["Ballpark or venue name.", "Harbor Field at Crescent Bay"],
+    "game.venue.city": ["City where the venue is located.", "Grand Valley"],
     "game.venue.state": ["State or province where the venue is located.", "WA"],
     "game.venue.country": ["Country where the venue is located.", "USA"],
     "game.venue.capacity": ["Published seating capacity of the venue.", "47,929"],
@@ -285,21 +285,21 @@ function fieldCatalogMetadata(entry) {
     "game.weather.condition": ["Pregame weather conditions.", "Partly Cloudy"],
     "game.weather.wind": ["Pregame wind speed and direction.", "7 mph, L to R"],
     "game.weather.summary": ["Combined pregame conditions, temperature, and wind.", "Partly Cloudy • 68° • 7 mph, L to R"],
-    "game.umpires.home.name": ["Name of the home-plate umpire.", "Pat Hoberg"],
-    "game.umpires.first.name": ["Name of the first-base umpire.", "Edwin Jimenez"],
-    "game.umpires.second.name": ["Name of the second-base umpire.", "Alfonso Márquez"],
-    "game.umpires.third.name": ["Name of the third-base umpire.", "Mike Estabrook"],
-    "game.umpires.crew[].name": ["Umpire name within the umpire-crew collection.", "Pat Hoberg"],
+    "game.umpires.home.name": ["Name of the home-plate umpire.", "Mara Ellison"],
+    "game.umpires.first.name": ["Name of the first-base umpire.", "Theo Marwick"],
+    "game.umpires.second.name": ["Name of the second-base umpire.", "Lucía Benavides"],
+    "game.umpires.third.name": ["Name of the third-base umpire.", "Graham Pike"],
+    "game.umpires.crew[].name": ["Umpire name within the umpire-crew collection.", "Mara Ellison"],
     "game.umpires.crew[].role": ["Assigned umpire position or role.", "Home Plate"]
   };
   if (game[id]) return metadataPair(game[id]);
 
   const sideId = id.replace(/^(away|home)\./, "");
   const side = {
-    "team.name": ["Full team name including location and club name.", "Seattle Mariners"],
-    "team.locationName": ["Team location or market name.", "Seattle"],
-    "team.shortName": ["Short team name supplied by the source data.", "Seattle"],
-    "team.clubName": ["Club name without the location.", "Mariners"],
+    "team.name": ["Full team name including location and club name.", "Grand Valley Copperheads"],
+    "team.locationName": ["Team location or market name.", "Grand Valley"],
+    "team.shortName": ["Short team name supplied by the source data.", "Grand Valley"],
+    "team.clubName": ["Club name without the location.", "Copperheads"],
     "team.abbreviation": ["Standard team abbreviation.", "SEA"],
     "team.league.name": ["League name for the team.", "American League"],
     "team.division.name": ["Division name for the team.", "American League West"],
@@ -316,14 +316,14 @@ function fieldCatalogMetadata(entry) {
     "team.standings.last10.wins": ["Wins in the team's last 10 games.", "7"],
     "team.standings.last10.losses": ["Losses in the team's last 10 games.", "3"],
     "team.standings.last10.display": ["Win-loss record over the team's last 10 games.", "7-3"],
-    "manager.name": ["Team manager's name.", "Dan Wilson"],
+    "manager.name": ["Team manager's name.", "Sebastian Montgomery"],
     "manager.number": ["Manager's uniform number, when available.", "6"]
   };
   if (side[sideId]) return metadataPair(side[sideId]);
 
   const starterId = sideId.replace(/^startingPitcher\./, "");
   const starter = {
-    "player.name": ["Starting pitcher's name. Display can be changed with Name Format.", "Logan Gilbert"],
+    "player.name": ["Starting pitcher's name. Display can be changed with Name Format.", "Thaddeus McAllister"],
     "player.number": ["Starting pitcher's jersey number.", "36"],
     "player.throws": ["Starting pitcher's throwing hand.", "R"],
     "stats.gamesStarted": ["Season games started by the pitcher.", "28"],
@@ -340,7 +340,7 @@ function fieldCatalogMetadata(entry) {
     const [, collection, leaf] = collectionMatch;
     const commonPlayer = {
       "player.number": ["Player's jersey number.", collection === "bullpen" ? "75" : "44"],
-      "player.name": [collection === "bullpen" ? "Pitcher's name. Display can be changed with Name Format." : "Player's name. Display can be changed with Name Format.", collection === "bullpen" ? "Andrés Muñoz" : "Julio Rodríguez"]
+      "player.name": [collection === "bullpen" ? "Pitcher's name. Display can be changed with Name Format." : "Player's name. Display can be changed with Name Format.", collection === "bullpen" ? "Silas Crowe" : "Theodore Fitzpatrick III"]
     };
     if (commonPlayer[leaf]) return metadataPair(commonPlayer[leaf]);
     if (collection === "bullpen") {

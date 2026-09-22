@@ -197,7 +197,7 @@ Prefixes:
 | `{side}.bullpen[]` | repeated, pitching |
 | `{side}.defense.{position}` | single, derived role view; shared player leaves, no separate stat family |
 
-Lineup and defense `position` means posted pregame assignment. Bench/bullpen position uses the pregame boxscore designation when present and may explicitly fall back to primary position with provenance. Starting pitcher position is the selected pitching role. `P.identity` is a composite of number + name + position, default `#44 Julio Rodríguez CF`; punctuation for missing components is omitted.
+Lineup and defense `position` means posted pregame assignment. Bench/bullpen position uses the pregame boxscore designation when present and may explicitly fall back to primary position with provenance. Starting pitcher position is the selected pitching role. `P.identity` is a composite of number + name + position, default `#7 Theodore Fitzpatrick III CF`; punctuation for missing components is omitted.
 
 ### Batting season/YTD family
 

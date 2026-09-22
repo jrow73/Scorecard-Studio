@@ -6,7 +6,7 @@ const css = fs.readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8
 const meta = JSON.parse(fs.readFileSync(new URL('../app-meta.json', import.meta.url), 'utf8'));
 
 assert.equal(meta.version, '0.2.0-dev');
-assert.match(meta.build, /^022(?:\.|$)/);
+assert.match(meta.build, /^02[3-9](?:\.|$)/);
 assert.match(html, /data-app-version-label/);
 assert.match(html, /data-app-build-label/);
 assert.match(html, /data-app-build-prefix="Live Coverage"/);

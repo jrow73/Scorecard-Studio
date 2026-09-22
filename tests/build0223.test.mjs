@@ -5,7 +5,7 @@ const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const meta = JSON.parse(fs.readFileSync(new URL('../app-meta.json', import.meta.url), 'utf8'));
 
 assert.equal(meta.version, '0.2.0-dev');
-assert.equal(meta.build, '022.3');
+assert.match(meta.build, /^02[3-9](?:\.|$)/);
 
 // Lasso completion must commit structural-parent state before rendering selection state,
 // including the one-visible-child case.

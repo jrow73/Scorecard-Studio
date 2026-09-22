@@ -11,7 +11,7 @@ assert.match(html, /id="designer-redo-btn"[^>]*title="Redo \(Ctrl\+Y or Ctrl\/Cm
 assert.match(html, /id="designer-layout-settings-btn"[^>]*title="Layout Settings"[^>]*aria-label="Layout Settings"[^>]*>⚙<\/button>/);
 assert.doesNotMatch(html, /id="designer-undo-btn"[^>]*>↶ Undo<\/button>/);
 assert.match(css, /\.designer-toolbar-icon\s*\{[\s\S]*min-height:\s*36px/);
-assert.match(app, /Build:\s*022/);
+assert.match(app, /Build:\s*02\d(?:\.\d+)?/);
 assert.match(app, /async function undoDesignerChange/);
 assert.match(app, /async function redoDesignerChange/);
 console.log('Build 020.1 static regression checks passed.');

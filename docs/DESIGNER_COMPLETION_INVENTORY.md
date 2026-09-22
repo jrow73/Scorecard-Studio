@@ -1,6 +1,6 @@
 # Scorecard Studio — Designer Completion Inventory
 
-**Baseline:** Build 018.3 final field-catalog closure accepted  
+**Baseline:** Build 022.3 accepted; Build 023 Representative Data/Test PDF underway  
 **Milestone:** v0.2.0 — Complete Field Mapping & Formatting  
 **Purpose:** Authoritative inventory of remaining work before the Layout Designer is functionally complete for the traditional pregame scorecard v1 scope.
 
@@ -28,10 +28,10 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 | Font size/alignment | Complete | Required / done | Preserve |
 | Static text color | Not implemented | Required | Add in formatting build |
 | Conditional/data-driven color | Not implemented | Scope decision | Prefer narrow handedness use case over generalized rules engine |
-| Long-text fit behavior | Unresolved | Scope decision | Define intentional v1 policy |
-| Representative preview data | Build 018.3-05 depth/realism pass complete | Complete for Build 018 | 9 lineup / 6 bench / 14 bullpen / 6 umpire representative members with mixed-width jersey numbers |
+| Long-text fit behavior | Deferred to Build 026 | Required / investigate | Evaluate maximum width + shrink-to-fit/truncate; wrapping separately |
+| Representative preview data | Build 023 fictional fixture | Required / Build 023 | Deterministic fictional teams/people/venue; 9 lineup / 6 bench / 14 bullpen / 6 umpires with text-width stress cases |
 | Capacity/overflow behavior | Functional | Required / refine | Keep under-capacity normal; improve preview guidance/warnings |
-| Undo/Redo | Missing | Required | Add full Designer history |
+| Undo/Redo | Complete | Required / done | Build 020 accepted |
 | Generation-result UX | Functional | v1 polish | Separate success from warnings/notices clearly |
 | Full-card regression/acceptance | Pending | Required | Final Designer completion pass |
 | Advanced matchup/research | Deferred | Not v1 Designer scope | Keep in Game Day/future research |
@@ -121,17 +121,15 @@ Full Designer Undo/Redo remains required. It should cover meaningful Designer mu
 
 Generation already reports conditions such as collection overflow and incomplete layouts. The final v1 workflow should clearly distinguish successful generation, warnings, and non-blocking notices even when the browser save/download interaction occurs. This is a UX refinement, not a change to field resolution or PDF-generation semantics.
 
-## Provisional remaining build path to v0.2.0
+## Remaining build path to v0.2.0
 
-Build 017 is accepted. The remaining build numbers are provisional until each preceding audit/acceptance pass fixes the next scope.
+Build 022.3 is accepted and is the baseline for the final Designer runway.
 
-1. **Build 018 — Field & Player-Format Coverage Audit/Completion** — reconcile Designer exposure with the canonical registry; close traditional pregame field gaps; complete Name Format coverage.
-2. **Designer Formatting** — static text color plus explicit v1 decisions/implementation for narrowly scoped conditional color and long-text fit.
-3. **Undo/Redo** — coherent Designer editing history across all accepted object types and mutations.
-4. **Preview & Collection Robustness** — deterministic full-capacity sample data, capacity guidance, and overflow UX refinement.
-5. **Designer Completion/Polish** — generation feedback, complete scorecard-design regression pass, documentation cleanup, and v0.2.0 release readiness.
-
-The exact numbering after Build 018 should remain flexible.
+1. **Build 023 — Representative Data & Test PDF** — deterministic fictional stress-test data; Designer Test PDF uses Representative Data only.
+2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal, Text Template/name-format and blank-value cleanup, compact Inspector/header, toolbar Copy/Paste, delete consistency, helper/footer cleanup.
+3. **Build 025 — Field Palette & Layout Settings** — dark-theme settings, Standard/Custom field selection, custom field picker, conditional-format toggles, palette cleanup, Umpire Crew consolidation.
+4. **Build 026 — Text Overflow & Fit Controls** — feasibility and implementation of intentional overflow behavior, with maximum-width/shrink-to-fit as the leading candidate and truncate/wrap evaluated as alternatives.
+5. **Build 027 — Designer Completion / Release Review** — full-card/fresh-layout regression, persistence/reload, documentation reconciliation, and v0.2.0 release readiness.
 
 ## Scope held for later
 

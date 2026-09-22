@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Representative Designer / field-catalog sample data
  * Version: 0.2.0-dev
- * Build: 018.3
+ * Build: 023
  */
 
 const POSITION_INFO = {
@@ -19,22 +19,24 @@ function position(abbreviation) {
 function samplePlayerName(name, boxscoreName = null) {
   const parts = String(name || "").trim().split(/\s+/);
   const firstName = parts[0] || "";
-  const lastName = parts.length > 1 ? parts.at(-1) : "";
+  const suffixes = new Set(["Jr.", "Sr.", "II", "III", "IV"]);
+  const suffix = parts.length > 2 && suffixes.has(parts.at(-1)) ? parts.at(-1) : "";
+  const lastName = parts.length > 1 ? parts.at(suffix ? -2 : -1) : "";
   return {
     name,
     firstName: firstName || null,
     lastName: lastName || null,
     useName: firstName || null,
     useLastName: lastName || null,
-    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}` : name,
+    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}${suffix ? ` ${suffix}` : ""}` : name,
     boxscoreName: boxscoreName || sampleBoxscoreName(name, firstName, lastName)
   };
 }
 
 function sampleBoxscoreName(name, firstName, lastName) {
   const disambiguated = {
-    "Brandon Lowe": "Lowe, B",
-    "Josh Lowe": "Lowe, J"
+    "Adrian Vale": "Vale, A",
+    "Marcos Vale": "Vale, M"
   };
   return disambiguated[name] || lastName || firstName || name;
 }
@@ -181,56 +183,57 @@ function sideTeam({ name, locationName, shortName, clubName, abbreviation, wins,
 export const DESIGNER_SAMPLE_MODEL = Object.freeze({
   schemaVersion: 1,
   game: {
-    date: "2026-09-19",
-    startTime: "2026-09-20T02:10:00Z",
+    date: "2026-07-18",
+    startTime: "2026-07-19T00:15:00Z",
     dayNight: "Night",
-    number: 2,
+    number: 1,
     venue: {
-      name: "T-Mobile Park",
-      city: "Seattle",
-      state: "WA",
+      // Deliberately long fictional venue name for layout-width stress testing.
+      name: "Harbor Field at Crescent Bay",
+      city: "Crescent Bay",
+      state: "OR",
       country: "USA",
-      capacity: 47929,
+      capacity: 41782,
       turfType: "Grass",
       roofType: "Retractable",
       timeZone: "America/Los_Angeles"
     },
-    weather: { temperature: 68, condition: "Partly Cloudy", wind: "7 mph, L to R" },
+    weather: { temperature: 71, condition: "Partly Cloudy", wind: "11 mph, L to R" },
     umpires: {
-      home: { id: 4001, name: "Pat Hoberg", role: "Home Plate" },
-      first: { id: 4002, name: "Edwin Jimenez", role: "First Base" },
-      second: { id: 4003, name: "Alfonso Márquez", role: "Second Base" },
-      third: { id: 4004, name: "Mike Estabrook", role: "Third Base" },
+      home: { id: 4001, name: "Mara Ellison", role: "Home Plate" },
+      first: { id: 4002, name: "Theo Marwick", role: "First Base" },
+      second: { id: 4003, name: "Lucía Benavides", role: "Second Base" },
+      third: { id: 4004, name: "Graham Pike", role: "Third Base" },
       additional: [
-        { id: 4005, name: "Tripp Gibson", role: "Left Field" },
-        { id: 4006, name: "Laz Díaz", role: "Right Field" }
+        { id: 4005, name: "Nolan Fairweather", role: "Left Field" },
+        { id: 4006, name: "Inez Calderón", role: "Right Field" }
       ],
       crew: [
-        { id: 4001, name: "Pat Hoberg", role: "Home Plate" },
-        { id: 4002, name: "Edwin Jimenez", role: "First Base" },
-        { id: 4003, name: "Alfonso Márquez", role: "Second Base" },
-        { id: 4004, name: "Mike Estabrook", role: "Third Base" },
-        { id: 4005, name: "Tripp Gibson", role: "Left Field" },
-        { id: 4006, name: "Laz Díaz", role: "Right Field" }
+        { id: 4001, name: "Mara Ellison", role: "Home Plate" },
+        { id: 4002, name: "Theo Marwick", role: "First Base" },
+        { id: 4003, name: "Lucía Benavides", role: "Second Base" },
+        { id: 4004, name: "Graham Pike", role: "Third Base" },
+        { id: 4005, name: "Nolan Fairweather", role: "Left Field" },
+        { id: 4006, name: "Inez Calderón", role: "Right Field" }
       ]
     }
   },
   away: sideTeam({
-    name: "Tampa Bay Rays", locationName: "Tampa Bay", shortName: "Tampa Bay", clubName: "Rays", abbreviation: "TB",
-    wins: 78, losses: 73, league: "American League", division: "American League East", managerName: "Kevin Cash", managerNumber: "16",
-    standings: { divisionRank: 3, leagueRank: 7, wildCardRank: 4, divisionGamesBack: "8.5", streak: "W2", last10: { wins: 6, losses: 4, display: "6-4" } },
-    starter: sampleStarter("Shane Baz", "Shane", "Baz", "S. Baz", "Baz, S.", "11", "R", 10, 5, 27, 3.19, 1.08),
-    lineup: sampleLineup(["Yandy Díaz", "Brandon Lowe", "Junior Caminero", "Jonathan Aranda", "Josh Lowe", "Christopher Morel", "Jake Mangum", "Nick Fortes", "Taylor Walls"], ["1B", "2B", "3B", "DH", "RF", "LF", "CF", "C", "SS"], ["R", "L", "R", "L", "L", "R", "S", "R", "S"]),
-    bench: sampleBench(["Kameron Misner", "José Caballero", "Ben Rortvedt", "Curtis Mead", "Richie Palacios", "Bob Seymour"], ["OF", "IF", "C", "IF", "OF", "1B"], ["L", "R", "L", "R", "L", "L"]),
-    bullpen: sampleBullpen(["Pete Fairbanks", "Garrett Cleavinger", "Mason Montgomery", "Edwin Uceta", "Kevin Kelly", "Manuel Rodríguez", "Hunter Bigge", "Eric Orze", "Drew Rasmussen", "Joe Boyle", "Ian Seymour", "Cole Sulser", "Jacob Waguespack", "Tyler Alexander"], ["R", "L", "L", "R", "R", "R", "R", "R", "R", "R", "L", "R", "R", "L"])
+    name: "Lakeview Foxes", locationName: "Lakeview", shortName: "Lakeview", clubName: "Foxes", abbreviation: "LVF",
+    wins: 74, losses: 77, league: "Continental League", division: "Continental League North", managerName: "Bo Mercer", managerNumber: "4",
+    standings: { divisionRank: 3, leagueRank: 8, wildCardRank: 5, divisionGamesBack: "7.5", streak: "L1", last10: { wins: 5, losses: 5, display: "5-5" } },
+    starter: sampleStarter("Nicolás Bellamy", "Nicolás", "Bellamy", "N. Bellamy", "Bellamy, N", "6", "L", 8, 9, 25, 3.84, 1.21),
+    lineup: sampleLineup(["Bo Yu", "Adrian Vale", "Mateo O'Rourke", "Alejandro Villaseñor", "Tess Marlowe", "Jae-Min Park", "Dorian St. James", "Eli Navarro-Soto", "Christopher Van Buren"], ["CF", "2B", "1B", "RF", "C", "SS", "LF", "3B", "DH"], ["L", "R", "S", "L", "R", "L", "S", "R", "R"]),
+    bench: sampleBench(["Marcos Vale", "Jo Pike", "Renée Calder", "Ty Hollis", "Santiago De la Cruz", "Max North"], ["IF", "OF", "C", "IF", "1B", "OF"], ["R", "L", "S", "R", "L", "R"]),
+    bullpen: sampleBullpen(["Ezra Quinn", "Milo Sandoval", "Anton Reyes", "Beckett Shaw", "Luis Fontaine", "Owen Kade", "Rafael Mercer", "Jonas Voss", "Emmett Price", "Noé Whitaker", "Caleb Frost", "Xavier Boone", "Parker Ibarra", "Dámaso Finch"], ["R", "L", "R", "R", "L", "R", "R", "L", "R", "L", "R", "R", "L", "R"])
   }),
   home: sideTeam({
-    name: "Seattle Mariners", locationName: "Seattle", shortName: "Seattle", clubName: "Mariners", abbreviation: "SEA",
-    wins: 86, losses: 65, league: "American League", division: "American League West", managerName: "Dan Wilson", managerNumber: "6",
-    standings: { divisionRank: 1, leagueRank: 2, wildCardRank: 0, divisionGamesBack: "-", streak: "W3", last10: { wins: 7, losses: 3, display: "7-3" } },
-    starter: sampleStarter("Logan Gilbert", "Logan", "Gilbert", "L. Gilbert", "Gilbert, L.", "36", "R", 14, 7, 28, 3.11, 1.04),
-    lineup: sampleLineup(["J.P. Crawford", "Julio Rodríguez", "Cal Raleigh", "Josh Naylor", "Randy Arozarena", "Jorge Polanco", "Dominic Canzone", "Cole Young", "Victor Robles"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "3B"], ["L", "R", "S", "L", "R", "S", "L", "L", "R"]),
-    bench: sampleBench(["Mitch Garver", "Leo Rivas", "Luke Raley", "Austin Shenton", "Dylan Moore", "Miles Mastrobuoni"], ["C", "IF", "OF", "IF", "IF", "IF"], ["R", "S", "L", "L", "R", "L"]),
-    bullpen: sampleBullpen(["Andrés Muñoz", "Matt Brash", "Gabe Speier", "Eduard Bazardo", "Carlos Vargas", "Casey Legumina", "Collin Snider", "Trent Thornton", "Tayler Saucedo", "Emerson Hancock", "Logan Evans", "Jackson Kowar", "Cody Bolton", "Jhonathan Díaz"], ["R", "R", "L", "R", "R", "R", "R", "R", "L", "R", "R", "R", "R", "L"])
+    name: "Grand Valley Copperheads", locationName: "Grand Valley", shortName: "Grand Valley", clubName: "Copperheads", abbreviation: "GVC",
+    wins: 91, losses: 60, league: "Continental League", division: "Continental League South", managerName: "Sebastian Montgomery", managerNumber: "27",
+    standings: { divisionRank: 1, leagueRank: 1, wildCardRank: 0, divisionGamesBack: "-", streak: "W4", last10: { wins: 8, losses: 2, display: "8-2" } },
+    starter: sampleStarter("Thaddeus McAllister", "Thaddeus", "McAllister", "T. McAllister", "McAllister, T", "47", "R", 18, 2, 29, 2.41, .99),
+    lineup: sampleLineup(["Kai Reed", "Lucien Baptiste", "Mara Devereaux", "J. P. Delacroix", "Rocco Fernández", "Amir Washington", "Søren Beck", "Quincy Hartwell", "Theodore Fitzpatrick III"], ["SS", "CF", "C", "1B", "LF", "DH", "RF", "2B", "3B"], ["R", "L", "S", "L", "R", "S", "L", "R", "R"]),
+    bench: sampleBench(["Nico Bell", "Ángel Montoya", "Wesley Carrington", "Devin Cho", "Augustus Wynn", "Remy LaSalle"], ["C", "IF", "OF", "IF", "1B", "OF"], ["R", "S", "L", "R", "L", "S"]),
+    bullpen: sampleBullpen(["Silas Crowe", "Bennett Okafor", "Marco D'Angelo", "Hugo Serrano", "Levi March", "Tobias Grant", "César Holloway", "Micah Boone", "Felix Laurent", "Orion Vega", "Malcolm Cross", "Rui Nakamura", "Gideon Wells", "Tomás Everhart"], ["R", "R", "L", "R", "L", "R", "R", "L", "R", "R", "L", "R", "R", "L"])
   })
 });

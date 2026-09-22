@@ -2,15 +2,15 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 022.1
+ * Build: 023
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
 import { normalizePregameData } from "./normalize.js?v=0183";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=0183";
+import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=023";
 import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=018";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=018305";
-import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=0183";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=023";
+import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
 import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=018";
 import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0192";
 import {
@@ -4899,17 +4899,15 @@ async function generateTestPdf() {
   const repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
   const individualMappings = Array.isArray(layout.individualMappings) ? layout.individualMappings : [];
   if (!mappings.length && !individualMappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar, composite, repeated-block, or individual collection field before generating a PDF.", true);
-  if (!state.selectedFeed) return setGenerateMessage("No game is loaded. Return Home and load a game first.", true);
   if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
 
   elements.designerGenerateButton.disabled = true;
-  setGenerateMessage("Loading required pregame data…");
-  const gameKey = String(state.selectedGamePk || "");
+  setGenerateMessage("Generating test PDF with representative data…");
 
   try {
-    const fieldIds = collectLayoutFieldIds(layout);
-    const model = await buildModelForMappings(fieldIds, gameKey);
-    if (String(state.selectedGamePk || "") !== gameKey) throw new Error("Game selection changed while pregame data was loading. Generate again for the selected game.");
+    // Designer output is intentionally deterministic and never depends on the
+    // selected live game. Real game-day PDFs are generated outside Designer.
+    const model = DESIGNER_SAMPLE_MODEL;
 
     const record = await getPdfTemplate(layout.pdfTemplateId);
     if (!record?.blob) throw new Error("The layout's source PDF is missing.");
@@ -4997,8 +4995,7 @@ async function generateTestPdf() {
 
     const outputBytes = await pdfDoc.save();
     const blob = new Blob([outputBytes], { type: "application/pdf" });
-    const selected = state.schedule.find((game) => game.gamePk === state.selectedGamePk);
-    const filename = buildGeneratedFilename(layout, selected);
+    const filename = buildDesignerTestFilename(layout);
     downloadBlob(blob, filename);
     const notices = [];
     if (missingCount) notices.push(`${missingCount} mapped value(s) were unavailable and left blank.`);
@@ -5105,6 +5102,15 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
 
 function currentScheduleGame() {
   return state.schedule.find((game) => game.gamePk === state.selectedGamePk) ?? null;
+}
+
+
+function buildDesignerTestFilename(layout) {
+  const date = DESIGNER_SAMPLE_MODEL.game?.date || "Representative";
+  const away = safeFilenamePart(DESIGNER_SAMPLE_MODEL.away?.team?.name || "Away");
+  const home = safeFilenamePart(DESIGNER_SAMPLE_MODEL.home?.team?.name || "Home");
+  const layoutName = safeFilenamePart(layout.name || "Scorecard");
+  return `${date}_${away}_at_${home}_${layoutName}_TEST.pdf`;
 }
 
 function buildGeneratedFilename(layout, game) {

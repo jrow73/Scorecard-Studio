@@ -5,7 +5,7 @@
  * Build: 018.3
  */
 
-import { getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=0183";
+import { getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=023";
 import { formatFieldValue } from "./formatter.js?v=018";
 
 export const DIAGNOSTIC_STATUSES = Object.freeze({

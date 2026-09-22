@@ -1135,3 +1135,18 @@ The Designer intentionally uses a simple legacy-style viewport model: ordinary w
 - `app-meta.json` is the single source for the displayed app version/build label. Update it once per build; app surfaces should consume that metadata rather than hard-code independent build labels.
 - Designer Copy/Paste uses an in-memory session clipboard. Paste enters ghost-placement mode and commits only on a click inside the PDF canvas. Page navigation, scrolling, zooming, and other controls must remain usable while placement is pending.
 - Away→Home and Home→Away translated paste is offered only for one-sided team-specific selections; mixed Away+Home selections intentionally expose neither translation option.
+
+
+## v0.2.0 Designer completion roadmap after Build 022
+
+Build 022.3 is the accepted Copy/Paste baseline. The remaining planned Designer runway is:
+
+1. **Build 023 — Representative Data & Test PDF** — replace recognizable real-world representative identities with a deterministic fictional stress-test fixture; Designer Generate Test PDF uses only that fixture and never requires a selected live game.
+2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal and placement-flow cleanup, Text Template player-name format parity and blank-value suppression, compact Inspector/header presentation, toolbar Copy/Paste with translated-paste dropdown, delete-path consistency, helper-text/footer cleanup.
+3. **Build 025 — Field Palette & Layout Settings** — dark-theme settings redesign; Standard vs Custom palette mode; custom field picker using representative examples; conditional-format toggle cards; palette collapse behavior; Umpire Crew consolidation.
+4. **Build 026 — Text Overflow & Fit Controls** — investigate and implement intentional long-text behavior. Maximum width plus shrink-to-fit is the leading candidate; truncation and wrapping should be evaluated against browser/PDF parity before committing to a final policy.
+5. **Build 027 — v0.2.0 Designer Completion / Release Review** — fresh-user/full-card regression, persistence/reload, Test PDF, documentation reconciliation, and final release-readiness defects.
+
+### Representative-data contract (Build 023)
+
+Representative Data is deterministic test infrastructure, not a simulated live game. It should contain fictional teams, people, and venues; deliberately exercise short/long text and collection-capacity cases; and remain stable across sessions so layout regressions are visually recognizable. Designer **Generate Test PDF** always uses Representative Data. Real game-day PDF generation belongs to the normal game workflow outside Designer.
