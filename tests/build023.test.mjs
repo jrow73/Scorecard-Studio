@@ -27,6 +27,6 @@ assert.ok(app.includes('_TEST.pdf'));
 assert.ok(!app.includes('No game is loaded. Return Home and load a game first.'));
 
 const meta = JSON.parse(fs.readFileSync(new URL('../app-meta.json', import.meta.url), 'utf8'));
-assert.equal(meta.build, '023');
+assert.ok(['023','024','024.1','024.2'].includes(meta.build));
 
 console.log('Build 023 representative-data checks passed.');

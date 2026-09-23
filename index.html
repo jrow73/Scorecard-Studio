@@ -4,7 +4,7 @@
   Layout Management
   Version: 0.2.0-dev
   Build metadata: app-meta.json
-  Previous accepted baseline: Build 021.2
+  Previous accepted baseline: Build 023 Final
 -->
 <html lang="en">
 <head>
@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=0223" />
+  <link rel="stylesheet" href="./css/styles.css?v=0243" />
 </head>
 <body>
   <div class="app-shell">
@@ -399,11 +399,10 @@
                 <span class="designer-toolbar-actions" aria-label="Designer actions">
                   <button class="secondary-button designer-toolbar-icon" id="designer-undo-btn" type="button" disabled title="Undo (Ctrl/Cmd+Z)" aria-label="Undo">↶</button>
                   <button class="secondary-button designer-toolbar-icon" id="designer-redo-btn" type="button" disabled title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" aria-label="Redo">↷</button>
+                  <button class="secondary-button designer-toolbar-icon" id="designer-copy-btn" type="button" disabled title="Copy (Ctrl/Cmd+C)" aria-label="Copy">⧉</button>
+                  <details class="designer-paste-menu disabled" id="designer-paste-menu"><summary class="secondary-button designer-toolbar-icon" id="designer-paste-btn" title="Paste (Ctrl/Cmd+V)" aria-label="Paste" aria-disabled="true">▣</summary><div class="designer-paste-options"><button type="button" data-paste-mode="exact">Paste</button><button id="designer-paste-away-home-btn" type="button" data-paste-mode="awayToHome" hidden>Paste Away → Home</button><button id="designer-paste-home-away-btn" type="button" data-paste-mode="homeToAway" hidden>Paste Home → Away</button></div></details>
+                  <details class="designer-zoom-menu" id="designer-zoom-menu"><summary class="secondary-button designer-toolbar-icon" id="designer-zoom-btn" title="Zoom" aria-label="Zoom"><span class="designer-zoom-icon" id="designer-zoom-icon" data-state="neutral" aria-hidden="true"><span></span></span></summary><div class="designer-zoom-options"><button type="button" id="designer-zoom-out-btn" aria-label="Zoom out">−</button><strong id="designer-zoom-status">100%</strong><button type="button" id="designer-zoom-in-btn" aria-label="Zoom in">+</button><button class="secondary-button compact-button" id="designer-zoom-reset-btn" type="button" disabled>Reset</button></div></details>
                   <button class="secondary-button designer-toolbar-icon" id="designer-layout-settings-btn" type="button" title="Layout Settings" aria-label="Layout Settings">⚙</button>
-                </span>
-                <span class="designer-zoom-status" aria-label="PDF zoom status">
-                  <span id="designer-zoom-status">Zoom: 100%</span>
-                  <button class="secondary-button compact-button" id="designer-zoom-reset-btn" type="button" disabled>Reset</button>
                 </span>
               </div>
               <div class="designer-placement-banner" id="designer-placement-banner" hidden></div>
@@ -420,16 +419,11 @@
                   <div><p class="section-label">Selected Object</p><h4 id="designer-selection-title">Nothing selected</h4></div>
                   <div class="designer-object-actions">
                     <button class="secondary-button compact-button" id="designer-selection-clear-btn" type="button">Deselect</button>
-                    <button class="danger-button compact-button" id="designer-selection-delete-btn" type="button" hidden>Delete</button>
                     <button class="secondary-button compact-button" id="designer-selection-new-instance-btn" type="button" hidden>New Instance</button>
-                    <button class="secondary-button compact-button" id="designer-copy-btn" type="button" hidden title="Copy selected Designer item(s) (Ctrl/Cmd+C)">Copy</button>
-                    <button class="secondary-button compact-button" id="designer-paste-btn" type="button" hidden title="Paste copied item(s) (Ctrl/Cmd+V)">Paste</button>
-                    <button class="secondary-button compact-button" id="designer-paste-away-home-btn" type="button" hidden title="Paste copied Away items using Home data">Away → Home</button>
-                    <button class="secondary-button compact-button" id="designer-paste-home-away-btn" type="button" hidden title="Paste copied Home items using Away data">Home → Away</button>
                     <button class="secondary-button compact-button" id="designer-workspace-layout-btn" type="button" hidden>Edit Layout</button>
+                    <button class="danger-button compact-button" id="designer-selection-delete-btn" type="button" hidden>Delete</button>
                   </div>
                 </div>
-                <p class="subtle" id="designer-selection-help">Select a data item on the left or a placed object on the scorecard.</p>
               </section>
 
               <section class="designer-subordinate-workspace" id="designer-subordinate-workspace" hidden>
@@ -469,8 +463,7 @@
                         <button type="button" data-multi-align="bottom" title="Align bottom edges">Bottom</button>
                       </div>
                     </div>
-                    <p class="subtle designer-help">Drag any selected item to move the group, or use arrow keys to nudge everything together.</p>
-                  </section>
+                    </section>
                   <div id="designer-selection-format-controls">
                     <label for="designer-selection-alignment">Alignment
                       <select id="designer-selection-alignment">
@@ -505,17 +498,15 @@
                       <textarea id="designer-selection-template" rows="3"></textarea>
                     </label>
                     <div class="composite-preview"><span>Preview</span><strong id="designer-selection-template-preview">Enter text or insert a field.</strong></div>
-                    <div class="designer-column-grid">
-                      <label for="designer-selection-template-field">Insert field
-                        <select id="designer-selection-template-field"></select>
-                      </label>
+                    <div class="designer-column-grid designer-template-insert-controls">
+                      <select id="designer-selection-template-field" aria-label="Choose text field to insert"></select>
+                      <span id="designer-selection-template-name-format-wrap" hidden><select id="designer-selection-template-name-format" aria-label="Choose name format"></select></span>
                       <button class="secondary-button composite-insert-button" id="designer-selection-template-insert-btn" type="button">Insert Field</button>
                     </div>
                   </div>
                   <div class="designer-selection-actions">
                     <button class="danger-button" id="designer-selection-remove-item-btn" type="button" hidden>Remove Item</button>
                   </div>
-                  <p class="subtle designer-help">Drag the selected item on the PDF, or use arrow keys to nudge it. Shift+Arrow makes a larger nudge.</p>
                 </div>
                 <section class="designer-new-item-panel" id="designer-new-item-panel" hidden></section>
                 <div id="designer-context-tools" hidden>
@@ -534,7 +525,6 @@
                 <select id="designer-field-name-format"></select>
               </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
-              <p class="subtle designer-help">Choose a scalar field, select Place Field, then click where the text baseline should begin. Choose a single item, set its font size and alignment, then place its alignment anchor on the scorecard.</p>
                 </div>
               </details>
 
@@ -549,6 +539,7 @@
                   <label for="designer-template-field">Insert field
                     <select id="designer-template-field"></select>
                   </label>
+                  <span id="designer-template-name-format-wrap" hidden><select id="designer-template-name-format" aria-label="Choose name format"></select></span>
                   <button class="secondary-button composite-insert-button" id="designer-template-insert-btn" type="button">Insert Field</button>
                 </div>
                 <div class="designer-column-grid">
@@ -561,7 +552,6 @@
                   </label>
                 </div>
                 <button class="primary-button" id="designer-template-place-btn" type="button">Place Text Template</button>
-                <p class="subtle designer-help">Type ordinary text and insert supported game fields wherever needed. The template is stored exactly as written; unavailable field values render blank.</p>
                 </div>
               </details>
 
@@ -608,7 +598,6 @@
                 <button class="secondary-button" id="designer-place-rows-btn" type="button" hidden>Change Placement</button>
                 </div>
                 <div id="designer-slot-fields-panel" class="designer-slot-fields-panel" hidden>
-                  <div class="designer-repeat-heading"><strong>Content in each slot</strong><span class="subtle">Add fields or a Text Template after placement is set.</span></div>
                   <label for="designer-column-content-type">Content type
                     <select id="designer-column-content-type">
                       <option value="">Choose content type…</option>
@@ -616,38 +605,31 @@
                       <option value="template">Text Template</option>
                     </select>
                   </label>
-                  <div class="designer-column-grid">
-                    <label id="designer-column-field-wrap" for="designer-column-field">Slot field
-                      <select id="designer-column-field"></select>
-                    </label>
-                    <label for="designer-column-alignment">Alignment
-                      <select id="designer-column-alignment">
-                        <option value="">Choose alignment…</option>
-                        <option value="left">Left</option>
-                        <option value="center">Center</option>
-                        <option value="right">Right</option>
-                      </select>
-                    </label>
-                  </div>
+                  <label id="designer-column-field-wrap" for="designer-column-field" hidden>Slot field
+                    <select id="designer-column-field"></select>
+                  </label>
                   <label id="designer-column-name-format-wrap" for="designer-column-name-format" hidden>Name format
                     <select id="designer-column-name-format"></select>
+                  </label>
+                  <label id="designer-column-alignment-wrap" for="designer-column-alignment" hidden>Alignment
+                    <select id="designer-column-alignment">
+                      <option value="">Choose alignment…</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+                    </select>
                   </label>
                   <div id="designer-column-template-wrap" hidden>
                     <label for="designer-column-template">Text template
                       <textarea id="designer-column-template" rows="3" placeholder="Example: ([Throws]) [Player Name] ([W-L], [ERA] ERA)"></textarea>
                     </label>
                     <div class="composite-preview"><span>Preview</span><strong id="designer-column-template-preview">Enter text or insert a field.</strong></div>
-                    <div class="designer-column-grid">
-                      <label for="designer-column-template-field">Insert field
-                        <select id="designer-column-template-field"></select>
-                      </label>
+                    <div class="designer-column-grid designer-template-insert-controls">
+                      <select id="designer-column-template-field" aria-label="Choose text field to insert"></select>
+                      <span id="designer-column-template-name-format-wrap" hidden><select id="designer-column-template-name-format" aria-label="Choose name format"></select></span>
                       <button class="secondary-button composite-insert-button" id="designer-column-template-insert-btn" type="button">Insert Field</button>
                     </div>
                   </div>
-                  <button class="primary-button" id="designer-place-column-btn" type="button">Add Slot Content</button>
+                  <button class="primary-button" id="designer-place-column-btn" type="button">Place Item on Scorecard</button>
                   <button class="danger-button" id="designer-delete-block-btn" type="button" hidden>Delete Repeated Layout</button>
                 </div>
-                <p class="subtle designer-help">Repeated Layouts use outer anchors to establish spacing. Record Layouts use one anchor for their single record. Add fields or Text Templates in the first slot; repeated layouts copy each position through every slot.</p>
                 <div id="designer-block-list" class="designer-block-list"></div>
                 </div>
               </details>
@@ -655,7 +637,6 @@
               <details class="designer-tool-section" id="designer-individual-tool">
                 <summary>Individual Placement</summary>
                 <div class="designer-tool-body designer-repeat-panel">
-                <div class="designer-repeat-heading"><strong>Individual mappings</strong><span class="pill neutral" id="designer-individual-count">0</span></div>
                 <label for="designer-individual-collection">Collection
                   <select id="designer-individual-collection">
                     <option value="away.lineup">Away starting lineup</option>
@@ -667,50 +648,31 @@
                     <option value="game.umpires.crew">Umpire crew</option>
                   </select>
                 </label>
-                <label for="designer-individual-strategy">Select member by
-                  <select id="designer-individual-strategy">
-                    <option value="slot">Slot / order</option>
-                    <option value="role">Role</option>
-                  </select>
+                <label id="designer-individual-role-wrap" for="designer-individual-role">Role
+                  <select id="designer-individual-role"><option value="">Choose role…</option></select>
                 </label>
-                <label id="designer-individual-slot-wrap" for="designer-individual-slot">Slot number
-                  <input id="designer-individual-slot" type="number" min="1" max="30" step="1" value="1" />
+                <label id="designer-individual-field-wrap" for="designer-individual-field" hidden>Field
+                  <select id="designer-individual-field"></select>
                 </label>
-                <label id="designer-individual-role-wrap" for="designer-individual-role" hidden>Role
-                  <select id="designer-individual-role"></select>
-                </label>
-                <div class="designer-column-grid">
-                  <label for="designer-individual-field">Field
-                    <select id="designer-individual-field"></select>
-                  </label>
-                  <label for="designer-individual-alignment">Alignment
-                    <select id="designer-individual-alignment">
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </label>
-                </div>
                 <label id="designer-individual-name-format-wrap" for="designer-individual-name-format" hidden>Name format
                   <select id="designer-individual-name-format"></select>
                 </label>
-                <button class="primary-button" id="designer-individual-place-btn" type="button">Place Individual Item</button>
-                <p class="subtle designer-help">Place one collection member independently by slot/order, or by semantic role when the collection supports it. Role placement is available for starting-lineup defensive positions and umpire assignments.</p>
-                <div id="designer-individual-list" class="designer-block-list"></div>
+                <label id="designer-individual-alignment-wrap" for="designer-individual-alignment" hidden>Alignment
+                  <select id="designer-individual-alignment"><option value="">Choose alignment…</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select>
+                </label>
+                <button class="primary-button" id="designer-individual-place-btn" type="button">Place Item on Scorecard</button>
                 </div>
               </details>
               </div>
                 <div class="designer-child-workspace-actions" id="designer-child-workspace-actions" hidden>
-                  <button class="secondary-button compact-button" id="designer-workspace-new-btn" type="button" hidden>Place New Item</button>
+                  <button class="secondary-button compact-button" id="designer-workspace-new-btn" type="button" hidden>Create New Item</button>
                 </div>
               </section>
 
             </aside>
           </div>
-          <div class="designer-status-row">
-            <div class="message-panel" id="designer-message" role="status" aria-live="polite">Choose a field to place.</div>
-            <div class="message-panel generate-message" id="generate-message" role="status" aria-live="polite">Generated PDFs use the currently selected game on Home.</div>
-          </div>
+          <div id="designer-message" class="designer-live-status" role="status" aria-live="polite"></div>
+          <div id="generate-message" class="designer-live-status" role="status" aria-live="polite"></div>
         </section>
       </section>
     </main>
@@ -728,6 +690,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=023"></script>
+  <script type="module" src="./js/app.js?v=0243"></script>
 </body>
 </html>

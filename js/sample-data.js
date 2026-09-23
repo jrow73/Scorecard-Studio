@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Representative Designer / field-catalog sample data
  * Version: 0.2.0-dev
- * Build: 023
+ * Build: 024.1
  */
 
 const POSITION_INFO = {
@@ -16,7 +16,16 @@ function position(abbreviation) {
   return { abbreviation, name, number };
 }
 
+const SAMPLE_NAME_FIELDS = Object.freeze({
+  "Dorian St. James": { firstName: "Dorian", lastName: "St. James", useName: "Dorian", useLastName: "St. James", initLastName: "D. St. James", boxscoreName: "St. James" },
+  "Christopher Van Buren": { firstName: "Christopher", lastName: "Van Buren", useName: "Christopher", useLastName: "Van Buren", initLastName: "C. Van Buren", boxscoreName: "Van Buren" },
+  "Santiago De la Cruz": { firstName: "Santiago", lastName: "De la Cruz", useName: "Santiago", useLastName: "De la Cruz", initLastName: "S. De la Cruz", boxscoreName: "De la Cruz" },
+  "Theodore Fitzpatrick III": { firstName: "Theodore", lastName: "Fitzpatrick", useName: "Theodore", useLastName: "Fitzpatrick", initLastName: "T. Fitzpatrick", boxscoreName: "Fitzpatrick", nameSuffix: "III" }
+});
+
 function samplePlayerName(name, boxscoreName = null) {
+  const explicit = SAMPLE_NAME_FIELDS[name];
+  if (explicit) return { name, ...explicit, boxscoreName: boxscoreName || explicit.boxscoreName };
   const parts = String(name || "").trim().split(/\s+/);
   const firstName = parts[0] || "";
   const suffixes = new Set(["Jr.", "Sr.", "II", "III", "IV"]);
@@ -28,8 +37,9 @@ function samplePlayerName(name, boxscoreName = null) {
     lastName: lastName || null,
     useName: firstName || null,
     useLastName: lastName || null,
-    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}${suffix ? ` ${suffix}` : ""}` : name,
-    boxscoreName: boxscoreName || sampleBoxscoreName(name, firstName, lastName)
+    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}` : name,
+    boxscoreName: boxscoreName || sampleBoxscoreName(name, firstName, lastName),
+    ...(suffix ? { nameSuffix: suffix } : {})
   };
 }
 

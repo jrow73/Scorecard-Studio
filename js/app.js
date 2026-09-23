@@ -2,16 +2,16 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 023
+ * Build: 024.2
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
 import { normalizePregameData } from "./normalize.js?v=0183";
 import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=023";
 import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=018";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=023";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0241";
 import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=018";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=024";
 import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0192";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
@@ -169,6 +169,8 @@ const elements = {
   designerTemplateText: document.querySelector("#designer-template-text"),
   designerTemplateField: document.querySelector("#designer-template-field"),
   designerTemplateInsertButton: document.querySelector("#designer-template-insert-btn"),
+  designerTemplateNameFormatWrap: document.querySelector("#designer-template-name-format-wrap"),
+  designerTemplateNameFormat: document.querySelector("#designer-template-name-format"),
   designerTemplateAlignment: document.querySelector("#designer-template-alignment"),
   designerTemplateFontSize: document.querySelector("#designer-template-font-size"),
   designerTemplatePreview: document.querySelector("#designer-template-preview"),
@@ -196,10 +198,11 @@ const elements = {
   designerColumnTemplatePreview: document.querySelector("#designer-column-template-preview"),
   designerColumnTemplateField: document.querySelector("#designer-column-template-field"),
   designerColumnTemplateInsertButton: document.querySelector("#designer-column-template-insert-btn"),
+  designerColumnTemplateNameFormatWrap: document.querySelector("#designer-column-template-name-format-wrap"),
+  designerColumnTemplateNameFormat: document.querySelector("#designer-column-template-name-format"),
   designerPlaceColumnButton: document.querySelector("#designer-place-column-btn"),
   designerDeleteBlockButton: document.querySelector("#designer-delete-block-btn"),
   designerBlockList: document.querySelector("#designer-block-list"),
-  designerIndividualCount: document.querySelector("#designer-individual-count"),
   designerIndividualCollection: document.querySelector("#designer-individual-collection"),
   designerIndividualStrategy: document.querySelector("#designer-individual-strategy"),
   designerIndividualSlotWrap: document.querySelector("#designer-individual-slot-wrap"),
@@ -207,12 +210,13 @@ const elements = {
   designerIndividualRoleWrap: document.querySelector("#designer-individual-role-wrap"),
   designerIndividualRole: document.querySelector("#designer-individual-role"),
   designerIndividualField: document.querySelector("#designer-individual-field"),
+  designerIndividualFieldWrap: document.querySelector("#designer-individual-field-wrap"),
+  designerIndividualAlignmentWrap: document.querySelector("#designer-individual-alignment-wrap"),
   designerIndividualAlignment: document.querySelector("#designer-individual-alignment"),
   designerIndividualFontSize: document.querySelector("#designer-individual-font-size"),
   designerIndividualNameFormatWrap: document.querySelector("#designer-individual-name-format-wrap"),
   designerIndividualNameFormat: document.querySelector("#designer-individual-name-format"),
   designerIndividualPlaceButton: document.querySelector("#designer-individual-place-btn"),
-  designerIndividualList: document.querySelector("#designer-individual-list"),
   designerGenerateButton: document.querySelector("#designer-generate-btn"),
   generateMessage: document.querySelector("#generate-message"),
   designerMessage: document.querySelector("#designer-message"),
@@ -221,7 +225,12 @@ const elements = {
   designerPrevButton: document.querySelector("#designer-prev-btn"),
   designerNextButton: document.querySelector("#designer-next-btn"),
   designerPageLabel: document.querySelector("#designer-page-label"),
+  designerZoomMenu: document.querySelector("#designer-zoom-menu"),
+  designerZoomButton: document.querySelector("#designer-zoom-btn"),
+  designerZoomIcon: document.querySelector("#designer-zoom-icon"),
   designerZoomStatus: document.querySelector("#designer-zoom-status"),
+  designerZoomOutButton: document.querySelector("#designer-zoom-out-btn"),
+  designerZoomInButton: document.querySelector("#designer-zoom-in-btn"),
   designerZoomResetButton: document.querySelector("#designer-zoom-reset-btn"),
   designerStageScroll: document.querySelector("#designer-stage-scroll"),
   designerStage: document.querySelector("#designer-stage"),
@@ -271,10 +280,13 @@ const elements = {
   designerSelectionTemplatePreview: document.querySelector("#designer-selection-template-preview"),
   designerSelectionTemplateField: document.querySelector("#designer-selection-template-field"),
   designerSelectionTemplateInsertButton: document.querySelector("#designer-selection-template-insert-btn"),
+  designerSelectionTemplateNameFormatWrap: document.querySelector("#designer-selection-template-name-format-wrap"),
+  designerSelectionTemplateNameFormat: document.querySelector("#designer-selection-template-name-format"),
   designerSelectionDeleteButton: document.querySelector("#designer-selection-delete-btn"),
   designerSelectionNewInstanceButton: document.querySelector("#designer-selection-new-instance-btn"),
   designerCopyButton: document.querySelector("#designer-copy-btn"),
   designerPasteButton: document.querySelector("#designer-paste-btn"),
+  designerPasteMenu: document.querySelector("#designer-paste-menu"),
   designerPasteAwayHomeButton: document.querySelector("#designer-paste-away-home-btn"),
   designerPasteHomeAwayButton: document.querySelector("#designer-paste-home-away-btn"),
   designerSelectionRemoveItemButton: document.querySelector("#designer-selection-remove-item-btn"),
@@ -338,6 +350,8 @@ async function initialize() {
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
   elements.designerPlaceButton.addEventListener("click", beginDesignerPlacement);
   elements.designerTemplateInsertButton.addEventListener("click", insertDesignerTemplateField);
+  elements.designerTemplateField.addEventListener("change", syncDesignerTemplateInsertControls);
+  elements.designerTemplateNameFormat?.addEventListener("change", syncDesignerTemplateInsertControls);
   elements.designerTemplateText.addEventListener("input", updateDesignerTemplatePreview);
   elements.designerTemplatePlaceButton.addEventListener("click", beginDesignerTemplatePlacement);
   elements.designerCreateBlockButton.addEventListener("click", createDesignerRepeatedBlock);
@@ -352,15 +366,22 @@ async function initialize() {
   elements.designerColumnNameFormat.addEventListener("change", syncDesignerSlotContentControls);
   elements.designerColumnTemplate.addEventListener("input", () => { updateDesignerSlotTemplatePreview(); syncDesignerSlotContentControls(); });
   elements.designerColumnTemplateInsertButton.addEventListener("click", insertDesignerSlotTemplateField);
+  elements.designerColumnTemplateField.addEventListener("change", () => { syncTemplateNameFormatControl(elements.designerColumnTemplateField, elements.designerColumnTemplateNameFormatWrap, elements.designerColumnTemplateNameFormat); syncDesignerSlotContentControls(); });
+  elements.designerColumnTemplateNameFormat.addEventListener("change", syncDesignerSlotContentControls);
   elements.designerFieldSelect.addEventListener("change", syncDesignerSingleNameFormatControl);
   elements.designerDeleteBlockButton.addEventListener("click", deleteSelectedDesignerBlock);
   elements.designerIndividualCollection.addEventListener("change", syncDesignerIndividualControls);
-  elements.designerIndividualStrategy.addEventListener("change", syncDesignerIndividualControls);
+  elements.designerIndividualStrategy?.addEventListener("change", syncDesignerIndividualControls);
+  elements.designerIndividualRole.addEventListener("change", syncDesignerIndividualProgressiveControls);
   elements.designerIndividualField.addEventListener("change", syncDesignerIndividualNameFormatControl);
+  elements.designerIndividualNameFormat.addEventListener("change", syncDesignerIndividualProgressiveControls);
+  elements.designerIndividualAlignment.addEventListener("change", syncDesignerIndividualProgressiveControls);
   elements.designerIndividualPlaceButton.addEventListener("click", beginDesignerIndividualPlacement);
   elements.designerGenerateButton.addEventListener("click", generateTestPdf);
   elements.designerPrevButton.addEventListener("click", () => changeDesignerPage(-1));
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
+  elements.designerZoomOutButton?.addEventListener("click", () => setDesignerZoom(state.designerZoom - DESIGNER_ZOOM_STEP));
+  elements.designerZoomInButton?.addEventListener("click", () => setDesignerZoom(state.designerZoom + DESIGNER_ZOOM_STEP));
   elements.designerZoomResetButton?.addEventListener("click", () => setDesignerZoom(1));
   elements.designerStageScroll?.addEventListener("wheel", handleDesignerZoomWheel, { passive: false });
   elements.designerStage.addEventListener("pointerdown", beginDesignerLasso);
@@ -376,7 +397,8 @@ async function initialize() {
   elements.designerSelectionDeleteButton.addEventListener("click", deleteActiveDesignerSelection);
   elements.designerSelectionNewInstanceButton.addEventListener("click", beginNewInstanceFromSelection);
   elements.designerCopyButton?.addEventListener("click", copyDesignerSelection);
-  elements.designerPasteButton?.addEventListener("click", () => beginDesignerClipboardPlacement("exact"));
+  elements.designerPasteButton?.addEventListener("click", handleDesignerPasteToolbarClick);
+  document.querySelector('[data-paste-mode="exact"]')?.addEventListener("click", () => beginDesignerClipboardPlacement("exact"));
   elements.designerPasteAwayHomeButton?.addEventListener("click", () => beginDesignerClipboardPlacement("awayToHome"));
   elements.designerPasteHomeAwayButton?.addEventListener("click", () => beginDesignerClipboardPlacement("homeToAway"));
   elements.designerSelectionRemoveItemButton?.addEventListener("click", removeSelectedDesignerChild);
@@ -402,6 +424,7 @@ async function initialize() {
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
   elements.designerSelectionTemplate?.addEventListener("input", updateDesignerSelectionTemplatePreview);
   elements.designerSelectionTemplateInsertButton?.addEventListener("click", insertDesignerSelectionTemplateField);
+  elements.designerSelectionTemplateField?.addEventListener("change", () => syncTemplateNameFormatControl(elements.designerSelectionTemplateField, elements.designerSelectionTemplateNameFormatWrap, elements.designerSelectionTemplateNameFormat));
   document.addEventListener("keydown", handleDesignerKeyboard);
   window.addEventListener("resize", debounce(() => {
     if (!document.querySelector('[data-view="designer"]').hidden && state.designerPdfDocument) renderDesignerPage();
@@ -1531,10 +1554,17 @@ function beginDesignerPlacement() {
 }
 
 function populateNameFormatSelects() {
-  for (const select of [elements.designerFieldNameFormat, elements.designerColumnNameFormat, elements.designerSelectionNameFormat, elements.designerIndividualNameFormat]) {
+  const placeholderSelects = new Set([
+    elements.designerColumnNameFormat,
+    elements.designerIndividualNameFormat,
+    elements.designerTemplateNameFormat,
+    elements.designerColumnTemplateNameFormat,
+    elements.designerSelectionTemplateNameFormat
+  ]);
+  for (const select of [elements.designerFieldNameFormat, elements.designerColumnNameFormat, elements.designerSelectionNameFormat, elements.designerIndividualNameFormat, elements.designerTemplateNameFormat, elements.designerColumnTemplateNameFormat, elements.designerSelectionTemplateNameFormat]) {
     if (!select) continue;
     select.replaceChildren();
-    if (select === elements.designerColumnNameFormat) {
+    if (placeholderSelects.has(select)) {
       const placeholder = document.createElement("option");
       placeholder.value = "";
       placeholder.textContent = "Choose name format…";
@@ -1546,6 +1576,7 @@ function populateNameFormatSelects() {
   }
   syncDesignerSingleNameFormatControl();
   syncDesignerIndividualNameFormatControl();
+  syncDesignerIndividualProgressiveControls();
 }
 
 function syncDesignerSingleNameFormatControl() {
@@ -1556,6 +1587,10 @@ function syncDesignerSingleNameFormatControl() {
 function populateDesignerTemplateFieldSelect(context = null) {
   if (!elements.designerTemplateField) return;
   elements.designerTemplateField.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choose text field to insert…";
+  elements.designerTemplateField.append(placeholder);
   const groups = new Map();
   const activeGroups = activeDesignerPaletteGroups();
   const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
@@ -1575,8 +1610,18 @@ function populateDesignerTemplateFieldSelect(context = null) {
     }
     elements.designerTemplateField.append(group);
   }
-  elements.designerTemplateField.disabled = elements.designerTemplateField.options.length === 0;
-  elements.designerTemplateInsertButton.disabled = elements.designerTemplateField.options.length === 0;
+  elements.designerTemplateField.disabled = elements.designerTemplateField.options.length <= 1;
+  elements.designerTemplateField.value = "";
+  if (elements.designerTemplateNameFormat) elements.designerTemplateNameFormat.value = "";
+  syncDesignerTemplateInsertControls();
+}
+
+function syncDesignerTemplateInsertControls() {
+  const definition = getFieldDefinition(elements.designerTemplateField?.value);
+  syncTemplateNameFormatControl(elements.designerTemplateField, elements.designerTemplateNameFormatWrap, elements.designerTemplateNameFormat);
+  const needsNameFormat = definition?.formatKind === "playerName";
+  const ready = Boolean(definition) && (!needsNameFormat || Boolean(elements.designerTemplateNameFormat?.value));
+  if (elements.designerTemplateInsertButton) elements.designerTemplateInsertButton.disabled = !ready;
 }
 
 function templateTokenForField(fieldId) {
@@ -1585,7 +1630,7 @@ function templateTokenForField(fieldId) {
 }
 
 function templateFieldIdByToken(tokenText) {
-  const token = String(tokenText || "").trim();
+  const token = String(tokenText || "").split("|")[0].trim();
   const direct = getFieldDefinition(token);
   if (direct?.cardinality === "single") return direct.id;
   const definition = getSupportedFields({ cardinality: "single" }).find((entry) => entry.label === token || entry.legacyLabels?.includes(token));
@@ -1607,19 +1652,41 @@ function templateFieldIds(template, context = null) {
 
 function resolveTemplateText(template, model, context = null) {
   if (context) return resolveSlotContent({ type: "template", template }, model, context);
-  return String(template || "").replace(/\[([^\[\]]+)\]/g, (_whole, token) => {
-    const fieldId = templateFieldIdByToken(token);
-    if (!fieldId) return "";
+  const source = String(template || "");
+  const tokenValues = [];
+  const rendered = source.replace(/\[([^\[\]]+)\]/g, (_whole, token) => {
+    const [label, nameFormat] = String(token).split("|").map((part) => part.trim());
+    const fieldId = templateFieldIdByToken(label);
+    if (!fieldId) { tokenValues.push(""); return ""; }
     const definition = getFieldDefinition(fieldId);
     const resolution = resolveField(model, fieldId);
-    return formatFieldValue(definition, resolution, model) || "";
+    const value = formatFieldValue(definition, resolution, model, nameFormat ? { nameFormat } : {}) || "";
+    tokenValues.push(value); return value;
   });
+  return tokenValues.length && tokenValues.every((value) => !String(value).trim()) ? "" : rendered;
 }
 
+function templateTokenWithNameFormat(fieldId, context, formatValue) {
+  const definition = getFieldDefinition(fieldId);
+  const base = context ? templateTokenForContextField(fieldId) : templateTokenForField(fieldId);
+  if (!base || definition?.formatKind !== "playerName" || !formatValue || formatValue === "full") return base;
+  return `${base.slice(0,-1)}|${formatValue}]`;
+}
+function syncTemplateNameFormatControl(fieldSelect, wrap, formatSelect) {
+  const definition = getFieldDefinition(fieldSelect?.value);
+  const needsNameFormat = definition?.formatKind === "playerName";
+  if (wrap) wrap.hidden = !needsNameFormat;
+  if (formatSelect && !needsNameFormat) formatSelect.value = "";
+}
 function insertDesignerTemplateField() {
   const fieldId = elements.designerTemplateField.value;
+  const definition = getFieldDefinition(fieldId);
+  if (!definition) return;
+  if (definition.formatKind === "playerName" && !elements.designerTemplateNameFormat?.value) {
+    return setDesignerMessage("Choose a name format before inserting Player Name.", true);
+  }
   const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
-  const token = context ? templateTokenForContextField(fieldId) : templateTokenForField(fieldId);
+  const token = templateTokenWithNameFormat(fieldId, context, elements.designerTemplateNameFormat?.value);
   if (!token) return;
   const textarea = elements.designerTemplateText;
   const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
@@ -1628,6 +1695,9 @@ function insertDesignerTemplateField() {
   const caret = start + token.length;
   textarea.focus();
   textarea.setSelectionRange(caret, caret);
+  elements.designerTemplateField.value = "";
+  if (elements.designerTemplateNameFormat) elements.designerTemplateNameFormat.value = "";
+  syncDesignerTemplateInsertControls();
   updateDesignerTemplatePreview();
 }
 
@@ -1766,22 +1836,29 @@ const INDIVIDUAL_ROLE_OPTIONS = {
 
 function syncDesignerIndividualControls() {
   if (!elements.designerIndividualCollection) return;
-  const collection = elements.designerIndividualCollection.value || "away.lineup";
-  const supportsRole = Boolean(INDIVIDUAL_ROLE_OPTIONS[collection]);
-  if (!supportsRole && elements.designerIndividualStrategy.value === "role") elements.designerIndividualStrategy.value = "slot";
-  const byRole = elements.designerIndividualStrategy.value === "role" && supportsRole;
-  elements.designerIndividualSlotWrap.hidden = byRole;
-  elements.designerIndividualRoleWrap.hidden = !byRole;
-  const roleOption = Array.from(elements.designerIndividualStrategy.options).find((option) => option.value === "role");
-  if (roleOption) roleOption.disabled = !supportsRole;
+  let collection = elements.designerIndividualCollection.value || "away.lineup";
+  for (const option of elements.designerIndividualCollection.options) option.disabled = !INDIVIDUAL_ROLE_OPTIONS[option.value];
+  if (!INDIVIDUAL_ROLE_OPTIONS[collection]) { collection = "away.lineup"; elements.designerIndividualCollection.value = collection; }
+  const roles = INDIVIDUAL_ROLE_OPTIONS[collection] || [];
   elements.designerIndividualRole.replaceChildren();
-  for (const [value, label] of INDIVIDUAL_ROLE_OPTIONS[collection] || []) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    elements.designerIndividualRole.append(option);
-  }
+  const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = roles.length ? "Choose role…" : "No role-based placement available"; elements.designerIndividualRole.append(placeholder);
+  for (const [value, label] of roles) { const option=document.createElement("option"); option.value=value; option.textContent=label; elements.designerIndividualRole.append(option); }
+  elements.designerIndividualRole.disabled = !roles.length;
   populateDesignerIndividualFieldSelect();
+  syncDesignerIndividualProgressiveControls();
+  renderDesignerIndividualList();
+}
+
+function syncDesignerIndividualProgressiveControls() {
+  const roleReady = Boolean(elements.designerIndividualRole?.value);
+  const definition = getFieldDefinition(elements.designerIndividualField?.value);
+  const fieldReady = roleReady && Boolean(definition);
+  const needsName = definition?.formatKind === "playerName";
+  const nameReady = !needsName || Boolean(elements.designerIndividualNameFormat?.value);
+  if (elements.designerIndividualFieldWrap) elements.designerIndividualFieldWrap.hidden = !roleReady;
+  if (elements.designerIndividualNameFormatWrap) elements.designerIndividualNameFormatWrap.hidden = !(fieldReady && needsName);
+  if (elements.designerIndividualAlignmentWrap) elements.designerIndividualAlignmentWrap.hidden = !(fieldReady && nameReady);
+  if (elements.designerIndividualPlaceButton) elements.designerIndividualPlaceButton.hidden = !(fieldReady && nameReady && ["left","center","right"].includes(elements.designerIndividualAlignment?.value));
 }
 
 function populateDesignerIndividualFieldSelect() {
@@ -1800,8 +1877,7 @@ function populateDesignerIndividualFieldSelect() {
 }
 
 function syncDesignerIndividualNameFormatControl() {
-  const definition = getFieldDefinition(elements.designerIndividualField?.value);
-  if (elements.designerIndividualNameFormatWrap) elements.designerIndividualNameFormatWrap.hidden = definition?.formatKind !== "playerName";
+  syncDesignerIndividualProgressiveControls();
 }
 
 function individualSelectorLabel(mapping) {
@@ -1814,27 +1890,19 @@ function individualSelectorLabel(mapping) {
 
 function selectNextUnplacedIndividualSelector(collection) {
   const mappings = (selectedLayout()?.individualMappings || []).filter((mapping) => mapping.collection === collection);
-  if (elements.designerIndividualStrategy.value === "role" && INDIVIDUAL_ROLE_OPTIONS[collection]) {
-    const used = new Set(mappings.filter((m) => m.strategy === "role").map((m) => m.selector?.role));
-    const next = INDIVIDUAL_ROLE_OPTIONS[collection].find(([value]) => !used.has(value));
-    if (next) elements.designerIndividualRole.value = next[0];
-  } else {
-    const used = new Set(mappings.filter((m) => m.strategy !== "role").map((m) => Number(m.selector?.slot)));
-    let slot = 1; while (used.has(slot) && slot < 30) slot += 1;
-    elements.designerIndividualSlot.value = slot;
-  }
+  const used = new Set(mappings.filter((m) => m.strategy === "role").map((m) => m.selector?.role));
+  const next = (INDIVIDUAL_ROLE_OPTIONS[collection] || []).find(([value]) => !used.has(value));
+  if (next) elements.designerIndividualRole.value = next[0];
+  syncDesignerIndividualProgressiveControls();
 }
 
 function beginDesignerIndividualPlacement() {
   if (!state.designerPdfDocument) return setDesignerMessage("Open a layout PDF first.", true);
   const collection = elements.designerIndividualCollection.value || "away.lineup";
-  let strategy = elements.designerIndividualStrategy.value === "role" ? "role" : "slot";
-  if (strategy === "role" && !INDIVIDUAL_ROLE_OPTIONS[collection]) return setDesignerMessage("That collection does not provide stable roles. Use slot/order placement instead.", true);
-  const selector = strategy === "role"
-    ? { role: elements.designerIndividualRole.value }
-    : { slot: Number(elements.designerIndividualSlot.value) };
-  if (strategy === "slot" && (!Number.isInteger(selector.slot) || selector.slot < 1 || selector.slot > 30)) return setDesignerMessage("Individual slot must be a whole number from 1 through 30.", true);
-  if (strategy === "role" && !selector.role) return setDesignerMessage("Choose a role to place.", true);
+  const strategy = "role";
+  const selector = { role: elements.designerIndividualRole.value };
+  if (!INDIVIDUAL_ROLE_OPTIONS[collection]?.length) return setDesignerMessage("This collection does not provide role-based Individual Placement.", true);
+  if (!selector.role) return setDesignerMessage("Choose a role to place.", true);
   const field = elements.designerIndividualField.value;
   const definition = getFieldDefinition(field);
   if (!definition || definition.cardinality !== "repeated" || definition.collection !== collection) return setDesignerMessage("Choose a field that belongs to the selected collection.", true);
@@ -2322,43 +2390,29 @@ function renderDesignerOverlay() {
 }
 
 function renderDesignerIndividualList() {
-  const layout = selectedLayout();
-  const mappings = layout?.individualMappings || [];
-  if (!elements.designerIndividualList) return;
-  elements.designerIndividualCount.textContent = String(mappings.length);
-  elements.designerIndividualList.replaceChildren();
-  if (!mappings.length) {
-    const empty = document.createElement("p");
-    empty.className = "subtle";
-    empty.textContent = "No individual collection placements yet.";
-    elements.designerIndividualList.append(empty);
-    return;
-  }
-  for (const mapping of mappings) {
-    const row = document.createElement("div");
-    row.className = "designer-block-column-row";
-    const text = document.createElement("span");
-    text.textContent = `${individualCollectionLabel(mapping.collection)} • ${individualSelectorLabel(mapping)} • ${designerFieldLabel(mapping.field)} • ${effectiveFormatting(mapping, { selection: { kind: "individual" }, object: mapping }).fontSize} pt • ${mapping.alignment || "left"}`;
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "secondary-button compact-button";
-    remove.textContent = "Remove Item";
-    remove.addEventListener("click", () => deleteDesignerIndividualMapping(mapping.id));
-    row.append(text, remove);
-    elements.designerIndividualList.append(row);
-  }
+  // Existing Individual Placement items are managed directly by selecting them on the scorecard.
+  // Keep this no-op for legacy call sites while the creation workflow remains inventory-free.
 }
 
-async function deleteDesignerIndividualMapping(id) {
+async function deleteDesignerIndividualMapping(id, options = {}) {
   const layout = selectedLayout();
   if (!layout) return;
+  const existing = (layout.individualMappings || []).find((item) => item.id === id);
   layout.individualMappings = (layout.individualMappings || []).filter((item) => item.id !== id);
   layout.updatedAt = new Date().toISOString();
   try {
     await saveLayout(layout);
     renderDesignerOverlay();
     renderDesignerIndividualList();
-    clearDesignerSelection({ render: false });
+    if (options.preserveParentContext && existing?.collection) {
+      state.designerSelection = { kind: "individualWorkspace", collection: existing.collection };
+      state.designerMultiSelection = [];
+      state.designerCollectionInspectorMode = "new";
+      state.designerPaletteSelection = null;
+      state.designerPendingMode = null;
+    } else {
+      clearDesignerSelection({ render: false });
+    }
     renderDesignerPalette();
     renderDesignerSelectionInspector();
     setDesignerMessage("Individual collection mapping deleted.");
@@ -2498,7 +2552,7 @@ async function deleteDesignerMapping(id) {
   }
 }
 
-async function deleteDesignerBlockColumn(blockId, columnId) {
+async function deleteDesignerBlockColumn(blockId, columnId, options = {}) {
   const layout = selectedLayout();
   const block = findDesignerBlock(blockId);
   if (!layout || !block) return;
@@ -2508,14 +2562,22 @@ async function deleteDesignerBlockColumn(blockId, columnId) {
     await saveLayout(layout);
     renderDesignerOverlay();
     renderDesignerBlockList();
-    clearDesignerSelection({ render: false });
+    if (options.preserveParentContext) {
+      state.designerSelection = { kind: "block", blockId };
+      state.designerMultiSelection = [];
+      state.designerCollectionInspectorMode = "new";
+      state.designerPaletteSelection = null;
+      state.designerPendingMode = null;
+    } else {
+      clearDesignerSelection({ render: false });
+    }
     renderDesignerPalette();
     renderDesignerSelectionInspector();
-    setDesignerMessage("Collection column deleted.");
+    setDesignerMessage("Collection item deleted.");
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
   } catch (error) {
-    setDesignerMessage(errorMessage(error, "The collection column could not be deleted."), true);
+    setDesignerMessage(errorMessage(error, "The collection item could not be deleted."), true);
   }
 }
 
@@ -2582,7 +2644,7 @@ function populateDesignerColumnFieldSelect() {
 
   const templatePlaceholder = document.createElement("option");
   templatePlaceholder.value = "";
-  templatePlaceholder.textContent = "Choose field to insert…";
+  templatePlaceholder.textContent = "Choose text field to insert…";
   elements.designerColumnTemplateField.append(templatePlaceholder);
 
   for (const definition of fieldsForRecordContext(context, { catalogOnly: true })) {
@@ -2627,27 +2689,35 @@ function syncDesignerSlotContentControls() {
   const contentType = elements.designerColumnContentType?.value || "";
   const isField = contentType === "field";
   const isTemplate = contentType === "template";
-  const hasType = isField || isTemplate;
   const definition = isField ? getFieldDefinition(elements.designerColumnField?.value) : null;
   const hasField = Boolean(definition);
   const needsNameFormat = isField && definition?.formatKind === "playerName";
   const hasAlignment = ["left", "center", "right"].includes(elements.designerColumnAlignment?.value);
-  const hasFontSize = true;
   const hasNameFormat = !needsNameFormat || Boolean(elements.designerColumnNameFormat?.value);
   const hasTemplate = isTemplate && Boolean(String(elements.designerColumnTemplate?.value || "").trim());
 
   if (elements.designerColumnFieldWrap) elements.designerColumnFieldWrap.hidden = !isField;
-  if (elements.designerColumnTemplateWrap) elements.designerColumnTemplateWrap.hidden = !isTemplate;
   const alignmentLabel = elements.designerColumnAlignment?.closest("label");
-  const fontSizeLabel = elements.designerColumnFontSize?.closest("label");
-  if (alignmentLabel) alignmentLabel.hidden = !hasType;
-  if (fontSizeLabel) fontSizeLabel.hidden = !hasType;
-  if (elements.designerColumnNameFormatWrap) elements.designerColumnNameFormatWrap.hidden = !needsNameFormat;
+  const fieldReady = isField && hasField && hasNameFormat;
+  // Text Templates choose alignment first; the editor is then revealed. This avoids
+  // requiring literal keyboard input before a token-only template can be placed.
+  if (alignmentLabel) alignmentLabel.hidden = isField ? !fieldReady : !isTemplate;
+  if (elements.designerColumnTemplateWrap) elements.designerColumnTemplateWrap.hidden = !(isTemplate && hasAlignment);
+  if (elements.designerColumnNameFormatWrap) elements.designerColumnNameFormatWrap.hidden = !(needsNameFormat && hasField);
+  if (elements.designerColumnTemplateNameFormatWrap) {
+    const templateDefinition = getFieldDefinition(elements.designerColumnTemplateField?.value);
+    elements.designerColumnTemplateNameFormatWrap.hidden = templateDefinition?.formatKind !== "playerName";
+  }
+  if (elements.designerColumnTemplateInsertButton) {
+    const templateDefinition = getFieldDefinition(elements.designerColumnTemplateField?.value);
+    const needsTemplateNameFormat = templateDefinition?.formatKind === "playerName";
+    elements.designerColumnTemplateInsertButton.disabled = !templateDefinition || (needsTemplateNameFormat && !elements.designerColumnTemplateNameFormat?.value);
+  }
   if (elements.designerPlaceColumnButton) {
-    elements.designerPlaceColumnButton.hidden = !hasType;
+    elements.designerPlaceColumnButton.hidden = !(hasAlignment && (fieldReady || (isTemplate && hasTemplate)));
     elements.designerPlaceColumnButton.disabled = isField
-      ? !(hasField && hasAlignment && hasFontSize && hasNameFormat)
-      : !(hasTemplate && hasAlignment && hasFontSize);
+      ? !(hasField && hasAlignment && hasNameFormat)
+      : !(isTemplate && hasTemplate && hasAlignment);
   }
   updateDesignerSlotTemplatePreview();
 }
@@ -2661,13 +2731,17 @@ function updateDesignerSlotTemplatePreview() {
 }
 
 function insertDesignerSlotTemplateField() {
-  const token = templateTokenForContextField(elements.designerColumnTemplateField?.value);
+  const token = templateTokenWithNameFormat(elements.designerColumnTemplateField?.value, blockContext(selectedDesignerBlock()) || String(elements.designerLineupSide?.value || ""), elements.designerColumnTemplateNameFormat?.value);
   const textarea = elements.designerColumnTemplate;
   if (!token || !textarea) return;
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? start;
   textarea.setRangeText(token, start, end, "end");
   updateDesignerSlotTemplatePreview();
+  elements.designerColumnTemplateField.value = "";
+  elements.designerColumnTemplateNameFormat.value = "";
+  syncTemplateNameFormatControl(elements.designerColumnTemplateField, elements.designerColumnTemplateNameFormatWrap, elements.designerColumnTemplateNameFormat);
+  syncDesignerSlotContentControls();
   textarea.focus();
 }
 
@@ -2834,8 +2908,17 @@ const DESIGNER_ZOOM_MAX = 3;
 const DESIGNER_ZOOM_STEP = 0.10;
 
 function updateDesignerZoomStatus() {
-  if (elements.designerZoomStatus) elements.designerZoomStatus.textContent = `Zoom: ${Math.round(state.designerZoom * 100)}%`;
+  const percent = Math.round(state.designerZoom * 100);
+  if (elements.designerZoomStatus) elements.designerZoomStatus.textContent = `${percent}%`;
   if (elements.designerZoomResetButton) elements.designerZoomResetButton.disabled = Math.abs(state.designerZoom - 1) < 0.001;
+  if (elements.designerZoomOutButton) elements.designerZoomOutButton.disabled = state.designerZoom <= DESIGNER_ZOOM_MIN + 0.001;
+  if (elements.designerZoomInButton) elements.designerZoomInButton.disabled = state.designerZoom >= DESIGNER_ZOOM_MAX - 0.001;
+  if (elements.designerZoomIcon) elements.designerZoomIcon.dataset.state = percent > 100 ? "in" : percent < 100 ? "out" : "neutral";
+  if (elements.designerZoomButton) {
+    const stateLabel = percent > 100 ? "zoomed in" : percent < 100 ? "zoomed out" : "100%";
+    elements.designerZoomButton.title = `Zoom (${percent}%, ${stateLabel})`;
+    elements.designerZoomButton.setAttribute("aria-label", `Zoom. Current level ${percent}%`);
+  }
 }
 
 function setDesignerZoom(zoom) {
@@ -2872,6 +2955,7 @@ function updateDesignerNavButtons() {
 }
 
 function setDesignerMessage(message, isError = false) {
+  if (!elements.designerMessage) return;
   elements.designerMessage.textContent = message;
   elements.designerMessage.classList.toggle("error", isError);
 }
@@ -3680,7 +3764,7 @@ function renderDesignerMultiSelectionInspector() {
   updateDesignerClipboardActions();
   const count = state.designerMultiSelection.length;
   elements.designerSelectionTitle.textContent = `${count} Items Selected`;
-  elements.designerSelectionHelp.textContent = "Formatting, alignment, movement, and deletion apply to every selected item.";
+  if (elements.designerSelectionHelp) elements.designerSelectionHelp.textContent = "Formatting, alignment, movement, and deletion apply to every selected item.";
   elements.designerSelectionClearButton.hidden = false; elements.designerSelectionClearButton.disabled = false; elements.designerSelectionClearButton.textContent = "Deselect";
   elements.designerSelectionDeleteButton.hidden = false; elements.designerSelectionDeleteButton.textContent = "Delete Selected";
   elements.designerSelectionNewInstanceButton.hidden = true; elements.designerWorkspaceLayoutButton.hidden = true; elements.designerWorkspaceNewButton.hidden = true;
@@ -3722,13 +3806,13 @@ function renderDesignerSelectionInspector() {
 
   if (!active && !pending) {
     elements.designerSelectionTitle.textContent = "Nothing selected";
-    elements.designerSelectionHelp.textContent = "Select a data item on the left or a placed object on the scorecard.";
+    if (elements.designerSelectionHelp) elements.designerSelectionHelp.textContent = "Select a data item on the left or a placed object on the scorecard.";
     return;
   }
 
   if (!active && pending) {
     elements.designerSelectionTitle.textContent = pending.label;
-    elements.designerSelectionHelp.textContent = designerInstancesForItem(pending).length
+    if (elements.designerSelectionHelp) elements.designerSelectionHelp.textContent = designerInstancesForItem(pending).length
       ? "This data is already used. Choose an existing instance on the left, or create another use of it."
       : "Choose how you want to use this data item.";
     elements.designerSelectionDeleteButton.hidden = true;
@@ -3739,7 +3823,7 @@ function renderDesignerSelectionInspector() {
 
   const parentLabel = designerParentLabel(selection, object);
   elements.designerSelectionTitle.textContent = parentLabel;
-  elements.designerSelectionHelp.textContent = "Parent actions apply to the complete object shown here. Child editing appears in the workspace below.";
+  if (elements.designerSelectionHelp) elements.designerSelectionHelp.textContent = "Parent actions apply to the complete object shown here. Child editing appears in the workspace below.";
   if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = false;
 
   const isRepeated = selection.kind === "block" || selection.kind === "repeatedColumn";
@@ -3760,7 +3844,7 @@ function renderDesignerSelectionInspector() {
   const editingChild = selection.kind === "repeatedColumn" || selection.kind === "individual";
 
   if (placingNew) {
-    setDesignerWorkspaceHeading("Place New Item", isRepeated ? "Add slot content" : "Add individual item");
+    setDesignerWorkspaceHeading("Create New Item", isRepeated ? "Add slot content" : "Add individual item");
     elements.designerSelectionControls.hidden = true;
     if (isRepeated) {
       elements.designerBlockSelect.value = parentBlock.id;
@@ -3815,7 +3899,7 @@ function renderDesignerSelectionInspector() {
 
   if (selection.kind === "individualWorkspace") {
     state.designerCollectionInspectorMode = "new";
-    setDesignerWorkspaceHeading("Place New Item", "Add individual item");
+    setDesignerWorkspaceHeading("Create New Item", "Add individual item");
     const collection = object.collection;
     state.designerPaletteSelection = { kind: "collection", id: collection, label: collectionDisplayLabel(collection) };
     state.designerPendingMode = "individual";
@@ -3864,6 +3948,10 @@ function populateDesignerSelectionTemplateFieldSelect() {
   if (!select) return;
   const previous = select.value;
   select.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choose text field to insert…";
+  select.append(placeholder);
   const selected = locateDesignerObject();
   const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
   const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
@@ -3873,7 +3961,9 @@ function populateDesignerSelectionTemplateFieldSelect() {
     option.textContent = context ? slotFieldShortLabel(definition) : definition.label;
     select.append(option);
   }
-  if (previous && Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
+  select.value = "";
+  if (elements.designerSelectionTemplateNameFormat) elements.designerSelectionTemplateNameFormat.value = "";
+  syncTemplateNameFormatControl(select, elements.designerSelectionTemplateNameFormatWrap, elements.designerSelectionTemplateNameFormat);
 }
 
 function updateDesignerSelectionTemplatePreview() {
@@ -3895,12 +3985,16 @@ function insertDesignerSelectionTemplateField() {
   if (!textarea || !definition) return;
   const selected = locateDesignerObject();
   const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
-  const token = context ? templateTokenForContextField(field) : `[${definition.label}]`;
+  const token = templateTokenWithNameFormat(field, context, elements.designerSelectionTemplateNameFormat?.value);
+  if (!token) return;
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? start;
   textarea.setRangeText(token, start, end, "end");
   updateDesignerSelectionTemplatePreview();
   applyDesignerInspectorTemplate();
+  elements.designerSelectionTemplateField.value = "";
+  if (elements.designerSelectionTemplateNameFormat) elements.designerSelectionTemplateNameFormat.value = "";
+  syncTemplateNameFormatControl(elements.designerSelectionTemplateField, elements.designerSelectionTemplateNameFormatWrap, elements.designerSelectionTemplateNameFormat);
   textarea.focus();
 }
 
@@ -4391,11 +4485,12 @@ function translateDesignerSideId(value, direction) {
 function translateDesignerTemplate(template, direction, context = null) {
   if (!template || context) return template;
   return String(template).replace(/\[([^\[\]]+)\]/g, (whole, token) => {
-    const fieldId = templateFieldIdByToken(token);
+    const [label, nameFormat] = String(token).split("|").map((part) => part.trim());
+    const fieldId = templateFieldIdByToken(label);
     if (!fieldId) return whole;
     const translatedId = translateDesignerSideId(fieldId, direction);
     const translated = getFieldDefinition(translatedId);
-    return translated ? `[${translated.label}]` : whole;
+    return translated ? `[${translated.label}${nameFormat ? `|${nameFormat}` : ""}]` : whole;
   });
 }
 
@@ -4456,12 +4551,34 @@ function copyDesignerSelection() {
 
 function updateDesignerClipboardActions() {
   const hasSelection = selectedDesignerSelectionsForCopy().length > 0;
-  if (elements.designerCopyButton) elements.designerCopyButton.hidden = !hasSelection;
+  if (elements.designerCopyButton) elements.designerCopyButton.disabled = !hasSelection;
   const hasClipboard = Boolean(state.designerClipboard?.units?.length);
-  if (elements.designerPasteButton) elements.designerPasteButton.hidden = !hasClipboard;
   const eligible = clipboardTranslationEligibility();
+  const hasTranslationChoice = hasClipboard && (eligible.awayToHome || eligible.homeToAway);
+  if (elements.designerPasteMenu) {
+    elements.designerPasteMenu.classList.toggle("disabled", !hasClipboard);
+    if (!hasClipboard || !hasTranslationChoice) elements.designerPasteMenu.open = false;
+  }
+  if (elements.designerPasteButton) {
+    elements.designerPasteButton.setAttribute("aria-disabled", String(!hasClipboard));
+    elements.designerPasteButton.title = "Paste (Ctrl/Cmd+V)";
+  }
   if (elements.designerPasteAwayHomeButton) elements.designerPasteAwayHomeButton.hidden = !(hasClipboard && eligible.awayToHome);
   if (elements.designerPasteHomeAwayButton) elements.designerPasteHomeAwayButton.hidden = !(hasClipboard && eligible.homeToAway);
+}
+
+function handleDesignerPasteToolbarClick(event) {
+  event.preventDefault();
+  const hasClipboard = Boolean(state.designerClipboard?.units?.length);
+  if (!hasClipboard) return;
+  const eligible = clipboardTranslationEligibility();
+  const hasTranslationChoice = eligible.awayToHome || eligible.homeToAway;
+  if (!hasTranslationChoice) {
+    elements.designerPasteMenu.open = false;
+    beginDesignerClipboardPlacement("exact");
+    return;
+  }
+  elements.designerPasteMenu.open = !elements.designerPasteMenu.open;
 }
 
 function clipboardUnitAnchor(unit) {
@@ -4471,6 +4588,7 @@ function clipboardUnitAnchor(unit) {
 }
 
 function beginDesignerClipboardPlacement(mode = "exact") {
+  if (elements.designerPasteMenu) elements.designerPasteMenu.open = false;
   const clipboard = state.designerClipboard;
   if (!clipboard?.units?.length) return setDesignerMessage("Copy one or more Designer items first.", true);
   const eligible = clipboardTranslationEligibility(clipboard);
@@ -4805,6 +4923,7 @@ async function deleteDesignerMultiSelection() {
   const mappingIds = new Set(structural.filter((s) => s.kind === "mapping").map((s) => s.id));
   const individualIds = new Set(structural.filter((s) => s.kind === "individual").map((s) => s.id));
   const blockIds = new Set(structural.filter((s) => s.kind === "block").map((s) => s.blockId));
+  if (blockIds.size && !window.confirm(`Delete ${blockIds.size === 1 ? "this complete layout" : `${blockIds.size} complete layouts`} and all of its placed content?`)) return;
   const columnKeys = new Set(structural.filter((s) => s.kind === "repeatedColumn").map((s) => `${s.blockId}:${s.columnId}`));
   layout.mappings = (layout.mappings || []).filter((item) => !mappingIds.has(item.id));
   layout.individualMappings = (layout.individualMappings || []).filter((item) => !individualIds.has(item.id));
@@ -4820,21 +4939,16 @@ async function deleteDesignerMultiSelection() {
 async function deleteSelectedDesignerObject() {
   const selection = state.designerSelection; if (!selection) return;
   if (selection.kind === "mapping") return deleteDesignerMapping(selection.id);
-  if (selection.kind === "individual" || selection.kind === "individualWorkspace") {
-    const object = locateDesignerObject(selection);
-    return deleteDesignerIndividualWorkspace(object?.collection);
-  }
-  if (selection.kind === "repeatedColumn" || selection.kind === "block") {
-    const blockId = selection.kind === "block" ? selection.blockId : selection.blockId;
-    if (elements.designerBlockSelect) elements.designerBlockSelect.value = blockId;
-    return deleteSelectedDesignerBlock();
-  }
+  if (selection.kind === "individual") return deleteDesignerIndividualMapping(selection.id, { preserveParentContext: true });
+  if (selection.kind === "individualWorkspace") { const object=locateDesignerObject(selection); return deleteDesignerIndividualWorkspace(object?.collection); }
+  if (selection.kind === "repeatedColumn") return deleteDesignerBlockColumn(selection.blockId, selection.columnId, { preserveParentContext: true });
+  if (selection.kind === "block") { if (elements.designerBlockSelect) elements.designerBlockSelect.value = selection.blockId; return deleteSelectedDesignerBlock(); }
 }
 
 async function removeSelectedDesignerChild() {
   const selection = state.designerSelection;
-  if (selection?.kind === "repeatedColumn") return deleteDesignerBlockColumn(selection.blockId, selection.columnId);
-  if (selection?.kind === "individual") return deleteDesignerIndividualMapping(selection.id);
+  if (selection?.kind === "repeatedColumn") return deleteDesignerBlockColumn(selection.blockId, selection.columnId, { preserveParentContext: true });
+  if (selection?.kind === "individual") return deleteDesignerIndividualMapping(selection.id, { preserveParentContext: true });
 }
 
 async function deleteDesignerIndividualWorkspace(collection) {

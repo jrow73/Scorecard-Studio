@@ -1150,3 +1150,12 @@ Build 022.3 is the accepted Copy/Paste baseline. The remaining planned Designer 
 ### Representative-data contract (Build 023)
 
 Representative Data is deterministic test infrastructure, not a simulated live game. It should contain fictional teams, people, and venues; deliberately exercise short/long text and collection-capacity cases; and remain stable across sessions so layout regressions are visually recognizable. Designer **Generate Test PDF** always uses Representative Data. Real game-day PDF generation belongs to the normal game workflow outside Designer.
+
+## v0.2.0 remaining roadmap (Build 024 baseline)
+
+- Build 024: Designer Workflow & Inspector Cleanup.
+- Build 025: Field Palette & Layout Settings, including Standard/Custom palette and Umpire Crew consolidation.
+- Build 026: Text Overflow & Fit Controls feasibility/implementation (truncate, shrink-to-fit, and related width constraints).
+- Build 027: Designer Completion / v0.2.0 release review.
+
+Build metadata continues to come from `/app-meta.json`; do not hard-code independent user-facing build labels. `README.md` remains intentionally untouched during intermediate builds.

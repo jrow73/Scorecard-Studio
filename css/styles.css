@@ -1828,3 +1828,77 @@ body.designer-mode .designer-view > .card,
 .designer-paste-ghost-item.block {
   background: rgba(179,108,255,.07);
 }
+
+/* Build 024: compact global clipboard controls and non-persistent status output. */
+.designer-live-status { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.designer-paste-menu { position:relative; }
+.designer-paste-menu > summary { list-style:none; display:inline-flex; align-items:center; justify-content:center; }
+.designer-paste-menu > summary::-webkit-details-marker { display:none; }
+.designer-paste-menu.disabled { opacity:.45; }
+.designer-paste-options { position:absolute; z-index:30; top:calc(100% + 4px); right:0; min-width:180px; padding:6px; border:1px solid var(--border); border-radius:8px; background:var(--panel); box-shadow:0 8px 24px rgba(0,0,0,.28); }
+.designer-paste-options button { display:block; width:100%; text-align:left; padding:7px 9px; border:0; border-radius:6px; background:transparent; color:inherit; cursor:pointer; }
+.designer-paste-options button:hover { background:rgba(255,255,255,.08); }
+.designer-live-inspector .designer-panel-heading { align-items:flex-start; }
+.designer-live-inspector .section-label { margin-bottom:2px; }
+.designer-live-inspector h4 { margin:0; }
+.designer-object-actions .compact-button { padding:.3rem .55rem; }
+
+/* Build 024.1 acceptance fixes: compact zoom popover and clipboard states. */
+.designer-paste-menu.disabled { opacity:.45; }
+.designer-paste-menu.disabled > summary { cursor:not-allowed; }
+.designer-paste-options button[hidden] { display:none !important; }
+
+.designer-zoom-menu { position:relative; }
+.designer-zoom-menu > summary { list-style:none; display:inline-flex; align-items:center; justify-content:center; }
+.designer-zoom-menu > summary::-webkit-details-marker { display:none; }
+.designer-zoom-options {
+  position:absolute; z-index:30; top:calc(100% + 4px); right:0;
+  display:grid; grid-template-columns:auto auto auto; align-items:center; gap:8px;
+  min-width:190px; padding:8px; border:1px solid var(--border); border-radius:10px;
+  background:var(--panel); box-shadow:0 8px 24px rgba(0,0,0,.28);
+}
+.designer-zoom-options > button:not(.compact-button) {
+  width:32px; min-width:32px; height:32px; border:0; border-radius:7px;
+  background:transparent; color:var(--text); font-size:20px; cursor:pointer;
+}
+.designer-zoom-options > button:not(.compact-button):hover { background:rgba(255,255,255,.08); }
+.designer-zoom-options > button:disabled { opacity:.4; cursor:not-allowed; }
+.designer-zoom-options #designer-zoom-reset-btn { grid-column:1 / -1; justify-self:stretch; }
+.designer-zoom-options strong { min-width:46px; text-align:center; }
+.designer-zoom-icon { position:relative; display:inline-block; width:18px; height:18px; }
+.designer-zoom-icon::before {
+  content:""; position:absolute; left:1px; top:1px; width:10px; height:10px;
+  border:2px solid currentColor; border-radius:50%; box-sizing:border-box;
+}
+.designer-zoom-icon::after {
+  content:""; position:absolute; width:7px; height:2px; left:10px; top:12px;
+  background:currentColor; transform:rotate(45deg); transform-origin:left center; border-radius:1px;
+}
+.designer-zoom-icon > span::before {
+  content:""; position:absolute; left:4px; top:5px; width:4px; height:2px; background:currentColor; border-radius:1px;
+}
+.designer-zoom-icon[data-state="neutral"] > span::before { display:none; }
+.designer-zoom-icon[data-state="in"] > span::after {
+  content:""; position:absolute; left:5px; top:4px; width:2px; height:4px; background:currentColor; border-radius:1px;
+}
+.designer-template-insert-controls { align-items:end; }
+
+
+/* Build 024.2 acceptance fixes: finished Inspector cleanup and disabled Paste parity. */
+.designer-live-inspector .designer-panel-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .35rem;
+}
+.designer-live-inspector .designer-object-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: .3rem;
+}
+.designer-live-inspector .designer-object-actions .compact-button {
+  padding: .22rem .45rem;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.designer-paste-menu.disabled > summary { cursor: not-allowed; pointer-events: auto; }

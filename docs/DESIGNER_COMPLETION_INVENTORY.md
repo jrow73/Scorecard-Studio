@@ -159,3 +159,9 @@ Two Build 018.1 acceptance defects are included: DH maps to `DH` in the derived 
 Build 018.3 closes the four remaining findings from the Build 018.2 Field Diagnostic review: Day/Night representative/live casing parity, realistic fixed-umpire examples, long-form division examples, and deterministic full names for today's posted defensive positions. The live diagnostic otherwise reported all active fields Available with complete repeated-field coverage in the acceptance game, and freshly generated PDFs populated the supplemental standings values that had been blank in Build 018.1.
 
 A final 018.3-05 acceptance cleanup expands representative repeated collections to 9 lineup / 6 bench / 14 bullpen / 6 umpires and replaces sequential jersey samples with deterministic mixed single- and double-digit values. With these fixes, Build 018 field coverage is considered complete. Future work may build the user-facing Standard/Custom field-selection workflow on top of the registry metadata, but that interface is not part of Build 018.
+
+## Build 024 — Designer Workflow & Inspector Cleanup
+
+Build 024 addresses Text Template blank suppression and Player Name formatting parity, progressive Repeated Layout content creation, role-driven Individual Placement, toolbar Copy/Paste, compact selection actions, helper-text cleanup, delete-path consistency, and removal of persistent Designer footer/status panels. Umpire Crew consolidation remains grouped with Build 025.
+
+Remaining v0.2.0 roadmap: Build 025 Field Palette & Layout Settings; Build 026 Text Overflow & Fit Controls; Build 027 Designer Completion / Release Review.

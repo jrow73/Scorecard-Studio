@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Shared field/template resolution for repeated and single-record slots
  * Version: 0.2.0-dev
- * Build: 018
+ * Build: 024
  */
 
 import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js";
@@ -27,7 +27,7 @@ export function templateTokenForContextField(fieldId) {
 }
 
 export function contextTemplateFieldIdByToken(tokenText, context) {
-  const token = String(tokenText || "").trim();
+  const token = String(tokenText || "").split("|")[0].trim();
   const fields = fieldsForRecordContext(context);
   const direct = getFieldDefinition(token);
   if (direct && fields.some((definition) => definition.id === direct.id)) return direct.id;
@@ -48,12 +48,17 @@ export function contextTemplateFieldIds(template, context) {
 
 export function resolveSlotContent(content, model, context, selector = null) {
   if (content?.type === "template") {
-    return String(content.template || "").replace(/\[([^\[\]]+)\]/g, (_whole, token) => {
-      const fieldId = contextTemplateFieldIdByToken(token, context);
-      if (!fieldId) return "";
+    const template = String(content.template || "");
+    const tokenValues = [];
+    const rendered = template.replace(/\[([^\[\]]+)\]/g, (_whole, token) => {
+      const [label, nameFormat] = String(token).split("|").map((part) => part.trim());
+      const fieldId = contextTemplateFieldIdByToken(label, context);
+      if (!fieldId) { tokenValues.push(""); return ""; }
       const definition = getFieldDefinition(fieldId);
-      return formatFieldValue(definition, resolveField(model, fieldId, selector), model) || "";
+      const value = formatFieldValue(definition, resolveField(model, fieldId, selector), model, nameFormat ? { nameFormat } : {}) || "";
+      tokenValues.push(value); return value;
     });
+    return tokenValues.length && tokenValues.every((value) => !String(value).trim()) ? "" : rendered;
   }
   const fieldId = canonicalFieldId(content?.field || "");
   const definition = getFieldDefinition(fieldId);
