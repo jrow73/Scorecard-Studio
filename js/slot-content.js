@@ -2,11 +2,11 @@
  * Scorecard Studio
  * Shared field/template resolution for repeated and single-record slots
  * Version: 0.2.0-dev
- * Build: 024
+ * Build: 025.3
  */
 
-import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js";
-import { formatFieldValue } from "./formatter.js";
+import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js?v=023";
+import { formatFieldValue } from "./formatter.js?v=0253";
 
 export function fieldsForRecordContext(context, options = {}) {
   const value = String(context || "");

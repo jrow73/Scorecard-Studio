@@ -127,9 +127,10 @@ Build 022.3 is accepted and is the baseline for the final Designer runway.
 
 1. **Build 023 — Representative Data & Test PDF** — deterministic fictional stress-test data; Designer Test PDF uses Representative Data only.
 2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal, Text Template/name-format and blank-value cleanup, compact Inspector/header, toolbar Copy/Paste, delete consistency, helper/footer cleanup.
-3. **Build 025 — Field Palette & Layout Settings** — dark-theme settings, Standard/Custom field selection, custom field picker, conditional-format toggles, palette cleanup, Umpire Crew consolidation.
-4. **Build 026 — Text Overflow & Fit Controls** — feasibility and implementation of intentional overflow behavior, with maximum-width/shrink-to-fit as the leading candidate and truncate/wrap evaluated as alternatives.
-5. **Build 027 — Designer Completion / Release Review** — full-card/fresh-layout regression, persistence/reload, documentation reconciliation, and v0.2.0 release readiness.
+3. **Build 025 — Live Game PDF Integration** — narrow A/B integration checkpoint: generate the Home-page selected game's live pregame scorecard from a saved layout using the same drawing path as Designer Test PDF.
+4. **Build 026 — Field Palette & Layout Settings** — dark-theme settings, Standard/Custom field selection, custom field picker, conditional-format toggles, palette cleanup, Umpire Crew consolidation.
+5. **Build 027 — Text Overflow & Fit Controls** — feasibility and implementation of intentional overflow behavior, with maximum-width/shrink-to-fit as the leading candidate and truncate/wrap evaluated as alternatives.
+6. **Build 028 — Designer Completion / Release Review** — full-card/fresh-layout regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and v0.2.0 release readiness.
 
 ## Scope held for later
 
@@ -140,7 +141,7 @@ The following should not delay v0.2.0 Designer completion unless a real scorecar
 - generalized repeated-collection template expressions beyond the agreed v1 need;
 - advanced matchup/situational research;
 - historical reconstruction algorithms beyond verified pregame data semantics;
-- one-click favorite-team/favorite-layout generation;
+- a dedicated favorite-layout preference beyond Build 025's remembered live-generation layout selection;
 - backup/export/import and cross-device portability; and
 - broader Game Day/application polish.
 
@@ -164,4 +165,4 @@ A final 018.3-05 acceptance cleanup expands representative repeated collections 
 
 Build 024 addresses Text Template blank suppression and Player Name formatting parity, progressive Repeated Layout content creation, role-driven Individual Placement, toolbar Copy/Paste, compact selection actions, helper-text cleanup, delete-path consistency, and removal of persistent Designer footer/status panels. Umpire Crew consolidation remains grouped with Build 025.
 
-Remaining v0.2.0 roadmap: Build 025 Field Palette & Layout Settings; Build 026 Text Overflow & Fit Controls; Build 027 Designer Completion / Release Review.
+Remaining v0.2.0 roadmap: Build 025 Live Game PDF Integration; Build 026 Field Palette & Layout Settings; Build 027 Text Overflow & Fit Controls; Build 028 Designer Completion / Release Review.

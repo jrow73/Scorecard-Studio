@@ -4,7 +4,7 @@
   Layout Management
   Version: 0.2.0-dev
   Build metadata: app-meta.json
-  Previous accepted baseline: Build 023 Final
+  Previous accepted baseline: Build 024 Final
 -->
 <html lang="en">
 <head>
@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=0243" />
+  <link rel="stylesheet" href="./css/styles.css?v=025" />
 </head>
 <body>
   <div class="app-shell">
@@ -150,7 +150,14 @@
               <h3 id="matchup-heading">Away Team at Home Team</h3>
               <p id="game-status-text"></p>
             </div>
+            <div class="live-pdf-actions" aria-label="Live PDF generation">
+              <label for="live-pdf-layout-select">Layout
+                <select id="live-pdf-layout-select"></select>
+              </label>
+              <button class="primary-button" id="live-pdf-generate-btn" type="button">Generate Live PDF</button>
+            </div>
           </div>
+          <div id="live-pdf-message" class="designer-live-status live-pdf-message" role="status" aria-live="polite"></div>
 
           <div class="pregame-kpis">
             <div class="kpi"><span class="label">First Pitch</span><span class="value" id="first-pitch">Not listed</span></div>
@@ -690,6 +697,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0243"></script>
+  <script type="module" src="./js/app.js?v=0253"></script>
 </body>
 </html>

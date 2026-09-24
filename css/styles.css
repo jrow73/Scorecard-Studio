@@ -1902,3 +1902,41 @@ body.designer-mode .designer-view > .card,
   white-space: nowrap;
 }
 .designer-paste-menu.disabled > summary { cursor: not-allowed; pointer-events: auto; }
+
+/* Build 025: narrow live-game PDF generation controls. */
+.live-pdf-actions {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.live-pdf-actions label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.live-pdf-actions select {
+  min-width: 220px;
+  max-width: 340px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.live-pdf-message {
+  margin: -4px 0 14px;
+}
+
+@media (max-width: 760px) {
+  .selected-game-heading { align-items: stretch; }
+  .live-pdf-actions { justify-content: flex-start; width: 100%; }
+  .live-pdf-actions label { flex: 1 1 220px; }
+  .live-pdf-actions select { width: 100%; max-width: none; }
+}

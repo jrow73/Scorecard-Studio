@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Representative Designer / field-catalog sample data
  * Version: 0.2.0-dev
- * Build: 024.1
+ * Build: 025.3
  */
 
 const POSITION_INFO = {
@@ -17,6 +17,9 @@ function position(abbreviation) {
 }
 
 const SAMPLE_NAME_FIELDS = Object.freeze({
+  "Bo Yu": { firstName: "Robert", lastName: "Yu", useName: "Bo", useLastName: "Yu", initLastName: "R. Yu", boxscoreName: "Yu, B" },
+  "Nico Bell": { firstName: "Nicholas", lastName: "Bell", useName: "Nico", useLastName: "Bell", initLastName: "N. Bell", boxscoreName: "Bell, N" },
+  "Silas Crowe": { firstName: "Silas", lastName: "Crowe", useName: "Si", useLastName: "Crowe", initLastName: "S. Crowe", boxscoreName: "Crowe, S" },
   "Dorian St. James": { firstName: "Dorian", lastName: "St. James", useName: "Dorian", useLastName: "St. James", initLastName: "D. St. James", boxscoreName: "St. James" },
   "Christopher Van Buren": { firstName: "Christopher", lastName: "Van Buren", useName: "Christopher", useLastName: "Van Buren", initLastName: "C. Van Buren", boxscoreName: "Van Buren" },
   "Santiago De la Cruz": { firstName: "Santiago", lastName: "De la Cruz", useName: "Santiago", useLastName: "De la Cruz", initLastName: "S. De la Cruz", boxscoreName: "De la Cruz" },
@@ -54,7 +57,7 @@ function sampleBoxscoreName(name, firstName, lastName) {
 function sampleStarter(name, firstName, lastName, initLastName, boxscoreName, number, throws, wins, losses, gamesStarted, era, whip) {
   return {
     player: {
-      name, firstName, lastName, useName: firstName, useLastName: lastName, initLastName, boxscoreName,
+      name, firstName, lastName, useName: name === "Thaddeus McAllister" ? "Thad" : firstName, useLastName: lastName, initLastName, boxscoreName,
       number, throws, primaryPosition: position("P")
     },
     position: position("P"),

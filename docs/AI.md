@@ -47,14 +47,7 @@ environment.
 -   **Pregame only:** Do not introduce live scores, inning state, or
     other spoiler-prone in-game information into the primary workflow.
 
--   **Lazy/on-demand pregame hydration:** The Home / Select Game workflow should
-    use the schedule and game-feed/game-pack data needed to identify and preview
-    available games. Do not fetch supplemental manager, standings, player-stat,
-    or other cross-reference data merely because a game appears on Home.
-    Supplemental data should be fetched when the user explicitly opens Game Day for a selected game, or after the user selects the game
-    and layout to generate (or invokes an equivalent one-click generation
-    workflow), and ideally only for field categories actually required by that
-    layout.
+-   **Immutable pregame source preference (Build 025.2):** Home / Select Game should prefer Schedule + date-specific Rosters for lineup and roster state. Player season stats come from a bulk People request hydrated with `byDateRange` ending the day before the selected game; team record/standings use the day-before-game standings snapshot. `/feed/live` is supplemental/on-demand only for fields that still lack a narrower immutable source (such as umpires or extended venue metadata). Do not use mutable completed-game lineup/bench/bullpen collections or embedded postgame `seasonStats` as historical pregame truth.
 
 ### Development environment terminology
 
@@ -217,10 +210,11 @@ trigger only the hydration needed for those mapped fields. Team W-L/PCT and embe
 
 ### Future one-click generation
 
-A future **Today's Scorecard** action may combine the favorite team and favorite
-layout into a quick-generation workflow. It should follow the same rule:
-identify today's favorite-team game, inspect the favorite layout, hydrate only
-the missing data required by that layout, and generate the scorecard.
+Build 025 introduces the first user-facing live generation path on Home. The user selects a saved layout for the currently selected favorite-team game; Scorecard Studio inspects that layout's mapped fields, hydrates only required supplemental sources, and sends the normalized live model through the same PDF renderer used by Designer Test PDF. The selected live-generation layout is remembered in browser settings for convenience. A later favorite-layout setting may streamline this further, but is not required for the narrow Build 025 integration test.
+
+**Build 025.2 API correction:** Acceptance testing of historical games exposed mutable/postgame artifacts in `/feed/live`. The live-PDF path now normalizes original lineups from Schedule hydration, derives Bench/Bullpen from date-specific rosters, enriches all roster player IDs in one bulk `/people` request, uses `byDateRange` stats through the day before the game, and uses day-before-game standings for pregame W-L. `boxscoreName` is taken directly from canonical People/roster metadata and is never manufactured from Full Name. Traded-player tests (Taylor Ward, Seranthony Domínguez), single-team tests (Cal Raleigh), and an MLB-debut test (Colt Emerson) validate the aggregate/stat cutoff rules. New API plumbing should carry the selected game sport context rather than introduce new MLB-only `sportId=1` assumptions where avoidable.
+
+**Build 025.3 name-source fidelity correction:** Player-name formats must resolve from their explicit normalized/API-backed properties rather than visually equivalent fallbacks: Full Name -> `player.name` (normalized from `fullName`), First Name -> `firstName`, Last Name -> `lastName`, Use Name + Last Name -> `useName` + `useLastName`, First Initial + Last Name -> `initLastName`, and Boxscore Name -> `boxscoreName`. Missing source variants render blank instead of silently substituting another name format. Representative Data intentionally includes differing first/use/boxscore values so mapping errors are visible. The shared slot/template renderer must use the same formatter module/version as direct field rendering. Designer Copy/Paste clipboard contents must survive page navigation; changing pages may clear source-page selection but must not clear the clipboard.
 
 This loading strategy is both a performance optimization and an architectural
 boundary: supplemental endpoints exist to satisfy scorecard field requirements,
@@ -1143,9 +1137,10 @@ Build 022.3 is the accepted Copy/Paste baseline. The remaining planned Designer 
 
 1. **Build 023 — Representative Data & Test PDF** — replace recognizable real-world representative identities with a deterministic fictional stress-test fixture; Designer Generate Test PDF uses only that fixture and never requires a selected live game.
 2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal and placement-flow cleanup, Text Template player-name format parity and blank-value suppression, compact Inspector/header presentation, toolbar Copy/Paste with translated-paste dropdown, delete-path consistency, helper-text/footer cleanup.
-3. **Build 025 — Field Palette & Layout Settings** — dark-theme settings redesign; Standard vs Custom palette mode; custom field picker using representative examples; conditional-format toggle cards; palette collapse behavior; Umpire Crew consolidation.
-4. **Build 026 — Text Overflow & Fit Controls** — investigate and implement intentional long-text behavior. Maximum width plus shrink-to-fit is the leading candidate; truncation and wrapping should be evaluated against browser/PDF parity before committing to a final policy.
-5. **Build 027 — v0.2.0 Designer Completion / Release Review** — fresh-user/full-card regression, persistence/reload, Test PDF, documentation reconciliation, and final release-readiness defects.
+3. **Build 025 — Live Game PDF Integration** — narrow integration build: generate the Home-page selected game's scorecard from a saved layout using the same PDF renderer as Designer Test PDF and dependency-driven supplemental hydration based on mapped fields.
+4. **Build 026 — Field Palette & Layout Settings** — dark-theme settings redesign; Standard vs Custom palette mode; custom field picker using representative examples; conditional-format toggle cards; palette collapse behavior; Umpire Crew consolidation.
+5. **Build 027 — Text Overflow & Fit Controls** — investigate and implement intentional long-text behavior. Maximum width plus shrink-to-fit is the leading candidate; truncation and wrapping should be evaluated against browser/PDF parity before committing to a final policy.
+6. **Build 028 — v0.2.0 Designer Completion / Release Review** — fresh-user/full-card regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and final release-readiness defects.
 
 ### Representative-data contract (Build 023)
 
@@ -1154,8 +1149,9 @@ Representative Data is deterministic test infrastructure, not a simulated live g
 ## v0.2.0 remaining roadmap (Build 024 baseline)
 
 - Build 024: Designer Workflow & Inspector Cleanup.
-- Build 025: Field Palette & Layout Settings, including Standard/Custom palette and Umpire Crew consolidation.
-- Build 026: Text Overflow & Fit Controls feasibility/implementation (truncate, shrink-to-fit, and related width constraints).
-- Build 027: Designer Completion / v0.2.0 release review.
+- Build 025: Live Game PDF Integration from the Home-page selected game using a saved layout and the shared renderer.
+- Build 026: Field Palette & Layout Settings, including Standard/Custom palette and Umpire Crew consolidation.
+- Build 027: Text Overflow & Fit Controls feasibility/implementation (truncate, shrink-to-fit, and related width constraints).
+- Build 028: Designer Completion / v0.2.0 release review.
 
 Build metadata continues to come from `/app-meta.json`; do not hard-code independent user-facing build labels. `README.md` remains intentionally untouched during intermediate builds.

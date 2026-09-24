@@ -2,52 +2,57 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 018.3
+ * Build: 025.2
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
   const gd = feed?.gameData || {};
   const live = feed?.liveData || {};
-  const date = gd.datetime?.officialDate || scheduleGame?.officialDate || null;
+  const date = scheduleGame?.officialDate || gd.datetime?.officialDate || null;
+  const sportId = scheduleGame?.sportId ?? gd.game?.sport?.id ?? 1;
   const model = {
     schemaVersion: 1,
     context: {
-      gamePk: String(gd.game?.pk || scheduleGame?.gamePk || ""),
-      season: Number(gd.game?.season || String(date || "").slice(0, 4)) || null,
-      sportId: gd.game?.sport?.id ?? 1,
+      gamePk: String(scheduleGame?.gamePk || gd.game?.pk || ""),
+      season: Number(scheduleGame?.season || gd.game?.season || String(date || "").slice(0, 4)) || null,
+      sportId,
       selectedDate: date,
       retrievedAt: new Date().toISOString()
     },
-    game: normalizeGame(gd, live),
+    game: normalizeGame(gd, live, scheduleGame),
     away: null,
     home: null,
     standings: { groups: [] },
     meta: { sources: {
       gamePack: Boolean(feed),
+      schedule: Boolean(scheduleGame),
+      rosters: Boolean(supplemental.rosters?.away || supplemental.rosters?.home),
+      peopleStats: Array.isArray(supplemental.people?.people) && supplemental.people.people.length > 0,
       coaches: Boolean(supplemental.coaches?.away || supplemental.coaches?.home),
       standings: Array.isArray(supplemental.standingsPayloads) && supplemental.standingsPayloads.length > 0
     } }
   };
 
-  model.away = normalizeSide(feed, "away", supplemental.coaches?.away, supplemental.standingsPayloads);
-  model.home = normalizeSide(feed, "home", supplemental.coaches?.home, supplemental.standingsPayloads);
+  const peopleMap = buildPeopleMap(supplemental.people);
+  model.away = normalizeSide(feed, "away", scheduleGame, supplemental.rosters?.away, peopleMap, supplemental.coaches?.away, supplemental.standingsPayloads);
+  model.home = normalizeSide(feed, "home", scheduleGame, supplemental.rosters?.home, peopleMap, supplemental.coaches?.home, supplemental.standingsPayloads);
   return model;
 }
 
-function normalizeGame(gd, live) {
-  const venue = gd.venue || {};
-  const weather = gd.weather || {};
+function normalizeGame(gd, live, scheduleGame) {
+  const venue = gd.venue || scheduleGame?.venueData || {};
+  const weather = scheduleGame?.weather || gd.weather || {};
   const field = venue.fieldInfo || {};
   const location = venue.location || {};
   return {
-    date: gd.datetime?.officialDate ?? null,
-    startTime: gd.datetime?.dateTime ?? null,
-    dayNight: normalizeDayNight(gd.datetime?.dayNight),
-    type: gd.game?.type ?? null,
-    number: numberOrNull(gd.game?.gameNumber),
+    date: scheduleGame?.officialDate ?? gd.datetime?.officialDate ?? null,
+    startTime: scheduleGame?.gameDate ?? gd.datetime?.dateTime ?? null,
+    dayNight: normalizeDayNight(scheduleGame?.dayNight ?? gd.datetime?.dayNight),
+    type: scheduleGame?.gameType ?? gd.game?.type ?? null,
+    number: numberOrNull(scheduleGame?.gameNumber ?? gd.game?.gameNumber),
     venue: {
       id: venue.id ?? null,
-      name: venue.name ?? null,
+      name: venue.name ?? scheduleGame?.venue ?? null,
       capacity: numberOrNull(field.capacity),
       turfType: field.turfType ?? null,
       roofType: field.roofType ?? null,
@@ -65,115 +70,156 @@ function normalizeGame(gd, live) {
   };
 }
 
-function normalizeSide(feed, side, coachesPayload, standingsPayloads) {
+function normalizeSide(feed, side, scheduleGame, rosterPayload, peopleMap, coachesPayload, standingsPayloads) {
   const gd = feed?.gameData || {};
-  const team = gd.teams?.[side] || {};
-  const standing = findStanding(standingsPayloads, team.id);
-  const lineup = normalizeLineup(feed, side);
-  const starter = normalizeStartingPitcher(feed, side);
+  const scheduleTeam = side === "away" ? scheduleGame?.awayTeamData : scheduleGame?.homeTeamData;
+  const team = scheduleTeam || gd.teams?.[side] || {};
+  const teamId = team.id ?? (side === "away" ? scheduleGame?.awayTeamId : scheduleGame?.homeTeamId);
+  const standing = findStanding(standingsPayloads, teamId);
+  const lineupSource = side === "away" ? scheduleGame?.awayLineup : scheduleGame?.homeLineup;
+  const probable = side === "away" ? scheduleGame?.awayProbablePitcher : scheduleGame?.homeProbablePitcher;
+  const rosterEntries = Array.isArray(rosterPayload?.roster) ? rosterPayload.roster : [];
+  const lineup = normalizeScheduleLineup(lineupSource, rosterEntries, peopleMap);
+  const starter = normalizeStartingPitcher(probable, rosterEntries, peopleMap);
+  const lineupIds = new Set(lineup.map((slot) => slot?.player?.id).filter(Boolean).map(String));
+  const bench = lineupIds.size ? normalizeBench(rosterEntries, lineupIds, peopleMap) : [];
+  const bullpen = normalizeBullpen(rosterEntries, starter?.player?.id, peopleMap);
+  const record = normalizePregameRecord(standing);
+
   return {
     team: {
-      id: team.id ?? null,
-      name: team.name ?? null,
+      id: teamId ?? null,
+      name: team.name ?? (side === "away" ? scheduleGame?.awayTeam : scheduleGame?.homeTeam) ?? null,
       locationName: team.locationName ?? null,
       shortName: team.shortName ?? null,
       clubName: team.clubName ?? team.teamName ?? null,
       abbreviation: team.abbreviation ?? null,
       league: { id: team.league?.id ?? null, name: team.league?.name ?? null },
       division: { id: team.division?.id ?? null, name: team.division?.nameShort ?? team.division?.name ?? null },
-      record: {
-        gamesPlayed: numberOrNull(team.record?.gamesPlayed),
-        wins: numberOrNull(team.record?.wins),
-        losses: numberOrNull(team.record?.losses),
-        pct: decimalOrNull(team.record?.winningPercentage),
-        divisionLeader: booleanOrNull(team.record?.divisionLeader)
-      },
+      record,
       standings: normalizeStanding(standing)
     },
     manager: normalizeManager(coachesPayload),
     coaches: [],
     lineup,
     startingPitcher: starter,
-    bench: normalizeMembership(feed, side, "bench", new Set(lineup.filter((slot) => slot?.player?.id).map((slot) => String(slot.player.id)))),
-    bullpen: normalizeBullpen(feed, side, starter?.player?.id),
+    bench,
+    bullpen,
     defense: {}
   };
 }
 
-function normalizeLineup(feed, side) {
-  const box = feed?.liveData?.boxscore?.teams?.[side] || {};
-  const ids = Array.isArray(box.battingOrder) ? box.battingOrder.map(String) : [];
-  const capacity = Math.max(9, ids.length);
-  const slots = Array.from({ length: capacity }, (_, index) => ({ battingOrder: index + 1, player: null, position: null, stats: {} }));
-  ids.forEach((id, index) => { slots[index] = normalizeBoxPlayer(feed, side, id, index + 1); });
-  return slots;
+function normalizeScheduleLineup(players, rosterEntries, peopleMap) {
+  const source = Array.isArray(players) ? players : [];
+  if (!source.length) return [];
+  return source.map((person, index) => {
+    const id = person?.id;
+    const rosterEntry = findRosterEntry(rosterEntries, id);
+    const player = normalizePlayer(person, rosterEntry, peopleMap.get(String(id)));
+    const pos = person?.primaryPosition || {};
+    return {
+      battingOrder: index + 1,
+      player,
+      position: {
+        abbreviation: pos.abbreviation ?? null,
+        name: defensivePositionName(pos.abbreviation) ?? pos.name ?? null,
+        number: defensivePositionNumber(pos.abbreviation)
+      },
+      stats: normalizeHydratedStats(peopleMap.get(String(id)))
+    };
+  });
 }
 
-function normalizeStartingPitcher(feed, side) {
-  const probable = feed?.gameData?.probablePitchers?.[side];
+function normalizeStartingPitcher(probable, rosterEntries, peopleMap) {
   if (!probable?.id && !probable?.fullName) return null;
-  const normalized = normalizeBoxPlayer(feed, side, String(probable.id || ""), null, probable);
-  if (!normalized.player?.name) normalized.player.name = probable.fullName ?? null;
-  return normalized;
-}
-
-function normalizeMembership(feed, side, key, excludedIds = new Set()) {
-  const box = feed?.liveData?.boxscore?.teams?.[side] || {};
-  if (!Array.isArray(box[key])) return [];
-  const seen = new Set();
-  const result = [];
-  for (const rawId of box[key]) {
-    const id = String(rawId);
-    if (seen.has(id) || excludedIds.has(id)) continue;
-    seen.add(id);
-    result.push(normalizeBoxPlayer(feed, side, id));
-  }
-  return result;
-}
-
-function normalizeBullpen(feed, side, starterId) {
-  const excluded = new Set(starterId ? [String(starterId)] : []);
-  return normalizeMembership(feed, side, "bullpen", excluded);
-}
-
-function normalizeBoxPlayer(feed, side, id, battingOrder = null, fallbackPerson = null) {
-  const box = feed?.liveData?.boxscore?.teams?.[side] || {};
-  const boxPlayer = box.players?.[`ID${id}`] || box.players?.[id] || {};
-  const gamePlayer = feed?.gameData?.players?.[`ID${id}`] || feed?.gameData?.players?.[id] || fallbackPerson || {};
-  const person = boxPlayer.person || {};
-  const player = {
-    id: numberOrNull(person.id ?? gamePlayer.id ?? fallbackPerson?.id),
-    name: person.fullName ?? gamePlayer.fullName ?? fallbackPerson?.fullName ?? null,
-    number: boxPlayer.jerseyNumber ?? gamePlayer.primaryNumber ?? null,
-    firstName: gamePlayer.firstName ?? null,
-    lastName: gamePlayer.lastName ?? null,
-    useName: gamePlayer.useName ?? null,
-    useLastName: gamePlayer.useLastName ?? null,
-    boxscoreName: gamePlayer.boxscoreName ?? null,
-    firstLastName: gamePlayer.firstLastName ?? gamePlayer.nameFirstLast ?? null,
-    lastFirstName: gamePlayer.lastFirstName ?? null,
-    initLastName: gamePlayer.initLastName ?? null,
-    lastInitName: gamePlayer.lastInitName ?? null,
-    nameSuffix: gamePlayer.nameSuffix ?? null,
-    nameTitle: gamePlayer.nameTitle ?? null,
-    pronunciation: gamePlayer.pronunciation ?? null,
-    bats: gamePlayer.batSide?.code ?? boxPlayer.batSide?.code ?? null,
-    throws: handCode(gamePlayer.pitchHand?.code ?? boxPlayer.pitchHand?.code),
-    primaryPosition: {
-      abbreviation: gamePlayer.primaryPosition?.abbreviation ?? null,
-      name: gamePlayer.primaryPosition?.name ?? null
-    }
-  };
+  const id = probable?.id;
+  const rosterEntry = findRosterEntry(rosterEntries, id);
+  const enriched = peopleMap.get(String(id));
   return {
-    battingOrder,
-    player,
-    position: {
-      abbreviation: boxPlayer.position?.abbreviation ?? null,
-      name: defensivePositionName(boxPlayer.position?.abbreviation) ?? boxPlayer.position?.name ?? null,
-      number: defensivePositionNumber(boxPlayer.position?.abbreviation)
-    },
-    stats: normalizeStats(boxPlayer.seasonStats)
+    battingOrder: null,
+    player: normalizePlayer(probable, rosterEntry, enriched),
+    position: { abbreviation: "P", name: "Pitcher", number: 1 },
+    stats: normalizeHydratedStats(enriched)
   };
+}
+
+function normalizeBench(rosterEntries, lineupIds, peopleMap) {
+  return rosterEntries
+    .filter((entry) => {
+      const id = String(entry?.person?.id ?? "");
+      if (!id || lineupIds.has(id)) return false;
+      return !isPitcher(entry?.position || entry?.person?.primaryPosition);
+    })
+    .map((entry) => normalizeRosterRecord(entry, peopleMap))
+    .sort(comparePlayerName);
+}
+
+function normalizeBullpen(rosterEntries, starterId, peopleMap) {
+  const starterKey = starterId != null ? String(starterId) : null;
+  return rosterEntries
+    .filter((entry) => {
+      const id = String(entry?.person?.id ?? "");
+      return id && id !== starterKey && isPitcher(entry?.position || entry?.person?.primaryPosition);
+    })
+    .map((entry) => normalizeRosterRecord(entry, peopleMap))
+    .sort(comparePlayerName);
+}
+
+function normalizeRosterRecord(entry, peopleMap) {
+  const id = entry?.person?.id;
+  const enriched = peopleMap.get(String(id));
+  const pos = entry?.position || entry?.person?.primaryPosition || enriched?.primaryPosition || {};
+  return {
+    battingOrder: null,
+    player: normalizePlayer(entry?.person || {}, entry, enriched),
+    position: {
+      abbreviation: pos.abbreviation ?? null,
+      name: defensivePositionName(pos.abbreviation) ?? pos.name ?? null,
+      number: defensivePositionNumber(pos.abbreviation)
+    },
+    stats: normalizeHydratedStats(enriched)
+  };
+}
+
+function normalizePlayer(basePerson, rosterEntry, enrichedPerson) {
+  const p = enrichedPerson || rosterEntry?.person || basePerson || {};
+  const fallback = rosterEntry?.person || basePerson || {};
+  const primary = p.primaryPosition || fallback.primaryPosition || rosterEntry?.position || {};
+  return {
+    id: numberOrNull(p.id ?? fallback.id),
+    name: p.fullName ?? fallback.fullName ?? null,
+    number: rosterEntry?.jerseyNumber ?? p.primaryNumber ?? fallback.primaryNumber ?? null,
+    firstName: p.firstName ?? fallback.firstName ?? null,
+    lastName: p.lastName ?? fallback.lastName ?? null,
+    useName: p.useName ?? fallback.useName ?? null,
+    useLastName: p.useLastName ?? fallback.useLastName ?? null,
+    boxscoreName: p.boxscoreName ?? fallback.boxscoreName ?? null,
+    firstLastName: p.firstLastName ?? p.nameFirstLast ?? fallback.firstLastName ?? fallback.nameFirstLast ?? null,
+    lastFirstName: p.lastFirstName ?? fallback.lastFirstName ?? null,
+    initLastName: p.initLastName ?? fallback.initLastName ?? null,
+    lastInitName: p.lastInitName ?? fallback.lastInitName ?? null,
+    nameSuffix: p.nameSuffix ?? fallback.nameSuffix ?? null,
+    nameTitle: p.nameTitle ?? fallback.nameTitle ?? null,
+    pronunciation: p.pronunciation ?? fallback.pronunciation ?? null,
+    bats: p.batSide?.code ?? fallback.batSide?.code ?? null,
+    throws: handCode(p.pitchHand?.code ?? fallback.pitchHand?.code),
+    primaryPosition: { abbreviation: primary.abbreviation ?? null, name: primary.name ?? null }
+  };
+}
+
+function normalizeHydratedStats(person) {
+  const groups = Array.isArray(person?.stats) ? person.stats : [];
+  const battingGroup = groups.find((group) => String(group?.group?.displayName || "").toLowerCase() === "hitting");
+  const pitchingGroup = groups.find((group) => String(group?.group?.displayName || "").toLowerCase() === "pitching");
+  const batting = selectAggregateSplit(battingGroup)?.stat || {};
+  const pitching = selectAggregateSplit(pitchingGroup)?.stat || {};
+  return normalizeStats({ batting, pitching });
+}
+
+function selectAggregateSplit(group) {
+  const splits = Array.isArray(group?.splits) ? group.splits : [];
+  if (!splits.length) return null;
+  return splits.find((split) => Number(split?.sport?.id) === 0 || String(split?.sport?.code || "").toLowerCase() === "all") || splits[0];
 }
 
 function normalizeStats(seasonStats) {
@@ -194,6 +240,42 @@ function normalizeStats(seasonStats) {
     strikeoutsPer9Inn: decimalOrNull(pitching.strikeoutsPer9Inn), walksPer9Inn: decimalOrNull(pitching.walksPer9Inn),
     hitsPer9Inn: decimalOrNull(pitching.hitsPer9Inn), homeRunsPer9: decimalOrNull(pitching.homeRunsPer9), pitchesPerInning: decimalOrNull(pitching.pitchesPerInning)
   };
+}
+
+function normalizePregameRecord(standing) {
+  const record = standing?.leagueRecord || standing?.record || {};
+  const wins = numberOrNull(record.wins);
+  const losses = numberOrNull(record.losses);
+  const gamesPlayed = wins != null && losses != null ? wins + losses : numberOrNull(record.gamesPlayed);
+  return {
+    gamesPlayed,
+    wins,
+    losses,
+    pct: decimalOrNull(record.pct ?? record.winningPercentage),
+    divisionLeader: booleanOrNull(standing?.divisionLeader)
+  };
+}
+
+function buildPeopleMap(payload) {
+  const map = new Map();
+  for (const person of Array.isArray(payload?.people) ? payload.people : []) if (person?.id != null) map.set(String(person.id), person);
+  return map;
+}
+
+function findRosterEntry(entries, personId) {
+  return (entries || []).find((entry) => String(entry?.person?.id ?? "") === String(personId ?? "")) || null;
+}
+
+function isPitcher(position) {
+  const code = String(position?.code ?? "").toUpperCase();
+  const abbr = String(position?.abbreviation ?? "").toUpperCase();
+  const type = String(position?.type ?? "").toLowerCase();
+  const name = String(position?.name ?? "").toLowerCase();
+  return code === "1" || abbr === "P" || type === "pitcher" || name === "pitcher";
+}
+
+function comparePlayerName(a, b) {
+  return String(a?.player?.name || "").localeCompare(String(b?.player?.name || ""));
 }
 
 function normalizeManager(payload) {
@@ -259,24 +341,9 @@ function normalizeDayNight(value) {
   return value ?? null;
 }
 
-function winLossRecord(winsValue, lossesValue) {
-  const wins = numberOrNull(winsValue), losses = numberOrNull(lossesValue);
-  return wins != null && losses != null ? `${wins}-${losses}` : null;
-}
-
-function slashLine(avgValue, obpValue, slgValue) {
-  const values = [avgValue, obpValue, slgValue].map((value) => value == null || value === "" ? "" : String(value).trim().replace(/^0(?=\.)/, ""));
-  return values.every(Boolean) ? values.join("/") : null;
-}
-
-function numberOrNull(value) {
-  if (value === null || value === undefined || value === "") return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-function decimalOrNull(value) { return numberOrNull(value); }
+function handCode(code) { const value = String(code || "").trim().toUpperCase(); return value === "R" || value === "L" ? value : value || null; }
+function numberOrNull(value) { const n = Number(value); return Number.isFinite(n) ? n : null; }
+function decimalOrNull(value) { if (value == null || value === "") return null; const n = Number(value); return Number.isFinite(n) ? n : null; }
 function booleanOrNull(value) { return typeof value === "boolean" ? value : null; }
-function handCode(value) {
-  const code = String(value || "").toUpperCase();
-  return code.startsWith("R") ? "R" : code.startsWith("L") ? "L" : code || null;
-}
+function slashLine(avg, obp, slg) { return [avg, obp, slg].every((v) => v != null && v !== "") ? [avg, obp, slg].map((v) => String(v).replace(/^0(?=\.)/, "")).join("/") : null; }
+function winLossRecord(wins, losses) { return wins != null && losses != null ? `${wins}-${losses}` : null; }

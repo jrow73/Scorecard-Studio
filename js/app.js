@@ -2,16 +2,16 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 024.2
+ * Build: 025.3
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=018";
-import { normalizePregameData } from "./normalize.js?v=0183";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0252";
+import { normalizePregameData } from "./normalize.js?v=0252";
 import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=023";
-import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=018";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0241";
+import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=0253";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0253";
 import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=024";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=0253";
 import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0192";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
@@ -26,6 +26,7 @@ const state = {
   schedule: [],
   selectedGamePk: null,
   selectedFeed: null,
+  selectedSupplemental: null,
   pdfDocument: null,
   pdfPageNumber: 1,
   pdfRecord: null,
@@ -83,6 +84,9 @@ const elements = {
   firstPitch: document.querySelector("#first-pitch"),
   venue: document.querySelector("#venue"),
   weather: document.querySelector("#weather"),
+  livePdfLayoutSelect: document.querySelector("#live-pdf-layout-select"),
+  livePdfGenerateButton: document.querySelector("#live-pdf-generate-btn"),
+  livePdfMessage: document.querySelector("#live-pdf-message"),
   awayPitchersHeading: document.querySelector("#away-pitchers-heading"),
   homePitchersHeading: document.querySelector("#home-pitchers-heading"),
   awayPitchers: document.querySelector("#away-pitchers"),
@@ -324,6 +328,8 @@ async function initialize() {
   elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today));
   elements.gameDateInput.addEventListener("change", handleGameDateChange);
   elements.gameDateTodayButton.addEventListener("click", () => setSelectedGameDate(getLocalDateString()));
+  elements.livePdfGenerateButton?.addEventListener("click", generateLivePdf);
+  elements.livePdfLayoutSelect?.addEventListener("change", saveLivePdfLayoutPreference);
   elements.navHome.addEventListener("click", () => showView("home"));
   elements.navGameDay.addEventListener("click", openGameDay);
   elements.navFieldDiagnostic.addEventListener("click", openFieldDiagnostic);
@@ -515,6 +521,9 @@ async function loadFavoriteTeamPregame(date) {
   if (dateChanged) {
     state.selectedGamePk = null;
     state.selectedFeed = null;
+    state.selectedSupplemental = null;
+    updateLivePdfAvailability();
+    setLiveGenerateMessage("");
   }
 
   setPregameLoading(true, `Finding ${state.favoriteTeam.name} game for ${formatDisplayDate(requestedDate)}…`);
@@ -526,6 +535,9 @@ async function loadFavoriteTeamPregame(date) {
     if (schedule.length === 0) {
       state.selectedGamePk = null;
       state.selectedFeed = null;
+      state.selectedSupplemental = null;
+      updateLivePdfAvailability();
+      setLiveGenerateMessage("");
       renderNoGame();
       setAppStatus("MLB API ready", "ready");
       return;
@@ -578,21 +590,76 @@ async function selectGame(gamePk) {
   if (!selected) return;
 
   state.selectedGamePk = selected.gamePk;
+  state.selectedFeed = null;
+  state.selectedSupplemental = null;
+  state.normalizedPregame = null;
+  updateLivePdfAvailability();
+  setLiveGenerateMessage("");
   highlightSelectedGame();
   setPregameLoading(true, `Loading pregame data for ${selected.awayTeam} at ${selected.homeTeam}…`);
 
   try {
-    const feed = await fetchGameFeed(selected.gamePk);
+    const supplemental = await loadPregameCore(selected);
     if (String(state.selectedGamePk) !== String(selected.gamePk)) return;
-    state.selectedFeed = feed;
-    state.normalizedPregame = normalizePregameData(feed, {}, selected);
-    renderSelectedGame(selected, feed);
+    state.selectedSupplemental = supplemental;
+    state.normalizedPregame = normalizePregameData(null, supplemental, selected);
+    renderSelectedGame(selected, state.normalizedPregame);
+    updateLivePdfAvailability();
+    setLiveGenerateMessage(`Ready to generate ${selected.awayTeam} at ${selected.homeTeam} from pregame data.`);
   } catch (error) {
     console.error(`Unable to load selected game ${selected.gamePk}:`, error);
+    updateLivePdfAvailability();
+    setLiveGenerateMessage("Live PDF unavailable until this game's pregame data loads successfully.", true);
     renderPregameError(error);
   } finally {
     setPregameLoading(false);
   }
+}
+
+async function loadPregameCore(game) {
+  const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
+  const season = Number(game.season || officialDate.slice(0, 4));
+  const cutoffDate = previousDateString(officialDate);
+  const seasonStart = `${season}-01-01`;
+
+  const [awayRoster, homeRoster] = await Promise.all([
+    fetchTeamRoster(game.awayTeamId, officialDate),
+    fetchTeamRoster(game.homeTeamId, officialDate)
+  ]);
+
+  const personIds = [...new Set([
+    ...(awayRoster?.roster || []).map((entry) => entry?.person?.id),
+    ...(homeRoster?.roster || []).map((entry) => entry?.person?.id),
+    ...(game.awayLineup || []).map((person) => person?.id),
+    ...(game.homeLineup || []).map((person) => person?.id),
+    game.awayProbablePitcher?.id,
+    game.homeProbablePitcher?.id
+  ].filter(Boolean))];
+
+  const [peopleResult, standingsResult] = await Promise.allSettled([
+    fetchPeoplePregameStats(personIds, seasonStart, cutoffDate),
+    fetchPregameStandings(game, cutoffDate, season)
+  ]);
+
+  return {
+    rosters: { away: awayRoster, home: homeRoster },
+    people: peopleResult.status === "fulfilled" ? peopleResult.value : { people: [] },
+    standingsPayloads: standingsResult.status === "fulfilled" ? standingsResult.value : []
+  };
+}
+
+async function fetchPregameStandings(game, cutoffDate, season) {
+  const leagueIds = [...new Set([game.awayLeagueId, game.homeLeagueId].filter(Boolean))];
+  const results = await Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, cutoffDate, season)));
+  return results.filter((result) => result.status === "fulfilled" && result.value).map((result) => result.value);
+}
+
+function previousDateString(dateText) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateText || ""));
+  if (!match) return dateText;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
 }
 
 function renderGameChoices(games) {
@@ -637,28 +704,26 @@ function renderPregameError(error) {
   setLineupStatus("Unavailable", "error");
 }
 
-function renderSelectedGame(selected, feed) {
-  const gameData = feed?.gameData ?? {};
-  const awayTeam = gameData.teams?.away?.name ?? selected.awayTeam;
-  const homeTeam = gameData.teams?.home?.name ?? selected.homeTeam;
-  const venue = gameData.venue ?? {};
-  const datetime = gameData.datetime ?? {};
-  const weather = gameData.weather ?? {};
+function renderSelectedGame(selected, model) {
+  const awayTeam = model?.away?.team?.name ?? selected.awayTeam;
+  const homeTeam = model?.home?.team?.name ?? selected.homeTeam;
+  const venue = model?.game?.venue ?? {};
+  const weather = model?.game?.weather ?? {};
 
-  const awayLineup = lineupPlayers(feed, "away");
-  const homeLineup = lineupPlayers(feed, "home");
-  const awayBench = benchPlayers(feed, "away");
-  const homeBench = benchPlayers(feed, "home");
-  const awayStarter = startingPitcher(feed, "away");
-  const homeStarter = startingPitcher(feed, "home");
-  const awayBullpen = bullpenPitchers(feed, "away");
-  const homeBullpen = bullpenPitchers(feed, "home");
+  const awayLineup = (model?.away?.lineup || []).map(uiPlayerFromNormalizedRecord);
+  const homeLineup = (model?.home?.lineup || []).map(uiPlayerFromNormalizedRecord);
+  const awayBench = (model?.away?.bench || []).map(uiPlayerFromNormalizedRecord);
+  const homeBench = (model?.home?.bench || []).map(uiPlayerFromNormalizedRecord);
+  const awayStarter = model?.away?.startingPitcher ? uiPlayerFromNormalizedRecord(model.away.startingPitcher) : null;
+  const homeStarter = model?.home?.startingPitcher ? uiPlayerFromNormalizedRecord(model.home.startingPitcher) : null;
+  const awayBullpen = (model?.away?.bullpen || []).map(uiPlayerFromNormalizedRecord);
+  const homeBullpen = (model?.home?.bullpen || []).map(uiPlayerFromNormalizedRecord);
 
   elements.matchupHeading.textContent = `${awayTeam} at ${homeTeam}`;
   elements.gameStatusText.textContent = selected.status || "Scheduled";
-  elements.firstPitch.textContent = formatFirstPitch(datetime, venue, selected.gameDate);
+  elements.firstPitch.textContent = formatGameTime(selected.gameDate);
   elements.venue.textContent = venue.name || selected.venue || "Not listed";
-  elements.weather.textContent = weatherSummary(weather);
+  elements.weather.textContent = weatherSummary({ condition: weather.condition, temp: weather.temperature, wind: weather.wind });
 
   elements.awayPitchersHeading.textContent = awayTeam;
   elements.homePitchersHeading.textContent = homeTeam;
@@ -680,6 +745,17 @@ function renderSelectedGame(selected, feed) {
   elements.pregameContent.hidden = false;
 }
 
+function uiPlayerFromNormalizedRecord(record) {
+  const player = record?.player || {};
+  return {
+    person: { id: player.id, fullName: player.name },
+    jerseyNumber: player.number,
+    batSide: { code: player.bats },
+    pitchHand: { code: player.throws },
+    position: record?.position || player.primaryPosition || {}
+  };
+}
+
 
 async function openGameDay() {
   showView("gameday");
@@ -687,15 +763,28 @@ async function openGameDay() {
 }
 
 async function loadGameDay(forceSupplemental = false) {
-  const feed = state.selectedFeed;
   const game = currentScheduleGame();
-  if (!feed || !game) {
+  if (!game) {
     elements.gameDayContent.hidden = true;
     elements.gameDaySources.hidden = true;
     elements.gameDayMessage.hidden = false;
     elements.gameDayMessage.classList.remove("error");
     elements.gameDayMessage.textContent = "No game is selected. Return Home and select a game first.";
     return;
+  }
+
+  let feed = state.selectedFeed;
+  if (!feed) {
+    try {
+      feed = await fetchGameFeed(game.gamePk);
+      if (String(state.selectedGamePk) !== String(game.gamePk)) return;
+      state.selectedFeed = feed;
+    } catch (error) {
+      elements.gameDayMessage.hidden = false;
+      elements.gameDayMessage.classList.add("error");
+      elements.gameDayMessage.textContent = `Game Day feed unavailable. ${errorMessage(error, "Unknown error.")}`;
+      return;
+    }
   }
 
   const token = ++state.gameDayLoadToken;
@@ -711,7 +800,7 @@ async function loadGameDay(forceSupplemental = false) {
   elements.gameDayContent.hidden = false;
   elements.gameDaySources.hidden = false;
 
-  const baseModel = normalizePregameData(feed, {}, game);
+  const baseModel = normalizePregameData(feed, state.selectedSupplemental || {}, game);
   state.normalizedPregame = baseModel;
   renderGameDay(baseModel);
 
@@ -729,7 +818,7 @@ async function loadGameDay(forceSupplemental = false) {
         awayId ? fetchTeamCoaches(awayId, officialDate, season) : Promise.resolve(null),
         homeId ? fetchTeamCoaches(homeId, officialDate, season) : Promise.resolve(null)
       ]),
-      Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, officialDate, season)))
+      Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, previousDateString(officialDate), season)))
     ]);
     if (token !== state.gameDayLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
 
@@ -738,7 +827,7 @@ async function loadGameDay(forceSupplemental = false) {
       home: coachResults[1]?.status === "fulfilled" ? coachResults[1].value : null
     };
     const standingsPayloads = standingsResults.filter((r) => r.status === "fulfilled").map((r) => r.value);
-    const model = normalizePregameData(feed, { coaches, standingsPayloads }, game);
+    const model = normalizePregameData(feed, { ...(state.selectedSupplemental || {}), coaches, standingsPayloads }, game);
     state.normalizedPregame = model;
 
     const coachOk = Boolean(coaches.away || coaches.home);
@@ -768,15 +857,28 @@ async function openFieldDiagnostic() {
 }
 
 async function loadFieldDiagnostic(force = false) {
-  const feed = state.selectedFeed;
   const game = currentScheduleGame();
-  if (!feed || !game) {
+  if (!game) {
     elements.fieldDiagnosticContent.hidden = true;
     elements.fieldDiagnosticSources.hidden = true;
     elements.fieldDiagnosticMessage.hidden = false;
     elements.fieldDiagnosticMessage.classList.remove("error");
     elements.fieldDiagnosticMessage.textContent = "No game is selected. Return Home and select a game first.";
     return;
+  }
+
+  let feed = state.selectedFeed;
+  if (!feed) {
+    try {
+      feed = await fetchGameFeed(game.gamePk);
+      if (String(state.selectedGamePk) !== String(game.gamePk)) return;
+      state.selectedFeed = feed;
+    } catch (error) {
+      elements.fieldDiagnosticMessage.hidden = false;
+      elements.fieldDiagnosticMessage.classList.add("error");
+      elements.fieldDiagnosticMessage.textContent = `Field Diagnostic feed unavailable. ${errorMessage(error, "Unknown error.")}`;
+      return;
+    }
   }
 
   const token = ++state.fieldDiagnosticLoadToken;
@@ -1368,6 +1470,7 @@ async function refreshLayouts() {
   try {
     state.layouts = await listLayouts();
     renderLayoutList();
+    await populateLivePdfLayoutSelect();
     elements.layoutStorageStatus.textContent = "IndexedDB Ready";
     elements.layoutStorageStatus.className = "pill ready";
   } catch (error) {
@@ -1376,6 +1479,58 @@ async function refreshLayouts() {
     elements.layoutStorageStatus.className = "pill error";
     setLayoutMessage(errorMessage(error, "Layouts could not be loaded."), true);
   }
+}
+
+async function populateLivePdfLayoutSelect() {
+  if (!elements.livePdfLayoutSelect) return;
+  const previous = elements.livePdfLayoutSelect.value;
+  const saved = await getSetting("livePdfLayoutId", "");
+  const preferred = state.layouts.some((layout) => layout.id === previous)
+    ? previous
+    : state.layouts.some((layout) => layout.id === saved)
+      ? saved
+      : state.selectedLayoutId && state.layouts.some((layout) => layout.id === state.selectedLayoutId)
+        ? state.selectedLayoutId
+        : state.layouts[0]?.id || "";
+
+  elements.livePdfLayoutSelect.replaceChildren();
+  if (!state.layouts.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "No saved layouts";
+    elements.livePdfLayoutSelect.append(option);
+    elements.livePdfLayoutSelect.disabled = true;
+    elements.livePdfGenerateButton.disabled = true;
+    return;
+  }
+
+  for (const layout of state.layouts) {
+    const option = document.createElement("option");
+    option.value = layout.id;
+    option.textContent = layout.name;
+    elements.livePdfLayoutSelect.append(option);
+  }
+  elements.livePdfLayoutSelect.value = preferred;
+  elements.livePdfLayoutSelect.disabled = false;
+  elements.livePdfGenerateButton.disabled = !state.normalizedPregame;
+}
+
+async function saveLivePdfLayoutPreference() {
+  const id = elements.livePdfLayoutSelect?.value || "";
+  if (!id) return;
+  try { await setSetting("livePdfLayoutId", id); }
+  catch (error) { console.warn("Unable to save live PDF layout preference:", error); }
+}
+
+function setLiveGenerateMessage(message, isError = false) {
+  if (!elements.livePdfMessage) return;
+  elements.livePdfMessage.textContent = message;
+  elements.livePdfMessage.classList.toggle("error", isError);
+}
+
+function updateLivePdfAvailability() {
+  if (!elements.livePdfGenerateButton) return;
+  elements.livePdfGenerateButton.disabled = !state.normalizedPregame || !state.layouts.length;
 }
 
 function renderLayoutList() {
@@ -2944,7 +3099,7 @@ async function changeDesignerPage(delta) {
   const keepClipboardPlacement = state.designerPlacement?.mode === "clipboard";
   if (!keepClipboardPlacement) cancelDesignerPlacement();
   else clearDesignerPasteGhost();
-  if (designerMultiSelectionActive()) clearDesignerSelection({ render: false });
+  if (designerMultiSelectionActive() || state.designerSelection) clearDesignerSelection({ render: false, preserveClipboard: true });
   try { await renderDesignerPage(); }
   catch (error) { setDesignerMessage("That PDF page could not be rendered.", true); }
 }
@@ -5009,120 +5164,150 @@ function debounce(fn, delay) {
 async function generateTestPdf() {
   const layout = selectedLayout();
   if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
-  const mappings = Array.isArray(layout.mappings) ? layout.mappings : [];
-  const repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
-  const individualMappings = Array.isArray(layout.individualMappings) ? layout.individualMappings : [];
-  if (!mappings.length && !individualMappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) return setGenerateMessage("Map at least one scalar, composite, repeated-block, or individual collection field before generating a PDF.", true);
-  if (!globalThis.PDFLib) return setGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
-
   elements.designerGenerateButton.disabled = true;
   setGenerateMessage("Generating test PDF with representative data…");
 
   try {
-    // Designer output is intentionally deterministic and never depends on the
-    // selected live game. Real game-day PDFs are generated outside Designer.
-    const model = DESIGNER_SAMPLE_MODEL;
-
-    const record = await getPdfTemplate(layout.pdfTemplateId);
-    if (!record?.blob) throw new Error("The layout's source PDF is missing.");
-    setGenerateMessage("Generating PDF…");
-
-    const sourceBytes = await record.blob.arrayBuffer();
-    const pdfDoc = await globalThis.PDFLib.PDFDocument.load(sourceBytes);
-    const fontCache = await embedFormattingFonts(pdfDoc);
-    const pages = pdfDoc.getPages();
-    const skipped = [];
-    const overflowBlocks = [];
-    let missingCount = 0;
-
-    for (const mapping of mappings) {
-      const page = pages[mapping.pageIndex];
-      if (!page) { skipped.push(mapping.content?.type === "template" ? "text template" : mapping.field); continue; }
-      if (mapping.content?.type === "template") {
-      const text = resolveTemplateText(mapping.content.template, model, mapping.content.context);
-        if (!text) continue;
-        drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
-        continue;
-      }
-      const definition = getFieldDefinition(mapping.field);
-      if (!definition) { skipped.push(mapping.field); continue; }
-      const resolution = resolveField(model, mapping.field);
-      const text = formatFieldValue(definition, resolution, model, mapping.content?.format || {});
-      if (!text) {
-        if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
-        else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
-        continue;
-      }
-      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
-    }
-
-    const emptyBlocks = [];
-    for (const block of repeatedBlocks) {
-      if (!block.geometry || !Number.isInteger(block.pageIndex)) { skipped.push(`${block.collection} block geometry`); continue; }
-      if (!(block.columns || []).length) { emptyBlocks.push(blockLabel(block)); continue; }
-      const page = pages[block.pageIndex];
-      if (!page) { skipped.push(`${block.collection} block page`); continue; }
-      if (!isRecordBlock(block) && collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
-      const { width, height } = page.getSize();
-      for (let slotIndex = 0; slotIndex < block.capacity; slotIndex += 1) {
-        const slot = isSlotGridGeometry(block)
-          ? repeatedSlotPosition(block, slotIndex, width, height)
-          : { xPercent: null, yPercent: repeatedRowYPercent(block, slotIndex, height) };
-        for (const column of block.columns || []) {
-          const content = column.content || { type: "field", field: column.field };
-          const selector = isRecordBlock(block) ? null : { slot: slotIndex + 1 };
-          const definition = content.type === "field" ? getFieldDefinition(content.field || column.field) : null;
-          if (content.type === "field" && (!definition || !fieldsForRecordContext(blockContext(block)).some((entry) => entry.id === definition.id))) { skipped.push(content.field || column.field || "slot field"); continue; }
-          const resolution = definition ? resolveField(model, definition.id, selector) : null;
-          const text = resolveSlotContent(content, model, blockContext(block), selector);
-          if (!text) {
-            if (resolution && ["unsupported", "error"].includes(resolution.state)) skipped.push(definition.id);
-            else if (resolution && ["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
-            continue;
-          }
-          const xPercent = isSlotGridGeometry(block)
-            ? slot.xPercent + ((Number(column.xOffsetPoints) || 0) / width)
-            : column.xPercent;
-          const conditionalGroup = conditionalFormattingGroup(model, blockContext(block), selector);
-          const format = effectiveFormatting(column, { layout, group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
-          drawAlignedPdfText(page, fontCache, text, format, xPercent, slot.yPercent, column.alignment || "left");
-        }
-      }
-    }
-
-    for (const mapping of individualMappings) {
-      const page = pages[mapping.pageIndex];
-      if (!page) { skipped.push(`${mapping.collection} individual mapping page`); continue; }
-      const definition = getFieldDefinition(mapping.field);
-      if (!definition || definition.cardinality !== "repeated" || definition.collection !== mapping.collection) { skipped.push(mapping.field || "individual field"); continue; }
-      const resolution = resolveField(model, mapping.field, mapping.selector);
-      const text = formatFieldValue(definition, resolution, model, mapping.content?.format || {});
-      if (!text) {
-        if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
-        else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
-        continue;
-      }
-      const conditionalGroup = conditionalFormattingGroup(model, mapping.collection, mapping.selector);
-      const format = effectiveFormatting(mapping, { layout, group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup });
-      drawAlignedPdfText(page, fontCache, text, format, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
-    }
-
-    const outputBytes = await pdfDoc.save();
-    const blob = new Blob([outputBytes], { type: "application/pdf" });
+    const result = await buildPopulatedPdf(layout, DESIGNER_SAMPLE_MODEL);
     const filename = buildDesignerTestFilename(layout);
-    downloadBlob(blob, filename);
-    const notices = [];
-    if (missingCount) notices.push(`${missingCount} mapped value(s) were unavailable and left blank.`);
-    if (overflowBlocks.length) notices.push(`Overflow: ${[...new Set(overflowBlocks)].join(", ")} contains player(s) beyond the layout capacity.`);
-    if (emptyBlocks.length) notices.push(`Empty repeated layout${emptyBlocks.length === 1 ? "" : "s"} skipped: ${[...new Set(emptyBlocks)].join(", ")}. Add at least one slot field to render ${emptyBlocks.length === 1 ? "it" : "them"}.`);
-    if (skipped.length) notices.push(`${skipped.length} unsupported/error mapping(s) were skipped.`);
-    setGenerateMessage(`Generated ${filename}.${notices.length ? ` ${notices.join(" ")}` : ""}`, skipped.length > 0 || overflowBlocks.length > 0);
+    downloadBlob(result.blob, filename);
+    setGenerateMessage(`Generated ${filename}.${result.notices.length ? ` ${result.notices.join(" ")}` : ""}`, result.hasWarnings);
   } catch (error) {
-    console.error("Unable to generate PDF:", error);
+    console.error("Unable to generate test PDF:", error);
     setGenerateMessage(errorMessage(error, "The PDF could not be generated."), true);
   } finally {
     elements.designerGenerateButton.disabled = false;
   }
+}
+
+async function generateLivePdf() {
+  const game = currentScheduleGame();
+  const layoutId = elements.livePdfLayoutSelect?.value || "";
+  const layout = state.layouts.find((item) => item.id === layoutId) || null;
+  if (!game || !state.normalizedPregame) return setLiveGenerateMessage("Select and load a game before generating a live PDF.", true);
+  if (!layout) return setLiveGenerateMessage("Choose a saved layout before generating a live PDF.", true);
+  if (!globalThis.PDFLib) return setLiveGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
+
+  elements.livePdfGenerateButton.disabled = true;
+  elements.livePdfLayoutSelect.disabled = true;
+  setLiveGenerateMessage(`Preparing ${game.awayTeam} at ${game.homeTeam} with ${layout.name}…`);
+
+  try {
+    await setSetting("livePdfLayoutId", layout.id);
+    const fieldIds = collectLayoutFieldIds(layout);
+    const model = await buildModelForMappings(fieldIds, String(game.gamePk));
+    if (String(state.selectedGamePk || "") !== String(game.gamePk)) throw new Error("Game selection changed while the PDF was being prepared.");
+    const result = await buildPopulatedPdf(layout, model);
+    const filename = buildGeneratedFilename(layout, game);
+    downloadBlob(result.blob, filename);
+    setLiveGenerateMessage(`Generated ${filename}.${result.notices.length ? ` ${result.notices.join(" ")}` : ""}`, result.hasWarnings);
+  } catch (error) {
+    console.error("Unable to generate live PDF:", error);
+    setLiveGenerateMessage(errorMessage(error, "The live PDF could not be generated."), true);
+  } finally {
+    elements.livePdfGenerateButton.disabled = false;
+    elements.livePdfLayoutSelect.disabled = false;
+  }
+}
+
+async function buildPopulatedPdf(layout, model) {
+  const mappings = Array.isArray(layout?.mappings) ? layout.mappings : [];
+  const repeatedBlocks = Array.isArray(layout?.repeatedBlocks) ? layout.repeatedBlocks : [];
+  const individualMappings = Array.isArray(layout?.individualMappings) ? layout.individualMappings : [];
+  if (!mappings.length && !individualMappings.length && !repeatedBlocks.some((block) => (block.columns || []).length)) throw new Error("Map at least one scalar, composite, repeated-block, or individual collection field before generating a PDF.");
+  if (!globalThis.PDFLib) throw new Error("pdf-lib did not load. Check the browser network connection.");
+
+  const record = await getPdfTemplate(layout.pdfTemplateId);
+  if (!record?.blob) throw new Error("The layout's source PDF is missing.");
+
+  const sourceBytes = await record.blob.arrayBuffer();
+  const pdfDoc = await globalThis.PDFLib.PDFDocument.load(sourceBytes);
+  const fontCache = await embedFormattingFonts(pdfDoc);
+  const pages = pdfDoc.getPages();
+  const skipped = [];
+  const overflowBlocks = [];
+  let missingCount = 0;
+
+  for (const mapping of mappings) {
+    const page = pages[mapping.pageIndex];
+    if (!page) { skipped.push(mapping.content?.type === "template" ? "text template" : mapping.field); continue; }
+    if (mapping.content?.type === "template") {
+      const text = resolveTemplateText(mapping.content.template, model, mapping.content.context);
+      if (!text) continue;
+      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+      continue;
+    }
+    const definition = getFieldDefinition(mapping.field);
+    if (!definition) { skipped.push(mapping.field); continue; }
+    const resolution = resolveField(model, mapping.field);
+    const text = formatFieldValue(definition, resolution, model, mapping.content?.format || {});
+    if (!text) {
+      if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
+      else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+      continue;
+    }
+    drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+  }
+
+  const emptyBlocks = [];
+  for (const block of repeatedBlocks) {
+    if (!block.geometry || !Number.isInteger(block.pageIndex)) { skipped.push(`${block.collection} block geometry`); continue; }
+    if (!(block.columns || []).length) { emptyBlocks.push(blockLabel(block)); continue; }
+    const page = pages[block.pageIndex];
+    if (!page) { skipped.push(`${block.collection} block page`); continue; }
+    if (!isRecordBlock(block) && collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
+    const { width, height } = page.getSize();
+    for (let slotIndex = 0; slotIndex < block.capacity; slotIndex += 1) {
+      const slot = isSlotGridGeometry(block)
+        ? repeatedSlotPosition(block, slotIndex, width, height)
+        : { xPercent: null, yPercent: repeatedRowYPercent(block, slotIndex, height) };
+      for (const column of block.columns || []) {
+        const content = column.content || { type: "field", field: column.field };
+        const selector = isRecordBlock(block) ? null : { slot: slotIndex + 1 };
+        const definition = content.type === "field" ? getFieldDefinition(content.field || column.field) : null;
+        if (content.type === "field" && (!definition || !fieldsForRecordContext(blockContext(block)).some((entry) => entry.id === definition.id))) { skipped.push(content.field || column.field || "slot field"); continue; }
+        const resolution = definition ? resolveField(model, definition.id, selector) : null;
+        const text = resolveSlotContent(content, model, blockContext(block), selector);
+        if (!text) {
+          if (resolution && ["unsupported", "error"].includes(resolution.state)) skipped.push(definition.id);
+          else if (resolution && ["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+          continue;
+        }
+        const xPercent = isSlotGridGeometry(block)
+          ? slot.xPercent + ((Number(column.xOffsetPoints) || 0) / width)
+          : column.xPercent;
+        const conditionalGroup = conditionalFormattingGroup(model, blockContext(block), selector);
+        const format = effectiveFormatting(column, { layout, group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
+        drawAlignedPdfText(page, fontCache, text, format, xPercent, slot.yPercent, column.alignment || "left");
+      }
+    }
+  }
+
+  for (const mapping of individualMappings) {
+    const page = pages[mapping.pageIndex];
+    if (!page) { skipped.push(`${mapping.collection} individual mapping page`); continue; }
+    const definition = getFieldDefinition(mapping.field);
+    if (!definition || definition.cardinality !== "repeated" || definition.collection !== mapping.collection) { skipped.push(mapping.field || "individual field"); continue; }
+    const resolution = resolveField(model, mapping.field, mapping.selector);
+    const text = formatFieldValue(definition, resolution, model, mapping.content?.format || {});
+    if (!text) {
+      if (["unsupported", "error"].includes(resolution.state)) skipped.push(mapping.field);
+      else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
+      continue;
+    }
+    const conditionalGroup = conditionalFormattingGroup(model, mapping.collection, mapping.selector);
+    const format = effectiveFormatting(mapping, { layout, group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup });
+    drawAlignedPdfText(page, fontCache, text, format, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+  }
+
+  const outputBytes = await pdfDoc.save();
+  const blob = new Blob([outputBytes], { type: "application/pdf" });
+  const notices = [];
+  if (missingCount) notices.push(`${missingCount} mapped value(s) were unavailable and left blank.`);
+  if (overflowBlocks.length) notices.push(`Overflow: ${[...new Set(overflowBlocks)].join(", ")} contains player(s) beyond the layout capacity.`);
+  if (emptyBlocks.length) notices.push(`Empty repeated layout${emptyBlocks.length === 1 ? "" : "s"} skipped: ${[...new Set(emptyBlocks)].join(", ")}. Add at least one slot field to render ${emptyBlocks.length === 1 ? "it" : "them"}.`);
+  if (skipped.length) notices.push(`${skipped.length} unsupported/error mapping(s) were skipped.`);
+  return { blob, notices, hasWarnings: skipped.length > 0 || overflowBlocks.length > 0 };
 }
 
 async function embedFormattingFonts(pdfDoc) {
@@ -5179,20 +5364,21 @@ async function buildModelForMappings(fieldIds, expectedGameKey) {
 async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
   const requirements = sourceRequirementsForFields(fieldIds);
   const game = currentScheduleGame();
-  const feed = state.selectedFeed;
-  if (!feed || !game) throw new Error("No selected game data is available.");
+  if (!game || !state.selectedSupplemental) throw new Error("No selected game data is available.");
 
-  const gd = feed.gameData || {};
-  const officialDate = gd.datetime?.officialDate || game.officialDate || state.selectedDate || getLocalDateString();
-  const season = Number(gd.game?.season || officialDate.slice(0, 4));
-  const supplemental = {};
+  const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
+  const season = Number(game.season || officialDate.slice(0, 4));
+  const supplemental = {
+    ...state.selectedSupplemental,
+    rosters: state.selectedSupplemental.rosters,
+    people: state.selectedSupplemental.people,
+    standingsPayloads: state.selectedSupplemental.standingsPayloads || []
+  };
 
   if (requirements.has("coaches")) {
-    const awayId = gd.teams?.away?.id || game.awayTeamId;
-    const homeId = gd.teams?.home?.id || game.homeTeamId;
     const coachResults = await Promise.allSettled([
-      awayId ? fetchTeamCoaches(awayId, officialDate, season) : Promise.resolve(null),
-      homeId ? fetchTeamCoaches(homeId, officialDate, season) : Promise.resolve(null)
+      game.awayTeamId ? fetchTeamCoaches(game.awayTeamId, officialDate, season) : Promise.resolve(null),
+      game.homeTeamId ? fetchTeamCoaches(game.homeTeamId, officialDate, season) : Promise.resolve(null)
     ]);
     const coaches = {
       away: coachResults[0]?.status === "fulfilled" ? coachResults[0].value : null,
@@ -5201,11 +5387,19 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
     if (coaches.away || coaches.home) supplemental.coaches = coaches;
   }
 
-  if (requirements.has("standings")) {
-    const leagueIds = [...new Set([gd.teams?.away?.league?.id, gd.teams?.home?.league?.id].filter(Boolean))];
-    const standingsResults = await Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, officialDate, season)));
-    const standingsPayloads = standingsResults.filter((result) => result.status === "fulfilled" && result.value).map((result) => result.value);
-    if (standingsPayloads.length) supplemental.standingsPayloads = standingsPayloads;
+  const needsLiveFeed = fieldIds.some((id) => {
+    const key = String(id || "");
+    return key.startsWith("game.umpires.") || [
+      "game.venue.capacity", "game.venue.turfType", "game.venue.roofType",
+      "game.venue.city", "game.venue.state", "game.venue.country", "game.venue.timeZone"
+    ].includes(key);
+  });
+
+  let feed = state.selectedFeed;
+  if (needsLiveFeed && !feed) {
+    feed = await fetchGameFeed(game.gamePk);
+    if (String(state.selectedGamePk || "") !== String(expectedGameKey)) throw new Error("Game selection changed during game-feed hydration.");
+    state.selectedFeed = feed;
   }
 
   if (String(state.selectedGamePk || "") !== String(expectedGameKey)) throw new Error("Game selection changed during supplemental hydration.");
@@ -5228,7 +5422,7 @@ function buildDesignerTestFilename(layout) {
 }
 
 function buildGeneratedFilename(layout, game) {
-  const date = game?.officialDate || state.selectedFeed?.gameData?.datetime?.officialDate || state.selectedDate || getLocalDateString();
+  const date = game?.officialDate || state.normalizedPregame?.game?.date || state.selectedDate || getLocalDateString();
   const away = safeFilenamePart(game?.awayTeam || "Away");
   const home = safeFilenamePart(game?.homeTeam || "Home");
   const layoutName = safeFilenamePart(layout.name || "Scorecard");

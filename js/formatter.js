@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Shared field formatting
  * Version: 0.2.0-dev
- * Build: 018
+ * Build: 025.3
  */
 
 export const PLAYER_NAME_FORMATS = Object.freeze([
@@ -36,19 +36,29 @@ export function formatFieldValue(definition, resolution, model, format = {}) {
 }
 
 function formatPlayerName(player, fallback, nameFormat = "full") {
-  const full = text(player?.name) || String(fallback);
-  if (nameFormat === "last") return text(player?.useLastName) || text(player?.lastName) || full;
-  if (nameFormat === "first") return text(player?.useName) || text(player?.firstName) || full;
-  if (nameFormat === "boxscore") return text(player?.boxscoreName) || full;
-  if (nameFormat === "use") {
+  const formatKey = canonicalPlayerNameFormat(nameFormat);
+  const full = text(player?.name) || text(fallback);
+  if (formatKey === "last") return text(player?.lastName);
+  if (formatKey === "first") return text(player?.firstName);
+  if (formatKey === "boxscore") return text(player?.boxscoreName);
+  if (formatKey === "use") {
     const first = text(player?.useName);
     const last = text(player?.useLastName);
-    return first && last ? `${first} ${last}` : full;
+    return first && last ? `${first} ${last}` : "";
   }
-  if (nameFormat === "first-initial-last") {
-    return text(player?.initLastName) || full;
-  }
+  if (formatKey === "first-initial-last") return text(player?.initLastName);
   return full;
+}
+
+function canonicalPlayerNameFormat(value) {
+  const raw = String(value ?? "").trim();
+  const compact = raw.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if (["last", "lastname"].includes(compact)) return "last";
+  if (["first", "firstname"].includes(compact)) return "first";
+  if (["use", "usename", "usenamelastname"].includes(compact)) return "use";
+  if (["boxscore", "boxscorename"].includes(compact)) return "boxscore";
+  if (["firstinitiallast", "firstinitiallastname", "initlastname"].includes(compact)) return "first-initial-last";
+  return "full";
 }
 
 function text(value) {

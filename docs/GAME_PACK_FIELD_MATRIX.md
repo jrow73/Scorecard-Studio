@@ -5,6 +5,23 @@ Build 018 confirmed that `gameData.game.gameNumber` is the game number within th
 
 # Scorecard Studio — Game Pack Field Matrix
 
+## Build 025.2 superseding source findings
+
+This document began as a `/feed/live` capability matrix. Build 025.2 acceptance testing found that several fields which are present in a pregame live feed are **not historically immutable** once a game is completed. For generated historical scorecards, the authoritative source matrix is now:
+
+| Data family | Authoritative source | Historical cutoff/derivation |
+|---|---|---|
+| Original 9-player lineup | Schedule `hydrate=lineups` | Stored original submitted lineup |
+| Starting pitcher | Schedule `hydrate=probablePitcher` | Treat as authoritative pregame SP; blank if missing |
+| Roster identity / jersey / bats / throws / `boxscoreName` | Team roster `?date={officialDate}&hydrate=person` plus bulk People enrichment | Game-date roster |
+| Bench | Derived from roster | non-pitchers minus starting 9; blank until lineup posted |
+| Bullpen | Derived from roster | pitchers minus SP; all pitchers if SP missing |
+| Player season stats | Bulk `/people` hydrated `byDateRange` | endDate = day before game; use `sport.id=0` / `All` aggregate |
+| Team W-L / standings | `/standings` | date = day before game |
+| Umpires / extended venue details | `/feed/live` for now | on-demand supplemental only |
+
+Therefore, older rows below marked `VERIFIED — Game Pack` remain useful as evidence that the value exists in the feed, but they do **not** imply that the feed is the correct source for historical pregame generation.
+
 **Fixture:** MLB gamePk `822955` — Seattle Mariners at Tampa Bay Rays  
 **Snapshot status:** `Pre-Game` / `Preview`  
 **Snapshot timestamp:** 2026-07-10 18:59:24 (feed metadata)  
@@ -48,10 +65,7 @@ fill the clearest remaining gaps:
 2. **Standings API** for division/league rank, meaningful games-back values,
    streak, last-10 record, and standings-table context.
 
-Build 008 also verified historical-date behavior: embedded player season/YTD
-statistics corresponded to the selected historical game date; a real
-managerial-change test returned the manager appropriate to that historical
-date; and standings context was successfully retrieved for the selected date.
+Build 025.2 supersedes the earlier historical-stat interpretation: completed-game embedded `seasonStats` include the selected game and therefore represent postgame rather than pregame YTD values. Historical player stats now come from bulk People `byDateRange` hydration ending the day before the game. Managerial-change testing remains valid, and standings are now requested with a day-before-game cutoff for true pregame records.
 
 These are verified application behaviors, not a guarantee that every MLB/MiLB
 game populates every field identically or at the same time before first pitch.
@@ -390,8 +404,7 @@ Build 008 browser-verified date-aware standings hydration, including division
 rank, games back, streak, and last-10 record.
 
 ### Historical Game Pack season statistics
-Historical-date testing showed that embedded `seasonStats.batting` and
-`seasonStats.pitching` correspond to the selected historical game context
+Build 025.2 acceptance testing showed that embedded `seasonStats.batting` and `seasonStats.pitching` on completed games include the selected game and must not be used as pregame YTD statistics
 rather than simply today's YTD totals.
 
 ### Remaining timing/consistency verification

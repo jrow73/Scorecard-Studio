@@ -5,6 +5,23 @@ Build 018 converts the broad discovery inventory into a deliberately smaller act
 
 # Scorecard Studio --- Pregame Data Inventory
 
+## Build 025.2 authoritative pregame API source contract
+
+Build 025.2 supersedes earlier assumptions that a completed `/api/v1.1/game/{gamePk}/feed/live` response can be treated as an immutable pregame snapshot. Acceptance testing showed that completed-game live-feed collections and embedded `seasonStats` reflect game/end-of-game state. Scorecard Studio therefore uses the following pregame sources for live PDF generation:
+
+- **Schedule**: `/api/v1/schedule?...&hydrate=lineups,weather,venue,team,probablePitcher` supplies the original submitted batting lineups, game-specific starting positions, probable/starting-pitcher IDs, teams, venue, weather, status, game number, and doubleheader metadata. Historical testing confirmed that the hydrated lineup remains the original nine starters after the game is complete.
+- **Date-specific team roster**: `/api/v1/teams/{teamId}/roster?date={officialDate}&hydrate=person` establishes who belonged to each team roster on the selected game date and supplies player identity metadata including jersey number, bats/throws, primary position, and `boxscoreName`.
+- **Derived Bench**: when a lineup is posted, Bench = date-specific roster non-pitchers minus the nine starting-lineup player IDs. If no lineup is posted, Bench remains blank rather than guessing.
+- **Derived Bullpen**: Bullpen = date-specific roster pitchers minus the hydrated probable/starting pitcher. If no probable pitcher is available, Starting Pitcher fields remain blank and Bullpen contains all roster pitchers.
+- **Bulk player enrichment/statistics**: `/api/v1/people?personIds=...&hydrate=stats(group=[hitting,pitching],type=[byDateRange],startDate={seasonStart},endDate={dayBeforeGame})` supplies canonical person metadata plus season-to-date player statistics entering the game. Up to 100 player IDs may be batched, so one request is sufficient for a normal game roster.
+- **Player aggregate split rule**: for hydrated `byDateRange` stats, select the split with `sport.id = 0` / `code = "All"`. Testing showed this aggregate is present for one-team players as well as traded players. Taylor Ward and Seranthony Domínguez returned separate team splits plus an `All` split that correctly combined both clubs.
+- **MLB-debut behavior**: Colt Emerson returned `splits: []` through the day before his MLB debut despite prior Triple-A activity, then returned MLB-only totals after his debut. This validates the pregame stat approach for an MLB scorecard without mixing prior MiLB performance.
+- **Pregame team record/standings**: request standings with `date = officialDate - 1 day`. Testing showed `date = game date` includes that day's completed result, while the previous date represents the record entering the game.
+- **Live feed**: `/feed/live` is no longer authoritative for lineup, Bench, Bullpen, Starting Pitcher, team W-L, or player season statistics. It remains an on-demand supplemental source only for fields not yet replaced by narrower immutable sources (for example, umpire crew and extended venue metadata).
+
+Missing data is rendered as blank on the generated scorecard. Diagnostic/warning text belongs in the generation-results UI rather than being printed onto the PDF.
+
+
 **Status:** Post-Build 017 working inventory\
 **Target milestone:** v0.2.0 --- Complete Field Mapping & Formatting\
 **Current state:** Designer placement architecture and Build 017 are accepted through hotfix Build 017.4. Starting Pitcher record expansion, Record Layout, contextual slot Text Templates, capability-gated Name Format, progressive reveal, and parent/child Inspector scoping are baseline behavior. Remaining v0.2.0 work is tracked in `DESIGNER_COMPLETION_INVENTORY.md`.\
@@ -20,9 +37,7 @@ to layouts, independent of which MLB API request supplies it.
 **Priority:** Core = broadly useful; Common = frequently useful on
 detailed cards; Optional = specialized or information-dense layouts.
 
-**Source:** Game Feed = expected in game-specific pregame data; Other
-MLB API = supplemental request; Derived = constructed from normalized
-data; Unknown = still to investigate.
+**Source:** Schedule / Roster / People Stats / Standings are the preferred immutable pregame sources established by Build 025.2; Game Feed is supplemental only where a narrower source has not yet replaced it; Derived = constructed from normalized data; Unknown = still to investigate.
 
 **Cardinality:** Single, Per Team, ×9 Lineup, ×N variable collection,
 Derived, or Composite.
@@ -76,9 +91,9 @@ Applies to both `away` and `home`.
   Team ID        136        Internal   Per Team      Game feed     `away.team.id`                       Application
                                                                                                         data
 
-  Wins           82         Core       Per Team      Game feed     `away.team.record.wins`              Verify
+  Wins           82         Core       Per Team      Standings     `away.team.record.wins`              Use day-before-game snapshot
 
-  Losses         63         Core       Per Team      Game feed     `away.team.record.losses`            Verify
+  Losses         63         Core       Per Team      Standings     `away.team.record.losses`            Use day-before-game snapshot
 
   W-L record     82-63      Core       Composite     Derived       `away.team.record.display`           
 
@@ -187,9 +202,9 @@ Repeat for batting-order positions 1--9 for each team.
   Throws         R/L            Common         Player          `away.startingPitcher.player.throws`
                                                metadata/feed   
 
-  Wins           11             Common         Game feed       `away.startingPitcher.stats.wins`
+  Wins           11             Common         People stats    `away.startingPitcher.stats.wins`
 
-  Losses         7              Common         Game feed       `away.startingPitcher.stats.losses`
+  Losses         7              Common         People stats    `away.startingPitcher.stats.losses`
 
   W-L            11-7           Common         Derived         `away.startingPitcher.stats.record`
 
@@ -380,12 +395,12 @@ though a completed card may later show the actual start time.
 - Repeated structures such as lineups should be modeled as collections rather than dozens of unrelated field IDs.
 - Variable collections such as bench and bullpen require layout behavior that tolerates different collection lengths.
 - Traditional scorecard information is the v0.2/v1.0 priority; advanced broadcaster-style matchup research is deferred.
-- Game Pack / game-feed data is the base pregame model used for Home / Select Game.
-- Supplemental manager/coaching personnel and standings context should be treated as on-demand hydration.
-- Team records and relevant player season/YTD statistics are Game-Pack-native and do not require separate player-stat hydration.
-- Build 008 historical testing verified date-appropriate player season/YTD statistics, manager, and standings context for selected historical games.
+- Schedule + date-specific roster data are the base pregame model used for Home / Select Game.
+- Manager/coaching personnel and remaining live-feed-only details should be treated as on-demand hydration.
+- Team records come from the standings snapshot for `officialDate - 1 day`; player season/YTD statistics come from bulk People `byDateRange` hydration ending on `officialDate - 1 day`.
+- Build 025.2 supersedes earlier Build 008 assumptions about completed-game live-feed season stats; those embedded values include the selected game and are postgame for historical generation.
 - A selected layout should declare its needs implicitly through its mapped fields; unmapped supplemental categories should not be fetched.
-- Future one-click generation for the favorite team/favorite layout should use the same dependency-driven hydration process.
+- Build 025 live generation for the Home-page selected game uses the same dependency-driven hydration process, with the chosen saved layout determining supplemental data requirements.
 
 ## 14. Mapping and Formatting Design Decisions
 
@@ -504,33 +519,26 @@ every possible matchup statistic.
 ## 16. API Verification Worklist
 
 -   [x] Manager/coaching staff — Team Coaches API browser-verified; historical manager date behavior verified
--   [x] Team W-L record — Game Pack
+-   [x] Team W-L record — Standings API with `date = officialDate - 1 day`
 -   [x] Division rank and games back — Standings API browser-verified
 -   [x] Current streak — Standings API browser-verified
 -   [x] Last-10 record — Standings API browser-verified
--   [x] Batter season statistics — Game Pack `seasonStats.batting`
--   [x] Starting-pitcher season statistics — Game Pack `seasonStats.pitching`
--   [x] Bullpen season statistics — Game Pack `seasonStats.pitching`
--   [x] Bench-player season statistics — Game Pack `seasonStats.batting`
+-   [x] Batter season statistics — Bulk People API hydrated `byDateRange` through `officialDate - 1 day`
+-   [x] Starting-pitcher season statistics — Bulk People API hydrated `byDateRange` through `officialDate - 1 day`
+-   [x] Bullpen season statistics — Bulk People API hydrated `byDateRange` through `officialDate - 1 day`
+-   [x] Bench-player season statistics — Bulk People API hydrated `byDateRange` through `officialDate - 1 day`
 -   [x] Bats/throws metadata — Game Pack player metadata
 -   [x] Venue capacity/metadata — Game Pack
--   [x] Historical player season/YTD date behavior — verified with a selected historical game
+-   [x] Historical player season/YTD date behavior — corrected in Build 025.2 using bulk People `byDateRange` through the day before the game
 -   [ ] Pregame umpire availability/timing — present in tested fixture; timing still to characterize
 -   [ ] Early-day Game Pack completeness before lineups are posted
 -   [ ] MiLB consistency for the same data families
 
-### Build 008 historical-date verification
+### Historical-date verification (Build 008, corrected by Build 025.2)
 
-Build 008 added historical date selection to Home / Select Game. Testing showed
-that a selected historical game returned season/YTD player statistics
-appropriate to that game date. A separate test involving a team whose manager
-had subsequently been replaced returned the manager appropriate to the
-historical date. Standings context was also successfully retrieved for the
-selected game's date.
+Build 008 added historical date selection to Home / Select Game and correctly verified date-sensitive manager/standings behavior, but its interpretation of embedded live-feed `seasonStats` was later shown to be incomplete. Build 025.2 acceptance testing demonstrated that completed-game live-feed player statistics include the selected game's result and therefore are not true pregame values.
 
-These results support historical scorecard generation as a useful secondary
-workflow while keeping today's game as the normal use case. They remain
-verified real-game behaviors rather than a guarantee of identical availability
+Build 025.2 replaces that source with bulk People `byDateRange` hydration through the day before the selected game and requests standings with the same day-before-game cutoff. A separate manager-change test remains valid. These results support historical scorecard generation while keeping today's game as the normal use case.
 or timing for every MLB/MiLB fixture.
 
 ## 17. Source Notes
@@ -573,4 +581,4 @@ Example: if **J. Pereda replaces Cal Raleigh at catcher in the seventh inning**,
 
 **Design consequence:** Scorecard Studio must not treat a completed historical GamePack as an authoritative pregame snapshot. This is a data-source limitation rather than a placement/rendering defect.
 
-A future data investigation should determine whether the original pregame state can be obtained or reconstructed reliably from another MLB endpoint, boxscore data, play-by-play/substitution history, or a combination of sources. Until that investigation is complete, historical games should be treated cautiously when validating pregame collection content.
+Build 025.2 completed that investigation: hydrated Schedule lineups preserve the original starters, date-specific rosters reconstruct Bench/Bullpen deterministically, and bulk People/Stats plus day-before-game standings provide true pregame statistics and records. Historical live-feed collection state is no longer used for these fields.
