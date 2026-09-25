@@ -105,7 +105,11 @@ Conditional formatting remains a scope decision. A narrow data-driven use case s
 
 ### Long-text fit
 
-The Designer still needs an intentional v1 policy for values longer than their available scorecard space. An optional maximum width with shrink-to-fit is the leading candidate. Wrapping, clipping, or richer text flow should be added only if real scorecard designs require them. Existing mappings must not silently change size or anchor semantics.
+Build 027 implements the v0.2.0 long-text policy: unrestricted text remains the default, while any text-bearing placement may opt in to a maximum width with shrink-to-fit. The preferred font size remains unchanged in layout data; the final resolved Representative or live value is measured independently at render time and reduced only when needed. No minimum font size, wrapping, clipping, truncation, or automatic neighbor-based boundary inference is imposed. Existing mappings therefore retain their prior size and anchor semantics unless the designer explicitly enables a width limit.
+
+Build 027.2 completes the Designer polish after technical acceptance: shrink-to-fit is grouped with the other formatting controls above the formatting/content divider; the option is labeled **Enable Shrink to Fit** with the checkbox on the same compact line; Maximum Width uses a compact inline point-value field; redundant remove/help UI is removed; and the draggable circular endpoint is replaced by a precision crosshair with a larger invisible hit target.
+
+Build 027.3 separates the enabled state from the stored width. Unchecking **Enable Shrink to Fit** now disables fitting without deleting the designer-selected `fitWidthPoints`; re-enabling restores the same boundary. Existing Build 027–027.2 layouts with a stored width and no explicit enabled flag remain enabled for backward compatibility.
 
 ## Preview and collection robustness
 
@@ -129,7 +133,7 @@ Build 026.4 is accepted and is the baseline for the remaining v0.2.0 Designer ru
 2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal, Text Template/name-format and blank-value cleanup, compact Inspector/header, toolbar Copy/Paste, delete consistency, helper/footer cleanup.
 3. **Build 025 — Live Game PDF Integration** — narrow A/B integration checkpoint: generate the Home-page selected game's live pregame scorecard from a saved layout using the same drawing path as Designer Test PDF.
 4. **Build 026 — Field Palette & Layout Settings** — dark-theme settings, Standard/Custom field selection, custom field picker, conditional-format toggles, palette cleanup, Umpire Crew consolidation.
-5. **Build 027 — Text Overflow & Fit Controls** — feasibility and implementation of intentional overflow behavior, with maximum-width/shrink-to-fit as the leading candidate and truncate/wrap evaluated as alternatives.
+5. **Build 027 — Text Overflow & Fit Controls** — opt-in per-placement maximum width with render-time shrink-to-fit, browser/PDF parity, draggable Designer boundary, and no hard minimum font size.
 6. **Build 028 — Designer Completion / Release Review** — full-card/fresh-layout regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and v0.2.0 release readiness.
 
 ## Scope held for later
@@ -173,5 +177,5 @@ Build 026 closes the field-palette/settings phase of the v0.2.0 Designer runway.
 
 The remaining Designer work is intentionally narrow:
 
-1. **Build 027 — Text Overflow & Fit Controls** — establish intentional long-text behavior with browser/PDF parity.
+1. **Build 027 — Text Overflow & Fit Controls** — implementation prepared for acceptance: opt-in maximum width, draggable Designer boundary, and render-time shrink-to-fit with Representative/live independence.
 2. **Build 028 — Designer Completion / Release Review** — perform fresh-layout/full-scorecard regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and v0.2.0 release-readiness review.

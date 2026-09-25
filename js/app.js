@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 026.3
+ * Build: 027
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0252";
@@ -264,6 +264,9 @@ const elements = {
   designerSelectionY: document.querySelector("#designer-selection-y"),
   designerSelectionFontFace: document.querySelector("#designer-selection-font-face"),
   designerSelectionFontSize: document.querySelector("#designer-selection-font-size"),
+  designerSelectionFitToggle: document.querySelector("#designer-selection-fit-toggle"),
+  designerSelectionFitControls: document.querySelector("#designer-selection-fit-controls"),
+  designerSelectionFitWidth: document.querySelector("#designer-selection-fit-width"),
   designerUndoButton: document.querySelector("#designer-undo-btn"),
   designerRedoButton: document.querySelector("#designer-redo-btn"),
   designerSelectionBold: document.querySelector("#designer-selection-bold"),
@@ -460,6 +463,7 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   elements.designerSelectionItalic?.addEventListener("click", () => toggleInlineFormattingProperty("italic"));
   elements.designerSelectionFormatRestore?.addEventListener("click", restoreInlineFormattingDefaults);
   wireFormattingFontSizeInput();
+  wireDesignerTextFitControls();
   elements.designerMultiFontFace?.addEventListener("change", () => { if (elements.designerMultiFontFace.value) applyMultiFormattingProperty("fontFace", elements.designerMultiFontFace.value); releaseDesignerControlFocus(); });
   elements.designerMultiBold?.addEventListener("click", () => toggleMultiFormattingProperty("bold"));
   elements.designerMultiItalic?.addEventListener("click", () => toggleMultiFormattingProperty("italic"));
@@ -2522,12 +2526,15 @@ function renderDesignerOverlay() {
     marker.dataset.selectionKey = designerSelectionKey({ kind: "mapping", id: mapping.id });
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
-    applyPreviewFormatting(marker, effectiveFormatting(mapping));
+    const previewFormat = effectiveFormatting(mapping);
+    applyPreviewFormatting(marker, previewFormat);
     marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL, mapping.content.context) || "[blank composite]") : designerFieldPreview(mapping.field, null, mapping.content?.format);
+    applyPreviewTextFit(marker, mapping, previewFormat);
     marker.title = `${isTemplate ? "Text template" : designerFieldLabel(mapping.field)} • click to edit • drag to move`;
     applyDesignerSelectionClass(marker, { kind: "mapping", id: mapping.id });
     wireDesignerMarker(marker, { kind: "mapping", id: mapping.id });
     elements.designerOverlay.append(marker);
+    appendDesignerTextFitGuide(mapping.xPercent, mapping.yPercent, mapping, alignment, { kind: "mapping", id: mapping.id });
   });
 
   const canvasRect = elements.designerPdfCanvas.getBoundingClientRect();
@@ -2555,8 +2562,10 @@ function renderDesignerOverlay() {
           marker.style.left = `${anchorXPercent * 100}%`;
           marker.style.top = `${slot.yPercent * 100}%`;
           const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot: slotIndex + 1 });
-          applyPreviewFormatting(marker, effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup }));
+          const previewFormat = effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
+          applyPreviewFormatting(marker, previewFormat);
           marker.textContent = designerSlotContentPreview(block, column, slotIndex + 1);
+          applyPreviewTextFit(marker, column, previewFormat);
           marker.title = `${blockContentLabel(column)} • slot ${slotIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
           marker.dataset.columnId = column.id;
@@ -2564,6 +2573,7 @@ function renderDesignerOverlay() {
           applyDesignerSelectionClass(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
           wireDesignerMarker(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
           elements.designerOverlay.append(marker);
+          appendDesignerTextFitGuide(anchorXPercent, slot.yPercent, column, alignment, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
         }
       }
     } else {
@@ -2584,8 +2594,10 @@ function renderDesignerOverlay() {
           marker.style.left = `${column.xPercent * 100}%`;
           marker.style.top = `${yPercent * 100}%`;
           const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot: rowIndex + 1 });
-          applyPreviewFormatting(marker, effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup }));
+          const previewFormat = effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
+          applyPreviewFormatting(marker, previewFormat);
           marker.textContent = designerSlotContentPreview(block, column, rowIndex + 1);
+          applyPreviewTextFit(marker, column, previewFormat);
           marker.title = `${blockContentLabel(column)} • row ${rowIndex + 1} • ${alignment} • click to edit content`;
           marker.dataset.blockId = block.id;
           marker.dataset.columnId = column.id;
@@ -2593,6 +2605,7 @@ function renderDesignerOverlay() {
           applyDesignerSelectionClass(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
           wireDesignerMarker(marker, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
           elements.designerOverlay.append(marker);
+          appendDesignerTextFitGuide(column.xPercent, yPercent, column, alignment, { kind: "repeatedColumn", blockId: block.id, columnId: column.id });
         }
       }
     }
@@ -2609,12 +2622,15 @@ function renderDesignerOverlay() {
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
     const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, mapping.collection, mapping.selector);
-    applyPreviewFormatting(marker, effectiveFormatting(mapping, { group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup }));
+    const previewFormat = effectiveFormatting(mapping, { group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup });
+    applyPreviewFormatting(marker, previewFormat);
     marker.textContent = designerFieldPreview(mapping.field, mapping.selector, mapping.content?.format || {}) || `[${individualSelectorLabel(mapping)}]`;
+    applyPreviewTextFit(marker, mapping, previewFormat);
     marker.title = `${designerFieldLabel(mapping.field)} • ${individualSelectorLabel(mapping)} • ${alignment} • click to edit • drag to move`;
     applyDesignerSelectionClass(marker, { kind: "individual", id: mapping.id });
     wireDesignerMarker(marker, { kind: "individual", id: mapping.id });
     elements.designerOverlay.append(marker);
+    appendDesignerTextFitGuide(mapping.xPercent, mapping.yPercent, mapping, alignment, { kind: "individual", id: mapping.id });
   }
 }
 
@@ -4237,6 +4253,7 @@ function renderDesignerSelectionInspector() {
   updateDesignerFormattingSummary(target, selection, object);
   elements.designerSelectionAlignment.disabled = false;
   elements.designerSelectionAlignment.value = target.alignment || "left";
+  updateDesignerTextFitControls(target);
   const isTemplate = (selection.kind === "mapping" || selection.kind === "repeatedColumn") && target.content?.type === "template";
   elements.designerSelectionTemplateWrap.hidden = !isTemplate;
   elements.designerSelectionTemplate.value = isTemplate ? (target.content.template || "") : "";
@@ -4256,6 +4273,165 @@ function renderDesignerSelectionInspector() {
     populateDesignerSelectionTemplateFieldSelect();
     updateDesignerSelectionTemplatePreview();
   }
+}
+
+
+function designerStoredTextFitWidth(target) {
+  const width = Number(target?.fitWidthPoints);
+  return Number.isFinite(width) && width > 0 ? width : null;
+}
+
+function designerTextFitEnabled(target) {
+  if (!target) return false;
+  // Backward compatibility: Build 027/027.1/027.2 placements that already
+  // have a width but no explicit enabled flag remain enabled.
+  return target.fitWidthEnabled !== false && designerStoredTextFitWidth(target) != null;
+}
+
+function designerTextFitWidth(target) {
+  return designerTextFitEnabled(target) ? designerStoredTextFitWidth(target) : null;
+}
+
+function updateDesignerTextFitControls(target) {
+  const enabled = designerTextFitEnabled(target);
+  const storedWidth = designerStoredTextFitWidth(target);
+  if (elements.designerSelectionFitToggle) elements.designerSelectionFitToggle.checked = enabled;
+  if (elements.designerSelectionFitControls) elements.designerSelectionFitControls.hidden = !enabled;
+  if (elements.designerSelectionFitWidth && document.activeElement !== elements.designerSelectionFitWidth) {
+    elements.designerSelectionFitWidth.value = enabled && storedWidth != null ? storedWidth.toFixed(1) : "";
+  }
+}
+
+function defaultDesignerFitWidthPoints(target) {
+  const selection = state.designerSelection;
+  const object = locateDesignerObject(selection);
+  const marker = designerMarkerForSelection(selection);
+  const scale = Math.max(state.designerRenderScale, .0001);
+  if (marker) {
+    const rect = marker.getBoundingClientRect();
+    const measured = Math.max(12, rect.width / scale);
+    return Math.ceil(measured * 1.15 * 2) / 2;
+  }
+  return Math.max(36, (Number(effectiveFormatting(target, selection && object ? { selection, object } : {}).fontSize) || 10) * 8);
+}
+
+function applyDesignerFitWidth(width) {
+  const found = currentInlineFormattingTarget();
+  if (!found) return;
+  const numeric = Number(width);
+  if (!Number.isFinite(numeric) || numeric <= 0) return;
+  found.target.fitWidthPoints = Math.round(numeric * 10) / 10;
+  found.target.fitWidthEnabled = true;
+  if (elements.designerSelectionFitWidth) elements.designerSelectionFitWidth.value = found.target.fitWidthPoints.toFixed(1);
+  if (elements.designerSelectionFitControls) elements.designerSelectionFitControls.hidden = false;
+  if (elements.designerSelectionFitToggle) elements.designerSelectionFitToggle.checked = true;
+  markDesignerObjectChanged();
+}
+
+function wireDesignerTextFitControls() {
+  elements.designerSelectionFitToggle?.addEventListener("change", () => {
+    const found = currentInlineFormattingTarget();
+    if (!found) return;
+    if (elements.designerSelectionFitToggle.checked) {
+      if (designerStoredTextFitWidth(found.target) == null) found.target.fitWidthPoints = defaultDesignerFitWidthPoints(found.target);
+      found.target.fitWidthEnabled = true;
+    } else {
+      // Disable the constraint without discarding the designer's chosen width.
+      // Re-enabling restores the prior boundary instead of recalculating it.
+      found.target.fitWidthEnabled = false;
+    }
+    updateDesignerTextFitControls(found.target);
+    markDesignerObjectChanged();
+    releaseDesignerControlFocus();
+  });
+  wireCommittedInspectorInput(elements.designerSelectionFitWidth, () => {
+    const width = Number(elements.designerSelectionFitWidth.value);
+    if (!Number.isFinite(width) || width <= 0) {
+      const found = currentInlineFormattingTarget();
+      if (found) updateDesignerTextFitControls(found.target);
+      return;
+    }
+    applyDesignerFitWidth(width);
+  });
+}
+
+function previewFontFamily(format) {
+  return format?.fontFace === "Times" ? '"Times New Roman", Times, serif' : format?.fontFace === "Courier" ? '"Courier New", Courier, monospace' : 'Helvetica, Arial, sans-serif';
+}
+
+function previewFittedFontSizePx(text, format, fitWidthPoints) {
+  const preferredPx = Math.max(1, Number(format?.fontSize || 10) * state.designerRenderScale);
+  const fitWidth = Number(fitWidthPoints);
+  if (!Number.isFinite(fitWidth) || fitWidth <= 0 || !String(text ?? "")) return preferredPx;
+  const canvas = previewFittedFontSizePx.canvas || (previewFittedFontSizePx.canvas = document.createElement("canvas"));
+  const context = canvas.getContext("2d");
+  if (!context) return preferredPx;
+  const weight = format?.bold ? "700" : "400";
+  const style = format?.italic ? "italic" : "normal";
+  context.font = `${style} ${weight} ${preferredPx}px ${previewFontFamily(format)}`;
+  const maxLineWidth = Math.max(...String(text).split(/\r\n|\r|\n/).map((line) => context.measureText(line).width), 0);
+  const allowedPx = fitWidth * state.designerRenderScale;
+  if (!maxLineWidth || maxLineWidth <= allowedPx) return preferredPx;
+  return preferredPx * (allowedPx / maxLineWidth);
+}
+
+function applyPreviewTextFit(marker, target, format) {
+  const fittedPx = previewFittedFontSizePx(marker.textContent, format, designerTextFitWidth(target));
+  marker.style.fontSize = `${fittedPx}px`;
+  marker.style.setProperty("--preview-font-px", `${fittedPx}px`);
+}
+
+function appendDesignerTextFitGuide(xPercent, yPercent, target, alignment, selection) {
+  const fitWidth = designerTextFitWidth(target);
+  if (fitWidth == null || designerMultiSelectionActive() || !designerSelectionsEqual(state.designerSelection, selection)) return;
+  if (elements.designerOverlay.querySelector(".designer-text-fit-guide")) return;
+  const widthPx = fitWidth * state.designerRenderScale;
+  const guide = document.createElement("div");
+  guide.className = `designer-text-fit-guide align-${alignment}`;
+  guide.style.left = `${xPercent * 100}%`;
+  guide.style.top = `${yPercent * 100}%`;
+  guide.style.width = `${widthPx}px`;
+  guide.title = `Shrink-to-fit width: ${fitWidth.toFixed(1)} pt`;
+  const handle = document.createElement("button");
+  handle.type = "button";
+  handle.className = "designer-text-fit-handle";
+  handle.setAttribute("aria-label", "Resize shrink-to-fit width");
+  handle.title = "Drag to change shrink-to-fit width";
+  handle.addEventListener("pointerdown", (event) => beginDesignerTextFitResize(event, selection, alignment, xPercent));
+  guide.append(handle);
+  elements.designerOverlay.append(guide);
+}
+
+function beginDesignerTextFitResize(event, selection, alignment, xPercent) {
+  if (event.button !== 0) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const overlayRect = elements.designerOverlay.getBoundingClientRect();
+  state.designerFitResize = { selection: { ...selection }, alignment, anchorClientX: overlayRect.left + overlayRect.width * xPercent };
+  document.addEventListener("pointermove", handleDesignerTextFitResizeMove);
+  document.addEventListener("pointerup", endDesignerTextFitResize, { once: true });
+}
+
+function handleDesignerTextFitResizeMove(event) {
+  const drag = state.designerFitResize;
+  if (!drag) return;
+  const scale = Math.max(state.designerRenderScale, .0001);
+  const deltaPx = drag.alignment === "right" ? drag.anchorClientX - event.clientX : event.clientX - drag.anchorClientX;
+  const widthPx = drag.alignment === "center" ? deltaPx * 2 : deltaPx;
+  const widthPoints = Math.max(2, widthPx / scale);
+  const object = locateDesignerObject(drag.selection);
+  const target = drag.selection.kind === "repeatedColumn" ? object?.column : object;
+  if (!target) return;
+  target.fitWidthPoints = Math.round(widthPoints * 10) / 10;
+  target.fitWidthEnabled = true;
+  if (elements.designerSelectionFitWidth) elements.designerSelectionFitWidth.value = target.fitWidthPoints.toFixed(1);
+  markDesignerObjectChanged();
+}
+
+function endDesignerTextFitResize() {
+  document.removeEventListener("pointermove", handleDesignerTextFitResizeMove);
+  state.designerFitResize = null;
+  scheduleDesignerSave();
 }
 
 function populateDesignerSelectionTemplateFieldSelect() {
@@ -4346,7 +4522,7 @@ function applyPreviewFormatting(marker, format) {
   const previewFontPx = Math.max(1, Number(format.fontSize || 10) * state.designerRenderScale);
   marker.style.fontSize = `${previewFontPx}px`;
   marker.style.setProperty("--preview-font-px", `${previewFontPx}px`);
-  marker.style.fontFamily = format.fontFace === "Times" ? "Times New Roman, Times, serif" : format.fontFace === "Courier" ? "Courier New, Courier, monospace" : "Helvetica, Arial, sans-serif";
+  marker.style.fontFamily = previewFontFamily(format);
   marker.style.fontWeight = format.bold ? "700" : "400";
   marker.style.fontStyle = format.italic ? "italic" : "normal";
   marker.style.color = format.color || "#000000";
@@ -5629,7 +5805,7 @@ async function buildPopulatedPdf(layout, model) {
     if (mapping.content?.type === "template") {
       const text = resolveTemplateText(mapping.content.template, model, mapping.content.context);
       if (!text) continue;
-      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
       continue;
     }
     const definition = getFieldDefinition(mapping.field);
@@ -5641,7 +5817,7 @@ async function buildPopulatedPdf(layout, model) {
       else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
       continue;
     }
-    drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+    drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
   }
 
   const emptyBlocks = [];
@@ -5673,7 +5849,7 @@ async function buildPopulatedPdf(layout, model) {
           : column.xPercent;
         const conditionalGroup = conditionalFormattingGroup(model, blockContext(block), selector);
         const format = effectiveFormatting(column, { layout, group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
-        drawAlignedPdfText(page, fontCache, text, format, xPercent, slot.yPercent, column.alignment || "left");
+        drawAlignedPdfText(page, fontCache, text, format, xPercent, slot.yPercent, column.alignment || "left", designerTextFitWidth(column));
       }
     }
   }
@@ -5692,7 +5868,7 @@ async function buildPopulatedPdf(layout, model) {
     }
     const conditionalGroup = conditionalFormattingGroup(model, mapping.collection, mapping.selector);
     const format = effectiveFormatting(mapping, { layout, group: formattingGroupForContext(mapping.collection), handednessGroup: conditionalGroup });
-    drawAlignedPdfText(page, fontCache, text, format, mapping.xPercent, mapping.yPercent, mapping.alignment || "left");
+    drawAlignedPdfText(page, fontCache, text, format, mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
   }
 
   const outputBytes = await pdfDoc.save();
@@ -5722,9 +5898,19 @@ function pdfFontForFormat(fontCache, format) {
   return fontCache[key] || fontCache["Helvetica|0|0"];
 }
 
-function drawAlignedPdfText(page, fontCache, text, format, xPercent, yPercent, alignment = "left") {
-  const size = Number(format?.fontSize) || 10;
+function fittedPdfFontSize(font, text, preferredSize, fitWidthPoints) {
+  const fitWidth = Number(fitWidthPoints);
+  if (!Number.isFinite(fitWidth) || fitWidth <= 0) return preferredSize;
+  const widths = String(text ?? "").split(/\r\n|\r|\n/).map((line) => line ? font.widthOfTextAtSize(line, preferredSize) : 0);
+  const maxWidth = Math.max(...widths, 0);
+  if (!maxWidth || maxWidth <= fitWidth) return preferredSize;
+  return preferredSize * (fitWidth / maxWidth);
+}
+
+function drawAlignedPdfText(page, fontCache, text, format, xPercent, yPercent, alignment = "left", fitWidthPoints = null) {
+  const preferredSize = Number(format?.fontSize) || 10;
   const font = pdfFontForFormat(fontCache, format || {});
+  const size = fittedPdfFontSize(font, text, preferredSize, fitWidthPoints);
   const [r, g, b] = hexToRgb01(format?.color || "#000000");
   const { width, height } = page.getSize();
   const anchorX = width * clamp(Number(xPercent) || 0, 0, 1);

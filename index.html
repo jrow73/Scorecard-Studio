@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=025" />
+  <link rel="stylesheet" href="./css/styles.css?v=027.2" />
 </head>
 <body>
   <div class="app-shell">
@@ -507,6 +507,16 @@
                         <button class="secondary-button compact-button designer-format-restore" id="designer-selection-format-restore" type="button">Restore Defaults</button>
                       </div>
                     </div>
+                    <div class="designer-text-fit-inspector">
+                      <label class="designer-fit-toggle"><input id="designer-selection-fit-toggle" type="checkbox" /> <span>Enable Shrink to Fit</span></label>
+                      <div id="designer-selection-fit-controls" class="designer-fit-controls" hidden>
+                        <div class="designer-fit-width-row">
+                          <label for="designer-selection-fit-width">Maximum Width</label>
+                          <input id="designer-selection-fit-width" type="number" min="2" step="0.5" inputmode="decimal" />
+                          <span class="designer-fit-width-unit">pt</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <label id="designer-selection-name-format-wrap" for="designer-selection-name-format" hidden>Name format
                     <select id="designer-selection-name-format"></select>
@@ -754,6 +764,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0263"></script>
+  <script type="module" src="./js/app.js?v=027.2"></script>
 </body>
 </html>
