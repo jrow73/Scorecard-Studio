@@ -1,6 +1,6 @@
 # Scorecard Studio — Designer Completion Inventory
 
-**Baseline:** Build 022.3 accepted; Build 023 Representative Data/Test PDF underway  
+**Baseline:** Build 026.4 accepted; Builds 023–026 complete  
 **Milestone:** v0.2.0 — Complete Field Mapping & Formatting  
 **Purpose:** Authoritative inventory of remaining work before the Layout Designer is functionally complete for the traditional pregame scorecard v1 scope.
 
@@ -15,7 +15,7 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 | Designer area | Current state | v1 classification | Remaining action |
 |---|---|---|---|
 | PDF/layout workspace | Complete | Required / done | Freeze unless a demonstrated defect appears |
-| Data Palette/navigation | Complete | Required / done | Freeze interaction model |
+| Data Palette/navigation | Complete | Required / done | Build 026.4 accepted: Standard/Custom per-layout palette, searchable Custom picker, accordion/collapse behavior, dynamic counts, and restore-to-Standard workflow |
 | Single Item | Complete | Required / done | No planned structural work |
 | Text Template | Complete core workflow | Required / done | Preserve contextual token behavior; revisit only for demonstrated punctuation/missing-value need |
 | Repeated Layout | Complete core workflow | Required / mostly done | Synthetic preview/capacity robustness remains |
@@ -26,14 +26,14 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 | Canonical field coverage | Build 018.3 live diagnostic and normalization closure complete | Complete for Build 018 | Field catalog verified against representative and live selected-game data |
 | Player name formatting | Boxscore Name representative behavior verified | Complete for Build 018 | Source-like compact names retained, including occasional disambiguation |
 | Font size/alignment | Complete | Required / done | Preserve |
-| Static text color | Not implemented | Required | Add in formatting build |
-| Conditional/data-driven color | Not implemented | Scope decision | Prefer narrow handedness use case over generalized rules engine |
-| Long-text fit behavior | Deferred to Build 026 | Required / investigate | Evaluate maximum width + shrink-to-fit/truncate; wrapping separately |
+| Static text color | Complete | Required / done | Build 019 accepted |
+| Conditional/data-driven color | Complete narrow scope | Required / done | Build 019 hitter/pitcher handedness opt-in retained; Build 026 only redesigns the settings presentation |
+| Long-text fit behavior | Deferred to Build 027 | Required / investigate | Evaluate maximum width + shrink-to-fit/truncate; wrapping separately |
 | Representative preview data | Build 023 fictional fixture | Required / Build 023 | Deterministic fictional teams/people/venue; 9 lineup / 6 bench / 14 bullpen / 6 umpires with text-width stress cases |
 | Capacity/overflow behavior | Functional | Required / refine | Keep under-capacity normal; improve preview guidance/warnings |
 | Undo/Redo | Complete | Required / done | Build 020 accepted |
 | Generation-result UX | Functional | v1 polish | Separate success from warnings/notices clearly |
-| Full-card regression/acceptance | Pending | Required | Final Designer completion pass |
+| Full-card regression/acceptance | Pending Build 028 | Required | Final Designer completion/release-review pass |
 | Advanced matchup/research | Deferred | Not v1 Designer scope | Keep in Game Day/future research |
 
 ## Accepted foundation — do not redesign without cause
@@ -123,7 +123,7 @@ Generation already reports conditions such as collection overflow and incomplete
 
 ## Remaining build path to v0.2.0
 
-Build 022.3 is accepted and is the baseline for the final Designer runway.
+Build 026.4 is accepted and is the baseline for the remaining v0.2.0 Designer runway. Builds 023–026 are complete.
 
 1. **Build 023 — Representative Data & Test PDF** — deterministic fictional stress-test data; Designer Test PDF uses Representative Data only.
 2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal, Text Template/name-format and blank-value cleanup, compact Inspector/header, toolbar Copy/Paste, delete consistency, helper/footer cleanup.
@@ -165,4 +165,13 @@ A final 018.3-05 acceptance cleanup expands representative repeated collections 
 
 Build 024 addresses Text Template blank suppression and Player Name formatting parity, progressive Repeated Layout content creation, role-driven Individual Placement, toolbar Copy/Paste, compact selection actions, helper-text cleanup, delete-path consistency, and removal of persistent Designer footer/status panels. Umpire Crew consolidation remains grouped with Build 025.
 
-Remaining v0.2.0 roadmap: Build 025 Live Game PDF Integration; Build 026 Field Palette & Layout Settings; Build 027 Text Overflow & Fit Controls; Build 028 Designer Completion / Release Review.
+Remaining v0.2.0 roadmap: Build 027 Text Overflow & Fit Controls; Build 028 Designer Completion / Release Review.
+
+## Build 026 — Field Palette & Layout Settings — accepted through Build 026.4
+
+Build 026 closes the field-palette/settings phase of the v0.2.0 Designer runway. The accepted baseline provides registry-driven Standard defaults and persistent Custom field selections; a searchable Custom Field Selector with balanced Away/Home grouping, per-card counts and bulk controls, Restore Standard Fields, sticky close/search controls, and explicit support for zero selected fields; Layout Details editing and same-page-count PDF replacement; collapsed-by-default default-formatting controls; palette accordion/collapse behavior; Team-format Manager placement; Starting Pitcher record cleanup; Text Template filtering against enabled fields without destroying existing tokens; and dynamic field/availability counts.
+
+The remaining Designer work is intentionally narrow:
+
+1. **Build 027 — Text Overflow & Fit Controls** — establish intentional long-text behavior with browser/PDF parity.
+2. **Build 028 — Designer Completion / Release Review** — perform fresh-layout/full-scorecard regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and v0.2.0 release-readiness review.

@@ -1,7 +1,7 @@
 /**
  * Scorecard Studio formatting defaults and inheritance helpers
  * Version: 0.2.0-dev
- * Build: 019.1
+ * Build: 026.1
  */
 
 export const FORMAT_GROUPS = [
@@ -105,6 +105,8 @@ export function hexToRgb01(hex) {
 
 export function formattingGroupForFieldId(fieldId = "") {
   const id = String(fieldId || "");
+  if (id.startsWith("away.manager")) return "away-team";
+  if (id.startsWith("home.manager")) return "home-team";
   if (id.startsWith("away.startingPitcher") || id.startsWith("away.lineup") || id.startsWith("away.bench") || id.startsWith("away.bullpen")) return "away-players";
   if (id.startsWith("home.startingPitcher") || id.startsWith("home.lineup") || id.startsWith("home.bench") || id.startsWith("home.bullpen")) return "home-players";
   if (id.startsWith("away.")) return "away-team";
@@ -113,6 +115,8 @@ export function formattingGroupForFieldId(fieldId = "") {
 }
 
 export function formattingGroupForContext(context = "") {
+  if (String(context) === "away.manager") return "away-team";
+  if (String(context) === "home.manager") return "home-team";
   if (String(context).startsWith("away.")) return "away-players";
   if (String(context).startsWith("home.")) return "home-players";
   return "game";

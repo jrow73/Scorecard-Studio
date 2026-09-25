@@ -214,7 +214,7 @@ Build 025 introduces the first user-facing live generation path on Home. The use
 
 **Build 025.2 API correction:** Acceptance testing of historical games exposed mutable/postgame artifacts in `/feed/live`. The live-PDF path now normalizes original lineups from Schedule hydration, derives Bench/Bullpen from date-specific rosters, enriches all roster player IDs in one bulk `/people` request, uses `byDateRange` stats through the day before the game, and uses day-before-game standings for pregame W-L. `boxscoreName` is taken directly from canonical People/roster metadata and is never manufactured from Full Name. Traded-player tests (Taylor Ward, Seranthony Domínguez), single-team tests (Cal Raleigh), and an MLB-debut test (Colt Emerson) validate the aggregate/stat cutoff rules. New API plumbing should carry the selected game sport context rather than introduce new MLB-only `sportId=1` assumptions where avoidable.
 
-**Build 025.3 name-source fidelity correction:** Player-name formats must resolve from their explicit normalized/API-backed properties rather than visually equivalent fallbacks: Full Name -> `player.name` (normalized from `fullName`), First Name -> `firstName`, Last Name -> `lastName`, Use Name + Last Name -> `useName` + `useLastName`, First Initial + Last Name -> `initLastName`, and Boxscore Name -> `boxscoreName`. Missing source variants render blank instead of silently substituting another name format. Representative Data intentionally includes differing first/use/boxscore values so mapping errors are visible. The shared slot/template renderer must use the same formatter module/version as direct field rendering. Designer Copy/Paste clipboard contents must survive page navigation; changing pages may clear source-page selection but must not clear the clipboard.
+**Build 025.3 / Build 026.1 name-source fidelity contract:** Player-name formats resolve from explicit normalized/API-backed properties rather than visually equivalent fallbacks. Current choices are Full Name -> `player.name` (normalized from `fullName`), First Initial + Last Name -> derived initial plus `lastName` with no period, Last Name -> `lastName`, First Name -> `firstName`, Use Name -> `useName`, and Boxscore Name -> `boxscoreName`. The older `Use Name + Last Name` creation choice is retired. Missing source variants render blank instead of silently substituting another name format. Representative Data intentionally includes differing first/use/boxscore values so mapping errors are visible. The shared slot/template renderer must use the same formatter module/version as direct field rendering. Designer Copy/Paste clipboard contents must survive page navigation; changing pages may clear source-page selection but must not clear the clipboard.
 
 This loading strategy is both a performance optimization and an architectural
 boundary: supplemental endpoints exist to satisfy scorecard field requirements,
@@ -869,19 +869,9 @@ The philosophy should remain:
 
 ---
 
-## Post-Build 018 Designer Completion Roadmap
+## Designer Completion Roadmap — historical note
 
-Build 018 is the current field-catalog completion build. The accepted Designer baseline from Build 017 still includes Starting Pitcher record expansion; reusable single-anchor Record Layouts with mixed Field/Text Template children; contextual Text Template labels and tokens; capability-gated Name Format; strict parent/child Inspector scoping; progressive-reveal creation flows; and persistent child-content creation while editing containers or existing children. These behaviors should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
-
-The remaining v0.2.0 Designer work is governed by `docs/DESIGNER_COMPLETION_INVENTORY.md`. The current expected sequence is:
-
-- **Build 018 — Field & Player-Format Coverage Audit/Completion.** Compare the canonical registry with actual Designer exposure, close traditional pregame field gaps, verify Home/Away symmetry, and complete Name Format coverage/fallback behavior for applicable person-name fields.
-- **Following build — Designer Formatting.** Add basic static text color and make an explicit v1 decision on narrowly scoped handedness/data-driven color and long-text fit. Avoid a generalized rules engine unless real scorecard requirements justify it.
-- **Following build — Undo/Redo.** Add coherent Designer editing history across the accepted Build 017 object and Inspector model.
-- **Following build — Preview & Collection Robustness.** Fill configured collection capacities with deterministic synthetic sample data, add soft capacity guidance where useful, and refine overflow feedback.
-- **Final Designer completion pass.** Improve generation-result/warning presentation and perform complete scorecard-design regression/acceptance testing before declaring v0.2.0 complete.
-
-Build numbers after 018 remain intentionally flexible. Advanced matchup/situational research, one-click favorite-layout generation, backup/export/import, and broader Game Day research are not prerequisites for completing the Designer.
+The earlier post-Build-018 sequencing has been superseded by the accepted Builds 019–026 implementation path. `docs/DESIGNER_COMPLETION_INVENTORY.md` is the authoritative current roadmap. Builds 023–026 are complete; the remaining v0.2.0 Designer runway is Build 027 Text Overflow & Fit Controls followed by Build 028 Designer Completion / Release Review. Accepted behavior from earlier builds should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
 
 ## Versioning
 
@@ -1131,9 +1121,9 @@ The Designer intentionally uses a simple legacy-style viewport model: ordinary w
 - Away→Home and Home→Away translated paste is offered only for one-sided team-specific selections; mixed Away+Home selections intentionally expose neither translation option.
 
 
-## v0.2.0 Designer completion roadmap after Build 022
+## v0.2.0 Designer completion roadmap
 
-Build 022.3 is the accepted Copy/Paste baseline. The remaining planned Designer runway is:
+Build 026.4 is the accepted Field Palette & Layout Settings baseline. Builds 023–026 are complete. The implemented runway and remaining release path are:
 
 1. **Build 023 — Representative Data & Test PDF** — replace recognizable real-world representative identities with a deterministic fictional stress-test fixture; Designer Generate Test PDF uses only that fixture and never requires a selected live game.
 2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal and placement-flow cleanup, Text Template player-name format parity and blank-value suppression, compact Inspector/header presentation, toolbar Copy/Paste with translated-paste dropdown, delete-path consistency, helper-text/footer cleanup.
@@ -1146,12 +1136,19 @@ Build 022.3 is the accepted Copy/Paste baseline. The remaining planned Designer 
 
 Representative Data is deterministic test infrastructure, not a simulated live game. It should contain fictional teams, people, and venues; deliberately exercise short/long text and collection-capacity cases; and remain stable across sessions so layout regressions are visually recognizable. Designer **Generate Test PDF** always uses Representative Data. Real game-day PDF generation belongs to the normal game workflow outside Designer.
 
-## v0.2.0 remaining roadmap (Build 024 baseline)
+## v0.2.0 remaining roadmap (Build 026 baseline)
 
-- Build 024: Designer Workflow & Inspector Cleanup.
-- Build 025: Live Game PDF Integration from the Home-page selected game using a saved layout and the shared renderer.
-- Build 026: Field Palette & Layout Settings, including Standard/Custom palette and Umpire Crew consolidation.
-- Build 027: Text Overflow & Fit Controls feasibility/implementation (truncate, shrink-to-fit, and related width constraints).
-- Build 028: Designer Completion / v0.2.0 release review.
+- **Build 027 — Text Overflow & Fit Controls:** implement intentional long-text behavior with browser/PDF parity; maximum width plus shrink-to-fit is the leading candidate, with truncation and wrapping evaluated where appropriate.
+- **Build 028 — Designer Completion / Release Review:** fresh-layout/full-scorecard regression, persistence/reload, Representative Data Test PDF vs live-game PDF comparison, documentation reconciliation, and final v0.2.0 release readiness.
 
 Build metadata continues to come from `/app-meta.json`; do not hard-code independent user-facing build labels. `README.md` remains intentionally untouched during intermediate builds.
+
+## Build 026 accepted baseline — Field Palette & Layout Settings (Sep 24, 2026)
+
+Build 026.4 is the accepted baseline for the Field Palette & Layout Settings phase. Per-layout field availability now supports registry-driven Standard defaults and explicit Custom selections, including a valid zero-field selection. The Custom Field Selector provides searchable Away/Home-paired cards, per-card selected/total counts, search-aware Select All/Deselect All, Restore Standard Fields, representative examples, a sticky close/search header, and unsaved-change protection. Total and Standard counts are derived dynamically from the registry rather than hard-coded.
+
+Layout Settings uses the application dark theme and is organized into Layout Details, Field Palette, and collapsed-by-default Default Formatting Options. Layout name and description are editable, and the underlying scorecard PDF can be replaced when the page count matches without invalidating existing placements. A mismatched page count produces an application-themed validation dialog.
+
+The Designer palette uses accordion behavior, placed-object detail collapsing, top/bottom Collapse All behavior, and finite Available Data counts that exclude the unlimited Text Template tool. Starting Pitcher uses its record presentation and new Starting Pitcher Record creation no longer offers the obsolete Single Item path. Manager belongs to Team Information and inherits Team formatting defaults. Text Template Insert Field menus honor the layout's enabled field set, while existing or manually typed valid tokens remain resolvable for compatibility/power-user workflows. Current Player Name formats are Full Name, First Initial + Last Name (no period), Last Name, First Name, Use Name, and Boxscore Name.
+
+**Remaining v0.2.0 roadmap:** Build 027 Text Overflow & Fit Controls, then Build 028 Designer Completion / Release Review.

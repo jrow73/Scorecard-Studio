@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Representative Designer / field-catalog sample data
  * Version: 0.2.0-dev
- * Build: 025.3
+ * Build: 026.1
  */
 
 const POSITION_INFO = {
@@ -17,13 +17,13 @@ function position(abbreviation) {
 }
 
 const SAMPLE_NAME_FIELDS = Object.freeze({
-  "Bo Yu": { firstName: "Robert", lastName: "Yu", useName: "Bo", useLastName: "Yu", initLastName: "R. Yu", boxscoreName: "Yu, B" },
-  "Nico Bell": { firstName: "Nicholas", lastName: "Bell", useName: "Nico", useLastName: "Bell", initLastName: "N. Bell", boxscoreName: "Bell, N" },
-  "Silas Crowe": { firstName: "Silas", lastName: "Crowe", useName: "Si", useLastName: "Crowe", initLastName: "S. Crowe", boxscoreName: "Crowe, S" },
-  "Dorian St. James": { firstName: "Dorian", lastName: "St. James", useName: "Dorian", useLastName: "St. James", initLastName: "D. St. James", boxscoreName: "St. James" },
-  "Christopher Van Buren": { firstName: "Christopher", lastName: "Van Buren", useName: "Christopher", useLastName: "Van Buren", initLastName: "C. Van Buren", boxscoreName: "Van Buren" },
-  "Santiago De la Cruz": { firstName: "Santiago", lastName: "De la Cruz", useName: "Santiago", useLastName: "De la Cruz", initLastName: "S. De la Cruz", boxscoreName: "De la Cruz" },
-  "Theodore Fitzpatrick III": { firstName: "Theodore", lastName: "Fitzpatrick", useName: "Theodore", useLastName: "Fitzpatrick", initLastName: "T. Fitzpatrick", boxscoreName: "Fitzpatrick", nameSuffix: "III" }
+  "Bo Yu": { firstName: "Robert", lastName: "Yu", useName: "Bo", useLastName: "Yu", initLastName: "R Yu", boxscoreName: "Yu, B" },
+  "Nico Bell": { firstName: "Nicholas", lastName: "Bell", useName: "Nico", useLastName: "Bell", initLastName: "N Bell", boxscoreName: "Bell, N" },
+  "Silas Crowe": { firstName: "Silas", lastName: "Crowe", useName: "Si", useLastName: "Crowe", initLastName: "S Crowe", boxscoreName: "Crowe, S" },
+  "Dorian St. James": { firstName: "Dorian", lastName: "St. James", useName: "Dorian", useLastName: "St. James", initLastName: "D St. James", boxscoreName: "St. James" },
+  "Christopher Van Buren": { firstName: "Christopher", lastName: "Van Buren", useName: "Christopher", useLastName: "Van Buren", initLastName: "C Van Buren", boxscoreName: "Van Buren" },
+  "Santiago De la Cruz": { firstName: "Santiago", lastName: "De la Cruz", useName: "Santiago", useLastName: "De la Cruz", initLastName: "S De la Cruz", boxscoreName: "De la Cruz" },
+  "Theodore Fitzpatrick III": { firstName: "Theodore", lastName: "Fitzpatrick", useName: "Theodore", useLastName: "Fitzpatrick", initLastName: "T Fitzpatrick", boxscoreName: "Fitzpatrick", nameSuffix: "III" }
 });
 
 function samplePlayerName(name, boxscoreName = null) {
@@ -40,7 +40,7 @@ function samplePlayerName(name, boxscoreName = null) {
     lastName: lastName || null,
     useName: firstName || null,
     useLastName: lastName || null,
-    initLastName: firstName && lastName ? `${firstName[0]}. ${lastName}` : name,
+    initLastName: firstName && lastName ? `${firstName[0]} ${lastName}` : name,
     boxscoreName: boxscoreName || sampleBoxscoreName(name, firstName, lastName),
     ...(suffix ? { nameSuffix: suffix } : {})
   };
@@ -235,7 +235,7 @@ export const DESIGNER_SAMPLE_MODEL = Object.freeze({
     name: "Lakeview Foxes", locationName: "Lakeview", shortName: "Lakeview", clubName: "Foxes", abbreviation: "LVF",
     wins: 74, losses: 77, league: "Continental League", division: "Continental League North", managerName: "Bo Mercer", managerNumber: "4",
     standings: { divisionRank: 3, leagueRank: 8, wildCardRank: 5, divisionGamesBack: "7.5", streak: "L1", last10: { wins: 5, losses: 5, display: "5-5" } },
-    starter: sampleStarter("Nicolás Bellamy", "Nicolás", "Bellamy", "N. Bellamy", "Bellamy, N", "6", "L", 8, 9, 25, 3.84, 1.21),
+    starter: sampleStarter("Nicolás Bellamy", "Nicolás", "Bellamy", "N Bellamy", "Bellamy, N", "6", "L", 8, 9, 25, 3.84, 1.21),
     lineup: sampleLineup(["Bo Yu", "Adrian Vale", "Mateo O'Rourke", "Alejandro Villaseñor", "Tess Marlowe", "Jae-Min Park", "Dorian St. James", "Eli Navarro-Soto", "Christopher Van Buren"], ["CF", "2B", "1B", "RF", "C", "SS", "LF", "3B", "DH"], ["L", "R", "S", "L", "R", "L", "S", "R", "R"]),
     bench: sampleBench(["Marcos Vale", "Jo Pike", "Renée Calder", "Ty Hollis", "Santiago De la Cruz", "Max North"], ["IF", "OF", "C", "IF", "1B", "OF"], ["R", "L", "S", "R", "L", "R"]),
     bullpen: sampleBullpen(["Ezra Quinn", "Milo Sandoval", "Anton Reyes", "Beckett Shaw", "Luis Fontaine", "Owen Kade", "Rafael Mercer", "Jonas Voss", "Emmett Price", "Noé Whitaker", "Caleb Frost", "Xavier Boone", "Parker Ibarra", "Dámaso Finch"], ["R", "L", "R", "R", "L", "R", "R", "L", "R", "L", "R", "R", "L", "R"])

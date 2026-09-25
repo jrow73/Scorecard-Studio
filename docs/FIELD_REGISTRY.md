@@ -2,7 +2,7 @@
 
 Status: **Build 018.3 active field-catalog contract.** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016 and the Build 017 Starting Pitcher record, Record Layout, contextual slot-template, and initial player-name-format implementation. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
 
-**Accepted implementation slice:** Build 018 reconciled the runtime registry with the v1 scorecard field catalog, added `visibilityTier: standard | custom`, preserved superseded Build 017 field IDs as compatibility-only (`catalog: false`), closed normalized-but-hidden field gaps, added selected derived/stat fields, and extended Player Name Format with Boxscore Name. Build 018.1 adds concise `description` and deterministic `exampleValue` metadata to every active catalog field and establishes a shared representative sample model for Designer preview/testing. The future Standard-vs-Custom scorecard setup UI is not implemented yet.
+**Accepted implementation slice:** Build 018 reconciled the runtime registry with the v1 scorecard field catalog, added `visibilityTier: standard | custom`, preserved superseded Build 017 field IDs as compatibility-only (`catalog: false`), closed normalized-but-hidden field gaps, added selected derived/stat fields, and extended Player Name Format with Boxscore Name. Build 018.1 adds concise `description` and deterministic `exampleValue` metadata to every active catalog field and establishes a shared representative sample model for Designer preview/testing. The Standard-vs-Custom scorecard setup UI is implemented and accepted through Build 026.4; it consumes these registry tiers dynamically rather than maintaining a separate hard-coded field list.
 
 ## Build 018 / 018.1 active-catalog overlay
 
@@ -29,10 +29,21 @@ Key Build 018 decisions:
 - Lineup/Bench active batting stats: AVG (Standard); OBP, SLG, OPS, HR, RBI, GP, PA, SB, Slash Line (Custom).
 - Bullpen active stats: W-L, ERA, WHIP (Standard); GS, W, L (Custom). Older bullpen IP/SO/Saves/Holds remain compatibility-only.
 - Today's Position supports abbreviation (Standard), full name (Custom), and derived defensive number (Custom). Primary Position is distinct and available.
-- Player Name Format includes Full Name, First Initial + Last Name, Last Name, First Name, Use Name + Last Name, and Boxscore Name.
+- Player Name Format includes Full Name, First Initial + Last Name, Last Name, First Name, Use Name, and Boxscore Name.
 - Umpires support both the repeated crew collection and fixed HP/1B/2B/3B scalar names.
 
 See `BUILD_018_FIELD_REVIEW_CHECKLIST.md`, `BUILD_018_FIELD_COVERAGE_AUDIT.md`, `BUILD_018_IMPLEMENTATION.md`, and `BUILD_018_1_IMPLEMENTATION.md` for the decision record, technical reconciliation, field-catalog implementation, and representative-preview follow-up.
+
+
+### Build 026 palette-selection contract
+
+The registry defines what fields exist and which active fields belong to the Standard tier. A saved layout independently defines which registry fields are enabled for new placement. These concepts must remain separate:
+
+- **Registry membership** — the field exists and can be resolved.
+- **Layout palette availability** — the field is currently enabled for discovery/new placement in that layout. An explicit empty selection is valid; only an absent pre-Build-026 palette configuration falls back to compatibility defaults.
+- **Existing placement/token use** — already placed fields and existing valid Text Template tokens remain resolvable even if the field is later removed from the layout palette.
+
+Build 026.4's **Restore Standard Fields** action derives its draft selection from the current registry-defined Standard tier, so changes to `visibilityTier` automatically flow into future restores and displayed Standard counts.
 
 ## 1. Authority and evidence
 

@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 025.3
+ * Build: 026.3
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0252";
 import { normalizePregameData } from "./normalize.js?v=0252";
 import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=023";
-import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=0253";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0253";
+import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=0261";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0261";
 import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
 import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=0253";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0192";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0261";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout as persistLayout, savePdfTemplate, setSetting
@@ -33,6 +33,10 @@ const state = {
   layouts: [],
   selectedLayoutId: null,
   pendingLayoutPdf: null,
+  layoutFieldDraft: new Set(),
+  layoutFieldDraftSaved: new Set(),
+  layoutReplacementPdf: null,
+  createFieldDraft: new Set(),
   designerPdfDocument: null,
   designerPageNumber: 1,
   designerPlacing: false,
@@ -241,6 +245,8 @@ const elements = {
   designerPdfCanvas: document.querySelector("#designer-pdf-canvas"),
   designerOverlay: document.querySelector("#designer-overlay"),
   designerPaletteEditButton: document.querySelector("#designer-palette-edit-btn"),
+  designerCollapseAllTop: document.querySelector("#designer-collapse-all-top"),
+  designerCollapseAllBottom: document.querySelector("#designer-collapse-all-bottom"),
   designerPaletteChooser: document.querySelector("#designer-palette-chooser"),
   designerPaletteSearch: document.querySelector("#designer-palette-search"),
   designerPaletteFilter: document.querySelector("#designer-palette-filter"),
@@ -277,6 +283,34 @@ const elements = {
   layoutFormattingGrid: document.querySelector("#layout-formatting-grid"),
   layoutFormattingSaveButton: document.querySelector("#layout-formatting-save-btn"),
   layoutFormattingResetButton: document.querySelector("#layout-formatting-reset-btn"),
+  layoutFieldModeCreate: document.querySelector("#layout-field-mode-create"),
+  layoutSettingsMain: document.querySelector("#layout-settings-main"),
+  layoutSettingsName: document.querySelector("#layout-settings-name"),
+  layoutSettingsDescription: document.querySelector("#layout-settings-description"),
+  layoutSettingsPdfSummary: document.querySelector("#layout-settings-pdf-summary"),
+  layoutSettingsPdfInput: document.querySelector("#layout-settings-pdf-input"),
+  layoutSettingsPdfMessage: document.querySelector("#layout-settings-pdf-message"),
+  layoutPdfErrorDialog: document.querySelector("#layout-pdf-error-dialog"),
+  layoutPdfErrorMessage: document.querySelector("#layout-pdf-error-message"),
+  layoutFieldTotalCount: document.querySelector("#layout-field-total-count"),
+  layoutFieldStandardCount: document.querySelector("#layout-field-standard-count"),
+  layoutCustomFieldsOpen: document.querySelector("#layout-custom-fields-open"),
+  layoutCustomFieldsSave: document.querySelector("#layout-custom-fields-save"),
+  layoutCustomFieldsCancel: document.querySelector("#layout-custom-fields-cancel"),
+  layoutCustomFieldsClose: document.querySelector("#layout-custom-fields-close"),
+  layoutCustomFieldsRestoreStandard: document.querySelector("#layout-custom-fields-restore-standard"),
+  layoutCustomDiscardDialog: document.querySelector("#layout-custom-discard-dialog"),
+  layoutCustomDiscardConfirm: document.querySelector("#layout-custom-discard-confirm"),
+  layoutCustomFieldCount: document.querySelector("#layout-custom-field-count"),
+  layoutFormattingToggle: document.querySelector("#layout-formatting-toggle"),
+  layoutFormattingPanel: document.querySelector("#layout-formatting-panel"),
+  layoutCustomFields: document.querySelector("#layout-custom-fields"),
+  layoutFieldSearch: document.querySelector("#layout-field-search"),
+  layoutCustomFieldList: document.querySelector("#layout-custom-field-list"),
+  layoutFieldCount: document.querySelector("#layout-field-count"),
+  layoutCreateCustomFields: document.querySelector("#layout-create-custom-fields"),
+  layoutCreateFieldSearch: document.querySelector("#layout-create-field-search"),
+  layoutCreateFieldList: document.querySelector("#layout-create-field-list"),
   designerSelectionNameFormatWrap: document.querySelector("#designer-selection-name-format-wrap"),
   designerSelectionNameFormat: document.querySelector("#designer-selection-name-format"),
   designerSelectionTemplateWrap: document.querySelector("#designer-selection-template-wrap"),
@@ -345,6 +379,10 @@ async function initialize() {
   });
   elements.layoutPdfInput.addEventListener("change", handleLayoutPdfSelection);
   elements.createLayoutButton.addEventListener("click", createLayout);
+state.createFieldDraft = new Set(standardDesignerFieldIds());
+for (const input of elements.layoutFieldModeCreate?.querySelectorAll('input[name="layout-field-mode"]') || []) input.addEventListener("change", syncCreateFieldMode);
+elements.layoutCreateFieldList?.addEventListener("change", (event) => { const input = event.target; if (!input?.matches?.("input[data-create-field-id]")) return; if (input.checked) state.createFieldDraft.add(input.value); else state.createFieldDraft.delete(input.value); });
+elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLayoutFieldPicker(elements.layoutCreateFieldSearch.value));
   elements.saveLayoutMetadataButton.addEventListener("click", saveSelectedLayoutMetadata);
   elements.duplicateLayoutButton.addEventListener("click", duplicateSelectedLayout);
   elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
@@ -395,6 +433,9 @@ async function initialize() {
   elements.designerStage.addEventListener("pointermove", updateDesignerPasteGhost);
   elements.designerStage.addEventListener("pointerleave", hideDesignerPasteGhost);
   if (elements.designerPaletteEditButton) elements.designerPaletteEditButton.addEventListener("click", toggleDesignerPaletteChooser);
+  elements.designerCollapseAllTop?.addEventListener("click", collapseDesignerPaletteAll);
+  elements.designerCollapseAllBottom?.addEventListener("click", collapseDesignerPaletteAll);
+  elements.designerCollapseAllTop?.closest(".designer-palette")?.addEventListener("scroll", updateDesignerBottomCollapseVisibility, { passive: true });
   elements.designerPaletteSearch?.addEventListener("input", renderDesignerPalette);
   elements.designerPaletteFilter?.addEventListener("change", renderDesignerPalette);
   elements.designerUndoButton?.addEventListener("click", undoDesignerChange);
@@ -427,6 +468,32 @@ async function initialize() {
   document.querySelectorAll("[data-multi-align]").forEach((button) => button.addEventListener("click", () => alignDesignerMultiSelection(button.dataset.multiAlign)));
   elements.layoutFormattingSaveButton?.addEventListener("click", saveLayoutFormattingDefaults);
   elements.layoutFormattingResetButton?.addEventListener("click", resetLayoutFormattingDefaults);
+elements.layoutCustomFieldList?.addEventListener("change", (event) => {
+  const input = event.target; if (!input?.matches?.("input[data-field-id]")) return;
+  if (input.checked) state.layoutFieldDraft.add(input.value); else state.layoutFieldDraft.delete(input.value);
+  updateLayoutFieldPickerGroupCounts();
+  syncLayoutFieldSettingsUI();
+});
+elements.layoutCustomFieldList?.addEventListener("click", (event) => {
+  const button = event.target?.closest?.("button[data-picker-action]");
+  if (!button) return;
+  // Bulk actions intentionally apply only to fields exposed by the current search.
+  // With no search active, visible IDs equal the complete card.
+  const ids = String(button.dataset.visibleFieldIds || button.dataset.fieldIds || "").split(",").filter(Boolean);
+  if (button.dataset.pickerAction === "select") ids.forEach((id) => state.layoutFieldDraft.add(id));
+  else ids.forEach((id) => state.layoutFieldDraft.delete(id));
+  renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || "");
+  syncLayoutFieldSettingsUI();
+});
+elements.layoutFieldSearch?.addEventListener("input", () => { renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch.value); syncLayoutFieldSettingsUI(); });
+  elements.layoutCustomFieldsOpen?.addEventListener("click", openCustomFieldSelector);
+  elements.layoutCustomFieldsSave?.addEventListener("click", saveCustomFieldSelectorDraft);
+  elements.layoutCustomFieldsCancel?.addEventListener("click", cancelCustomFieldSelector);
+  elements.layoutCustomFieldsClose?.addEventListener("click", requestCloseCustomFieldSelector);
+  elements.layoutCustomFieldsRestoreStandard?.addEventListener("click", restoreStandardCustomFieldDraft);
+  elements.layoutCustomDiscardConfirm?.addEventListener("click", () => { elements.layoutCustomDiscardDialog?.close(); cancelCustomFieldSelector(); });
+  elements.layoutFormattingToggle?.addEventListener("click", toggleLayoutFormattingPanel);
+  elements.layoutSettingsPdfInput?.addEventListener("change", handleLayoutReplacementPdf);
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
   elements.designerSelectionTemplate?.addEventListener("input", updateDesignerSelectionTemplatePreview);
   elements.designerSelectionTemplateInsertButton?.addEventListener("click", insertDesignerSelectionTemplateField);
@@ -1439,6 +1506,8 @@ async function createLayout() {
       mappings: [],
       designerPaletteGroups: [],
       designerPaletteConfigured: false,
+      paletteMode: elements.layoutFieldModeCreate?.querySelector('input[name="layout-field-mode"]:checked')?.value === "custom" ? "custom" : "standard",
+      enabledFieldIds: elements.layoutFieldModeCreate?.querySelector('input[name="layout-field-mode"]:checked')?.value === "custom" ? Array.from(state.createFieldDraft.size ? state.createFieldDraft : new Set(standardDesignerFieldIds())) : [],
       formattingDefaults: appFormattingDefaults(),
       conditionalFormatting: appConditionalFormattingDefaults(),
       name,
@@ -1455,6 +1524,11 @@ async function createLayout() {
     elements.layoutPdfInput.value = "";
     elements.layoutPdfSummary.textContent = "No PDF selected.";
     state.pendingLayoutPdf = null;
+    const standardRadio = elements.layoutFieldModeCreate?.querySelector('input[name="layout-field-mode"][value="standard"]');
+    if (standardRadio) standardRadio.checked = true;
+    state.createFieldDraft = new Set(standardDesignerFieldIds());
+    if (elements.layoutCreateFieldSearch) elements.layoutCreateFieldSearch.value = "";
+    if (elements.layoutCreateCustomFields) elements.layoutCreateCustomFields.hidden = true;
     await refreshLayouts();
     await openLayout(id);
     setLayoutMessage(`Created ${layout.name}.`);
@@ -1748,7 +1822,7 @@ function populateDesignerTemplateFieldSelect(context = null) {
   elements.designerTemplateField.append(placeholder);
   const groups = new Map();
   const activeGroups = activeDesignerPaletteGroups();
-  const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
+  const definitions = (context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" })).filter((definition) => designerFieldEnabled(definition));
   for (const definition of definitions) {
     if (selectedLayout() && !activeGroups.has(designerPaletteGroupForField(definition))) continue;
     if (!groups.has(definition.category)) groups.set(definition.category, []);
@@ -2021,7 +2095,7 @@ function populateDesignerIndividualFieldSelect() {
   const collection = elements.designerIndividualCollection.value || "away.lineup";
   const previous = elements.designerIndividualField.value;
   elements.designerIndividualField.replaceChildren();
-  for (const definition of getCatalogFields({ cardinality: "repeated", collection })) {
+  for (const definition of getCatalogFields({ cardinality: "repeated", collection }).filter((definition) => designerFieldAllowed(definition))) {
     const option = document.createElement("option");
     option.value = definition.id;
     option.textContent = definition.label.replace(/^(Away|Home) (Lineup|Bench|Bullpen) — /, "").replace(/^Umpire Crew — /, "");
@@ -2802,13 +2876,15 @@ function populateDesignerColumnFieldSelect() {
   templatePlaceholder.textContent = "Choose text field to insert…";
   elements.designerColumnTemplateField.append(templatePlaceholder);
 
-  for (const definition of fieldsForRecordContext(context, { catalogOnly: true })) {
+  for (const definition of designerFieldsForContext(context, { catalogOnly: true })) {
     const option = document.createElement("option");
     option.value = definition.id;
     option.textContent = slotFieldShortLabel(definition);
     elements.designerColumnField.append(option);
-    const templateOption = option.cloneNode(true);
-    elements.designerColumnTemplateField.append(templateOption);
+    if (designerFieldEnabled(definition)) {
+      const templateOption = option.cloneNode(true);
+      elements.designerColumnTemplateField.append(templateOption);
+    }
   }
   if (previous && Array.from(elements.designerColumnField.options).some((option) => option.value === previous)) elements.designerColumnField.value = previous;
   if (previousTemplate && Array.from(elements.designerColumnTemplateField.options).some((option) => option.value === previousTemplate)) elements.designerColumnTemplateField.value = previousTemplate;
@@ -2904,6 +2980,7 @@ function syncDesignerBlockControls() {
   const block = selectedDesignerBlock();
   const disabled = !block;
   elements.designerPlaceRowsButton.disabled = disabled;
+  elements.designerPlaceRowsButton.hidden = !block?.geometry;
   elements.designerPlaceColumnButton.disabled = disabled;
   elements.designerDeleteBlockButton.disabled = disabled;
   elements.designerDeleteBlockButton.textContent = block && isRecordBlock(block) ? "Delete Record Layout" : "Delete Repeated Layout";
@@ -3133,7 +3210,7 @@ function populateDesignerFieldSelect(context = null) {
   elements.designerFieldSelect.replaceChildren();
   const activeGroups = activeDesignerPaletteGroups();
   const groups = new Map();
-  const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
+  const definitions = (context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" })).filter((definition) => designerFieldAllowed(definition));
   for (const definition of definitions) {
     const paletteGroup = designerPaletteGroupForField(definition);
     if (!activeGroups.has(paletteGroup)) continue;
@@ -3155,6 +3232,55 @@ function populateDesignerFieldSelect(context = null) {
   syncDesignerSingleNameFormatControl();
 }
 
+
+const LEGACY_UMPIRE_SCALAR_PREFIXES = [
+  "game.umpires.home.", "game.umpires.first.", "game.umpires.second.", "game.umpires.third."
+];
+
+function isLegacyUmpireScalarField(definition) {
+  const id = String(definition?.id || "");
+  return LEGACY_UMPIRE_SCALAR_PREFIXES.some((prefix) => id.startsWith(prefix));
+}
+
+function standardDesignerFieldIds() {
+  return getCatalogFields().filter((definition) => definition.visibilityTier === "standard" && !isLegacyUmpireScalarField(definition)).map((definition) => definition.id);
+}
+
+function layoutPaletteMode(layout = selectedLayout()) {
+  if (!layout) return "standard";
+  if (layout.paletteMode === "standard" || layout.paletteMode === "custom") return layout.paletteMode;
+  return "legacy";
+}
+
+function enabledDesignerFieldIds(layout = selectedLayout()) {
+  const mode = layoutPaletteMode(layout);
+  if (mode === "legacy") return new Set(getCatalogFields().filter((definition) => !isLegacyUmpireScalarField(definition)).map((definition) => definition.id));
+  if (mode === "standard") return new Set(standardDesignerFieldIds());
+  const saved = Array.isArray(layout?.enabledFieldIds) ? layout.enabledFieldIds : standardDesignerFieldIds();
+  return new Set(saved);
+}
+
+function designerFieldEnabled(definition, layout = selectedLayout()) {
+  return Boolean(definition) && !isLegacyUmpireScalarField(definition) && enabledDesignerFieldIds(layout).has(definition.id);
+}
+
+function layoutUsedFieldIds(layout = selectedLayout()) {
+  const used = new Set();
+  if (!layout) return used;
+  for (const mapping of layout.mappings || []) { if (mapping.field) used.add(mapping.field); for (const id of slotContentFieldIds(mapping.content)) used.add(id); }
+  for (const block of layout.repeatedBlocks || []) for (const column of block.columns || []) { if (column.field) used.add(column.field); for (const id of slotContentFieldIds(column.content)) used.add(id); }
+  for (const mapping of layout.individualMappings || []) { if (mapping.field) used.add(mapping.field); for (const id of slotContentFieldIds(mapping.content)) used.add(id); }
+  return used;
+}
+
+function designerFieldAllowed(definition, layout = selectedLayout()) {
+  if (!definition || isLegacyUmpireScalarField(definition)) return false;
+  return enabledDesignerFieldIds(layout).has(definition.id) || layoutUsedFieldIds(layout).has(definition.id);
+}
+
+function designerFieldsForContext(context, options = {}) {
+  return fieldsForRecordContext(context, options).filter((definition) => designerFieldAllowed(definition));
+}
 
 const DESIGNER_PALETTE_GROUPS = [
   { id: "game", label: "Game Information" },
@@ -3202,23 +3328,27 @@ function renderDesignerPaletteChooser() {
 function designerPaletteItems() {
   const items = [];
   for (const definition of getCatalogFields({ cardinality: "single" })) {
-    if (definition.record) continue;
+    if (!designerFieldAllowed(definition)) continue;
+    if (definition.record || String(definition.id).includes("startingPitcher")) continue;
     const groupId = designerPaletteGroupForField(definition);
     let label = definition.label;
-    if ((groupId === "away-players" || groupId === "home-players") && String(definition.id).includes("startingPitcher")) label = "Starting Pitcher";
+    if (String(definition.id).endsWith("manager.name")) label = "Manager";
     items.push({ kind: "field", id: definition.id, groupId, label, description: definition.description, exampleValue: definition.exampleValue });
   }
-  items.push(
-    { kind: "record", id: "away.startingPitcher", groupId: "away-players", label: "Starting Pitcher", fields: fieldsForRecordContext("away.startingPitcher", { catalogOnly: true }) },
-    { kind: "record", id: "home.startingPitcher", groupId: "home-players", label: "Starting Pitcher", fields: fieldsForRecordContext("home.startingPitcher", { catalogOnly: true }) }
-  );
+  for (const [id, groupId] of [["away.startingPitcher","away-players"],["home.startingPitcher","home-players"]]) {
+    const fields = designerFieldsForContext(id, { catalogOnly: true });
+    if (fields.length || designerDirectInstancesForItem({ kind: "record", id }).length) items.push({ kind: "record", id, groupId, label: "Starting Pitcher", fields });
+  }
   const collections = [
     ["away.lineup", "Starting Lineup", "away-players"], ["home.lineup", "Starting Lineup", "home-players"],
     ["away.bench", "Bench", "away-players"], ["home.bench", "Bench", "home-players"],
     ["away.bullpen", "Bullpen", "away-players"], ["home.bullpen", "Bullpen", "home-players"],
     ["game.umpires.crew", "Umpire Crew", "game"]
   ];
-  for (const [collection, label, groupId] of collections) items.push({ kind: "collection", id: collection, groupId, label });
+  for (const [collection, label, groupId] of collections) {
+    const hasFields = getCatalogFields({ cardinality: "repeated", collection }).some((definition) => designerFieldAllowed(definition));
+    if (hasFields || designerDirectInstancesForItem({ kind: "collection", id: collection }).length) items.push({ kind: "collection", id: collection, groupId, label });
+  }
   items.push({ kind: "custom", id: "custom", groupId: "custom", label: "Text Template" });
   return items;
 }
@@ -3287,17 +3417,34 @@ function renderDesignerPalette() {
   const query = String(elements.designerPaletteSearch?.value || "").trim().toLowerCase();
   const filter = elements.designerPaletteFilter?.value || "all";
   const allItems = designerPaletteItems();
-  const usedCount = allItems.filter((item) => designerInstancesForItem(item, layout).length > 0).length;
+  const dataItems = allItems.filter((item) => item.kind !== "custom");
+  const usedCount = dataItems.filter((item) => designerInstancesForItem(item, layout).length > 0).length;
   const visible = allItems.filter((item) => {
     const instances = designerInstancesForItem(item, layout);
     if (filter === "used" && !instances.length) return false;
     if (query && !`${item.label} ${paletteGroupLabel(item.groupId)}`.toLowerCase().includes(query)) return false;
     return true;
   });
-  elements.designerUnplacedCount.textContent = `${visible.length}`;
+  elements.designerUnplacedCount.textContent = `${visible.filter((item) => item.kind !== "custom").length}`;
   elements.designerPlacedCount.textContent = `${usedCount}`;
   elements.designerPlacedList?.replaceChildren();
   renderDesignerPaletteCategories(elements.designerUnplacedList, visible);
+  requestAnimationFrame(updateDesignerBottomCollapseVisibility);
+}
+
+function collapseDesignerPaletteAll() {
+  state.designerPaletteExpanded.clear();
+  for (const details of elements.designerUnplacedList?.querySelectorAll("details") || []) details.open = false;
+}
+
+function updateDesignerBottomCollapseVisibility() {
+  const top = elements.designerCollapseAllTop;
+  const bottom = elements.designerCollapseAllBottom;
+  const scroller = top?.closest(".designer-palette");
+  if (!top || !bottom || !scroller) return;
+  const topRect = top.getBoundingClientRect();
+  const scrollerRect = scroller.getBoundingClientRect();
+  bottom.closest(".designer-palette-actions-bottom").hidden = topRect.bottom > scrollerRect.top && topRect.top < scrollerRect.bottom;
 }
 
 function renderDesignerPaletteCategories(container, items) {
@@ -3320,11 +3467,16 @@ function renderDesignerPaletteCategories(container, items) {
     details.open = forcedOpen || state.designerPaletteExpanded.has(group.id) || hasSelected;
     details.addEventListener("toggle", () => {
       if (forcedOpen) return;
-      if (details.open) state.designerPaletteExpanded.add(group.id); else state.designerPaletteExpanded.delete(group.id);
+      if (details.open) {
+        state.designerPaletteExpanded.clear();
+        state.designerPaletteExpanded.add(group.id);
+        for (const sibling of container.querySelectorAll(".designer-palette-category")) if (sibling !== details) sibling.open = false;
+      } else state.designerPaletteExpanded.delete(group.id);
     });
     const summary = document.createElement("summary");
     const usedInGroup = groupItems.filter((item) => designerInstancesForItem(item).length).length;
-    summary.innerHTML = `<strong>${group.label}</strong><span>${usedInGroup ? `${usedInGroup} used` : `${groupItems.length} available`}</span>`;
+    const groupStatus = group.id === "custom" ? "" : (usedInGroup ? `${usedInGroup} used` : `${groupItems.length} available`);
+    summary.innerHTML = `<strong>${group.label}</strong>${groupStatus ? `<span>${groupStatus}</span>` : ""}`;
     details.append(summary);
     const body = document.createElement("div"); body.className = "designer-palette-category-body";
     for (const item of groupItems) body.append(renderDesignerPaletteItem(item));
@@ -3343,7 +3495,7 @@ function renderDesignerPaletteItem(item) {
   const check = document.createElement("span"); check.className = "designer-palette-status-icon"; check.textContent = instances.length ? "✓" : "";
   const label = document.createElement("span"); label.className = "designer-palette-item-label"; label.textContent = item.label;
   const status = document.createElement("small");
-  status.textContent = directInstances.length ? `${directInstances.length} instance${directInstances.length === 1 ? "" : "s"}` : (references.length ? "Used in template" : "Available");
+  status.textContent = directInstances.length ? `${directInstances.length} instance${directInstances.length === 1 ? "" : "s"}` : (references.length ? "Used in template" : (item.kind === "custom" ? "" : "Available"));
   button.replaceChildren(check, label, status);
   if (item.description) button.title = item.exampleValue ? `${item.description} Example: ${item.exampleValue}` : item.description;
   button.addEventListener("click", () => activateDesignerPaletteItem(item, directInstances.length > 0));
@@ -3394,7 +3546,16 @@ function renderDesignerPaletteItem(item) {
     if (references.length) {
       const ref = document.createElement("div"); ref.className = "designer-instance-reference"; ref.textContent = references.length === 1 ? "Referenced by a Text Template" : `Referenced by ${references.length} Text Templates`; children.append(ref);
     }
-    group.append(children);
+    if (item.kind !== "record") {
+      const details = document.createElement("details"); details.className = "designer-palette-item-details";
+      details.open = selected;
+      const summary = document.createElement("summary"); summary.className = button.className; summary.replaceChildren(check, label, status);
+      summary.addEventListener("click", (event) => { if (!details.open) { event.preventDefault(); details.open = true; activateDesignerPaletteItem(item, true); } });
+      button.remove(); details.append(summary, children); group.append(details);
+    } else {
+      const recordDetails = group.querySelector("details.designer-record-fields");
+      if (recordDetails) recordDetails.append(children); else group.append(children);
+    }
   }
   return group;
 }
@@ -3835,7 +3996,6 @@ function renderPendingDesignerCreation(pending, pendingMode) {
       add("Single Item", "Place this value directly on the scorecard.", "single");
       add("Text Template", "Combine this value with labels or other fields.", "template");
     } else if (pending.kind === "record") {
-      add("Single Item", "Place one record attribute directly.", "single");
       add("Text Template", "Combine attributes from this record.", "template");
       add("Record Layout", "Arrange several attributes in one one-record slot.", "record");
     } else if (pending.kind === "collection") {
@@ -4109,7 +4269,7 @@ function populateDesignerSelectionTemplateFieldSelect() {
   select.append(placeholder);
   const selected = locateDesignerObject();
   const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
-  const definitions = context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" });
+  const definitions = (context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" })).filter((definition) => designerFieldEnabled(definition));
   for (const definition of definitions) {
     const option = document.createElement("option");
     option.value = definition.id;
@@ -4420,6 +4580,195 @@ function renderColorPicker(container, value, onChange) {
   panel.append(swatches, custom, native); details.append(summary, panel); container.append(details);
 }
 
+function renderCreateLayoutFieldPicker(query = "") {
+  if (!elements.layoutCreateFieldList) return;
+  const q = String(query || "").trim().toLowerCase();
+  elements.layoutCreateFieldList.replaceChildren();
+  const groups = new Map();
+  for (const definition of getCatalogFields().filter((definition) => !isLegacyUmpireScalarField(definition))) {
+    const haystack = `${definition.label} ${definition.category} ${definition.description || ""} ${definition.exampleValue || ""}`.toLowerCase();
+    if (q && !haystack.includes(q)) continue;
+    if (!groups.has(definition.category)) groups.set(definition.category, []);
+    groups.get(definition.category).push(definition);
+  }
+  for (const [category, definitions] of groups) {
+    const section = document.createElement("section"); section.className = "layout-field-picker-group";
+    const heading = document.createElement("h5"); heading.textContent = category; section.append(heading);
+    for (const definition of definitions) {
+      const label = document.createElement("label"); label.className = "layout-field-picker-item";
+      const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = definition.id; checkbox.dataset.createFieldId = definition.id; checkbox.checked = state.createFieldDraft.has(definition.id);
+      const copy = document.createElement("span"); const title = document.createElement("strong"); title.textContent = fieldPickerLabel(definition);
+      const meta = document.createElement("small"); meta.textContent = definition.exampleValue ? `Example: ${definition.exampleValue}` : definition.description || "";
+      copy.append(title, meta); label.append(checkbox, copy); section.append(label);
+    }
+    elements.layoutCreateFieldList.append(section);
+  }
+}
+
+function syncCreateFieldMode() {
+  const mode = elements.layoutFieldModeCreate?.querySelector('input[name="layout-field-mode"]:checked')?.value || "standard";
+  if (!state.createFieldDraft.size) state.createFieldDraft = new Set(standardDesignerFieldIds());
+  if (elements.layoutCreateCustomFields) elements.layoutCreateCustomFields.hidden = mode !== "custom";
+  if (mode === "custom" && !elements.layoutCreateFieldList?.children.length) renderCreateLayoutFieldPicker(elements.layoutCreateFieldSearch?.value || "");
+}
+
+function layoutSettingsMode(layout = selectedLayout()) { const mode = layoutPaletteMode(layout); return mode === "legacy" ? "custom" : mode; }
+function layoutSettingsSelectedIds(layout = selectedLayout()) {
+  if (!layout) return new Set(standardDesignerFieldIds());
+  if (layoutPaletteMode(layout) === "legacy") return new Set(getCatalogFields().filter((definition) => !isLegacyUmpireScalarField(definition)).map((definition) => definition.id));
+  return enabledDesignerFieldIds(layout);
+}
+function fieldPickerLabel(definition) { return definition.label.replace(/^(Away|Home) /, ""); }
+
+const LAYOUT_FIELD_PICKER_GROUPS = [
+  { key: "game", label: "Game", categories: ["Game", "Game / Weather"] },
+  { key: "venue", label: "Game / Venue", categories: ["Game / Venue"] },
+  { key: "away-team", label: "Away / Team", categories: ["Away / Team"] },
+  { key: "home-team", label: "Home / Team", categories: ["Home / Team"] },
+  { key: "away-record", label: "Away / Record", categories: ["Away / Record"] },
+  { key: "home-record", label: "Home / Record", categories: ["Home / Record"] },
+  { key: "away-standings", label: "Away / Standings", categories: ["Away / Standings"] },
+  { key: "home-standings", label: "Home / Standings", categories: ["Home / Standings"] },
+  { key: "away-personnel", label: "Away / Personnel", categories: ["Away / Personnel"] },
+  { key: "home-personnel", label: "Home / Personnel", categories: ["Home / Personnel"] },
+  { key: "away-starting-pitcher", label: "Away / Starting Pitcher", categories: ["Away / Starting Pitcher"] },
+  { key: "home-starting-pitcher", label: "Home / Starting Pitcher", categories: ["Home / Starting Pitcher"] },
+  { key: "away-lineup", label: "Away / Starting Lineup", categories: ["Away / Starting Lineup"] },
+  { key: "home-lineup", label: "Home / Starting Lineup", categories: ["Home / Starting Lineup"] },
+  { key: "away-bench", label: "Away / Bench", categories: ["Away / Bench"] },
+  { key: "home-bench", label: "Home / Bench", categories: ["Home / Bench"] },
+  { key: "away-bullpen", label: "Away / Bullpen", categories: ["Away / Bullpen"] },
+  { key: "home-bullpen", label: "Home / Bullpen", categories: ["Home / Bullpen"] },
+  { key: "umpires", label: "Game / Umpires", categories: ["Game / Umpires"], fullWidth: true }
+];
+
+function customPickerFieldDefinitions() {
+  return getCatalogFields().filter((definition) => !isLegacyUmpireScalarField(definition));
+}
+
+function layoutFieldPickerGroupDefinitions(group) {
+  const categories = new Set(group.categories);
+  return customPickerFieldDefinitions().filter((definition) => categories.has(definition.category));
+}
+
+function updateLayoutFieldPickerGroupCounts() {
+  for (const section of elements.layoutCustomFieldList?.querySelectorAll(".layout-field-picker-group[data-field-ids]") || []) {
+    const ids = String(section.dataset.fieldIds || "").split(",").filter(Boolean);
+    const selectedCount = ids.filter((id) => state.layoutFieldDraft.has(id)).length;
+    const count = section.querySelector("[data-picker-count]");
+    if (count) count.textContent = `${selectedCount} of ${ids.length} selected`;
+    const selectAll = section.querySelector('[data-picker-action="select"]');
+    const deselectAll = section.querySelector('[data-picker-action="deselect"]');
+    const visibleIds = String(selectAll?.dataset.visibleFieldIds || "").split(",").filter(Boolean);
+    const actionableIds = visibleIds.length ? visibleIds : ids;
+    const visibleSelectedCount = actionableIds.filter((id) => state.layoutFieldDraft.has(id)).length;
+    if (selectAll) selectAll.disabled = actionableIds.length > 0 && visibleSelectedCount === actionableIds.length;
+    if (deselectAll) deselectAll.disabled = visibleSelectedCount === 0;
+  }
+}
+
+function renderLayoutFieldPicker(selected = state.layoutFieldDraft, query = "") {
+  if (!elements.layoutCustomFieldList) return;
+  const q = String(query || "").trim().toLowerCase();
+  elements.layoutCustomFieldList.replaceChildren();
+  for (const group of LAYOUT_FIELD_PICKER_GROUPS) {
+    const allDefinitions = layoutFieldPickerGroupDefinitions(group);
+    const definitions = allDefinitions.filter((definition) => {
+      const haystack = `${definition.label} ${definition.category} ${definition.description || ""} ${definition.exampleValue || ""}`.toLowerCase();
+      return !q || haystack.includes(q);
+    });
+    if (!definitions.length) continue;
+    const section = document.createElement("section");
+    section.className = `layout-field-picker-group${group.fullWidth ? " full-width" : ""}`;
+    section.dataset.groupKey = group.key;
+    section.dataset.fieldIds = allDefinitions.map((definition) => definition.id).join(",");
+
+    const heading = document.createElement("div"); heading.className = "layout-field-picker-heading";
+    const headingCopy = document.createElement("div");
+    const title = document.createElement("h5"); title.textContent = group.label;
+    const count = document.createElement("small"); count.dataset.pickerCount = "";
+    headingCopy.append(title, count);
+    const actions = document.createElement("div"); actions.className = "layout-field-picker-actions";
+    const selectAll = document.createElement("button"); selectAll.type = "button"; selectAll.className = "link-button"; selectAll.textContent = "Select All"; selectAll.dataset.pickerAction = "select";
+    const deselectAll = document.createElement("button"); deselectAll.type = "button"; deselectAll.className = "link-button"; deselectAll.textContent = "Deselect All"; deselectAll.dataset.pickerAction = "deselect";
+    const fieldIds = allDefinitions.map((definition) => definition.id).join(",");
+    const visibleFieldIds = definitions.map((definition) => definition.id).join(",");
+    selectAll.dataset.fieldIds = fieldIds; deselectAll.dataset.fieldIds = fieldIds;
+    selectAll.dataset.visibleFieldIds = visibleFieldIds; deselectAll.dataset.visibleFieldIds = visibleFieldIds;
+    actions.append(selectAll, deselectAll); heading.append(headingCopy, actions); section.append(heading);
+
+    for (const definition of definitions) {
+      const label = document.createElement("label"); label.className = "layout-field-picker-item";
+      const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = definition.id; checkbox.dataset.fieldId = definition.id; checkbox.checked = selected.has(definition.id);
+      const copy = document.createElement("span"); const itemTitle = document.createElement("strong"); itemTitle.textContent = fieldPickerLabel(definition);
+      const meta = document.createElement("small"); meta.textContent = definition.exampleValue ? `Example: ${definition.exampleValue}` : definition.description || "";
+      copy.append(itemTitle, meta); label.append(checkbox, copy); section.append(label);
+    }
+    elements.layoutCustomFieldList.append(section);
+  }
+  updateLayoutFieldPickerGroupCounts();
+}
+function fieldSelectionIsStandard(selected) {
+  const standard = new Set(standardDesignerFieldIds());
+  return selected.size === standard.size && Array.from(selected).every((id) => standard.has(id));
+}
+function syncLayoutFieldSettingsUI() {
+  const selected = state.layoutFieldDraftSaved;
+  const standard = fieldSelectionIsStandard(selected);
+  const totalCount = customPickerFieldDefinitions().length;
+  const standardCount = standardDesignerFieldIds().length;
+  if (elements.layoutFieldTotalCount) elements.layoutFieldTotalCount.textContent = String(totalCount);
+  if (elements.layoutFieldStandardCount) elements.layoutFieldStandardCount.textContent = String(standardCount);
+  if (elements.layoutFieldCount) elements.layoutFieldCount.textContent = standard ? "Standard Fields" : `Custom Fields · ${selected.size} selected`;
+  if (elements.layoutCustomFieldCount) elements.layoutCustomFieldCount.textContent = `${state.layoutFieldDraft.size} selected`;
+}
+function populateLayoutFieldSettings(layout = selectedLayout()) {
+  const selected = layoutSettingsSelectedIds(layout);
+  state.layoutFieldDraftSaved = new Set(selected);
+  state.layoutFieldDraft = new Set(selected);
+  if (elements.layoutFieldSearch) elements.layoutFieldSearch.value = "";
+  renderLayoutFieldPicker(state.layoutFieldDraft); syncLayoutFieldSettingsUI();
+}
+function readLayoutFieldSettings() {
+  const selected = new Set(state.layoutFieldDraftSaved);
+  const mode = fieldSelectionIsStandard(selected) ? "standard" : "custom";
+  return { mode, enabledFieldIds: mode === "custom" ? Array.from(selected) : [] };
+}
+function openCustomFieldSelector() {
+  state.layoutFieldDraft = new Set(state.layoutFieldDraftSaved);
+  if (elements.layoutFieldSearch) elements.layoutFieldSearch.value = "";
+  renderLayoutFieldPicker(state.layoutFieldDraft); syncLayoutFieldSettingsUI();
+  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = true;
+  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = false;
+}
+function saveCustomFieldSelectorDraft() {
+  state.layoutFieldDraftSaved = new Set(state.layoutFieldDraft);
+  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = true;
+  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = false;
+  syncLayoutFieldSettingsUI();
+}
+function restoreStandardCustomFieldDraft() {
+  state.layoutFieldDraft = new Set(standardDesignerFieldIds());
+  renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || "");
+  syncLayoutFieldSettingsUI();
+}
+
+function customFieldSelectorIsDirty() {
+  if (state.layoutFieldDraft.size !== state.layoutFieldDraftSaved.size) return true;
+  for (const id of state.layoutFieldDraft) if (!state.layoutFieldDraftSaved.has(id)) return true;
+  return false;
+}
+function requestCloseCustomFieldSelector() {
+  if (!customFieldSelectorIsDirty()) return cancelCustomFieldSelector();
+  elements.layoutCustomDiscardDialog?.showModal();
+}
+function cancelCustomFieldSelector() {
+  state.layoutFieldDraft = new Set(state.layoutFieldDraftSaved);
+  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = true;
+  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = false;
+  syncLayoutFieldSettingsUI();
+}
+
 function createLayoutFormattingRow(group, value) {
   const row = document.createElement("div"); row.className = "layout-formatting-row"; row.dataset.group = group.id;
   const title = document.createElement("strong"); title.textContent = group.label; row.append(title);
@@ -4460,9 +4809,46 @@ function renderLayoutFormattingEditor(values = layoutFormattingDefaults(), condi
 }
 
 function openLayoutFormattingDialog() {
-  if (!selectedLayout()) return setLayoutMessage("Open a layout before changing Layout Settings.", true);
+  const layout = selectedLayout();
+  if (!layout) return setLayoutMessage("Open a layout before changing Layout Settings.", true);
+  populateLayoutFieldSettings(layout);
   renderLayoutFormattingEditor();
+  state.layoutReplacementPdf = null;
+  if (elements.layoutSettingsName) elements.layoutSettingsName.value = layout.name || "";
+  if (elements.layoutSettingsDescription) elements.layoutSettingsDescription.value = layout.description || "";
+  if (elements.layoutSettingsPdfSummary) elements.layoutSettingsPdfSummary.textContent = `${layout.pdfFileName} · ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
+  if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "Replacement PDFs must have the same page count so existing placements remain valid.";
+  if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
+  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = false;
+  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = true;
+  if (elements.layoutFormattingPanel) elements.layoutFormattingPanel.hidden = true;
+  if (elements.layoutFormattingToggle) elements.layoutFormattingToggle.textContent = "Open Formatting Options";
   elements.layoutFormattingDialog?.showModal();
+}
+function toggleLayoutFormattingPanel() {
+  if (!elements.layoutFormattingPanel) return;
+  elements.layoutFormattingPanel.hidden = !elements.layoutFormattingPanel.hidden;
+  if (elements.layoutFormattingToggle) elements.layoutFormattingToggle.textContent = elements.layoutFormattingPanel.hidden ? "Open Formatting Options" : "Close Formatting Options";
+}
+async function handleLayoutReplacementPdf() {
+  const layout = selectedLayout(); const file = elements.layoutSettingsPdfInput?.files?.[0];
+  state.layoutReplacementPdf = null; if (!file || !layout) return;
+  try {
+    const pdf = await loadPdfDocument(file);
+    if (pdf.numPages !== layout.pageCount) {
+      if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
+      if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "Replacement PDFs must have the same page count so existing placements remain valid.";
+      if (elements.layoutPdfErrorMessage) elements.layoutPdfErrorMessage.textContent = `The selected PDF has ${pdf.numPages} page${pdf.numPages === 1 ? "" : "s"}, but this layout requires ${layout.pageCount}.`;
+      elements.layoutPdfErrorDialog?.showModal();
+      return;
+    }
+    state.layoutReplacementPdf = file;
+    if (elements.layoutSettingsPdfSummary) elements.layoutSettingsPdfSummary.textContent = `${file.name} · ${pdf.numPages} page${pdf.numPages === 1 ? "" : "s"} (replacement selected)`;
+    if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "PDF validated. Existing placements will be preserved.";
+  } catch (error) {
+    if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
+    if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = errorMessage(error, "Replacement PDF could not be read.");
+  }
 }
 
 function readLayoutFormattingEditor() {
@@ -4482,12 +4868,21 @@ function readLayoutFormattingEditor() {
 
 async function saveLayoutFormattingDefaults() {
   const layout = selectedLayout(); if (!layout) return;
+  const name = String(elements.layoutSettingsName?.value || "").trim();
+  if (!name) { if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "Layout name cannot be blank."; return; }
   const editor = readLayoutFormattingEditor();
-  layout.formattingDefaults = editor.values;
-  layout.conditionalFormatting = editor.conditional;
-  layout.updatedAt = new Date().toISOString(); await saveLayout(layout);
-  elements.layoutFormattingDialog?.close(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
-  setDesignerMessage("Layout formatting defaults saved.");
+  const fields = readLayoutFieldSettings();
+  layout.name = name; layout.description = String(elements.layoutSettingsDescription?.value || "").trim();
+  layout.paletteMode = fields.mode; layout.enabledFieldIds = fields.enabledFieldIds;
+  layout.formattingDefaults = editor.values; layout.conditionalFormatting = editor.conditional;
+  const replacementPdf = state.layoutReplacementPdf;
+  if (replacementPdf) { await savePdfTemplate(layout.pdfTemplateId, replacementPdf); layout.pdfFileName = replacementPdf.name; }
+  layout.updatedAt = new Date().toISOString(); await saveLayout(layout); await refreshLayouts(); state.selectedLayoutId = layout.id;
+  elements.layoutFormattingDialog?.close(); populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect(); populateDesignerColumnFieldSelect(); populateDesignerIndividualFieldSelect(); renderDesignerPalette(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
+  if (elements.designerLayoutMeta) elements.designerLayoutMeta.textContent = `${layout.name} • ${layout.pdfFileName} • ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
+  if (replacementPdf && state.designerPdfDocument) { const record = await getPdfTemplate(layout.pdfTemplateId); state.designerPdfDocument = await loadPdfDocument(record.blob); await renderDesignerPage(); }
+  state.layoutReplacementPdf = null;
+  setDesignerMessage("Layout settings saved.");
 }
 
 function resetLayoutFormattingDefaults() { renderLayoutFormattingEditor(appFormattingDefaults(), appConditionalFormattingDefaults()); }

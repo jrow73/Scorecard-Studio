@@ -1940,3 +1940,125 @@ body.designer-mode .designer-view > .card,
   .live-pdf-actions label { flex: 1 1 220px; }
   .live-pdf-actions select { width: 100%; max-width: none; }
 }
+
+/* Build 026 — Field Palette & Layout Settings */
+.layout-field-mode-create {
+  margin: .85rem 0 1rem;
+  padding: .75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.layout-field-mode-create legend { padding: 0 .35rem; color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.layout-field-mode-create { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
+.layout-field-mode-create legend { grid-column: 1/-1; }
+.layout-choice-card { display: flex; gap: .65rem; align-items: flex-start; padding: .75rem; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.025); cursor: pointer; }
+.layout-choice-card:has(input:checked) { border-color: rgba(124,199,255,.65); background: rgba(124,199,255,.10); box-shadow: inset 0 0 0 1px rgba(124,199,255,.14); }
+.layout-choice-card input { margin-top: .2rem; }
+.layout-choice-card span { display: grid; gap: .2rem; }
+.layout-choice-card small { color: var(--muted); line-height: 1.35; }
+.layout-settings-dialog { width: min(1120px, 95vw); }
+.layout-settings-card { background: var(--panel); color: var(--text); border: 1px solid var(--line); box-shadow: 0 28px 90px rgba(0,0,0,.55); }
+.layout-settings-section { margin-top: .9rem; padding: .85rem; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.018); }
+.layout-settings-section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .75rem; }
+.layout-settings-section-heading h4 { margin: 0 0 .2rem; }
+.layout-field-mode-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .6rem; }
+.layout-custom-fields { margin-top: .8rem; }
+.layout-custom-search { display: grid; gap: .35rem; color: var(--muted); font-size: 12px; font-weight: 700; }
+.layout-custom-search input { width: 100%; }
+.layout-custom-field-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; margin-top: .7rem; max-height: 42vh; overflow: auto; padding-right: .2rem; }
+.layout-field-picker-group { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: rgba(0,0,0,.08); }
+.layout-field-picker-group h5 { margin: 0; padding: .55rem .7rem; background: rgba(255,255,255,.045); border-bottom: 1px solid var(--line); font-size: 12px; color: var(--accent); }
+.layout-field-picker-item { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: .55rem; padding: .55rem .7rem; border-bottom: 1px solid rgba(255,255,255,.055); cursor: pointer; }
+.layout-field-picker-item:last-child { border-bottom: 0; }
+.layout-field-picker-item:hover { background: rgba(124,199,255,.06); }
+.layout-field-picker-item span { display: grid; gap: .15rem; }
+.layout-field-picker-item strong { font-size: 12px; }
+.layout-field-picker-item small { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.layout-settings-card .layout-formatting-row { border-color: var(--line); background: rgba(0,0,0,.08); }
+.layout-settings-card .layout-conditional-section { background: rgba(0,0,0,.08); }
+.layout-settings-card .layout-conditional-heading { justify-content: space-between; }
+.layout-settings-card .layout-conditional-toggle { padding: .55rem .7rem; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); cursor: pointer; }
+.layout-settings-card .layout-conditional-toggle:has(input:checked) { border-color: rgba(105,211,145,.55); background: rgba(105,211,145,.08); }
+.layout-settings-card .scorecard-color-panel { background: var(--panel-2); color: var(--text); border-color: var(--line); }
+.layout-settings-card .scorecard-color-custom { background: rgba(255,255,255,.05); color: var(--text); border-color: var(--line); }
+@media (max-width: 800px) {
+  .layout-field-mode-create, .layout-field-mode-grid, .layout-custom-field-list { grid-template-columns: 1fr; }
+}
+.layout-create-custom-fields { margin: -.35rem 0 1rem; padding: .75rem; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.08); }
+.layout-custom-field-list.compact { max-height: 330px; }
+
+/* Build 026.1 — Layout Settings workflow and palette cleanup */
+.layout-details-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: .7rem; }
+.layout-details-grid label { display: grid; gap: .3rem; color: var(--muted); font-size: 12px; font-weight: 700; }
+.layout-details-grid input, .layout-details-grid textarea { width: 100%; }
+.layout-pdf-replace-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .8rem; padding-top: .75rem; border-top: 1px solid var(--line); }
+.layout-pdf-replace-row > div { display: grid; gap: .2rem; }
+.layout-pdf-replace-row small { color: var(--muted); }
+#layout-custom-fields .layout-custom-field-list { max-height: none; overflow: visible; grid-template-columns: repeat(2,minmax(0,1fr)); }
+#layout-formatting-panel { margin-top: .8rem; }
+.designer-palette-actions { display: flex; justify-content: flex-end; margin: 0 0 .45rem; }
+.designer-palette-actions-bottom { margin: .55rem 0 0; padding-top: .45rem; border-top: 1px solid var(--line); }
+.designer-palette-item-details { border: 0; }
+.designer-palette-item-details > summary { list-style: none; cursor: pointer; }
+.designer-palette-item-details > summary::-webkit-details-marker { display: none; }
+.designer-palette-item-details > summary::after { content: "▶"; margin-left: 4px; font-size: 9px; color: var(--muted); }
+.designer-palette-item-details[open] > summary::after { content: "▼"; }
+@media (max-width: 800px) { #layout-custom-fields .layout-custom-field-list { grid-template-columns: 1fr; } .layout-pdf-replace-row { align-items: flex-start; flex-direction: column; } }
+
+
+/* Build 026.2 — Custom field picker balance, card controls, and PDF validation */
+.layout-custom-field-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+.layout-field-picker-group { height: 100%; }
+.layout-field-picker-group.full-width { grid-column: 1 / -1; }
+.layout-field-picker-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.layout-field-picker-heading h5 { margin: 0; }
+.layout-field-picker-heading small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.layout-field-picker-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.layout-field-picker-actions .link-button { padding: 0; font-size: 11px; white-space: nowrap; }
+.layout-field-picker-actions .link-button:disabled { opacity: .38; cursor: default; }
+.compact-message-dialog { max-width: 520px; }
+.compact-message-card { width: min(480px, calc(100vw - 32px)); }
+@media (max-width: 820px) {
+  .layout-custom-field-list { grid-template-columns: 1fr; }
+  .layout-field-picker-group.full-width { grid-column: auto; }
+}
+.layout-field-picker-heading h5 { margin: 0; padding: 0; background: transparent; border: 0; }
+.layout-field-picker-actions .link-button { appearance: none; border: 0; background: transparent; color: var(--accent); font-weight: 800; cursor: pointer; }
+.layout-field-picker-actions .link-button:not(:disabled):hover { text-decoration: underline; }
+
+
+/* Build 026.3 — final palette/settings polish */
+#layout-custom-fields { position: relative; }
+.layout-custom-fields-sticky {
+  position: sticky;
+  top: -1rem;
+  z-index: 12;
+  margin: -1rem -1rem .8rem;
+  padding: 1rem 1rem .75rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 10px 18px rgba(0,0,0,.18);
+}
+.layout-custom-fields-heading { align-items: flex-start; }
+.layout-custom-fields-header-actions { display: flex; align-items: center; gap: .5rem; }
+.layout-custom-fields-close {
+  width: 32px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 9px;
+  background: rgba(255,255,255,.04); color: var(--text); font-size: 24px; line-height: 1; cursor: pointer;
+}
+.layout-custom-fields-close:hover { border-color: rgba(124,199,255,.55); background: rgba(124,199,255,.10); }
+.dark-message-dialog .formatting-dialog-card { background: var(--panel); color: var(--text); border: 1px solid var(--line); }
+.dark-message-dialog .subtle { color: var(--muted); }
+.dark-message-dialog::backdrop { background: rgba(0,0,0,.62); }
+.designer-palette-actions-bottom[hidden] { display: none !important; }

@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Shared field formatting
  * Version: 0.2.0-dev
- * Build: 025.3
+ * Build: 026.1
  */
 
 export const PLAYER_NAME_FORMATS = Object.freeze([
@@ -10,7 +10,7 @@ export const PLAYER_NAME_FORMATS = Object.freeze([
   { value: "first-initial-last", label: "First Initial + Last Name" },
   { value: "last", label: "Last Name" },
   { value: "first", label: "First Name" },
-  { value: "use", label: "Use Name + Last Name" },
+  { value: "use", label: "Use Name" },
   { value: "boxscore", label: "Boxscore Name" }
 ]);
 
@@ -41,12 +41,12 @@ function formatPlayerName(player, fallback, nameFormat = "full") {
   if (formatKey === "last") return text(player?.lastName);
   if (formatKey === "first") return text(player?.firstName);
   if (formatKey === "boxscore") return text(player?.boxscoreName);
-  if (formatKey === "use") {
-    const first = text(player?.useName);
-    const last = text(player?.useLastName);
-    return first && last ? `${first} ${last}` : "";
+  if (formatKey === "use") return text(player?.useName);
+  if (formatKey === "first-initial-last") {
+    const first = text(player?.firstName) || text(player?.useName);
+    const last = text(player?.lastName) || text(player?.useLastName);
+    return first && last ? `${first.charAt(0)} ${last}` : text(player?.initLastName).replace(/^(\p{L})\.\s+/u, "$1 ");
   }
-  if (formatKey === "first-initial-last") return text(player?.initLastName);
   return full;
 }
 

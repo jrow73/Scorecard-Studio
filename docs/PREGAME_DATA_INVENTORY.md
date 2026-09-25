@@ -22,9 +22,9 @@ Build 025.2 supersedes earlier assumptions that a completed `/api/v1.1/game/{gam
 Missing data is rendered as blank on the generated scorecard. Diagnostic/warning text belongs in the generation-results UI rather than being printed onto the PDF.
 
 
-**Status:** Post-Build 017 working inventory\
+**Status:** Build 026.4 accepted working inventory\
 **Target milestone:** v0.2.0 --- Complete Field Mapping & Formatting\
-**Current state:** Designer placement architecture and Build 017 are accepted through hotfix Build 017.4. Starting Pitcher record expansion, Record Layout, contextual slot Text Templates, capability-gated Name Format, progressive reveal, and parent/child Inspector scoping are baseline behavior. Remaining v0.2.0 work is tracked in `DESIGNER_COMPLETION_INVENTORY.md`.\
+**Current state:** Builds 018–026 have completed the active field catalog, representative-data coverage, formatting/editing workflow, live-game PDF integration, and per-layout Standard/Custom field-palette/settings workflow. Build 026.4 is the accepted baseline. Remaining v0.2.0 work is Build 027 Text Overflow & Fit Controls followed by Build 028 Designer Completion / Release Review; `DESIGNER_COMPLETION_INVENTORY.md` is authoritative for that runway.\
 **Purpose:** Define the pregame data Scorecard Studio may make available
 to layouts, independent of which MLB API request supplies it.
 
