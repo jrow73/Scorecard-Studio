@@ -33,7 +33,7 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 | Capacity/overflow behavior | Functional | Required / refine | Keep under-capacity normal; improve preview guidance/warnings |
 | Undo/Redo | Complete | Required / done | Build 020 accepted |
 | Generation-result UX | Functional | v1 polish | Separate success from warnings/notices clearly |
-| Full-card regression/acceptance | Pending Build 028 | Required | Final Designer completion/release-review pass |
+| Full-card regression/acceptance | Planned Build 032 | Required | Final v0.2.0 Designer completion/release-review pass after Builds 029-031 |
 | Advanced matchup/research | Deferred | Not v1 Designer scope | Keep in Game Day/future research |
 
 ## Accepted foundation — do not redesign without cause
@@ -127,14 +127,12 @@ Generation already reports conditions such as collection overflow and incomplete
 
 ## Remaining build path to v0.2.0
 
-Build 026.4 is accepted and is the baseline for the remaining v0.2.0 Designer runway. Builds 023–026 are complete.
+Build 028 is accepted through Build 028.20 and is closed. Builds 023–028 are complete. The remaining v0.2.0 work is deliberately split into three focused completion builds plus the final release review.
 
-1. **Build 023 — Representative Data & Test PDF** — deterministic fictional stress-test data; Designer Test PDF uses Representative Data only.
-2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal, Text Template/name-format and blank-value cleanup, compact Inspector/header, toolbar Copy/Paste, delete consistency, helper/footer cleanup.
-3. **Build 025 — Live Game PDF Integration** — narrow A/B integration checkpoint: generate the Home-page selected game's live pregame scorecard from a saved layout using the same drawing path as Designer Test PDF.
-4. **Build 026 — Field Palette & Layout Settings** — dark-theme settings, Standard/Custom field selection, custom field picker, conditional-format toggles, palette cleanup, Umpire Crew consolidation.
-5. **Build 027 — Text Overflow & Fit Controls** — opt-in per-placement maximum width with render-time shrink-to-fit, browser/PDF parity, draggable Designer boundary, and no hard minimum font size.
-6. **Build 028 — Designer Completion / Release Review** — full-card/fresh-layout regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and v0.2.0 release readiness.
+1. **Build 029 — Pregame Data Context & Semantics** — define the exact pregame cutoff for the selected game, including earlier same-day doubleheader games; correct team/player YTD context; display First Pitch in the venue timezone; add Away/Home Team Game Number.
+2. **Build 030 — Layout Settings Workflow** — standardize the parent Layout Settings modal and its Layout Details / Custom Fields / Default Formatting child views using fixed header/footer chrome, scrollable bodies, bottom-right Cancel/Save actions, and consistent unsaved-change handling.
+3. **Build 031 — Text Template Workflow Completion** — finish the generic Text Template palette/creation workflow for v0.2.0, preferably flattening the redundant category/item hierarchy if the palette architecture supports it cleanly.
+4. **Build 032 — v0.2.0 Designer Completion / Release Review** — full fresh-layout/full-scorecard regression, persistence/reload, Representative Test PDF/live PDF comparison, viewport/multi-page checks, documentation reconciliation, and final release readiness. No planned feature expansion.
 
 ## Scope held for later
 
@@ -169,13 +167,16 @@ A final 018.3-05 acceptance cleanup expands representative repeated collections 
 
 Build 024 addresses Text Template blank suppression and Player Name formatting parity, progressive Repeated Layout content creation, role-driven Individual Placement, toolbar Copy/Paste, compact selection actions, helper-text cleanup, delete-path consistency, and removal of persistent Designer footer/status panels. Umpire Crew consolidation remains grouped with Build 025.
 
-Remaining v0.2.0 roadmap: Build 027 Text Overflow & Fit Controls; Build 028 Designer Completion / Release Review.
+Builds 027 and 028 are complete. Remaining v0.2.0 roadmap: Build 029 Pregame Data Context & Semantics; Build 030 Layout Settings Workflow; Build 031 Text Template Workflow Completion; Build 032 v0.2.0 Designer Completion / Release Review.
 
 ## Build 026 — Field Palette & Layout Settings — accepted through Build 026.4
 
 Build 026 closes the field-palette/settings phase of the v0.2.0 Designer runway. The accepted baseline provides registry-driven Standard defaults and persistent Custom field selections; a searchable Custom Field Selector with balanced Away/Home grouping, per-card counts and bulk controls, Restore Standard Fields, sticky close/search controls, and explicit support for zero selected fields; Layout Details editing and same-page-count PDF replacement; collapsed-by-default default-formatting controls; palette accordion/collapse behavior; Team-format Manager placement; Starting Pitcher record cleanup; Text Template filtering against enabled fields without destroying existing tokens; and dynamic field/availability counts.
 
-The remaining Designer work is intentionally narrow:
+Builds 027 and 028 are now accepted. The remaining v0.2.0 Designer work is Build 029 Pregame Data Context & Semantics, Build 030 Layout Settings Workflow, Build 031 Text Template Workflow Completion, and Build 032 final Designer release review.
 
-1. **Build 027 — Text Overflow & Fit Controls** — implementation prepared for acceptance: opt-in maximum width, draggable Designer boundary, and render-time shrink-to-fit with Representative/live independence.
-2. **Build 028 — Designer Completion / Release Review** — perform fresh-layout/full-scorecard regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and v0.2.0 release-readiness review.
+
+## Build 028 final accepted state
+Build 028 is closed through Build 028.20. It completed date-format controls; representative-name review; palette used-state simplification and first-class Defensive Alignment; compact Inspector/Formatting cleanup; Individual Placement progressive reveal; Starting Pitcher workflow/context/conditional-format corrections; Bench/Bullpen forced Repeated Layout workflows; per-instance Bench/Bullpen sorting; Team Information Text Template context retention; stronger modal separation; Inspector action polish; Paste/Zoom popover dismissal; Custom Color interaction fixes; and final Designer toolbar-space cleanup.
+
+The remaining v0.2.0 runway is intentionally outside Build 028: Build 029 data context, Build 030 Layout Settings workflow, Build 031 Text Template workflow completion, and Build 032 release review.

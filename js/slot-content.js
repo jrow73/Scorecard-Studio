@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Shared field/template resolution for repeated and single-record slots
  * Version: 0.2.0-dev
- * Build: 025.3
+ * Build: 028.16
  */
 
 import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js?v=023";
@@ -10,13 +10,22 @@ import { formatFieldValue } from "./formatter.js?v=0253";
 
 export function fieldsForRecordContext(context, options = {}) {
   const value = String(context || "");
-  return getSupportedFields().filter((definition) => (definition.collection === value || definition.record === value) && (!options.catalogOnly || definition.catalog !== false));
+  const teamInfoSide = value === "away.teamInfo" ? "away" : value === "home.teamInfo" ? "home" : null;
+  return getSupportedFields().filter((definition) => {
+    const inContext = teamInfoSide
+      ? (String(definition.id || "").startsWith(`${teamInfoSide}.team.`) || String(definition.id || "").startsWith(`${teamInfoSide}.manager.`)) && definition.cardinality === "single"
+      : (definition.collection === value || definition.record === value);
+    return inContext && (!options.catalogOnly || definition.catalog !== false);
+  });
 }
 
 function contextualTokenLabel(definition) {
   if (!definition) return "";
   return String(definition.label || "")
     .replace(/^(Away|Home) (Lineup|Bench|Bullpen|Starting Pitcher) — /, "")
+    .replace(/^(Away|Home) Team — /, "")
+    .replace(/^(Away|Home) Manager$/, "Manager")
+    .replace(/^(Away|Home) Manager — /, "Manager — ")
     .replace(/^Umpire Crew — /, "");
 }
 

@@ -270,7 +270,7 @@ function canonicalRoleKey(value) {
 function fieldCatalogMetadata(entry) {
   const id = String(entry.id || "");
   const game = {
-    "game.date": ["Official game date.", "Sep 19, 2026"],
+    "game.date": ["Official game date.", "9/19/2026"],
     "game.startTime": ["Scheduled first-pitch time.", "7:10 PM"],
     "game.dayNight": ["Whether the game is designated as a day or night game.", "Night"],
     "game.number": ["Game number within the day, such as Game 2 of a doubleheader.", "2"],

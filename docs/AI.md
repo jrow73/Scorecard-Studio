@@ -871,7 +871,7 @@ The philosophy should remain:
 
 ## Designer Completion Roadmap — historical note
 
-The earlier post-Build-018 sequencing has been superseded by the accepted Builds 019–026 implementation path. `docs/DESIGNER_COMPLETION_INVENTORY.md` is the authoritative current roadmap. Builds 023–026 are complete; the remaining v0.2.0 Designer runway is Build 027 Text Overflow & Fit Controls followed by Build 028 Designer Completion / Release Review. Accepted behavior from earlier builds should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
+The earlier post-Build-018 sequencing has been superseded by the accepted Builds 019–028 implementation path. `docs/DESIGNER_COMPLETION_INVENTORY.md` is the authoritative current roadmap. Build 028 is closed through Build 028.20. The remaining v0.2.0 Designer runway is Build 029 Pregame Data Context & Semantics, Build 030 Layout Settings Workflow, Build 031 Text Template Workflow Completion, and Build 032 v0.2.0 Designer Completion / Release Review. Accepted behavior from earlier builds should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
 
 ## Versioning
 
@@ -1123,23 +1123,25 @@ The Designer intentionally uses a simple legacy-style viewport model: ordinary w
 
 ## v0.2.0 Designer completion roadmap
 
-Build 026.4 is the accepted Field Palette & Layout Settings baseline. Builds 023–026 are complete. The implemented runway and remaining release path are:
+Build 028 is accepted through Build 028.20 and is closed. Builds 023–028 are complete. The remaining v0.2.0 runway is:
 
-1. **Build 023 — Representative Data & Test PDF** — replace recognizable real-world representative identities with a deterministic fictional stress-test fixture; Designer Generate Test PDF uses only that fixture and never requires a selected live game.
-2. **Build 024 — Designer Workflow & Inspector Cleanup** — progressive reveal and placement-flow cleanup, Text Template player-name format parity and blank-value suppression, compact Inspector/header presentation, toolbar Copy/Paste with translated-paste dropdown, delete-path consistency, helper-text/footer cleanup.
-3. **Build 025 — Live Game PDF Integration** — narrow integration build: generate the Home-page selected game's scorecard from a saved layout using the same PDF renderer as Designer Test PDF and dependency-driven supplemental hydration based on mapped fields.
-4. **Build 026 — Field Palette & Layout Settings** — dark-theme settings redesign; Standard vs Custom palette mode; custom field picker using representative examples; conditional-format toggle cards; palette collapse behavior; Umpire Crew consolidation.
-5. **Build 027 — Text Overflow & Fit Controls** — investigate and implement intentional long-text behavior. Maximum width plus shrink-to-fit is the leading candidate; truncation and wrapping should be evaluated against browser/PDF parity before committing to a final policy.
-6. **Build 028 — v0.2.0 Designer Completion / Release Review** — fresh-user/full-card regression, persistence/reload, Test PDF/live PDF comparison, documentation reconciliation, and final release-readiness defects.
+1. **Build 029 — Pregame Data Context & Semantics** — use a game-specific pregame cutoff, including completed earlier same-day doubleheader games; ensure team/player YTD values match that cutoff; display First Pitch in the ballpark's local timezone; add Away/Home Team Game Number from verified pregame context.
+2. **Build 030 — Layout Settings Workflow** — give the parent Layout Settings modal fixed header/footer chrome and a scrollable body; make Layout Details a read-only summary with an Edit child view; standardize Layout Details, Select Custom Fields, and Default Formatting Options as full-size child views with consistent Save/Cancel and dirty-close behavior.
+3. **Build 031 — Text Template Workflow Completion** — complete the generic Text Template creation/palette workflow, preferably flattening the redundant `Text Template -> Text Template -> instances` hierarchy if the palette architecture supports it cleanly.
+4. **Build 032 — v0.2.0 Designer Completion / Release Review** — no planned new feature scope; perform full Designer regression, persistence/reload, Representative Test PDF/live PDF comparison, viewport/multi-page checks, import/export checks, documentation reconciliation, and final release readiness.
+
+Build 028 final accepted behavior includes the cleanup/polish, contextual Text Template fixes, Starting Pitcher fixes, and Bench/Bullpen per-instance sorting documented in `Build_028_Implementation.md` and the decimal implementation notes through `Build_028.20_Implementation.md`.
 
 ### Representative-data contract (Build 023)
 
 Representative Data is deterministic test infrastructure, not a simulated live game. It should contain fictional teams, people, and venues; deliberately exercise short/long text and collection-capacity cases; and remain stable across sessions so layout regressions are visually recognizable. Designer **Generate Test PDF** always uses Representative Data. Real game-day PDF generation belongs to the normal game workflow outside Designer.
 
-## v0.2.0 remaining roadmap (Build 026 baseline)
+## v0.2.0 remaining roadmap (current after Build 028.20)
 
-- **Build 027 — Text Overflow & Fit Controls:** implement intentional long-text behavior with browser/PDF parity; maximum width plus shrink-to-fit is the leading candidate, with truncation and wrapping evaluated where appropriate.
-- **Build 028 — Designer Completion / Release Review:** fresh-layout/full-scorecard regression, persistence/reload, Representative Data Test PDF vs live-game PDF comparison, documentation reconciliation, and final v0.2.0 release readiness.
+- **Build 029 — Pregame Data Context & Semantics:** doubleheader-aware pregame snapshots, venue-local First Pitch, and Team Game Number.
+- **Build 030 — Layout Settings Workflow:** consistent parent/child modal workflow with fixed chrome and transactional Save/Cancel behavior.
+- **Build 031 — Text Template Workflow Completion:** finish the generic Text Template palette/creation workflow.
+- **Build 032 — v0.2.0 Designer Completion / Release Review:** final regression and release-readiness pass; no planned feature expansion.
 
 Build metadata continues to come from `/app-meta.json`; do not hard-code independent user-facing build labels. `README.md` remains intentionally untouched during intermediate builds.
 
@@ -1151,4 +1153,4 @@ Layout Settings uses the application dark theme and is organized into Layout Det
 
 The Designer palette uses accordion behavior, placed-object detail collapsing, top/bottom Collapse All behavior, and finite Available Data counts that exclude the unlimited Text Template tool. Starting Pitcher uses its record presentation and new Starting Pitcher Record creation no longer offers the obsolete Single Item path. Manager belongs to Team Information and inherits Team formatting defaults. Text Template Insert Field menus honor the layout's enabled field set, while existing or manually typed valid tokens remain resolvable for compatibility/power-user workflows. Current Player Name formats are Full Name, First Initial + Last Name (no period), Last Name, First Name, Use Name, and Boxscore Name.
 
-**Remaining v0.2.0 roadmap:** Build 027 Text Overflow & Fit Controls, then Build 028 Designer Completion / Release Review.
+**Current remaining v0.2.0 roadmap after Build 028.20:** Build 029 Pregame Data Context & Semantics; Build 030 Layout Settings Workflow; Build 031 Text Template Workflow Completion; Build 032 v0.2.0 Designer Completion / Release Review.

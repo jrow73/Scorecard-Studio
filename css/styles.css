@@ -1528,7 +1528,6 @@ body.designer-mode .designer-view > .card { grid-template-rows: auto minmax(0, 1
 #designer-context-tools.editing-existing-block label:has(#designer-block-select),
 #designer-context-tools.editing-existing-block #designer-block-list,
 #designer-context-tools.editing-existing-block .designer-tool-body > .designer-repeat-heading:first-child { display: none !important; }
-#designer-context-tools.editing-existing-block #designer-place-rows-btn { display: inline-flex !important; }
 /* Prevent long generation messages / filenames from forcing the Designer grid wider. */
 body.designer-mode .designer-view > .card,
 .designer-grid,
@@ -2149,3 +2148,505 @@ body.designer-mode .designer-view > .card,
 .designer-text-fit-handle::before { width: 13px; height: 1px; }
 .designer-text-fit-handle::after { width: 1px; height: 13px; }
 .designer-text-fit-guide.align-right .designer-text-fit-handle { left: -12px; right: auto; }
+\n\n/* Build 028 — Designer completion cleanup */\n/* Modals should visibly separate from the Designer without changing the dark theme. */\n.formatting-dialog::backdrop { background: rgba(0,0,0,.74); }\n.layout-settings-card { border-color: rgba(124,199,255,.24); box-shadow: 0 30px 100px rgba(0,0,0,.78), 0 0 0 1px rgba(255,255,255,.025); }\n\n/* Inspector hierarchy: Selected Object -> Selected Item -> Formatting. */\n.designer-subordinate-workspace {\n  display: grid; gap: .8rem; padding: 0; border: 0; border-radius: 0; background: transparent;\n}\n.designer-selected-item-card,\n.designer-formatting-card {\n  border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025);\n}\n.designer-selected-item-card { padding: .8rem; }\n.designer-selected-item-card .designer-workspace-heading { padding-bottom: 0; border-bottom: 0; }\n.designer-child-workspace-actions { display:flex; justify-content:flex-start; gap:.4rem; padding-top:.55rem; flex-wrap:wrap; }\n.designer-child-workspace-actions[hidden] { display:none !important; }\n.designer-formatting-card[hidden] { display:none !important; }\n.designer-formatting-card > summary {\n  list-style:none; display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.7rem .8rem;\n  color:var(--muted); font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; cursor:pointer; user-select:none;\n}\n.designer-formatting-card > summary::-webkit-details-marker { display:none; }\n.designer-formatting-card > summary::after { content:"□"; font-size:13px; line-height:1; color:var(--muted); }\n.designer-formatting-card[open] > summary::after { content:"−"; font-size:17px; }\n.designer-formatting-card-body { padding:0 .8rem .8rem; }\n.designer-formatting-card:not([open]) .designer-formatting-card-body { display:none; }\n#designer-selection-position-controls { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:.65rem; }\n#designer-selection-position-controls label { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:.4rem; }\n#designer-selection-position-controls label input { min-width:0; width:100%; }\n#designer-selection-format-controls { margin-top:.45rem; padding-top:.55rem; border-top:1px solid var(--line); }\n#designer-selection-name-format-wrap, #designer-selection-date-format-wrap { margin-top:.55rem; padding-top:.55rem; border-top:1px solid var(--line); }\n#designer-selection-date-format { width:100%; }\n.designer-text-fit-inspector { margin-top:.55rem; }\n\n/* Every expandable palette row keeps chevron, check, label, and status on one line. */\n.designer-palette-item-details > summary.designer-palette-item {\n  list-style:none; display:grid; grid-template-columns:14px 18px minmax(0,1fr) auto; column-gap:7px; align-items:center;\n}\n.designer-palette-item-details > summary.designer-palette-item::after { content:none; }\n.designer-palette-item-details > summary.designer-palette-item::before {\n  content:"▶"; grid-column:1; width:14px; text-align:center; color:var(--muted); font-size:10px;\n}\n.designer-palette-item-details[open] > summary.designer-palette-item::before { content:"▼"; }\n.designer-palette-item-details > summary.designer-palette-item .designer-palette-status-icon { grid-column:2; }\n.designer-palette-item-details > summary.designer-palette-item .designer-palette-item-label { grid-column:3; }\n.designer-palette-item-details > summary.designer-palette-item small { grid-column:4; }\n\n#designer-field-date-format-wrap[hidden], #designer-selection-date-format-wrap[hidden] { display:none !important; }\n
+/* Build 028.1 - focused palette header correction.
+   Expandable rows use an explicit chevron cell so chevron, status icon,
+   label, and instance/status text are always one structural header row. */
+.designer-palette-item-details > summary.designer-palette-item,
+.designer-record-fields.designer-record-direct > summary.designer-palette-item {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 14px 18px minmax(0, 1fr) auto;
+  column-gap: 7px;
+  align-items: center;
+}
+.designer-palette-item-details > summary.designer-palette-item::-webkit-details-marker,
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::-webkit-details-marker {
+  display: none;
+}
+.designer-palette-item-details > summary.designer-palette-item::before,
+.designer-palette-item-details > summary.designer-palette-item::after,
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::before,
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::after {
+  content: none;
+}
+.designer-palette-chevron {
+  grid-column: 1;
+  width: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+}
+.designer-palette-chevron::before { content: "\25B6"; }
+.designer-palette-item-details[open] > summary .designer-palette-chevron::before,
+.designer-record-fields.designer-record-direct[open] > summary .designer-palette-chevron::before { content: "\25BC"; }
+.designer-palette-item-details > summary .designer-palette-status-icon,
+.designer-record-fields.designer-record-direct > summary .designer-palette-status-icon { grid-column: 2; }
+.designer-palette-item-details > summary .designer-palette-item-label,
+.designer-record-fields.designer-record-direct > summary .designer-palette-item-label { grid-column: 3; }
+.designer-palette-item-details > summary small,
+.designer-record-fields.designer-record-direct > summary small { grid-column: 4; }
+
+/* Build 028.2 - focused palette-state simplification.
+   Plain border = available; green border = used; gold = selected.
+   Expandable placed instances use a chevron; right-side status text and
+   green checkmarks are intentionally removed. */
+.designer-palette-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+.designer-palette-item.placed {
+  border-color: rgba(74, 222, 128, .46);
+  box-shadow: inset 0 0 0 1px rgba(74, 222, 128, .08);
+}
+.designer-palette-item.selected {
+  border-color: var(--warn);
+}
+.designer-palette-status-icon,
+.designer-palette-item > small,
+.designer-palette-item-details > summary small,
+.designer-record-fields.designer-record-direct > summary small {
+  display: none !important;
+}
+.designer-palette-item-details > summary.designer-palette-item,
+.designer-record-fields.designer-record-direct > summary.designer-palette-item {
+  grid-template-columns: 14px minmax(0, 1fr);
+  column-gap: 7px;
+}
+.designer-palette-item-details > summary .designer-palette-chevron,
+.designer-record-fields.designer-record-direct > summary .designer-palette-chevron { grid-column: 1; }
+.designer-palette-item-details > summary .designer-palette-item-label,
+.designer-record-fields.designer-record-direct > summary .designer-palette-item-label { grid-column: 2; }
+
+/* Build 028.3 - focused Formatting card UI pass.
+   Formatting is a true sibling card with a compact, grouped layout. */
+.designer-subordinate-workspace {
+  gap: 1rem;
+}
+.designer-formatting-card {
+  overflow: visible;
+}
+.designer-formatting-card > summary {
+  min-height: 42px;
+  padding: .65rem .8rem;
+  border-radius: 12px;
+}
+.designer-formatting-card[open] > summary {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.designer-formatting-card > summary::after {
+  content: "□";
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.designer-formatting-card[open] > summary::after {
+  content: "−";
+  font-size: 19px;
+}
+.designer-formatting-card-body {
+  padding: 0 .8rem .8rem;
+}
+
+/* Position: X and Y each stay on one compact line, side by side. */
+#designer-selection-position-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: .55rem .75rem !important;
+  margin: 0;
+  padding: .55rem 0 .65rem;
+}
+#designer-selection-position-controls label {
+  display: grid !important;
+  grid-template-columns: auto minmax(54px, 1fr) !important;
+  align-items: center !important;
+  gap: .35rem !important;
+  margin: 0 !important;
+  white-space: nowrap;
+}
+#designer-selection-position-controls label input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 30px;
+  min-height: 30px;
+}
+
+/* Formatting groups use separators instead of nested cards. */
+#designer-selection-format-controls {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-top: 1px solid var(--line);
+}
+.designer-format-group {
+  padding: .65rem 0;
+  margin: 0 !important;
+}
+.designer-format-group + .designer-format-group {
+  border-top: 1px solid var(--line);
+}
+.designer-alignment-group {
+  display: grid;
+  gap: .55rem;
+}
+.designer-compact-label-row {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: .5rem !important;
+  margin: 0 !important;
+}
+.designer-compact-label-row select {
+  min-width: 0;
+  min-height: 30px;
+  height: 30px;
+}
+.designer-format-toolbar-compact {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) auto 34px 34px auto;
+  gap: .35rem;
+  align-items: center;
+}
+.designer-format-toolbar-compact select,
+.designer-format-toolbar-compact input,
+.designer-format-toolbar-compact .designer-format-toggle,
+.designer-format-toolbar-compact .scorecard-color-summary,
+.designer-format-toolbar-compact .designer-font-size-menu > summary {
+  min-height: 34px;
+  height: 34px;
+}
+#designer-selection-font-face {
+  width: 100%;
+  min-width: 0;
+}
+.designer-format-toolbar-compact .designer-font-size-picker {
+  min-width: 76px;
+}
+.designer-defaults-group {
+  display: grid;
+  gap: .55rem;
+}
+.designer-defaults-group .designer-format-default {
+  margin: 0;
+}
+.designer-defaults-group .designer-format-restore {
+  justify-self: start;
+}
+.designer-text-fit-inspector {
+  display: grid;
+  gap: .45rem;
+}
+.designer-fit-width-row {
+  display: grid;
+  grid-template-columns: auto minmax(56px, 92px) auto;
+  align-items: center;
+  justify-content: start;
+  gap: .4rem;
+}
+.designer-fit-width-row label {
+  display: block !important;
+  margin: 0 !important;
+  white-space: nowrap;
+}
+.designer-fit-width-row input {
+  width: 100% !important;
+  min-height: 30px;
+  height: 30px;
+}
+
+/* Field-specific presentation controls are their own Formatting groups. */
+#designer-selection-name-format-wrap,
+#designer-selection-date-format-wrap {
+  margin: 0 !important;
+  padding: .65rem 0 0 !important;
+  border-top: 1px solid var(--line) !important;
+}
+#designer-selection-name-format-wrap select,
+#designer-selection-date-format-wrap input {
+  margin-top: .35rem;
+}
+
+@media (max-width: 520px) {
+  .designer-format-toolbar-compact {
+    grid-template-columns: minmax(90px, 1fr) auto 34px 34px;
+  }
+  .designer-format-toolbar-compact #designer-selection-color-picker {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Build 028.4 - focused Selected Item action and Formatting-header cleanup. */
+/* Keep child-item actions compact in both collapsed and expanded Formatting states. */
+.designer-child-workspace-actions {
+  justify-content: flex-start;
+  align-items: center;
+  gap: .35rem;
+}
+.designer-child-workspace-actions .compact-button {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: .22rem .45rem !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+}
+
+/* Retain the existing chevron as the sole Formatting expand/collapse cue. */
+.designer-formatting-card > summary::after,
+.designer-formatting-card[open] > summary::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Build 028.5 - Inspector Formatting width containment.
+   Opening Formatting must never widen the Inspector or create horizontal scrolling. */
+.designer-controls {
+  overflow-x: hidden;
+}
+.designer-controls > *,
+.designer-subordinate-workspace,
+.designer-selected-item-card,
+.designer-formatting-card,
+.designer-formatting-card-body,
+#designer-selection-controls,
+#designer-selection-position-controls,
+#designer-selection-format-controls,
+.designer-format-group,
+.designer-alignment-group,
+.designer-defaults-group,
+.designer-text-fit-inspector {
+  min-width: 0;
+  max-width: 100%;
+}
+.designer-formatting-card,
+.designer-formatting-card-body,
+#designer-selection-controls {
+  width: 100%;
+}
+#designer-selection-position-controls,
+.designer-compact-label-row,
+.designer-fit-width-row {
+  min-width: 0;
+}
+#designer-selection-alignment,
+#designer-selection-name-format,
+#designer-selection-date-format,
+#designer-selection-font-face,
+#designer-selection-x,
+#designer-selection-y,
+#designer-selection-fit-width {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Let the typography toolbar wrap naturally at narrow Inspector widths instead of
+   forcing the Inspector wider. This intentionally favors containment over a rigid
+   one-line mock-up. */
+.designer-format-toolbar-compact {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  min-width: 0;
+  gap: .35rem;
+  align-items: center;
+}
+.designer-format-toolbar-compact #designer-selection-font-face {
+  flex: 1 1 100px;
+  width: auto;
+  min-width: 90px;
+}
+.designer-format-toolbar-compact .designer-font-size-picker {
+  flex: 0 0 76px;
+  min-width: 0;
+}
+.designer-format-toolbar-compact .designer-format-toggle {
+  flex: 0 0 34px;
+}
+.designer-format-toolbar-compact #designer-selection-color-picker {
+  flex: 0 0 46px;
+}
+
+/* Build 028.7 — Individual Placement first-item progressive reveal.
+   These controls already use the hidden attribute in the workflow logic; enforce
+   it here because the generic Designer label/button layout rules can otherwise
+   override the browser's default [hidden] display behavior. */
+#designer-individual-field-wrap[hidden],
+#designer-individual-name-format-wrap[hidden],
+#designer-individual-alignment-wrap[hidden],
+#designer-individual-place-btn[hidden] {
+  display: none !important;
+}
+
+
+/* Build 028.8 - Starting Pitcher palette/workflow cleanup.
+   The Starting Pitcher record summary uses one explicit chevron only and
+   keeps the label left-aligned in the same two-column header structure. */
+.designer-record-fields.designer-record-direct {
+  width: 100%;
+  min-width: 0;
+}
+.designer-record-fields.designer-record-direct > summary.designer-palette-item {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  list-style: none !important;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  column-gap: 7px;
+  align-items: center;
+  justify-content: initial;
+  text-align: left;
+}
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::marker {
+  content: "";
+  font-size: 0;
+}
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::-webkit-details-marker {
+  display: none !important;
+}
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::before,
+.designer-record-fields.designer-record-direct > summary.designer-palette-item::after {
+  content: none !important;
+  display: none !important;
+}
+.designer-record-fields.designer-record-direct > summary .designer-palette-chevron {
+  display: block;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+}
+.designer-record-fields.designer-record-direct > summary .designer-palette-item-label {
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  justify-self: stretch;
+  text-align: left;
+}
+
+
+/* Build 028.9 - Starting Pitcher final palette/workflow polish.
+   Use a simple left-aligned flex header for the record card and enter the
+   sole Record Layout workflow directly. */
+.designer-record-fields.designer-record-direct > summary.designer-palette-item {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start !important;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: left !important;
+}
+.designer-record-fields.designer-record-direct > summary .designer-palette-chevron {
+  flex: 0 0 14px;
+  width: 14px;
+  margin: 0;
+  justify-self: auto;
+}
+.designer-record-fields.designer-record-direct > summary .designer-palette-item-label {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  justify-self: auto;
+  text-align: left !important;
+}
+
+/* Build 028.11 - modal separation.
+   Keep the existing dark theme, but make Layout Settings read unmistakably
+   as a modal layer over the Designer. No backdrop blur. */
+#layout-formatting-dialog::backdrop {
+  background: rgba(2, 6, 12, .86);
+}
+#layout-formatting-dialog .layout-settings-card {
+  background: #1b2230;
+  border: 1px solid rgba(124, 199, 255, .42);
+  box-shadow:
+    0 42px 120px rgba(0, 0, 0, .90),
+    0 0 0 1px rgba(255, 255, 255, .035);
+}
+
+
+/* Build 028.14: compact per-block Bench/Bullpen collection sorting. */
+.designer-block-sort-controls {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  min-width: 0;
+}
+.designer-block-sort-controls[hidden] { display: none !important; }
+.designer-block-sort-controls select {
+  width: auto;
+  max-width: min(100%, 12rem);
+  min-width: 0;
+}
+.designer-block-sort-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: .15rem;
+  flex: 0 0 auto;
+}
+.designer-block-sort-direction[hidden] { display: none !important; }
+.designer-sort-direction-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border, #374151);
+  border-radius: .45rem;
+  background: transparent;
+  color: var(--muted, #94a3b8);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .5;
+}
+.designer-sort-direction-button:hover { opacity: .8; }
+.designer-sort-direction-button.active {
+  opacity: 1;
+  color: var(--accent, #60a5fa);
+  border-color: currentColor;
+  box-shadow: 0 0 0 1px currentColor, 0 0 .6rem color-mix(in srgb, currentColor 35%, transparent);
+}
+
+
+/* Build 028.17 - final Inspector action polish. */
+/* Secondary/destructive Inspector actions use the compact Selected Object language.
+   Primary workflow buttons intentionally keep their larger treatment. */
+.designer-controls .secondary-button:not(.designer-toolbar-icon),
+.designer-controls .danger-button {
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: .22rem .45rem;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.designer-controls .composite-insert-button,
+.designer-controls .designer-format-restore {
+  min-height: 0;
+}
+
+/* Repeated-layout geometry is an Edit Layout action, above the content divider. */
+.designer-layout-workspace-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .35rem;
+  margin-top: .45rem;
+}
+.designer-layout-workspace-actions[hidden] { display: none !important; }
+.designer-layout-workspace-actions:not([hidden]) + .designer-child-workspace-actions:not([hidden]) {
+  margin-top: .55rem;
+  padding-top: .55rem;
+  border-top: 1px solid var(--line);
+}

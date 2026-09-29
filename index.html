@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=027.2" />
+  <link rel="stylesheet" href="./css/styles.css?v=028.18" />
 </head>
 <body>
   <div class="app-shell">
@@ -381,7 +381,7 @@
             </div>
             <div class="designer-header-actions">
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
-              <button class="secondary-button" id="designer-back-btn" type="button">Back to Layouts</button>
+              <button class="secondary-button" id="designer-back-btn" type="button">Close Layout Designer</button>
             </div>
           </div>
           <div class="designer-grid">
@@ -411,9 +411,9 @@
             </aside>
             <div class="designer-stage-panel">
               <div class="pdf-toolbar">
-                <button class="secondary-button" id="designer-prev-btn" type="button">Previous</button>
+                <button class="secondary-button" id="designer-prev-btn" type="button" aria-label="Previous PDF page" title="Previous PDF page">←</button>
                 <strong id="designer-page-label">Page 1 of 1</strong>
-                <button class="secondary-button" id="designer-next-btn" type="button">Next</button>
+                <button class="secondary-button" id="designer-next-btn" type="button" aria-label="Next PDF page" title="Next PDF page">→</button>
                 <span class="designer-toolbar-actions" aria-label="Designer actions">
                   <button class="secondary-button designer-toolbar-icon" id="designer-undo-btn" type="button" disabled title="Undo (Ctrl/Cmd+Z)" aria-label="Undo">↶</button>
                   <button class="secondary-button designer-toolbar-icon" id="designer-redo-btn" type="button" disabled title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" aria-label="Redo">↷</button>
@@ -445,10 +445,33 @@
               </section>
 
               <section class="designer-subordinate-workspace" id="designer-subordinate-workspace" hidden>
-                <div class="designer-workspace-heading">
-                  <p class="section-label" id="designer-workspace-label">Selected Item</p>
-                  <h4 id="designer-workspace-title">Item</h4>
-                </div>
+                <section class="designer-selected-item-card">
+                  <div class="designer-workspace-heading">
+                    <p class="section-label" id="designer-workspace-label">Selected Item</p>
+                    <h4 id="designer-workspace-title">Item</h4>
+                  </div>
+                  <div class="designer-layout-workspace-actions" id="designer-layout-workspace-actions" hidden>
+                    <button class="secondary-button compact-button" id="designer-place-rows-btn" type="button" hidden>Change Placement</button>
+                  </div>
+                  <div class="designer-child-workspace-actions" id="designer-child-workspace-actions" hidden>
+                    <button class="secondary-button compact-button" id="designer-workspace-new-btn" type="button" hidden>Create New Item</button>
+                    <button class="danger-button compact-button" id="designer-selection-remove-item-btn" type="button" hidden>Remove Item</button>
+                  </div>
+                  <div id="designer-selection-template-wrap" class="designer-selection-template-editor" hidden>
+                    <label for="designer-selection-template">Template
+                      <textarea id="designer-selection-template" rows="3"></textarea>
+                    </label>
+                    <div class="composite-preview"><span>Preview</span><strong id="designer-selection-template-preview">Enter text or insert a field.</strong></div>
+                    <div class="designer-column-grid designer-template-insert-controls">
+                      <select id="designer-selection-template-field" aria-label="Choose text field to insert"></select>
+                      <span id="designer-selection-template-name-format-wrap" hidden><select id="designer-selection-template-name-format" aria-label="Choose name format"></select></span>
+                      <button class="secondary-button composite-insert-button" id="designer-selection-template-insert-btn" type="button">Insert Field</button>
+                    </div>
+                  </div>
+                </section>
+                <details class="designer-formatting-card" id="designer-formatting-card">
+                  <summary><span>Formatting</span></summary>
+                  <div class="designer-formatting-card-body">
                 <div id="designer-selection-controls" hidden>
                   <div class="designer-column-grid" id="designer-selection-position-controls">
                     <label for="designer-selection-x">X (pt)
@@ -482,15 +505,14 @@
                       </div>
                     </div>
                     </section>
-                  <div id="designer-selection-format-controls">
-                    <label for="designer-selection-alignment">Alignment
-                      <select id="designer-selection-alignment">
-                        <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
-                      </select>
-                    </label>
-                    <div class="designer-inline-formatting">
-                      <div class="designer-format-default"><strong>Current Defaults:</strong> <span id="designer-selection-format-summary">Helvetica, 10 pt, Black, Normal</span></div>
-                      <div class="designer-format-toolbar" aria-label="Formatting">
+                  <div id="designer-selection-format-controls" class="designer-formatting-single-controls">
+                    <div class="designer-format-group designer-alignment-group">
+                      <label class="designer-compact-label-row" for="designer-selection-alignment"><span>Alignment</span>
+                        <select id="designer-selection-alignment">
+                          <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+                        </select>
+                      </label>
+                      <div class="designer-format-toolbar designer-format-toolbar-compact" aria-label="Formatting">
                         <select id="designer-selection-font-face" aria-label="Font family"><option>Helvetica</option><option>Times</option><option>Courier</option></select>
                         <div class="designer-font-size-picker">
                           <input id="designer-selection-font-size" type="text" inputmode="decimal" aria-label="Font size in points" />
@@ -504,10 +526,13 @@
                         <button class="designer-format-toggle" id="designer-selection-bold" type="button" aria-label="Bold" aria-pressed="false"><strong>B</strong></button>
                         <button class="designer-format-toggle designer-format-italic" id="designer-selection-italic" type="button" aria-label="Italic" aria-pressed="false">I</button>
                         <div id="designer-selection-color-picker"></div>
-                        <button class="secondary-button compact-button designer-format-restore" id="designer-selection-format-restore" type="button">Restore Defaults</button>
                       </div>
                     </div>
-                    <div class="designer-text-fit-inspector">
+                    <div class="designer-format-group designer-defaults-group">
+                      <div class="designer-format-default"><strong>Current Defaults:</strong> <span id="designer-selection-format-summary">Helvetica, 10 pt, Black, Normal</span></div>
+                      <button class="secondary-button compact-button designer-format-restore" id="designer-selection-format-restore" type="button">Restore Defaults</button>
+                    </div>
+                    <div class="designer-format-group designer-text-fit-inspector">
                       <label class="designer-fit-toggle"><input id="designer-selection-fit-toggle" type="checkbox" /> <span>Enable Shrink to Fit</span></label>
                       <div id="designer-selection-fit-controls" class="designer-fit-controls" hidden>
                         <div class="designer-fit-width-row">
@@ -521,21 +546,12 @@
                   <label id="designer-selection-name-format-wrap" for="designer-selection-name-format" hidden>Name format
                     <select id="designer-selection-name-format"></select>
                   </label>
-                  <div id="designer-selection-template-wrap" class="designer-selection-template-editor" hidden>
-                    <label for="designer-selection-template">Template
-                      <textarea id="designer-selection-template" rows="3"></textarea>
-                    </label>
-                    <div class="composite-preview"><span>Preview</span><strong id="designer-selection-template-preview">Enter text or insert a field.</strong></div>
-                    <div class="designer-column-grid designer-template-insert-controls">
-                      <select id="designer-selection-template-field" aria-label="Choose text field to insert"></select>
-                      <span id="designer-selection-template-name-format-wrap" hidden><select id="designer-selection-template-name-format" aria-label="Choose name format"></select></span>
-                      <button class="secondary-button composite-insert-button" id="designer-selection-template-insert-btn" type="button">Insert Field</button>
-                    </div>
-                  </div>
-                  <div class="designer-selection-actions">
-                    <button class="danger-button" id="designer-selection-remove-item-btn" type="button" hidden>Remove Item</button>
-                  </div>
+                  <label id="designer-selection-date-format-wrap" for="designer-selection-date-format" hidden>Date format
+                    <input id="designer-selection-date-format" type="text" spellcheck="false" autocomplete="off" />
+                  </label>
                 </div>
+                  </div>
+                </details>
                 <section class="designer-new-item-panel" id="designer-new-item-panel" hidden></section>
                 <div id="designer-context-tools" hidden>
               <details class="designer-tool-section" id="designer-single-item-tool">
@@ -544,13 +560,16 @@
               <label for="designer-field-select">Field
                 <select id="designer-field-select" aria-label="Scorecard field"></select>
               </label>
+              <label id="designer-field-name-format-wrap" for="designer-field-name-format" hidden>Name format
+                <select id="designer-field-name-format"></select>
+              </label>
+              <label id="designer-field-date-format-wrap" for="designer-field-date-format" hidden>Date format
+                <input id="designer-field-date-format" type="text" value="M/D/YYYY" spellcheck="false" autocomplete="off" />
+              </label>
               <label for="designer-field-alignment">Alignment
                 <select id="designer-field-alignment">
                   <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
                 </select>
-              </label>
-              <label id="designer-field-name-format-wrap" for="designer-field-name-format" hidden>Name format
-                <select id="designer-field-name-format"></select>
               </label>
               <button class="primary-button" id="designer-place-btn" type="button">Place Field</button>
                 </div>
@@ -623,7 +642,15 @@
                 <label for="designer-block-select">Edit block
                   <select id="designer-block-select" aria-label="Repeated player block"></select>
                 </label>
-                <button class="secondary-button" id="designer-place-rows-btn" type="button" hidden>Change Placement</button>
+                <div id="designer-block-sort-controls" class="designer-block-sort-controls" hidden>
+                  <select id="designer-block-sort" aria-label="Sort repeated layout">
+                    <option value="">Sort: None</option>
+                  </select>
+                  <div id="designer-block-sort-direction" class="designer-block-sort-direction" role="group" aria-label="Sort direction" hidden>
+                    <button type="button" id="designer-block-sort-asc" class="designer-sort-direction-button" aria-label="Ascending" title="Ascending">△</button>
+                    <button type="button" id="designer-block-sort-desc" class="designer-sort-direction-button" aria-label="Descending" title="Descending">▽</button>
+                  </div>
+                </div>
                 </div>
                 <div id="designer-slot-fields-panel" class="designer-slot-fields-panel" hidden>
                   <label for="designer-column-content-type">Content type
@@ -688,13 +715,11 @@
                 <label id="designer-individual-alignment-wrap" for="designer-individual-alignment" hidden>Alignment
                   <select id="designer-individual-alignment"><option value="">Choose alignment…</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select>
                 </label>
-                <button class="primary-button" id="designer-individual-place-btn" type="button">Place Item on Scorecard</button>
+                <button class="primary-button" id="designer-individual-place-btn" type="button" hidden>Place Item on Scorecard</button>
                 </div>
               </details>
               </div>
-                <div class="designer-child-workspace-actions" id="designer-child-workspace-actions" hidden>
-                  <button class="secondary-button compact-button" id="designer-workspace-new-btn" type="button" hidden>Create New Item</button>
-                </div>
+
               </section>
 
             </aside>
@@ -764,6 +789,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=027.2"></script>
+  <script type="module" src="./js/app.js?v=028.20"></script>
 </body>
 </html>

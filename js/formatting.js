@@ -115,8 +115,8 @@ export function formattingGroupForFieldId(fieldId = "") {
 }
 
 export function formattingGroupForContext(context = "") {
-  if (String(context) === "away.manager") return "away-team";
-  if (String(context) === "home.manager") return "home-team";
+  if (String(context) === "away.manager" || String(context) === "away.teamInfo") return "away-team";
+  if (String(context) === "home.manager" || String(context) === "home.teamInfo") return "home-team";
   if (String(context).startsWith("away.")) return "away-players";
   if (String(context).startsWith("home.")) return "home-players";
   return "game";

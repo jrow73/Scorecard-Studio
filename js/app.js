@@ -2,17 +2,17 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 027
+ * Build: 028.16
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0252";
 import { normalizePregameData } from "./normalize.js?v=0252";
-import { canonicalFieldId, collectionHasOverflow, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=023";
-import { formatFieldValue, PLAYER_NAME_FORMATS } from "./formatter.js?v=0261";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0261";
+import { canonicalFieldId, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=028";
+import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=028";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=028";
 import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=0253";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=0261";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=02816";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=02816";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout as persistLayout, savePdfTemplate, setSetting
@@ -55,6 +55,7 @@ const state = {
   designerSuppressStageClick: false,
   designerPaletteSelection: null,
   designerPendingMode: null,
+  designerBlockSortDraft: { field: "", direction: "asc" },
   designerCollectionInspectorMode: null,
   designerPaletteExpanded: new Set(),
   designerDrag: null,
@@ -173,6 +174,8 @@ const elements = {
   designerFieldAlignment: document.querySelector("#designer-field-alignment"),
   designerFieldNameFormatWrap: document.querySelector("#designer-field-name-format-wrap"),
   designerFieldNameFormat: document.querySelector("#designer-field-name-format"),
+  designerFieldDateFormatWrap: document.querySelector("#designer-field-date-format-wrap"),
+  designerFieldDateFormat: document.querySelector("#designer-field-date-format"),
   designerPlaceButton: document.querySelector("#designer-place-btn"),
   designerTemplateText: document.querySelector("#designer-template-text"),
   designerTemplateField: document.querySelector("#designer-template-field"),
@@ -194,6 +197,7 @@ const elements = {
   designerCreateBlockButton: document.querySelector("#designer-create-block-btn"),
   designerBlockSelect: document.querySelector("#designer-block-select"),
   designerPlaceRowsButton: document.querySelector("#designer-place-rows-btn"),
+  designerLayoutWorkspaceActions: document.querySelector("#designer-layout-workspace-actions"),
   designerColumnField: document.querySelector("#designer-column-field"),
   designerColumnContentType: document.querySelector("#designer-column-content-type"),
   designerColumnFieldWrap: document.querySelector("#designer-column-field-wrap"),
@@ -260,6 +264,7 @@ const elements = {
   designerSelectionClearButton: document.querySelector("#designer-selection-clear-btn"),
   designerSelectionPositionControls: document.querySelector("#designer-selection-position-controls"),
   designerSelectionFormatControls: document.querySelector("#designer-selection-format-controls"),
+  designerFormattingCard: document.querySelector("#designer-formatting-card"),
   designerSelectionX: document.querySelector("#designer-selection-x"),
   designerSelectionY: document.querySelector("#designer-selection-y"),
   designerSelectionFontFace: document.querySelector("#designer-selection-font-face"),
@@ -316,6 +321,8 @@ const elements = {
   layoutCreateFieldList: document.querySelector("#layout-create-field-list"),
   designerSelectionNameFormatWrap: document.querySelector("#designer-selection-name-format-wrap"),
   designerSelectionNameFormat: document.querySelector("#designer-selection-name-format"),
+  designerSelectionDateFormatWrap: document.querySelector("#designer-selection-date-format-wrap"),
+  designerSelectionDateFormat: document.querySelector("#designer-selection-date-format"),
   designerSelectionTemplateWrap: document.querySelector("#designer-selection-template-wrap"),
   designerSelectionTemplate: document.querySelector("#designer-selection-template"),
   designerSelectionTemplatePreview: document.querySelector("#designer-selection-template-preview"),
@@ -338,6 +345,11 @@ const elements = {
   designerWorkspaceNewButton: document.querySelector("#designer-workspace-new-btn"),
   designerChildWorkspaceActions: document.querySelector("#designer-child-workspace-actions"),
   designerBlockLayoutControls: document.querySelector("#designer-block-layout-controls"),
+  designerBlockSortControls: document.querySelector("#designer-block-sort-controls"),
+  designerBlockSort: document.querySelector("#designer-block-sort"),
+  designerBlockSortDirection: document.querySelector("#designer-block-sort-direction"),
+  designerBlockSortAsc: document.querySelector("#designer-block-sort-asc"),
+  designerBlockSortDesc: document.querySelector("#designer-block-sort-desc"),
   designerNewItemPanel: document.querySelector("#designer-new-item-panel"),
   designerContextTools: document.querySelector("#designer-context-tools"),
   designerSingleItemTool: document.querySelector("#designer-single-item-tool"),
@@ -403,7 +415,13 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   elements.designerTemplatePlaceButton.addEventListener("click", beginDesignerTemplatePlacement);
   elements.designerCreateBlockButton.addEventListener("click", createDesignerRepeatedBlock);
   elements.designerBlockSelect.addEventListener("change", syncDesignerBlockControls);
-  elements.designerLineupSide.addEventListener("change", () => { syncDesignerArrangementInputs(); populateDesignerColumnFieldSelect(); syncDesignerSlotContentControls(); });
+  elements.designerBlockSort?.addEventListener("change", handleDesignerBlockSortChange);
+  elements.designerBlockSortAsc?.addEventListener("click", () => setDesignerBlockSortDirection("asc"));
+  elements.designerBlockSortDesc?.addEventListener("click", () => setDesignerBlockSortDirection("desc"));
+  elements.designerLineupSide.addEventListener("change", () => {
+    if (state.designerPaletteSelection && state.designerPendingMode) state.designerBlockSortDraft = { field: "", direction: "asc" };
+    syncDesignerArrangementInputs(); populateDesignerColumnFieldSelect(); syncDesignerSlotContentControls(); syncDesignerBlockSortControls();
+  });
   elements.designerBlockArrangement.addEventListener("change", syncDesignerArrangementInputs);
   elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
   elements.designerPlaceColumnButton.addEventListener("click", beginDesignerBlockColumnPlacement);
@@ -415,7 +433,7 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   elements.designerColumnTemplateInsertButton.addEventListener("click", insertDesignerSlotTemplateField);
   elements.designerColumnTemplateField.addEventListener("change", () => { syncTemplateNameFormatControl(elements.designerColumnTemplateField, elements.designerColumnTemplateNameFormatWrap, elements.designerColumnTemplateNameFormat); syncDesignerSlotContentControls(); });
   elements.designerColumnTemplateNameFormat.addEventListener("change", syncDesignerSlotContentControls);
-  elements.designerFieldSelect.addEventListener("change", syncDesignerSingleNameFormatControl);
+  elements.designerFieldSelect.addEventListener("change", syncDesignerSingleFieldFormatControls);
   elements.designerDeleteBlockButton.addEventListener("click", deleteSelectedDesignerBlock);
   elements.designerIndividualCollection.addEventListener("change", syncDesignerIndividualControls);
   elements.designerIndividualStrategy?.addEventListener("change", syncDesignerIndividualControls);
@@ -429,7 +447,8 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   elements.designerNextButton.addEventListener("click", () => changeDesignerPage(1));
   elements.designerZoomOutButton?.addEventListener("click", () => setDesignerZoom(state.designerZoom - DESIGNER_ZOOM_STEP));
   elements.designerZoomInButton?.addEventListener("click", () => setDesignerZoom(state.designerZoom + DESIGNER_ZOOM_STEP));
-  elements.designerZoomResetButton?.addEventListener("click", () => setDesignerZoom(1));
+  elements.designerZoomResetButton?.addEventListener("click", () => { setDesignerZoom(1); closeDesignerToolbarPopover(elements.designerZoomMenu); });
+  wireDesignerToolbarPopovers();
   elements.designerStageScroll?.addEventListener("wheel", handleDesignerZoomWheel, { passive: false });
   elements.designerStage.addEventListener("pointerdown", beginDesignerLasso);
   elements.designerStage.addEventListener("click", handleDesignerStageClick);
@@ -458,6 +477,7 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   wireCommittedInspectorInput(elements.designerSelectionY, applyDesignerInspectorPosition);
   elements.designerSelectionAlignment.addEventListener("change", () => { applyDesignerInspectorFormatting(); releaseDesignerControlFocus(); });
   elements.designerSelectionNameFormat.addEventListener("change", () => { applyDesignerInspectorFormatting(); releaseDesignerControlFocus(); });
+  wireCommittedInspectorInput(elements.designerSelectionDateFormat, () => { applyDesignerInspectorDateFormat(); releaseDesignerControlFocus(); });
   elements.designerSelectionFontFace?.addEventListener("change", () => { applyInlineFormattingProperty("fontFace", elements.designerSelectionFontFace.value); releaseDesignerControlFocus(); });
   elements.designerSelectionBold?.addEventListener("click", () => toggleInlineFormattingProperty("bold"));
   elements.designerSelectionItalic?.addEventListener("click", () => toggleInlineFormattingProperty("italic"));
@@ -1754,6 +1774,7 @@ async function openDesigner() {
     state.designerPdfDocument = await loadPdfDocument(record.blob);
     state.designerPageNumber = 1;
     state.designerSelection = null;
+    if (elements.designerFormattingCard) elements.designerFormattingCard.open = false;
     clearDesignerPasteGhost();
     state.designerPaletteSelection = null;
     cancelDesignerPlacement();
@@ -1781,8 +1802,15 @@ function beginDesignerPlacement() {
   const definition = getFieldDefinition(elements.designerFieldSelect.value);
   const group = formattingGroupForFieldId(definition?.id);
   const alignment = ["left", "center", "right"].includes(elements.designerFieldAlignment?.value) ? elements.designerFieldAlignment.value : "left";
-  const format = definition?.formatKind === "playerName" ? { nameFormat: elements.designerFieldNameFormat.value || "full" } : {};
-  setDesignerPlacement({ mode: "scalar", alignment, format });
+  const isGameDate = definition?.id === "game.date";
+  const format = definition?.formatKind === "playerName"
+    ? { nameFormat: elements.designerFieldNameFormat.value || "full" }
+    : isGameDate
+      ? { dateFormat: validDesignerDateFormat(elements.designerFieldDateFormat?.value) || DEFAULT_DATE_FORMAT }
+      : {};
+  if (isGameDate && !validDesignerDateFormat(elements.designerFieldDateFormat?.value)) return setDesignerMessage("Use a valid date format with D, M, Y and separators such as spaces, comma, slash, or dash.", true);
+  const context = startingPitcherContextForField(definition?.id);
+  setDesignerPlacement({ mode: "scalar", alignment, format, ...(context ? { context } : {}) });
   setDesignerMessage(`Click the ${alignment}-alignment anchor for ${designerFieldLabel(elements.designerFieldSelect.value)}.`);
 }
 
@@ -1812,10 +1840,25 @@ function populateNameFormatSelects() {
   syncDesignerIndividualProgressiveControls();
 }
 
-function syncDesignerSingleNameFormatControl() {
-  const definition = getFieldDefinition(elements.designerFieldSelect?.value);
-  if (elements.designerFieldNameFormatWrap) elements.designerFieldNameFormatWrap.hidden = definition?.formatKind !== "playerName";
+function validDesignerDateFormat(value) {
+  const text = String(value ?? "").trim();
+  return isValidDateFormatPattern(text) ? text : null;
 }
+
+function syncDesignerSingleFieldFormatControls() {
+  const definition = getFieldDefinition(elements.designerFieldSelect?.value);
+  const isGameDate = definition?.id === "game.date";
+  if (elements.designerFieldNameFormatWrap) elements.designerFieldNameFormatWrap.hidden = definition?.formatKind !== "playerName";
+  if (elements.designerFieldDateFormatWrap) {
+    elements.designerFieldDateFormatWrap.hidden = !isGameDate;
+    // Keep the visibility deterministic even when this tool is moved into the
+    // contextual New Object panel and other label layout rules are active.
+    elements.designerFieldDateFormatWrap.style.display = isGameDate ? "" : "none";
+  }
+  if (elements.designerFieldDateFormat && isGameDate && !elements.designerFieldDateFormat.value) elements.designerFieldDateFormat.value = DEFAULT_DATE_FORMAT;
+}
+
+function syncDesignerSingleNameFormatControl() { syncDesignerSingleFieldFormatControls(); }
 
 function populateDesignerTemplateFieldSelect(context = null) {
   if (!elements.designerTemplateField) return;
@@ -1883,6 +1926,50 @@ function templateFieldIds(template, context = null) {
   return ids;
 }
 
+function startingPitcherContextForField(fieldId) {
+  const record = getFieldDefinition(fieldId)?.record;
+  return record === "away.startingPitcher" || record === "home.startingPitcher" ? record : null;
+}
+
+function teamInfoContextForField(fieldId) {
+  const id = canonicalFieldId(fieldId);
+  if (id.startsWith("away.team.") || id.startsWith("away.manager.")) return "away.teamInfo";
+  if (id.startsWith("home.team.") || id.startsWith("home.manager.")) return "home.teamInfo";
+  return null;
+}
+
+function templateContextForField(fieldId) {
+  return startingPitcherContextForField(fieldId) || teamInfoContextForField(fieldId);
+}
+
+function isTeamInfoTemplateContext(context) {
+  return context === "away.teamInfo" || context === "home.teamInfo";
+}
+
+function startingPitcherContextForTarget(target) {
+  const explicit = target?.content?.context;
+  if (explicit === "away.startingPitcher" || explicit === "home.startingPitcher") return explicit;
+  const fieldContext = startingPitcherContextForField(target?.field || target?.content?.field);
+  if (fieldContext) return fieldContext;
+  if (target?.content?.type !== "template") return null;
+  const contexts = [...new Set(templateFieldIds(target.content.template).map(startingPitcherContextForField).filter(Boolean))];
+  if (contexts.length !== 1) return null;
+  // Legacy SP-derived templates from before Build 028.10 did not persist content.context,
+  // but they did retain the Away/Home Player formatting group. Generic templates remain
+  // in the Game Information group and must not acquire pitcher conditional formatting.
+  return target.formattingGroup === formattingGroupForContext(contexts[0]) ? contexts[0] : null;
+}
+
+function scalarFormattingOptions(target, model = DESIGNER_SAMPLE_MODEL, layout = null) {
+  const context = startingPitcherContextForTarget(target);
+  if (!context) return layout ? { layout } : {};
+  return {
+    ...(layout ? { layout } : {}),
+    group: formattingGroupForContext(context),
+    handednessGroup: conditionalFormattingGroup(model, context, null)
+  };
+}
+
 function resolveTemplateText(template, model, context = null) {
   if (context) return resolveSlotContent({ type: "template", template }, model, context);
   const source = String(template || "");
@@ -1918,7 +2005,8 @@ function insertDesignerTemplateField() {
   if (definition.formatKind === "playerName" && !elements.designerTemplateNameFormat?.value) {
     return setDesignerMessage("Choose a name format before inserting Player Name.", true);
   }
-  const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
+  const origin = state.designerPaletteSelection;
+  const context = origin?.kind === "record" ? origin.id : origin?.kind === "field" ? templateContextForField(origin.id) : null;
   const token = templateTokenWithNameFormat(fieldId, context, elements.designerTemplateNameFormat?.value);
   if (!token) return;
   const textarea = elements.designerTemplateText;
@@ -1937,7 +2025,8 @@ function insertDesignerTemplateField() {
 function updateDesignerTemplatePreview() {
   if (!elements.designerTemplatePreview) return;
   const template = elements.designerTemplateText.value;
-  const context = state.designerPaletteSelection?.kind === "record" ? state.designerPaletteSelection.id : null;
+  const origin = state.designerPaletteSelection;
+  const context = origin?.kind === "record" ? origin.id : origin?.kind === "field" ? templateContextForField(origin.id) : null;
   const preview = resolveTemplateText(template, DESIGNER_SAMPLE_MODEL, context);
   elements.designerTemplatePreview.textContent = preview || "Enter text or insert a field.";
 }
@@ -1947,10 +2036,10 @@ function beginDesignerTemplatePlacement() {
   const template = elements.designerTemplateText.value;
   if (!template.trim()) return setDesignerMessage("Enter text template before placing it.", true);
   const origin = state.designerPaletteSelection;
-  const context = origin?.kind === "record" ? origin.id : null;
+  const context = origin?.kind === "record" ? origin.id : origin?.kind === "field" ? templateContextForField(origin.id) : null;
   const formattingGroup = origin?.kind === "field" ? formattingGroupForFieldId(origin.id) : formattingGroupForContext(context);
   const alignment = ["left", "center", "right"].includes(elements.designerTemplateAlignment.value) ? elements.designerTemplateAlignment.value : "left";
-  setDesignerPlacement({ mode: "template", template, alignment, context, formattingGroup });
+  setDesignerPlacement({ mode: "template", template, alignment, context, formattingGroup, ...(origin?.kind === "field" ? { originField: origin.id } : {}) });
   setDesignerMessage(`Click the ${alignment}-alignment baseline anchor for the text template.`);
 }
 
@@ -1995,7 +2084,8 @@ async function createDesignerRepeatedBlock() {
     slotColumns: columns,
     pageIndex: null,
     geometry: null,
-    columns: []
+    columns: [],
+    ...(!isRecord && state.designerBlockSortDraft?.field ? { sort: { field: state.designerBlockSortDraft.field, direction: state.designerBlockSortDraft.direction === "desc" ? "desc" : "asc" } } : {})
   };
   layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
   layout.repeatedBlocks.push(block);
@@ -2007,6 +2097,7 @@ async function createDesignerRepeatedBlock() {
     syncDesignerBlockControls();
     renderDesignerBlockList();
     state.designerPaletteSelection = null;
+    state.designerBlockSortDraft = { field: "", direction: "asc" };
     selectDesignerObject({ kind: "block", blockId: block.id });
     beginDesignerBlockGeometryPlacement();
     setDesignerMessage(`Created ${blockLabel(block)}. Follow the placement instructions above the scorecard.`);
@@ -2097,8 +2188,13 @@ function syncDesignerIndividualProgressiveControls() {
 function populateDesignerIndividualFieldSelect() {
   if (!elements.designerIndividualField) return;
   const collection = elements.designerIndividualCollection.value || "away.lineup";
-  const previous = elements.designerIndividualField.value;
+  const mappings = (selectedLayout()?.individualMappings || []).filter((mapping) => mapping.collection === collection);
+  const last = mappings.at(-1);
+  const previous = elements.designerIndividualField.value || last?.field || "";
   elements.designerIndividualField.replaceChildren();
+  if (!mappings.length) {
+    const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Choose field…"; elements.designerIndividualField.append(placeholder);
+  }
   for (const definition of getCatalogFields({ cardinality: "repeated", collection }).filter((definition) => designerFieldAllowed(definition))) {
     const option = document.createElement("option");
     option.value = definition.id;
@@ -2106,6 +2202,14 @@ function populateDesignerIndividualFieldSelect() {
     elements.designerIndividualField.append(option);
   }
   if (previous && Array.from(elements.designerIndividualField.options).some((option) => option.value === previous)) elements.designerIndividualField.value = previous;
+  if (last) {
+    const lastDefinition = getFieldDefinition(last.field);
+    if (lastDefinition?.formatKind === "playerName" && elements.designerIndividualNameFormat) elements.designerIndividualNameFormat.value = last.content?.format?.nameFormat || "full";
+    if (elements.designerIndividualAlignment) elements.designerIndividualAlignment.value = last.alignment || "left";
+  } else {
+    if (elements.designerIndividualNameFormat) elements.designerIndividualNameFormat.value = "";
+    if (elements.designerIndividualAlignment) elements.designerIndividualAlignment.value = "";
+  }
   syncDesignerIndividualNameFormatControl();
 }
 
@@ -2263,7 +2367,7 @@ async function handleDesignerStageClick(event) {
     const mapping = {
       id: makeMappingId(),
       field,
-      content: { type: "field", field, ...(Object.keys(placement.format || {}).length ? { format: placement.format } : {}) },
+      content: { type: "field", field, ...(placement.context ? { context: placement.context } : {}), ...(Object.keys(placement.format || {}).length ? { format: placement.format } : {}) },
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
@@ -2295,7 +2399,7 @@ async function handleDesignerStageClick(event) {
     const mapping = {
       id: makeMappingId(),
       field: null,
-      content: { type: "template", template: placement.template, ...(placement.context ? { context: placement.context } : {}) },
+      content: { type: "template", template: placement.template, ...(placement.context ? { context: placement.context } : {}), ...(placement.originField ? { originField: placement.originField } : {}) },
       pageIndex: state.designerPageNumber - 1,
       xPercent,
       yPercent,
@@ -2526,7 +2630,7 @@ function renderDesignerOverlay() {
     marker.dataset.selectionKey = designerSelectionKey({ kind: "mapping", id: mapping.id });
     marker.style.left = `${mapping.xPercent * 100}%`;
     marker.style.top = `${mapping.yPercent * 100}%`;
-    const previewFormat = effectiveFormatting(mapping);
+    const previewFormat = effectiveFormatting(mapping, scalarFormattingOptions(mapping, DESIGNER_SAMPLE_MODEL));
     applyPreviewFormatting(marker, previewFormat);
     marker.textContent = isTemplate ? (resolveTemplateText(mapping.content.template, DESIGNER_SAMPLE_MODEL, mapping.content.context) || "[blank composite]") : designerFieldPreview(mapping.field, null, mapping.content?.format);
     applyPreviewTextFit(marker, mapping, previewFormat);
@@ -2561,7 +2665,7 @@ function renderDesignerOverlay() {
           const anchorXPercent = slot.xPercent + ((Number(column.xOffsetPoints) || 0) / pageWidthPoints);
           marker.style.left = `${anchorXPercent * 100}%`;
           marker.style.top = `${slot.yPercent * 100}%`;
-          const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot: slotIndex + 1 });
+          const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), repeatedSourceSelector(DESIGNER_SAMPLE_MODEL, block, slotIndex + 1));
           const previewFormat = effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
           applyPreviewFormatting(marker, previewFormat);
           marker.textContent = designerSlotContentPreview(block, column, slotIndex + 1);
@@ -2593,7 +2697,7 @@ function renderDesignerOverlay() {
           marker.className = `mapping-marker repeated-marker${isTemplate ? " template-marker" : ""} align-${alignment}${!isTemplate && !getFieldDefinition(column.field) ? " unsupported" : ""}`;
           marker.style.left = `${column.xPercent * 100}%`;
           marker.style.top = `${yPercent * 100}%`;
-          const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot: rowIndex + 1 });
+          const conditionalGroup = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, blockContext(block), repeatedSourceSelector(DESIGNER_SAMPLE_MODEL, block, rowIndex + 1));
           const previewFormat = effectiveFormatting(column, { group: formattingGroupForContext(blockContext(block)), handednessGroup: conditionalGroup });
           applyPreviewFormatting(marker, previewFormat);
           marker.textContent = designerSlotContentPreview(block, column, rowIndex + 1);
@@ -3011,6 +3115,90 @@ function syncDesignerBlockControls() {
   } else elements.designerPlaceRowsButton.textContent = "Set Placement";
   syncDesignerArrangementInputs();
   populateDesignerColumnFieldSelect();
+  syncDesignerBlockSortControls(block);
+}
+
+function sortableRepeatedDefinitions(collection) {
+  if (!["away.bench", "home.bench", "away.bullpen", "home.bullpen"].includes(String(collection || ""))) return [];
+  return getCatalogFields({ cardinality: "repeated", collection })
+    .filter((definition) => definition.kind === "atomic" && ["text", "integer", "decimal"].includes(definition.valueType))
+    .filter((definition) => !/[.]stats[.](record|slashLine)$/.test(definition.id));
+}
+
+function repeatedSortOptionLabel(definition) {
+  if (!definition) return "";
+  if (/[.]player[.]name$/.test(definition.id)) return "Last Name";
+  return String(definition.label || definition.id)
+    .replace(/^(Away|Home) (Bench|Bullpen) — /, "");
+}
+
+function syncDesignerBlockSortControls(block = selectedDesignerBlock()) {
+  if (!elements.designerBlockSortControls || !elements.designerBlockSort) return;
+  const creating = Boolean(state.designerPaletteSelection && state.designerPendingMode === "repeated");
+  const collection = creating ? String(elements.designerLineupSide?.value || "") : (block?.collection || "");
+  const supported = (creating || !isRecordBlock(block)) && ["away.bench", "home.bench", "away.bullpen", "home.bullpen"].includes(collection);
+  elements.designerBlockSortControls.hidden = !supported;
+  if (!supported) return;
+
+  const definitions = sortableRepeatedDefinitions(collection);
+  const sortState = creating ? state.designerBlockSortDraft : block?.sort;
+  const currentField = String(sortState?.field || "");
+  elements.designerBlockSort.replaceChildren();
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "Sort: None";
+  elements.designerBlockSort.append(none);
+  for (const definition of definitions) {
+    const option = document.createElement("option");
+    option.value = definition.id;
+    option.textContent = repeatedSortOptionLabel(definition);
+    elements.designerBlockSort.append(option);
+  }
+  elements.designerBlockSort.value = definitions.some((definition) => definition.id === currentField) ? currentField : "";
+  const enabled = Boolean(elements.designerBlockSort.value);
+  if (elements.designerBlockSortDirection) elements.designerBlockSortDirection.hidden = !enabled;
+  const direction = sortState?.direction === "desc" ? "desc" : "asc";
+  for (const [button, value] of [[elements.designerBlockSortAsc, "asc"], [elements.designerBlockSortDesc, "desc"]]) {
+    if (!button) continue;
+    const active = enabled && direction === value;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  }
+}
+
+function handleDesignerBlockSortChange() {
+  const creating = Boolean(state.designerPaletteSelection && state.designerPendingMode === "repeated");
+  const field = String(elements.designerBlockSort?.value || "");
+  if (creating) {
+    const direction = state.designerBlockSortDraft?.direction === "desc" ? "desc" : "asc";
+    state.designerBlockSortDraft = { field, direction };
+    syncDesignerBlockSortControls(null);
+    return;
+  }
+  const block = selectedDesignerBlock();
+  if (!block || isRecordBlock(block) || !["away.bench", "home.bench", "away.bullpen", "home.bullpen"].includes(block.collection)) return;
+  recordDesignerHistory();
+  const direction = block.sort?.direction === "desc" ? "desc" : "asc";
+  block.sort = { field, direction };
+  markDesignerObjectChanged();
+  syncDesignerBlockSortControls(block);
+}
+
+function setDesignerBlockSortDirection(direction) {
+  if (!["asc", "desc"].includes(direction)) return;
+  const creating = Boolean(state.designerPaletteSelection && state.designerPendingMode === "repeated");
+  if (creating) {
+    if (!state.designerBlockSortDraft?.field || state.designerBlockSortDraft.direction === direction) return;
+    state.designerBlockSortDraft = { field: state.designerBlockSortDraft.field, direction };
+    syncDesignerBlockSortControls(null);
+    return;
+  }
+  const block = selectedDesignerBlock();
+  if (!block || !block.sort?.field || block.sort.direction === direction) return;
+  recordDesignerHistory();
+  block.sort = { field: block.sort.field, direction };
+  markDesignerObjectChanged();
+  syncDesignerBlockSortControls(block);
 }
 
 function syncDesignerArrangementInputs() {
@@ -3086,7 +3274,7 @@ function blockContentLabel(column) {
 
 function designerSlotContentPreview(block, column, slot) {
   const content = column.content || { type: "field", field: column.field };
-  return resolveSlotContent(content, DESIGNER_SAMPLE_MODEL, blockContext(block), isRecordBlock(block) ? null : { slot }) || "[blank]";
+  return resolveSlotContent(content, DESIGNER_SAMPLE_MODEL, blockContext(block), repeatedSourceSelector(DESIGNER_SAMPLE_MODEL, block, slot)) || "[blank]";
 }
 
 function isSlotGridGeometry(block) {
@@ -3120,6 +3308,50 @@ function ensureRepeatedBlockIds(layout) {
 function repeatedRowYPercent(block, rowIndex, pageHeightPoints) {
   if (!block?.geometry) return 0;
   return clamp(Number(block.geometry.firstYPercent) + ((Number(block.geometry.rowSpacingPoints) || 0) * rowIndex / pageHeightPoints), 0, 1);
+}
+
+function repeatedSortValue(model, fieldId, slot) {
+  const definition = getFieldDefinition(fieldId);
+  if (!definition) return null;
+  const resolution = resolveField(model, fieldId, { slot });
+  if (resolution.state !== "available") return null;
+  if (/[.]player[.]name$/.test(definition.id)) {
+    const player = resolution.formatSource || {};
+    const value = player.lastName || player.useLastName || resolution.value;
+    const text = String(value ?? "").trim();
+    return text ? { type: "text", value: text } : null;
+  }
+  if (/[.]player[.]number$/.test(definition.id) || /[.]position[.]number$/.test(definition.id) || ["integer", "decimal"].includes(definition.valueType)) {
+    const number = Number.parseFloat(String(resolution.value ?? "").replace(/[^0-9.+-]/g, ""));
+    if (Number.isFinite(number)) return { type: "number", value: number };
+  }
+  const text = String(resolution.value ?? "").trim();
+  return text ? { type: "text", value: text } : null;
+}
+
+function repeatedSourceSlots(model, block) {
+  const rows = getCollectionRows(model, block?.collection);
+  const slots = rows.map((_row, index) => index + 1);
+  const fieldId = String(block?.sort?.field || "");
+  if (!fieldId || !sortableRepeatedDefinitions(block?.collection).some((definition) => definition.id === fieldId)) return slots;
+  const direction = block?.sort?.direction === "desc" ? -1 : 1;
+  return slots.slice().sort((left, right) => {
+    const a = repeatedSortValue(model, fieldId, left);
+    const b = repeatedSortValue(model, fieldId, right);
+    if (!a && !b) return left - right;
+    if (!a) return 1;
+    if (!b) return -1;
+    let comparison = 0;
+    if (a.type === "number" && b.type === "number") comparison = a.value - b.value;
+    else comparison = String(a.value).localeCompare(String(b.value), undefined, { sensitivity: "base", numeric: true });
+    return comparison ? comparison * direction : left - right;
+  });
+}
+
+function repeatedSourceSelector(model, block, displaySlot) {
+  if (isRecordBlock(block)) return null;
+  const sourceSlots = repeatedSourceSlots(model, block);
+  return { slot: sourceSlots[displaySlot - 1] || displaySlot };
 }
 
 function setDesignerPlacement(placement) {
@@ -3183,6 +3415,28 @@ function handleDesignerZoomWheel(event) {
   setDesignerZoom(state.designerZoom + (event.deltaY < 0 ? DESIGNER_ZOOM_STEP : -DESIGNER_ZOOM_STEP));
 }
 
+function closeDesignerToolbarPopover(menu) {
+  if (menu?.open) menu.open = false;
+}
+
+function closeDesignerToolbarPopovers(except = null) {
+  [elements.designerPasteMenu, elements.designerZoomMenu].forEach((menu) => {
+    if (menu && menu !== except) closeDesignerToolbarPopover(menu);
+  });
+}
+
+function wireDesignerToolbarPopovers() {
+  [elements.designerPasteMenu, elements.designerZoomMenu].forEach((menu) => {
+    menu?.addEventListener("toggle", () => {
+      if (menu.open) closeDesignerToolbarPopovers(menu);
+    });
+  });
+  document.addEventListener("pointerdown", (event) => {
+    const target = event.target;
+    if (elements.designerPasteMenu?.open && !elements.designerPasteMenu.contains(target)) closeDesignerToolbarPopover(elements.designerPasteMenu);
+    if (elements.designerZoomMenu?.open && !elements.designerZoomMenu.contains(target)) closeDesignerToolbarPopover(elements.designerZoomMenu);
+  });
+}
 
 async function changeDesignerPage(delta) {
   if (!state.designerPdfDocument) return;
@@ -3353,17 +3607,27 @@ function designerPaletteItems() {
   }
   for (const [id, groupId] of [["away.startingPitcher","away-players"],["home.startingPitcher","home-players"]]) {
     const fields = designerFieldsForContext(id, { catalogOnly: true });
-    if (fields.length || designerDirectInstancesForItem({ kind: "record", id }).length) items.push({ kind: "record", id, groupId, label: "Starting Pitcher", fields });
+    if (fields.length || designerDirectInstancesForItem({ kind: "record", id }).length) {
+      // Build 028.9: Starting Pitcher has exactly one whole-object workflow.
+      // Enter Record Layout directly, matching Starting Lineup and Defensive Alignment.
+      items.push({ kind: "record", id, groupId, label: "Starting Pitcher", fields, forcedMode: "record" });
+    }
   }
   const collections = [
-    ["away.lineup", "Starting Lineup", "away-players"], ["home.lineup", "Starting Lineup", "home-players"],
-    ["away.bench", "Bench", "away-players"], ["home.bench", "Bench", "home-players"],
-    ["away.bullpen", "Bullpen", "away-players"], ["home.bullpen", "Bullpen", "home-players"],
-    ["game.umpires.crew", "Umpire Crew", "game"]
+    { id:"away.lineup", label:"Starting Lineup", groupId:"away-players", forcedMode:"repeated" },
+    { id:"away.lineup", paletteId:"away.defensiveAlignment", label:"Defensive Alignment", groupId:"away-players", forcedMode:"individual" },
+    { id:"home.lineup", label:"Starting Lineup", groupId:"home-players", forcedMode:"repeated" },
+    { id:"home.lineup", paletteId:"home.defensiveAlignment", label:"Defensive Alignment", groupId:"home-players", forcedMode:"individual" },
+    // Build 028.13: Bench and Bullpen are single-workflow palette objects.
+    // Skip the redundant usage chooser and enter Repeated Layout directly.
+    { id:"away.bench", label:"Bench", groupId:"away-players", forcedMode:"repeated" }, { id:"home.bench", label:"Bench", groupId:"home-players", forcedMode:"repeated" },
+    { id:"away.bullpen", label:"Bullpen", groupId:"away-players", forcedMode:"repeated" }, { id:"home.bullpen", label:"Bullpen", groupId:"home-players", forcedMode:"repeated" },
+    { id:"game.umpires.crew", label:"Umpire Crew", groupId:"game" }
   ];
-  for (const [collection, label, groupId] of collections) {
+  for (const item of collections) {
+    const collection = item.id;
     const hasFields = getCatalogFields({ cardinality: "repeated", collection }).some((definition) => designerFieldAllowed(definition));
-    if (hasFields || designerDirectInstancesForItem({ kind: "collection", id: collection }).length) items.push({ kind: "collection", id: collection, groupId, label });
+    if (hasFields || designerDirectInstancesForItem({ kind:"collection", ...item }).length) items.push({ kind:"collection", ...item });
   }
   items.push({ kind: "custom", id: "custom", groupId: "custom", label: "Text Template" });
   return items;
@@ -3384,8 +3648,10 @@ function designerInstancesForItem(item, layout = selectedLayout()) {
       if (mapping.content?.type !== "template" && canonicalFieldId(mapping.field) === canonicalFieldId(item.id)) {
         instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Single Item` });
       } else if (mapping.content?.type === "template") {
-        const label = getFieldDefinition(item.id)?.label;
-        if (label && String(mapping.content.template || "").includes(`[${label}]`)) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Used in Text Template`, reference: true });
+        const originMatches = canonicalFieldId(mapping.content?.originField) === canonicalFieldId(item.id);
+        const referenced = templateFieldIds(mapping.content.template, mapping.content.context).some((fieldId) => canonicalFieldId(fieldId) === canonicalFieldId(item.id));
+        if (originMatches) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Text Template` });
+        else if (referenced) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Used in Text Template`, reference: true });
       }
     }
   } else if (item.kind === "record") {
@@ -3404,13 +3670,13 @@ function designerInstancesForItem(item, layout = selectedLayout()) {
     for (const mapping of layout.mappings || []) if (mapping.content?.type === "template" && !mapping.content.context) instances.push({ selection: { kind: "mapping", id: mapping.id }, label: `Page ${(mapping.pageIndex ?? 0) + 1} • Text Template` });
   } else if (item.kind === "collection") {
     let n = 0;
-    for (const block of layout.repeatedBlocks || []) if (block.collection === item.id) {
+    if (item.forcedMode !== "individual") for (const block of layout.repeatedBlocks || []) if (block.collection === item.id) {
       n += 1;
       const page = Number.isInteger(block.pageIndex) ? `Page ${block.pageIndex + 1}` : "Placement not set";
       const contentState = (block.columns || []).length ? `${(block.columns || []).length} field${(block.columns || []).length === 1 ? "" : "s"}` : "No fields";
       instances.push({ selection: { kind: "block", blockId: block.id }, label: `${blockArrangementLabel(block)} • ${page} • ${contentState} • Instance ${n}` });
     }
-    const individual = (layout.individualMappings || []).filter((mapping) => mapping.collection === item.id);
+    const individual = item.forcedMode === "repeated" ? [] : (layout.individualMappings || []).filter((mapping) => mapping.collection === item.id);
     if (individual.length) {
       const roleTotal = INDIVIDUAL_ROLE_OPTIONS[item.id]?.length || 0;
       const progress = roleTotal ? `${individual.length} of ${roleTotal} placed` : `${individual.length} placed`;
@@ -3508,17 +3774,15 @@ function renderDesignerPaletteItem(item) {
   const references = instances.filter((instance) => instance.reference);
   const selected = designerPaletteItemMatchesSelection(item, state.designerSelection) || designerPendingPaletteMatches(item);
   button.className = `designer-palette-item${instances.length ? " placed" : ""}${selected ? " selected" : ""}`;
-  const check = document.createElement("span"); check.className = "designer-palette-status-icon"; check.textContent = instances.length ? "✓" : "";
   const label = document.createElement("span"); label.className = "designer-palette-item-label"; label.textContent = item.label;
-  const status = document.createElement("small");
-  status.textContent = directInstances.length ? `${directInstances.length} instance${directInstances.length === 1 ? "" : "s"}` : (references.length ? "Used in template" : (item.kind === "custom" ? "" : "Available"));
-  button.replaceChildren(check, label, status);
+  button.replaceChildren(label);
   if (item.description) button.title = item.exampleValue ? `${item.description} Example: ${item.exampleValue}` : item.description;
   button.addEventListener("click", () => activateDesignerPaletteItem(item, directInstances.length > 0));
   if (item.kind === "record" && item.fields?.length) {
     const details = document.createElement("details"); details.className = "designer-record-fields designer-record-direct";
     const summary = document.createElement("summary");
-    summary.append(check, label, status);
+    const chevron = document.createElement("span"); chevron.className = "designer-palette-chevron"; chevron.setAttribute("aria-hidden", "true");
+    summary.append(chevron, label);
     summary.className = button.className;
     summary.title = "Expand or collapse Starting Pitcher fields";
     details.append(summary);
@@ -3565,7 +3829,9 @@ function renderDesignerPaletteItem(item) {
     if (item.kind !== "record") {
       const details = document.createElement("details"); details.className = "designer-palette-item-details";
       details.open = selected;
-      const summary = document.createElement("summary"); summary.className = button.className; summary.replaceChildren(check, label, status);
+      const summary = document.createElement("summary"); summary.className = button.className;
+      const chevron = document.createElement("span"); chevron.className = "designer-palette-chevron"; chevron.setAttribute("aria-hidden", "true");
+      summary.replaceChildren(chevron, label);
       summary.addEventListener("click", (event) => { if (!details.open) { event.preventDefault(); details.open = true; activateDesignerPaletteItem(item, true); } });
       button.remove(); details.append(summary, children); group.append(details);
     } else {
@@ -3701,9 +3967,11 @@ function toggleDesignerMultiSelection(selection) {
   setDesignerMultiSelection(current);
 }
 
+function designerPaletteIdentity(item) { return item?.paletteId || item?.id || ""; }
+
 function designerPendingPaletteMatches(item) {
   const p = state.designerPaletteSelection;
-  return Boolean(p && p.kind === item.kind && p.id === item.id);
+  return Boolean(p && p.kind === item.kind && designerPaletteIdentity(p) === designerPaletteIdentity(item));
 }
 
 function designerPaletteItemMatchesSelection(item, selection) {
@@ -3711,13 +3979,19 @@ function designerPaletteItemMatchesSelection(item, selection) {
   const object = locateDesignerObject(selection);
   if (!selection || !object) return false;
   if (item.kind === "field" && selection.kind === "mapping" && object.content?.type !== "template") return canonicalFieldId(object.field) === canonicalFieldId(item.id);
-  if (item.kind === "field" && selection.kind === "mapping" && object.content?.type === "template") return false;
+  if (item.kind === "field" && selection.kind === "mapping" && object.content?.type === "template") return canonicalFieldId(object.content?.originField) === canonicalFieldId(item.id);
   if (item.kind === "custom" && selection.kind === "mapping") return object.content?.type === "template" && !object.content.context;
   if (item.kind === "record") {
     if (selection.kind === "mapping") return getFieldDefinition(object.field)?.record === item.id || object.content?.context === item.id;
     return (selection.kind === "block" && blockContext(object) === item.id) || (selection.kind === "repeatedColumn" && blockContext(object.block) === item.id);
   }
-  if (item.kind === "collection") return (selection.kind === "block" && object.collection === item.id) || (selection.kind === "individual" && object.collection === item.id) || (selection.kind === "individualWorkspace" && object.collection === item.id) || (selection.kind === "repeatedColumn" && object.block.collection === item.id);
+  if (item.kind === "collection") {
+    const isRepeatedSelection = (selection.kind === "block" && object.collection === item.id) || (selection.kind === "repeatedColumn" && object.block.collection === item.id);
+    const isIndividualSelection = (selection.kind === "individual" && object.collection === item.id) || (selection.kind === "individualWorkspace" && object.collection === item.id);
+    if (item.forcedMode === "repeated") return isRepeatedSelection;
+    if (item.forcedMode === "individual") return isIndividualSelection;
+    return isRepeatedSelection || isIndividualSelection;
+  }
   return false;
 }
 
@@ -3725,16 +3999,34 @@ function paletteItemForSelection(selection = state.designerSelection) {
   const object = locateDesignerObject(selection);
   if (!selection || !object) return null;
   if (selection.kind === "mapping") {
-    if (object.content?.type === "template") return object.content.context
-      ? { kind:"record", id:object.content.context, label:collectionDisplayLabel(object.content.context) }
-      : { kind:"custom", id:"custom", label:"Text Template" };
+    if (object.content?.type === "template") {
+      if (isTeamInfoTemplateContext(object.content.context) && object.content.originField) {
+        const def = getFieldDefinition(object.content.originField);
+        if (def) return { kind:"field", id:def.id, groupId:designerPaletteGroupForField(def), label:def.label };
+      }
+      return object.content.context
+        ? { kind:"record", id:object.content.context, label:collectionDisplayLabel(object.content.context) }
+        : { kind:"custom", id:"custom", label:"Text Template" };
+    }
     const def = getFieldDefinition(object.field); return def ? { kind:"field", id:def.id, label:def.label } : null;
   }
-  if (selection.kind === "block") return isRecordBlock(object) ? { kind:"record", id:blockContext(object), label: collectionDisplayLabel(blockContext(object)) } : { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
-  if (selection.kind === "individual") return { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
-  if (selection.kind === "individualWorkspace") return { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection) };
-  if (selection.kind === "repeatedColumn") return isRecordBlock(object.block) ? { kind:"record", id:blockContext(object.block), label: collectionDisplayLabel(blockContext(object.block)) } : { kind:"collection", id:object.block.collection, label: collectionDisplayLabel(object.block.collection) };
+  if (selection.kind === "block") return isRecordBlock(object) ? { kind:"record", id:blockContext(object), label: collectionDisplayLabel(blockContext(object)), forcedMode:"record" } : { kind:"collection", id:object.collection, label: collectionDisplayLabel(object.collection), ...(["away.lineup","home.lineup","away.bench","home.bench","away.bullpen","home.bullpen"].includes(object.collection) ? { forcedMode:"repeated" } : {}) };
+  if (selection.kind === "individual") return individualPaletteItem(object.collection);
+  if (selection.kind === "individualWorkspace") return individualPaletteItem(object.collection);
+  if (selection.kind === "repeatedColumn") return isRecordBlock(object.block) ? { kind:"record", id:blockContext(object.block), label: collectionDisplayLabel(blockContext(object.block)), forcedMode:"record" } : { kind:"collection", id:object.block.collection, label: collectionDisplayLabel(object.block.collection), ...(["away.lineup","home.lineup","away.bench","home.bench","away.bullpen","home.bullpen"].includes(object.block.collection) ? { forcedMode:"repeated" } : {}) };
   return null;
+}
+
+function individualPaletteItem(collection) {
+  if (collection === "away.lineup") return { kind:"collection", id:collection, paletteId:"away.defensiveAlignment", label:"Defensive Alignment", forcedMode:"individual" };
+  if (collection === "home.lineup") return { kind:"collection", id:collection, paletteId:"home.defensiveAlignment", label:"Defensive Alignment", forcedMode:"individual" };
+  return { kind:"collection", id:collection, label:collectionDisplayLabel(collection) };
+}
+
+function individualWorkspaceDisplayLabel(collection) {
+  if (collection === "away.lineup") return "Away defensive alignment";
+  if (collection === "home.lineup") return "Home defensive alignment";
+  return collectionDisplayLabel(collection);
 }
 
 function collectionDisplayLabel(collection) {
@@ -3758,13 +4050,15 @@ function activateDesignerPaletteItem(item, placed) {
   }
   state.designerSelection = null;
   state.designerPaletteSelection = { ...item };
+  if (item.forcedMode) state.designerPendingMode = item.forcedMode;
   configureControlsForPaletteItem(item);
   renderDesignerOverlay(); renderDesignerPalette(); renderDesignerSelectionInspector();
 }
 
 function configureControlsForPaletteItem(item) {
   if (item.kind === "field") {
-    populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect();
+    const templateContext = templateContextForField(item.id);
+    populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect(templateContext);
     if (Array.from(elements.designerFieldSelect.options).some((o)=>o.value===item.id)) elements.designerFieldSelect.value=item.id;
     elements.designerTemplateField.value = item.id;
     syncDesignerSingleNameFormatControl();
@@ -3775,7 +4069,8 @@ function configureControlsForPaletteItem(item) {
   } else if (item.kind === "collection") {
     if (Array.from(elements.designerLineupSide.options).some((o)=>o.value===item.id)) elements.designerLineupSide.value=item.id;
     if (Array.from(elements.designerIndividualCollection.options).some((o)=>o.value===item.id)) elements.designerIndividualCollection.value=item.id;
-    populateDesignerColumnFieldSelect(); syncDesignerIndividualControls();
+    state.designerBlockSortDraft = { field: "", direction: "asc" };
+    populateDesignerColumnFieldSelect(); syncDesignerIndividualControls(); syncDesignerBlockSortControls(null);
   } else if (item.kind === "custom") {
     populateDesignerTemplateFieldSelect();
   }
@@ -3786,7 +4081,7 @@ function beginNewInstanceFromSelection() {
   if (!item) return;
   state.designerSelection = null;
   state.designerPaletteSelection = item;
-  state.designerPendingMode = null;
+  state.designerPendingMode = item.forcedMode || null;
   configureControlsForPaletteItem(item);
   renderDesignerOverlay(); renderDesignerPalette(); renderDesignerSelectionInspector();
 }
@@ -3803,7 +4098,8 @@ function chooseDesignerPendingMode(mode) {
   elements.designerContextTools.classList.remove("editing-existing-block");
   configureControlsForPaletteItem(item);
   if (mode === "template") {
-    elements.designerTemplateText.value = item.kind === "field" ? templateTokenForField(item.id) : "";
+    const context = item.kind === "field" ? templateContextForField(item.id) : item.kind === "record" ? item.id : null;
+    elements.designerTemplateText.value = item.kind === "field" ? (context ? templateTokenForContextField(item.id) : templateTokenForField(item.id)) : "";
     updateDesignerTemplatePreview();
   }
   renderDesignerSelectionInspector();
@@ -3835,8 +4131,8 @@ function locateDesignerObject(selection = state.designerSelection) {
 function designerSelectionLabel(selection, object) {
   if (!selection || !object) return "Nothing selected";
   if (selection.kind === "mapping") return object.content?.type === "template" ? "Text Template" : designerFieldLabel(object.field);
-  if (selection.kind === "individual") return `${collectionDisplayLabel(object.collection)} — Individual Placement`;
-  if (selection.kind === "individualWorkspace") return `${collectionDisplayLabel(object.collection)} — Individual Placement`;
+  if (selection.kind === "individual") return `${individualWorkspaceDisplayLabel(object.collection)} — Individual Placement`;
+  if (selection.kind === "individualWorkspace") return `${individualWorkspaceDisplayLabel(object.collection)} — Individual Placement`;
   if (selection.kind === "block") return blockLabel(object);
   if (selection.kind === "repeatedColumn") return blockLabel(object.block);
   return "Selected object";
@@ -3925,7 +4221,7 @@ function designerParentLabel(selection = state.designerSelection, object = locat
   if (!selection || !object) return "Nothing selected";
   if (selection.kind === "repeatedColumn") return blockLabel(object.block);
   if (selection.kind === "block") return blockLabel(object);
-  if (selection.kind === "individual" || selection.kind === "individualWorkspace") return `${collectionDisplayLabel(object.collection)} — Individual Placement`;
+  if (selection.kind === "individual" || selection.kind === "individualWorkspace") return `${individualWorkspaceDisplayLabel(object.collection)} — Individual Placement`;
   return designerSelectionLabel(selection, object);
 }
 
@@ -3985,8 +4281,11 @@ function resetDesignerInspectorSurfaces() {
   if (elements.designerBlockLayoutControls) elements.designerBlockLayoutControls.hidden = false;
   if (elements.designerSlotFieldsPanel) elements.designerSlotFieldsPanel.hidden = true;
   if (elements.designerSelectionNameFormatWrap) elements.designerSelectionNameFormatWrap.hidden = true;
+  if (elements.designerSelectionDateFormatWrap) elements.designerSelectionDateFormatWrap.hidden = true;
+  if (elements.designerFormattingCard) elements.designerFormattingCard.hidden = true;
   if (elements.designerSelectionTemplateWrap) elements.designerSelectionTemplateWrap.hidden = true;
   if (elements.designerSelectionRemoveItemButton) elements.designerSelectionRemoveItemButton.hidden = true;
+  if (elements.designerLayoutWorkspaceActions) elements.designerLayoutWorkspaceActions.hidden = true;
   elements.designerContextTools.classList.remove("editing-existing-block", "geometry-ready", "creating-repeated", "creating-record", "scoped-child-workspace");
   if (elements.designerBlockList) elements.designerBlockList.hidden = false;
 }
@@ -4012,7 +4311,9 @@ function renderPendingDesignerCreation(pending, pendingMode) {
       add("Single Item", "Place this value directly on the scorecard.", "single");
       add("Text Template", "Combine this value with labels or other fields.", "template");
     } else if (pending.kind === "record") {
-      add("Text Template", "Combine attributes from this record.", "template");
+      // Build 028.8: a Starting Pitcher record is a structured one-record object.
+      // Text Templates remain available for its individual child fields, but the
+      // whole record itself should not be offered as a Text Template instance.
       add("Record Layout", "Arrange several attributes in one one-record slot.", "record");
     } else if (pending.kind === "collection") {
       add("Repeated Layout", "Arrange records as a list, row, or grid.", "repeated");
@@ -4030,7 +4331,8 @@ function renderPendingDesignerCreation(pending, pendingMode) {
   summaryText.innerHTML = `<span>Usage</span><strong>${names[pendingMode] || pendingMode}</strong>`;
   const change = document.createElement("button"); change.type = "button"; change.className = "secondary-button compact-button"; change.textContent = "Change";
   change.addEventListener("click", () => { state.designerPendingMode = null; renderDesignerSelectionInspector(); });
-  summary.append(summaryText, change);
+  summary.append(summaryText);
+  if (!pending.forcedMode) summary.append(change);
   elements.designerNewItemPanel.append(summary);
 
   configureControlsForPaletteItem(pending);
@@ -4087,7 +4389,8 @@ function renderMultiColorPicker(container, common) {
   }
   const custom = document.createElement("button"); custom.type = "button"; custom.className = "scorecard-color-custom"; custom.textContent = "Custom Color…";
   const native = document.createElement("input"); native.type = "color"; native.value = "#000000"; native.className = "scorecard-color-native"; native.tabIndex = -1;
-  custom.addEventListener("click", () => native.click()); native.addEventListener("input", () => { details.open = false; applyMultiFormattingProperty("color", native.value); });
+  custom.addEventListener("click", () => openNativeColorPicker(native, custom));
+  native.addEventListener("change", () => { details.open = false; applyMultiFormattingProperty("color", native.value); });
   panel.append(swatches, custom, native); details.append(summary, panel); container.append(details);
 }
 
@@ -4102,6 +4405,7 @@ function renderDesignerMultiSelectionInspector() {
   if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = false;
   setDesignerWorkspaceHeading("Multiple Selection", "Common Formatting & Alignment");
   elements.designerSelectionControls.hidden = false; elements.designerSelectionPositionControls.hidden = true; elements.designerSelectionFormatControls.hidden = true;
+  if (elements.designerFormattingCard) elements.designerFormattingCard.hidden = false;
   elements.designerMultiSelectionControls.hidden = false; elements.designerContextTools.hidden = true;
   const targets = multiFormattingTargets();
   const face = commonMultiFormattingValue("fontFace", targets); elements.designerMultiFontFace.value = face.mixed ? "" : String(face.value);
@@ -4220,6 +4524,7 @@ function renderDesignerSelectionInspector() {
     elements.designerBlockLayoutControls.hidden = false;
     elements.designerSlotFieldsPanel.hidden = true;
     elements.designerPlaceRowsButton.hidden = !object.geometry;
+    if (elements.designerLayoutWorkspaceActions) elements.designerLayoutWorkspaceActions.hidden = !object.geometry;
     elements.designerDeleteBlockButton.hidden = true;
     if (hasEstablishedGeometry) {
       elements.designerWorkspaceNewButton.hidden = false;
@@ -4242,6 +4547,7 @@ function renderDesignerSelectionInspector() {
 
   setDesignerWorkspaceHeading("Selected Item", designerChildLabel(selection, object));
   elements.designerSelectionControls.hidden = false;
+  if (elements.designerFormattingCard) elements.designerFormattingCard.hidden = false;
   elements.designerContextTools.hidden = true;
 
   const anchor = designerSelectionAnchor(selection, object);
@@ -4259,16 +4565,20 @@ function renderDesignerSelectionInspector() {
   elements.designerSelectionTemplate.value = isTemplate ? (target.content.template || "") : "";
   const definition = getFieldDefinition(target.content?.field || target.field);
   const hasNameFormat = !isTemplate && definition?.formatKind === "playerName";
+  const hasDateFormat = !isTemplate && definition?.id === "game.date";
   elements.designerSelectionNameFormatWrap.hidden = !hasNameFormat;
   elements.designerSelectionNameFormat.value = hasNameFormat ? (target.content?.format?.nameFormat || "full") : "full";
+  if (elements.designerSelectionDateFormatWrap) elements.designerSelectionDateFormatWrap.hidden = !hasDateFormat;
+  if (elements.designerSelectionDateFormat) elements.designerSelectionDateFormat.value = hasDateFormat ? (target.content?.format?.dateFormat || DEFAULT_DATE_FORMAT) : "";
   elements.designerSelectionRemoveItemButton.hidden = !editingChild;
   // Keep the add-child loop available while an existing child is selected. This is a
   // child-workspace action, not a parent-card action, and applies to both Repeated and
   // single-record Record Layout containers.
-  if (editingChild && isRepeated && parentBlock?.geometry) {
+  if (editingChild && ((isRepeated && parentBlock?.geometry) || selection.kind === "individual")) {
     elements.designerWorkspaceNewButton.hidden = false;
     if (elements.designerChildWorkspaceActions) elements.designerChildWorkspaceActions.hidden = false;
   }
+  if (editingChild && elements.designerChildWorkspaceActions) elements.designerChildWorkspaceActions.hidden = false;
   if (isTemplate) {
     populateDesignerSelectionTemplateFieldSelect();
     updateDesignerSelectionTemplatePreview();
@@ -4444,7 +4754,7 @@ function populateDesignerSelectionTemplateFieldSelect() {
   placeholder.textContent = "Choose text field to insert…";
   select.append(placeholder);
   const selected = locateDesignerObject();
-  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
+  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : (selected?.content?.context || startingPitcherContextForTarget(selected));
   const definitions = (context ? fieldsForRecordContext(context, { catalogOnly: true }) : getCatalogFields({ cardinality: "single" })).filter((definition) => designerFieldEnabled(definition));
   for (const definition of definitions) {
     const option = document.createElement("option");
@@ -4462,7 +4772,7 @@ function updateDesignerSelectionTemplatePreview() {
   if (!preview || elements.designerSelectionTemplateWrap?.hidden) return;
   const template = elements.designerSelectionTemplate.value || "";
   const selected = locateDesignerObject();
-  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
+  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : (selected?.content?.context || startingPitcherContextForTarget(selected));
   const selector = state.designerSelection?.kind === "repeatedColumn" && !isRecordBlock(selected?.block) ? { slot: 1 } : null;
   preview.textContent = context
     ? (resolveSlotContent({ type: "template", template }, DESIGNER_SAMPLE_MODEL, context, selector) || "Enter text or insert a field.")
@@ -4475,7 +4785,7 @@ function insertDesignerSelectionTemplateField() {
   const definition = getFieldDefinition(field);
   if (!textarea || !definition) return;
   const selected = locateDesignerObject();
-  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : selected?.content?.context;
+  const context = state.designerSelection?.kind === "repeatedColumn" ? blockContext(selected?.block) : (selected?.content?.context || startingPitcherContextForTarget(selected));
   const token = templateTokenWithNameFormat(field, context, elements.designerSelectionTemplateNameFormat?.value);
   if (!token) return;
   const start = textarea.selectionStart ?? textarea.value.length;
@@ -4489,6 +4799,22 @@ function insertDesignerSelectionTemplateField() {
   textarea.focus();
 }
 
+
+
+function applyDesignerInspectorDateFormat() {
+  const found = currentInlineFormattingTarget();
+  if (!found) return;
+  const definition = getFieldDefinition(found.target?.content?.field || found.target?.field);
+  if (definition?.valueType !== "date") return;
+  const value = validDesignerDateFormat(elements.designerSelectionDateFormat?.value);
+  if (!value) {
+    if (elements.designerSelectionDateFormat) elements.designerSelectionDateFormat.value = found.target.content?.format?.dateFormat || DEFAULT_DATE_FORMAT;
+    return setDesignerMessage("Date format can use D, DD, M, MM, MMM, MMMM, Y, YY, YYYY plus spaces, comma, slash, or dash.", true);
+  }
+  found.target.content = found.target.content || { type: "field", field: found.target.field };
+  found.target.content.format = { ...(found.target.content.format || {}), dateFormat: value };
+  markDesignerObjectChanged();
+}
 
 function layoutFormattingDefaults(layout = selectedLayout()) {
   return ensureLayoutFormattingDefaults(layout || {});
@@ -4542,9 +4868,9 @@ function currentInlineFormattingTarget() {
 
 function updateDesignerFormattingSummary(target, selection = state.designerSelection, object = locateDesignerObject(selection)) {
   if (!elements.designerSelectionFormatSummary || !target) return;
-  const handedness = conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, selection?.kind === "repeatedColumn" ? blockContext(object?.block) : target?.collection || target?.content?.context, selection?.kind === "individual" ? target?.selector : selection?.kind === "repeatedColumn" && !isRecordBlock(object?.block) ? { slot: 1 } : null);
-  const defaults = defaultFormattingForTarget(target, { selection, object, handednessGroup: handedness });
-  const effective = effectiveFormatting(target, { selection, object, handednessGroup: handedness });
+  const options = inlineFormattingOptions({ selection, object, target });
+  const defaults = defaultFormattingForTarget(target, options);
+  const effective = effectiveFormatting(target, options);
   elements.designerSelectionFormatSummary.textContent = formattingSummary(defaults);
   if (elements.designerSelectionFontFace) elements.designerSelectionFontFace.value = effective.fontFace;
   if (elements.designerSelectionFontSize && document.activeElement !== elements.designerSelectionFontSize) elements.designerSelectionFontSize.value = String(effective.fontSize);
@@ -4567,7 +4893,7 @@ function formatsEqualValue(prop, a, b) {
 
 function inlineFormattingOptions(found) {
   const { selection, object, target } = found;
-  const context = selection.kind === "repeatedColumn" ? blockContext(object?.block) : target?.collection || target?.content?.context;
+  const context = selection.kind === "repeatedColumn" ? blockContext(object?.block) : target?.collection || target?.content?.context || startingPitcherContextForTarget(target);
   const selector = selection.kind === "individual" ? target?.selector : selection.kind === "repeatedColumn" && !isRecordBlock(object?.block) ? { slot: 1 } : null;
   return { selection, object, handednessGroup: conditionalFormattingGroup(DESIGNER_SAMPLE_MODEL, context, selector) };
 }
@@ -4723,6 +5049,24 @@ function wireFormattingFontSizeInput() {
   });
 }
 
+function openNativeColorPicker(native, anchor) {
+  if (!native || !anchor) return;
+  // Chrome anchors the native color chooser to the input element. Keep that
+  // anchor inside the viewport so the chooser can flip left/up at screen edges.
+  const rect = anchor.getBoundingClientRect();
+  const margin = 12;
+  const x = Math.max(margin, Math.min(window.innerWidth - margin, rect.left + rect.width / 2));
+  const y = Math.max(margin, Math.min(window.innerHeight - margin, rect.top + rect.height / 2));
+  native.style.position = "fixed";
+  native.style.left = `${Math.round(x)}px`;
+  native.style.top = `${Math.round(y)}px`;
+  native.style.width = "1px";
+  native.style.height = "1px";
+  native.style.opacity = "0";
+  native.style.pointerEvents = "none";
+  native.click();
+}
+
 function renderColorPicker(container, value, onChange) {
   if (!container) return;
   const normalized = normalizeColor(value);
@@ -4751,8 +5095,11 @@ function renderColorPicker(container, value, onChange) {
   }
   const custom = document.createElement("button"); custom.type = "button"; custom.className = "scorecard-color-custom"; custom.textContent = "Custom Color…";
   const native = document.createElement("input"); native.type = "color"; native.value = normalized; native.className = "scorecard-color-native"; native.tabIndex = -1;
-  custom.addEventListener("click", () => native.click());
-  native.addEventListener("input", () => { details.open = false; onChange?.(native.value); });
+  custom.addEventListener("click", () => openNativeColorPicker(native, custom));
+  // Do not commit on every native-picker input event. Chrome emits input while
+  // sliders are dragged and while hex digits are typed; committing there
+  // re-renders the host and destroys the picker after the first interaction.
+  native.addEventListener("change", () => { details.open = false; onChange?.(native.value); });
   panel.append(swatches, custom, native); details.append(summary, panel); container.append(details);
 }
 
@@ -5226,7 +5573,7 @@ function translateDesignerObjectSide(value, direction) {
     if (!node || typeof node !== "object") return;
     for (const [key, val] of Object.entries(node)) {
       if (key === "template" && typeof val === "string") { node[key] = translateDesignerTemplate(val, direction, node.context || null); continue; }
-      if (typeof val === "string" && ["field","collection","record","context","formattingGroup"].includes(key)) node[key] = translateDesignerSideId(val, direction);
+      if (typeof val === "string" && ["field","collection","record","context","originField","formattingGroup"].includes(key)) node[key] = translateDesignerSideId(val, direction);
       else if (val && typeof val === "object") walk(val);
     }
   };
@@ -5295,6 +5642,7 @@ function updateDesignerClipboardActions() {
 
 function handleDesignerPasteToolbarClick(event) {
   event.preventDefault();
+  closeDesignerToolbarPopovers(elements.designerPasteMenu);
   const hasClipboard = Boolean(state.designerClipboard?.units?.length);
   if (!hasClipboard) return;
   const eligible = clipboardTranslationEligibility();
@@ -5805,7 +6153,7 @@ async function buildPopulatedPdf(layout, model) {
     if (mapping.content?.type === "template") {
       const text = resolveTemplateText(mapping.content.template, model, mapping.content.context);
       if (!text) continue;
-      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
+      drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, scalarFormattingOptions(mapping, model, layout)), mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
       continue;
     }
     const definition = getFieldDefinition(mapping.field);
@@ -5817,7 +6165,7 @@ async function buildPopulatedPdf(layout, model) {
       else if (["missing", "notRequested", "partial"].includes(resolution.state)) missingCount += 1;
       continue;
     }
-    drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, { layout }), mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
+    drawAlignedPdfText(page, fontCache, text, effectiveFormatting(mapping, scalarFormattingOptions(mapping, model, layout)), mapping.xPercent, mapping.yPercent, mapping.alignment || "left", designerTextFitWidth(mapping));
   }
 
   const emptyBlocks = [];
@@ -5834,7 +6182,7 @@ async function buildPopulatedPdf(layout, model) {
         : { xPercent: null, yPercent: repeatedRowYPercent(block, slotIndex, height) };
       for (const column of block.columns || []) {
         const content = column.content || { type: "field", field: column.field };
-        const selector = isRecordBlock(block) ? null : { slot: slotIndex + 1 };
+        const selector = repeatedSourceSelector(model, block, slotIndex + 1);
         const definition = content.type === "field" ? getFieldDefinition(content.field || column.field) : null;
         if (content.type === "field" && (!definition || !fieldsForRecordContext(blockContext(block)).some((entry) => entry.id === definition.id))) { skipped.push(content.field || column.field || "slot field"); continue; }
         const resolution = definition ? resolveField(model, definition.id, selector) : null;
