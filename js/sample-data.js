@@ -183,6 +183,7 @@ function sideTeam({ name, locationName, shortName, clubName, abbreviation, wins,
       league: { name: league },
       division: { name: division },
       record: { gamesPlayed: wins + losses, wins, losses, pct: wins / (wins + losses) },
+      gameNumber: wins + losses + 1,
       standings
     },
     manager: { name: managerName, number: managerNumber },

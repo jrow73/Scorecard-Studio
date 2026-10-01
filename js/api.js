@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Stats API access
  * Version: 0.2.0-dev
- * Build: 025.2
+ * Build: 029.1
  */
 
 const STATS_API_V1 = "https://statsapi.mlb.com/api/v1";
@@ -33,6 +33,10 @@ export async function fetchFavoriteTeamSchedule(date, teamId, sportId = 1) {
 
 export async function fetchGameFeed(gamePk) {
   return fetchJson(`${GAME_FEED}/${encodeURIComponent(String(gamePk))}/feed/live`, "game feed");
+}
+
+export async function fetchGameBoxscore(gamePk) {
+  return fetchJson(`${STATS_API_V1}/game/${encodeURIComponent(String(gamePk))}/boxscore`, "game boxscore");
 }
 
 export async function fetchTeamRoster(teamId, date) {
@@ -96,6 +100,9 @@ function normalizeSchedule(data, requestedSportId = 1) {
     gameNumber: Number(game.gameNumber) || 1,
     doubleHeader: game.doubleHeader ?? "N",
     dayNight: game.dayNight ?? null,
+    startTimeTBD: Boolean(game.status?.startTimeTBD),
+    statusCode: game.status?.statusCode ?? null,
+    abstractGameState: game.status?.abstractGameState ?? null,
     awayTeam: game.teams?.away?.team?.name ?? "Away Team",
     homeTeam: game.teams?.home?.team?.name ?? "Home Team",
     awayTeamId: game.teams?.away?.team?.id ?? null,
@@ -104,6 +111,9 @@ function normalizeSchedule(data, requestedSportId = 1) {
     homeLeagueId: game.teams?.home?.team?.league?.id ?? null,
     awayTeamData: game.teams?.away?.team ?? null,
     homeTeamData: game.teams?.home?.team ?? null,
+    awayIsWinner: game.teams?.away?.isWinner === true,
+    homeIsWinner: game.teams?.home?.isWinner === true,
+    isTie: game.isTie === true,
     awayProbablePitcher: game.teams?.away?.probablePitcher ?? null,
     homeProbablePitcher: game.teams?.home?.probablePitcher ?? null,
     awayLineup: Array.isArray(game.lineups?.awayPlayers) ? game.lineups.awayPlayers : [],

@@ -1,6 +1,6 @@
 # Scorecard Studio — Field Registry
 
-Status: **Build 018.3 active field-catalog contract.** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016 and the Build 017 Starting Pitcher record, Record Layout, contextual slot-template, and initial player-name-format implementation. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
+Status: **Build 029 active field-catalog contract.** The normalized field/collection contract remains authoritative through the accepted Designer capabilities in Builds 009–016 and the Build 017 Starting Pitcher record, Record Layout, contextual slot-template, and initial player-name-format implementation. Target: complete v0.2.0 traditional pregame field library and formatting. Registry schema version: 1.
 
 **Accepted implementation slice:** Build 018 reconciled the runtime registry with the v1 scorecard field catalog, added `visibilityTier: standard | custom`, preserved superseded Build 017 field IDs as compatibility-only (`catalog: false`), closed normalized-but-hidden field gaps, added selected derived/stat fields, and extended Player Name Format with Boxscore Name. Build 018.1 adds concise `description` and deterministic `exampleValue` metadata to every active catalog field and establishes a shared representative sample model for Designer preview/testing. The Standard-vs-Custom scorecard setup UI is implemented and accepted through Build 026.4; it consumes these registry tiers dynamically rather than maintaining a separate hard-coded field list.
 
@@ -24,7 +24,7 @@ Key Build 018 decisions:
 
 - Standard game fields: Game Date, Scheduled Start, Venue Name, Weather Summary. Day/Night and game-of-day Game Number are Custom.
 - Venue city/state/country/capacity/turf/roof are Custom. Venue time zone remains application metadata, not a Designer field.
-- Full Team Name, Club Name, Abbreviation, Games Played, W-L Record, and Manager Name are Standard; other accepted team/standings details are Custom.
+- Full Team Name, Club Name, Abbreviation, Games Played, Team Game Number, W-L Record, and Manager Name are Standard; other accepted team/standings details are Custom.
 - Starting Pitcher active stats: GS, W-L, ERA (Standard); W, L, WHIP (Custom). Older pitching leaves remain compatibility-only.
 - Lineup/Bench active batting stats: AVG (Standard); OBP, SLG, OPS, HR, RBI, GP, PA, SB, Slash Line (Custom).
 - Bullpen active stats: W-L, ERA, WHIP (Standard); GS, W, L (Custom). Older bullpen IP/SO/Saves/Holds remain compatibility-only.
@@ -111,14 +111,14 @@ schemaVersion
 context { gamePk, season, sportId, selectedDate, retrievedAt }
 game { date, startTime, dayNight, type, number, venue, weather, umpires }
 away / home {
-  team, manager, coaches,
+  team { ..., gameNumber }, manager, coaches,
   lineup[9], startingPitcher, bench[], bullpen[], defense
 }
 standings { groups[] }
 meta { fields, collections, sources }
 ```
 
-Atomic leaf IDs equal paths below. Composite IDs are virtual resolver paths and need not be stored. `game.startTime` is the scheduled ISO instant, while `game.date` is the official date-only string; never parse a date-only string into a timezone-shifted day. Preserve null for missing values; never turn absence into zero, an empty object, or “TBD.” Uniform numbers are strings. Rates are finite decimal values with conventional formatter defaults (AVG/PCT three decimals, ERA/WHIP two); retain source text in provenance where needed. Innings pitched uses baseball notation, not a decimal fraction: `154.2` means 154 innings and two outs. Validate it and use outs for any arithmetic. Games-back values are tagged numeric/leader/not-applicable/unknown; raw `-` alone does not prove leader or zero.
+Atomic leaf IDs equal paths below. Composite IDs are virtual resolver paths and need not be stored. `game.startTime` is the scheduled ISO instant expressed with the venue timezone at render time; it is null when MLB marks `startTimeTBD: true`. `game.date` is the official date-only string; never parse a date-only string into a timezone-shifted day. Preserve null for missing values; never turn absence into zero, an empty object, or “TBD.” Uniform numbers are strings. Rates are finite decimal values with conventional formatter defaults (AVG/PCT three decimals, ERA/WHIP two); retain source text in provenance where needed. Innings pitched uses baseball notation, not a decimal fraction: `154.2` means 154 innings and two outs. Validate it and use outs for any arithmetic. Games-back values are tagged numeric/leader/not-applicable/unknown; raw `-` alone does not prove leader or zero.
 
 `resolveField(model, fieldId, selector)` returns `{ value, state, reason, provenance }`. States: `available`, `partial`, `missing`, `notRequested`, `error`, `unsupported`. An invalid/unknown ID or selector is an explicit diagnostic, never executed or silently rebound. Derived/composite results propagate dependency status. Missing values render blank by default; diagnostics remain visible in the UI, not printed into the PDF. Optional mapping placeholders may be offered later. Valid zero and false remain available. Failed supplemental requests cannot erase Game Pack values.
 
@@ -133,7 +133,7 @@ The tables and leaf lists below are exhaustive for this version's traditional re
 | Canonical ID or leaf family | Kind / type | Source and meaning |
 |---|---|---|
 | `game.date` | atomic / date | `gameData.datetime.officialDate` |
-| `game.startTime` | atomic / instant | `gameData.datetime.dateTime`; scheduled, never actual first pitch |
+| `game.startTime` | atomic / instant | Scheduled instant from Schedule/feed; render in venue local time, never actual first pitch; null when `startTimeTBD` is true |
 | `game.dayNight`, `game.type` | atomic / text | `datetime.dayNight`, `game.type` |
 | `game.number` | atomic / integer | `gameData.game.gameNumber`; within day's scheduled games |
 | `game.venue.name` | atomic / text | `gameData.venue.name` |
@@ -156,7 +156,8 @@ Internal: `game.id`, `game.venue.id`, each umpire `.id`, feed status and timing.
 |---|---|---|
 | `{side}.team`: `name`, `locationName`, `shortName`, `clubName`, `abbreviation` | atomic / text | `gameData.teams.{side}`; clubName falls back to teamName only |
 | `{side}.team.league.name`, `{side}.team.division.name` | atomic / text | Same team's league/division objects |
-| `{side}.team.record`: `gamesPlayed`, `wins`, `losses` | atomic / integer | Same team's `record` |
+| `{side}.team.record`: `gamesPlayed`, `wins`, `losses` | atomic / integer | Pregame record: previous-day Standings for the first game of the day; completed earlier same-day boxscore record when applicable |
+| `{side}.team.gameNumber` | atomic / integer | Team-specific season game number for the selected game: pregame `gamesPlayed + 1` |
 | `{side}.team.record.pct` | atomic / decimal | `record.winningPercentage`; do not recompute by default |
 | `{side}.team.record.display` | composite / text | wins + losses, default `W-L` |
 | `{side}.team.record.divisionLeader` | atomic / boolean | Feed flag, when supplied |

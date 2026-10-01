@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Pregame API normalization
  * Version: 0.2.0-dev
- * Build: 025.2
+ * Build: 029.1
  */
 
 export function normalizePregameData(feed, supplemental = {}, scheduleGame = null) {
@@ -34,19 +34,20 @@ export function normalizePregameData(feed, supplemental = {}, scheduleGame = nul
   };
 
   const peopleMap = buildPeopleMap(supplemental.people);
-  model.away = normalizeSide(feed, "away", scheduleGame, supplemental.rosters?.away, peopleMap, supplemental.coaches?.away, supplemental.standingsPayloads);
-  model.home = normalizeSide(feed, "home", scheduleGame, supplemental.rosters?.home, peopleMap, supplemental.coaches?.home, supplemental.standingsPayloads);
+  const priorGameSeasonStats = buildBoxscoreSeasonStatsMap(supplemental.earlierSameDayBoxscore);
+  model.away = normalizeSide(feed, "away", scheduleGame, supplemental.rosters?.away, peopleMap, priorGameSeasonStats, supplemental.coaches?.away, supplemental.standingsPayloads, supplemental.earlierSameDayBoxscore, supplemental.earlierSameDayGame);
+  model.home = normalizeSide(feed, "home", scheduleGame, supplemental.rosters?.home, peopleMap, priorGameSeasonStats, supplemental.coaches?.home, supplemental.standingsPayloads, supplemental.earlierSameDayBoxscore, supplemental.earlierSameDayGame);
   return model;
 }
 
 function normalizeGame(gd, live, scheduleGame) {
-  const venue = gd.venue || scheduleGame?.venueData || {};
+  const venue = { ...(scheduleGame?.venueData || {}), ...(gd.venue || {}) };
   const weather = scheduleGame?.weather || gd.weather || {};
   const field = venue.fieldInfo || {};
   const location = venue.location || {};
   return {
     date: scheduleGame?.officialDate ?? gd.datetime?.officialDate ?? null,
-    startTime: scheduleGame?.gameDate ?? gd.datetime?.dateTime ?? null,
+    startTime: scheduleGame?.startTimeTBD ? null : (scheduleGame?.gameDate ?? gd.datetime?.dateTime ?? null),
     dayNight: normalizeDayNight(scheduleGame?.dayNight ?? gd.datetime?.dayNight),
     type: scheduleGame?.gameType ?? gd.game?.type ?? null,
     number: numberOrNull(scheduleGame?.gameNumber ?? gd.game?.gameNumber),
@@ -70,21 +71,28 @@ function normalizeGame(gd, live, scheduleGame) {
   };
 }
 
-function normalizeSide(feed, side, scheduleGame, rosterPayload, peopleMap, coachesPayload, standingsPayloads) {
+function normalizeSide(feed, side, scheduleGame, rosterPayload, peopleMap, priorGameSeasonStats, coachesPayload, standingsPayloads, earlierSameDayBoxscore, earlierSameDayGame) {
   const gd = feed?.gameData || {};
   const scheduleTeam = side === "away" ? scheduleGame?.awayTeamData : scheduleGame?.homeTeamData;
   const team = scheduleTeam || gd.teams?.[side] || {};
   const teamId = team.id ?? (side === "away" ? scheduleGame?.awayTeamId : scheduleGame?.homeTeamId);
   const standing = findStanding(standingsPayloads, teamId);
+  const earlierTeam = findBoxscoreTeam(earlierSameDayBoxscore, teamId);
   const lineupSource = side === "away" ? scheduleGame?.awayLineup : scheduleGame?.homeLineup;
   const probable = side === "away" ? scheduleGame?.awayProbablePitcher : scheduleGame?.homeProbablePitcher;
   const rosterEntries = Array.isArray(rosterPayload?.roster) ? rosterPayload.roster : [];
-  const lineup = normalizeScheduleLineup(lineupSource, rosterEntries, peopleMap);
-  const starter = normalizeStartingPitcher(probable, rosterEntries, peopleMap);
+  const lineup = normalizeScheduleLineup(lineupSource, rosterEntries, peopleMap, priorGameSeasonStats);
+  const starter = normalizeStartingPitcher(probable, rosterEntries, peopleMap, priorGameSeasonStats);
   const lineupIds = new Set(lineup.map((slot) => slot?.player?.id).filter(Boolean).map(String));
-  const bench = lineupIds.size ? normalizeBench(rosterEntries, lineupIds, peopleMap) : [];
-  const bullpen = normalizeBullpen(rosterEntries, starter?.player?.id, peopleMap);
-  const record = normalizePregameRecord(standing);
+  const bench = lineupIds.size ? normalizeBench(rosterEntries, lineupIds, peopleMap, priorGameSeasonStats) : [];
+  const bullpen = normalizeBullpen(rosterEntries, starter?.player?.id, peopleMap, priorGameSeasonStats);
+  const record = earlierTeam?.team?.record ? normalizePregameRecord({ record: earlierTeam.team.record }) : normalizePregameRecord(standing);
+  const withinDayNumber = Math.max(1, numberOrNull(scheduleGame?.gameNumber) || 1);
+  const teamGameNumber = record.gamesPlayed != null
+    ? record.gamesPlayed + (earlierTeam?.team?.record ? 1 : withinDayNumber)
+    : null;
+  const standings = normalizeStanding(standing);
+  standings.streak = advanceStreakForEarlierGame(standings.streak, earlierSameDayGame, teamId);
 
   return {
     team: {
@@ -97,7 +105,8 @@ function normalizeSide(feed, side, scheduleGame, rosterPayload, peopleMap, coach
       league: { id: team.league?.id ?? null, name: team.league?.name ?? null },
       division: { id: team.division?.id ?? null, name: team.division?.nameShort ?? team.division?.name ?? null },
       record,
-      standings: normalizeStanding(standing)
+      gameNumber: teamGameNumber,
+      standings
     },
     manager: normalizeManager(coachesPayload),
     coaches: [],
@@ -109,7 +118,7 @@ function normalizeSide(feed, side, scheduleGame, rosterPayload, peopleMap, coach
   };
 }
 
-function normalizeScheduleLineup(players, rosterEntries, peopleMap) {
+function normalizeScheduleLineup(players, rosterEntries, peopleMap, priorGameSeasonStats) {
   const source = Array.isArray(players) ? players : [];
   if (!source.length) return [];
   return source.map((person, index) => {
@@ -125,12 +134,12 @@ function normalizeScheduleLineup(players, rosterEntries, peopleMap) {
         name: defensivePositionName(pos.abbreviation) ?? pos.name ?? null,
         number: defensivePositionNumber(pos.abbreviation)
       },
-      stats: normalizeHydratedStats(peopleMap.get(String(id)))
+      stats: normalizePlayerStats(id, peopleMap, priorGameSeasonStats)
     };
   });
 }
 
-function normalizeStartingPitcher(probable, rosterEntries, peopleMap) {
+function normalizeStartingPitcher(probable, rosterEntries, peopleMap, priorGameSeasonStats) {
   if (!probable?.id && !probable?.fullName) return null;
   const id = probable?.id;
   const rosterEntry = findRosterEntry(rosterEntries, id);
@@ -139,33 +148,33 @@ function normalizeStartingPitcher(probable, rosterEntries, peopleMap) {
     battingOrder: null,
     player: normalizePlayer(probable, rosterEntry, enriched),
     position: { abbreviation: "P", name: "Pitcher", number: 1 },
-    stats: normalizeHydratedStats(enriched)
+    stats: normalizePlayerStats(id, peopleMap, priorGameSeasonStats)
   };
 }
 
-function normalizeBench(rosterEntries, lineupIds, peopleMap) {
+function normalizeBench(rosterEntries, lineupIds, peopleMap, priorGameSeasonStats) {
   return rosterEntries
     .filter((entry) => {
       const id = String(entry?.person?.id ?? "");
       if (!id || lineupIds.has(id)) return false;
       return !isPitcher(entry?.position || entry?.person?.primaryPosition);
     })
-    .map((entry) => normalizeRosterRecord(entry, peopleMap))
+    .map((entry) => normalizeRosterRecord(entry, peopleMap, priorGameSeasonStats))
     .sort(comparePlayerName);
 }
 
-function normalizeBullpen(rosterEntries, starterId, peopleMap) {
+function normalizeBullpen(rosterEntries, starterId, peopleMap, priorGameSeasonStats) {
   const starterKey = starterId != null ? String(starterId) : null;
   return rosterEntries
     .filter((entry) => {
       const id = String(entry?.person?.id ?? "");
       return id && id !== starterKey && isPitcher(entry?.position || entry?.person?.primaryPosition);
     })
-    .map((entry) => normalizeRosterRecord(entry, peopleMap))
+    .map((entry) => normalizeRosterRecord(entry, peopleMap, priorGameSeasonStats))
     .sort(comparePlayerName);
 }
 
-function normalizeRosterRecord(entry, peopleMap) {
+function normalizeRosterRecord(entry, peopleMap, priorGameSeasonStats) {
   const id = entry?.person?.id;
   const enriched = peopleMap.get(String(id));
   const pos = entry?.position || entry?.person?.primaryPosition || enriched?.primaryPosition || {};
@@ -177,8 +186,35 @@ function normalizeRosterRecord(entry, peopleMap) {
       name: defensivePositionName(pos.abbreviation) ?? pos.name ?? null,
       number: defensivePositionNumber(pos.abbreviation)
     },
-    stats: normalizeHydratedStats(enriched)
+    stats: normalizePlayerStats(id, peopleMap, priorGameSeasonStats)
   };
+}
+
+
+function normalizePlayerStats(personId, peopleMap, priorGameSeasonStats) {
+  const prior = priorGameSeasonStats?.get(String(personId));
+  return prior ? normalizeStats(prior) : normalizeHydratedStats(peopleMap.get(String(personId)));
+}
+
+function buildBoxscoreSeasonStatsMap(boxscore) {
+  const map = new Map();
+  for (const side of ["away", "home"]) {
+    const players = boxscore?.teams?.[side]?.players || {};
+    for (const entry of Object.values(players)) {
+      const id = entry?.person?.id;
+      if (id != null && entry?.seasonStats) map.set(String(id), entry.seasonStats);
+    }
+  }
+  return map;
+}
+
+function findBoxscoreTeam(boxscore, teamId) {
+  if (!boxscore || teamId == null) return null;
+  for (const side of ["away", "home"]) {
+    const candidate = boxscore?.teams?.[side];
+    if (String(candidate?.team?.id ?? "") === String(teamId)) return candidate;
+  }
+  return null;
 }
 
 function normalizePlayer(basePerson, rosterEntry, enrichedPerson) {
@@ -298,6 +334,22 @@ function normalizeStanding(standing) {
     streak: standing?.streak?.streakCode ?? standing?.streak?.code ?? null,
     last10: { wins, losses, display: wins != null && losses != null ? `${wins}-${losses}` : null }
   };
+}
+
+
+function advanceStreakForEarlierGame(baseStreak, earlierGame, teamId) {
+  if (!earlierGame || teamId == null || earlierGame.isTie === true) return baseStreak;
+  let won = null;
+  if (String(earlierGame.awayTeamId ?? "") === String(teamId)) won = earlierGame.awayIsWinner === true;
+  else if (String(earlierGame.homeTeamId ?? "") === String(teamId)) won = earlierGame.homeIsWinner === true;
+  if (won == null) return baseStreak;
+
+  const match = /^([WL])(\d+)$/i.exec(String(baseStreak || ""));
+  if (!match) return won ? "W1" : "L1";
+  const type = match[1].toUpperCase();
+  const count = Number(match[2]) || 0;
+  if (won) return type === "W" ? `W${count + 1}` : "W1";
+  return type === "L" ? `L${count + 1}` : "L1";
 }
 
 function normalizeUmpires(officials) {

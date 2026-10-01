@@ -37,7 +37,7 @@ to layouts, independent of which MLB API request supplies it.
 **Priority:** Core = broadly useful; Common = frequently useful on
 detailed cards; Optional = specialized or information-dense layouts.
 
-**Source:** Schedule / Roster / People Stats / Standings are the preferred immutable pregame sources established by Build 025.2; Game Feed is supplemental only where a narrower source has not yet replaced it; Derived = constructed from normalized data; Unknown = still to investigate.
+**Source:** Schedule / Roster / People Stats / Standings are the preferred immutable pregame sources established by Build 025.2. Build 029 adds the completed earlier same-day Game 1 boxscore as the authoritative YTD snapshot for Game 2 of a doubleheader; Build 029.1 adds conservative pre-Game-1 fallback behavior, known Team Game Number handling, and post-Game-1 streak advancement while intentionally retaining pre-Game-1 division/league/wild-card standings context; Game Feed remains supplemental where richer game metadata is required; Derived = constructed from normalized data; Unknown = still to investigate.
 
 **Cardinality:** Single, Per Team, ×9 Lineup, ×N variable collection,
 Derived, or Composite.
@@ -49,7 +49,7 @@ Derived, or Composite.
   ------------- ------------ ---------- ------------- --------------- ---------------------------- -----------------
   Game date     2026-09-06   Core       Single        Schedule/feed   `game.date`                  
 
-  Scheduled     7:05 PM      Core       Single        Schedule/feed   `game.startTime`             
+  Scheduled     7:05 PM      Core       Single        Schedule/feed   `game.startTime`             Venue-local on PDF; blank when startTimeTBD
   start                                                                                            
 
   Venue name    T-Mobile     Core       Single        Game feed       `game.venue.name`            
@@ -91,9 +91,16 @@ Applies to both `away` and `home`.
   Team ID        136        Internal   Per Team      Game feed     `away.team.id`                       Application
                                                                                                         data
 
-  Wins           82         Core       Per Team      Standings     `away.team.record.wins`              Use day-before-game snapshot
+  Games played   145        Core       Per Team      Standings /   `away.team.record.gamesPlayed`       Pregame completed games
+                                                     prior boxscore
 
-  Losses         63         Core       Per Team      Standings     `away.team.record.losses`            Use day-before-game snapshot
+  Team game #    146        Core       Per Team      Derived       `away.team.gameNumber`               Pregame games played + 1
+
+  Wins           82         Core       Per Team      Standings /   `away.team.record.wins`              Day-before snapshot, or Game 1 postgame record for Game 2
+                                                     prior boxscore
+
+  Losses         63         Core       Per Team      Standings /   `away.team.record.losses`            Day-before snapshot, or Game 1 postgame record for Game 2
+                                                     prior boxscore
 
   W-L record     82-63      Core       Composite     Derived       `away.team.record.display`           
 
@@ -582,3 +589,38 @@ Example: if **J. Pereda replaces Cal Raleigh at catcher in the seventh inning**,
 **Design consequence:** Scorecard Studio must not treat a completed historical GamePack as an authoritative pregame snapshot. This is a data-source limitation rather than a placement/rendering defect.
 
 Build 025.2 completed that investigation: hydrated Schedule lineups preserve the original starters, date-specific rosters reconstruct Bench/Bullpen deterministically, and bulk People/Stats plus day-before-game standings provide true pregame statistics and records. Historical live-feed collection state is no longer used for these fields.
+
+
+## Build 029.1 doubleheader availability rules
+
+- **Game 2 before Game 1 is Final:** use previous-day player stats, team record, streak, and standings. Do not infer the Game 1 result. Game 2 Team Game Number may still be populated from the previous-day completed-games count plus the within-day game number.
+- **Game 2 after Game 1 is Final:** prefer Game 1 boxscore `seasonStats` for players; use the post-Game-1 W-L/games-played record; advance the streak from the previous-day streak using the known Game 1 result.
+- **Standings-context limitation:** division/league/wild-card rank and games-back, Last 10, and similar fields remain at the pre-Game-1 snapshot for Game 2. They are not reconstructed from other same-day games.
+- **Lineups:** Game 2 lineups remain blank until MLB posts them; Game 1 lineup content is never borrowed for Game 2.
+- **Refresh scope:** deliberate Game 2 selection performs one targeted selected-team schedule refresh so an already-open browser can see a newly Final Game 1 and newly posted Game 2 metadata without broad API polling.
+
+## Build 029 closure notes and future API opportunities
+
+Build 029.1 is the accepted doubleheader pregame-data baseline. Game 2 uses post-Game-1 player/team/streak data only when Game 1 is Final; otherwise it conservatively retains the pre-Game-1 snapshot. Broader standings-context fields intentionally remain at the pre-Game-1 snapshot for Game 2 rather than reconstructing intraday league/division standings across MLB/MiLB.
+
+### Deferred UI communication
+
+A future Game 2 information/notification indicator should explain the data boundary without adding permanent explanatory text to every scorecard. Recommended behavior is a tooltip on pointer devices and a compact tap/click modal on touch devices. Homepage time-display changes are also deferred to later homepage work.
+
+### Future API opportunity: team logos
+
+Team logos appear to be directly addressable by Team ID as SVG assets:
+
+`https://www.mlbstatic.com/team-logos/{teamId}.svg`
+
+Potential future use: optional team-logo placement in Designer layouts. Before implementation, verify coverage and historical behavior across MLB, MiLB, inactive clubs, and renamed/reaffiliated teams.
+
+### Future API opportunity: pitcher depth-chart roles
+
+Team depth charts are available from:
+
+`/api/v1/teams/{teamId}/roster/depthChart?season={season}`
+
+This may allow Scorecard Studio to distinguish projected/rotation starters (`SP`) from regular pitchers/relievers (`P`) instead of defining Bullpen solely as all rostered pitchers minus the selected starting pitcher.
+
+Future investigation should verify role consistency across MLB and MiLB before changing the canonical bullpen model. The current roster-pitchers-minus-starting-pitcher logic should remain a safe fallback when depth-chart role data is missing or unreliable.

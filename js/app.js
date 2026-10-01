@@ -2,14 +2,14 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 028.16
+ * Build: 029.1
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0252";
-import { normalizePregameData } from "./normalize.js?v=0252";
-import { canonicalFieldId, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=028";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0291";
+import { normalizePregameData } from "./normalize.js?v=0291";
+import { canonicalFieldId, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=0291";
 import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=028";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=028";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0291";
 import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
 import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=02816";
 import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=02816";
@@ -677,8 +677,10 @@ function chooseInitialGame(games) {
 }
 
 async function selectGame(gamePk) {
-  const selected = state.schedule.find((game) => game.gamePk === String(gamePk));
+  let selected = state.schedule.find((game) => game.gamePk === String(gamePk));
   if (!selected) return;
+
+  selected = await refreshDoubleheaderSelectionContext(selected);
 
   state.selectedGamePk = selected.gamePk;
   state.selectedFeed = null;
@@ -707,6 +709,23 @@ async function selectGame(gamePk) {
   }
 }
 
+async function refreshDoubleheaderSelectionContext(game) {
+  if (!game || Number(game.gameNumber || 1) <= 1) return game;
+  const teamId = game.awayTeamId || game.homeTeamId;
+  if (!teamId || !game.officialDate) return game;
+
+  try {
+    const refreshed = await fetchFavoriteTeamSchedule(game.officialDate, teamId, game.sportId || 1);
+    if (!Array.isArray(refreshed) || !refreshed.length) return game;
+    const byPk = new Map(refreshed.map((item) => [String(item.gamePk), item]));
+    state.schedule = state.schedule.map((item) => byPk.get(String(item.gamePk)) || item);
+    return byPk.get(String(game.gamePk)) || game;
+  } catch (error) {
+    console.warn("Unable to refresh doubleheader context; using the existing schedule snapshot.", error);
+    return game;
+  }
+}
+
 async function loadPregameCore(game) {
   const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
   const season = Number(game.season || officialDate.slice(0, 4));
@@ -727,16 +746,41 @@ async function loadPregameCore(game) {
     game.homeProbablePitcher?.id
   ].filter(Boolean))];
 
-  const [peopleResult, standingsResult] = await Promise.allSettled([
+  const earlierSameDayGame = findEarlierSameDayCompletedGame(game);
+  const [peopleResult, standingsResult, earlierBoxscoreResult] = await Promise.allSettled([
     fetchPeoplePregameStats(personIds, seasonStart, cutoffDate),
-    fetchPregameStandings(game, cutoffDate, season)
+    fetchPregameStandings(game, cutoffDate, season),
+    earlierSameDayGame ? fetchGameBoxscore(earlierSameDayGame.gamePk) : Promise.resolve(null)
   ]);
 
   return {
     rosters: { away: awayRoster, home: homeRoster },
     people: peopleResult.status === "fulfilled" ? peopleResult.value : { people: [] },
-    standingsPayloads: standingsResult.status === "fulfilled" ? standingsResult.value : []
+    standingsPayloads: standingsResult.status === "fulfilled" ? standingsResult.value : [],
+    earlierSameDayGame,
+    earlierSameDayBoxscore: earlierBoxscoreResult.status === "fulfilled" ? earlierBoxscoreResult.value : null
   };
+}
+
+function findEarlierSameDayCompletedGame(game) {
+  if (!game || Number(game.gameNumber || 1) <= 1) return null;
+  const selectedDate = String(game.officialDate || "");
+  const selectedTeams = [String(game.awayTeamId || ""), String(game.homeTeamId || "")].sort().join(":");
+  return state.schedule
+    .filter((candidate) => {
+      if (!candidate || String(candidate.gamePk) === String(game.gamePk)) return false;
+      if (String(candidate.officialDate || "") !== selectedDate) return false;
+      if (Number(candidate.gameNumber || 1) >= Number(game.gameNumber || 1)) return false;
+      const candidateTeams = [String(candidate.awayTeamId || ""), String(candidate.homeTeamId || "")].sort().join(":");
+      return candidateTeams === selectedTeams && isCompletedScheduleGame(candidate);
+    })
+    .sort((a, b) => Number(b.gameNumber || 0) - Number(a.gameNumber || 0))[0] || null;
+}
+
+function isCompletedScheduleGame(game) {
+  if (String(game?.abstractGameState || "").toLowerCase() === "final") return true;
+  if (String(game?.statusCode || "").toUpperCase() === "F") return true;
+  return /^final\b/i.test(String(game?.status || ""));
 }
 
 async function fetchPregameStandings(game, cutoffDate, season) {
@@ -6318,6 +6362,7 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
 
   const needsLiveFeed = fieldIds.some((id) => {
     const key = String(id || "");
+    if (key === "game.startTime" && !game.venueData?.timeZone) return true;
     return key.startsWith("game.umpires.") || [
       "game.venue.capacity", "game.venue.turfType", "game.venue.roofType",
       "game.venue.city", "game.venue.state", "game.venue.country", "game.venue.timeZone"

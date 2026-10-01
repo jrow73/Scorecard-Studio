@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Canonical pregame field registry
  * Version: 0.2.0-dev
- * Build: 023
+ * Build: 029
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
@@ -53,6 +53,7 @@ const sideFields = ["away", "home"].flatMap((side) => {
     custom(field(`${side}.team.league.name`, `${label} Team — League`, `${label} / Team`, "text", "atomic", `${side}.team.league.name`, ["gamePack"])),
     custom(field(`${side}.team.division.name`, `${label} Team — Division`, `${label} / Team`, "text", "atomic", `${side}.team.division.name`, ["gamePack"])),
     standard(field(`${side}.team.record.gamesPlayed`, `${label} Team — Games Played`, `${label} / Record`, "integer", "atomic", `${side}.team.record.gamesPlayed`, ["gamePack"])),
+    standard(field(`${side}.team.gameNumber`, `${label} Team — Game Number`, `${label} / Record`, "integer", "atomic", `${side}.team.gameNumber`, ["gamePack"])),
     custom(field(`${side}.team.record.wins`, `${label} Team — Wins`, `${label} / Record`, "integer", "atomic", `${side}.team.record.wins`, ["gamePack"])),
     custom(field(`${side}.team.record.losses`, `${label} Team — Losses`, `${label} / Record`, "integer", "atomic", `${side}.team.record.losses`, ["gamePack"])),
     custom(field(`${side}.team.record.pct`, `${label} Team — PCT`, `${label} / Record`, "decimal", "atomic", `${side}.team.record.pct`, ["gamePack"], { precision: 3 })),
@@ -303,7 +304,8 @@ function fieldCatalogMetadata(entry) {
     "team.abbreviation": ["Standard team abbreviation.", "SEA"],
     "team.league.name": ["League name for the team.", "American League"],
     "team.division.name": ["Division name for the team.", "American League West"],
-    "team.record.gamesPlayed": ["Season games played before or including the selected game, as supplied by the source.", "151"],
+    "team.record.gamesPlayed": ["Season games completed before the selected game.", "151"],
+    "team.gameNumber": ["Team-specific season game number for the selected game (pregame games played + 1).", "152"],
     "team.record.wins": ["Season wins.", "86"],
     "team.record.losses": ["Season losses.", "65"],
     "team.record.pct": ["Season winning percentage.", ".570"],
