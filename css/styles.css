@@ -2650,3 +2650,104 @@ body.designer-mode .designer-view > .card,
   padding-top: .55rem;
   border-top: 1px solid var(--line);
 }
+
+/* Build 030 — Layout Settings parent/child workflow */
+.layout-settings-parent-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(860px, calc(100vw - 32px));
+  max-height: 82vh;
+  overflow: hidden;
+  padding: 0;
+}
+.layout-settings-parent-header,
+.layout-settings-child-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line);
+  background: #1b2230;
+}
+.layout-settings-parent-header h3,
+.layout-settings-child-header h3 { margin-bottom: .2rem; }
+.layout-settings-parent-body {
+  display: grid;
+  gap: .75rem;
+  overflow: auto;
+  padding: 1rem;
+}
+.layout-settings-summary-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding: .9rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.018);
+}
+.layout-settings-summary-copy { min-width: 0; }
+.layout-settings-summary-card h4 { margin: 0 0 .2rem; }
+.layout-settings-summary-list { display: grid; gap: .35rem; margin: .7rem 0 0; }
+.layout-settings-summary-list > div { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: .55rem; }
+.layout-settings-summary-list dt { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.layout-settings-summary-list dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.layout-settings-summary-line { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; margin-top: .7rem; color: var(--muted); font-size: 12px; }
+.layout-settings-open-button { min-width: 72px; }
+.layout-settings-parent-footer,
+.layout-settings-child-footer {
+  margin-top: 0;
+  padding: .75rem 1rem;
+  border-top: 1px solid var(--line);
+  background: #1b2230;
+}
+.layout-settings-child-dialog { width: min(1120px, 95vw); }
+.layout-settings-child-dialog::backdrop { background: rgba(2, 6, 12, .62); }
+.layout-settings-child-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(1080px, calc(100vw - 32px));
+  height: min(84vh, 900px);
+  max-height: 84vh;
+  overflow: hidden;
+  padding: 0;
+}
+.layout-settings-child-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+.layout-settings-child-close {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.layout-settings-child-close:hover { border-color: rgba(124,199,255,.55); background: rgba(124,199,255,.10); }
+.layout-custom-fields-child-card .layout-custom-field-list {
+  max-height: none;
+  overflow: visible;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+#layout-default-formatting-dialog .layout-formatting-grid { margin: 0; }
+@media (max-width: 800px) {
+  .layout-settings-summary-card { grid-template-columns: 1fr; }
+  .layout-settings-open-button { justify-self: start; }
+  .layout-settings-summary-list > div { grid-template-columns: 1fr; gap: .12rem; }
+  .layout-custom-fields-child-card .layout-custom-field-list { grid-template-columns: 1fr; }
+  .layout-settings-child-header { align-items: flex-start; }
+  .layout-custom-fields-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+}
+
+/* Build 030.2 — Custom Fields count consistency */
+.layout-custom-fields-footer-left { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.layout-custom-field-count { color: var(--muted); font-size: 12px; white-space: nowrap; }

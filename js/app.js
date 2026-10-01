@@ -2,7 +2,7 @@
  * Scorecard Studio
  * Application coordinator
  * Version: 0.2.0-dev
- * Build: 029.1
+ * Build: 030.1
  */
 
 import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0291";
@@ -36,6 +36,9 @@ const state = {
   layoutFieldDraft: new Set(),
   layoutFieldDraftSaved: new Set(),
   layoutReplacementPdf: null,
+  layoutDetailsSavedSnapshot: null,
+  layoutFormattingSavedSnapshot: null,
+  layoutSettingsDiscardTarget: null,
   createFieldDraft: new Set(),
   designerPdfDocument: null,
   designerPageNumber: 1,
@@ -288,20 +291,32 @@ const elements = {
   designerMultiColorPicker: document.querySelector("#designer-multi-color-picker"),
   designerMultiFormatRestore: document.querySelector("#designer-multi-format-restore"),
   layoutFormattingDialog: document.querySelector("#layout-formatting-dialog"),
+  layoutDetailsDialog: document.querySelector("#layout-details-dialog"),
+  layoutCustomFieldsDialog: document.querySelector("#layout-custom-fields-dialog"),
+  layoutDefaultFormattingDialog: document.querySelector("#layout-default-formatting-dialog"),
+  layoutDetailsOpen: document.querySelector("#layout-details-open"),
+  layoutFormattingOpen: document.querySelector("#layout-formatting-open"),
+  layoutDetailsClose: document.querySelector("#layout-details-close"),
+  layoutDetailsCancel: document.querySelector("#layout-details-cancel"),
+  layoutDetailsSave: document.querySelector("#layout-details-save"),
+  layoutFormattingClose: document.querySelector("#layout-formatting-close"),
+  layoutFormattingCancel: document.querySelector("#layout-formatting-cancel"),
   layoutFormattingGrid: document.querySelector("#layout-formatting-grid"),
   layoutFormattingSaveButton: document.querySelector("#layout-formatting-save-btn"),
   layoutFormattingResetButton: document.querySelector("#layout-formatting-reset-btn"),
   layoutFieldModeCreate: document.querySelector("#layout-field-mode-create"),
-  layoutSettingsMain: document.querySelector("#layout-settings-main"),
   layoutSettingsName: document.querySelector("#layout-settings-name"),
   layoutSettingsDescription: document.querySelector("#layout-settings-description"),
   layoutSettingsPdfSummary: document.querySelector("#layout-settings-pdf-summary"),
   layoutSettingsPdfInput: document.querySelector("#layout-settings-pdf-input"),
   layoutSettingsPdfMessage: document.querySelector("#layout-settings-pdf-message"),
+  layoutDetailsSummaryName: document.querySelector("#layout-details-summary-name"),
+  layoutDetailsSummaryDescription: document.querySelector("#layout-details-summary-description"),
+  layoutDetailsSummaryPdf: document.querySelector("#layout-details-summary-pdf"),
+  layoutFieldSummaryDetail: document.querySelector("#layout-field-summary-detail"),
+  layoutFormattingSummary: document.querySelector("#layout-formatting-summary"),
   layoutPdfErrorDialog: document.querySelector("#layout-pdf-error-dialog"),
   layoutPdfErrorMessage: document.querySelector("#layout-pdf-error-message"),
-  layoutFieldTotalCount: document.querySelector("#layout-field-total-count"),
-  layoutFieldStandardCount: document.querySelector("#layout-field-standard-count"),
   layoutCustomFieldsOpen: document.querySelector("#layout-custom-fields-open"),
   layoutCustomFieldsSave: document.querySelector("#layout-custom-fields-save"),
   layoutCustomFieldsCancel: document.querySelector("#layout-custom-fields-cancel"),
@@ -309,10 +324,8 @@ const elements = {
   layoutCustomFieldsRestoreStandard: document.querySelector("#layout-custom-fields-restore-standard"),
   layoutCustomDiscardDialog: document.querySelector("#layout-custom-discard-dialog"),
   layoutCustomDiscardConfirm: document.querySelector("#layout-custom-discard-confirm"),
+  layoutSettingsDiscardMessage: document.querySelector("#layout-settings-discard-message"),
   layoutCustomFieldCount: document.querySelector("#layout-custom-field-count"),
-  layoutFormattingToggle: document.querySelector("#layout-formatting-toggle"),
-  layoutFormattingPanel: document.querySelector("#layout-formatting-panel"),
-  layoutCustomFields: document.querySelector("#layout-custom-fields"),
   layoutFieldSearch: document.querySelector("#layout-field-search"),
   layoutCustomFieldList: document.querySelector("#layout-custom-field-list"),
   layoutFieldCount: document.querySelector("#layout-field-count"),
@@ -492,6 +505,20 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   document.querySelectorAll("[data-multi-align]").forEach((button) => button.addEventListener("click", () => alignDesignerMultiSelection(button.dataset.multiAlign)));
   elements.layoutFormattingSaveButton?.addEventListener("click", saveLayoutFormattingDefaults);
   elements.layoutFormattingResetButton?.addEventListener("click", resetLayoutFormattingDefaults);
+  elements.layoutDetailsOpen?.addEventListener("click", openLayoutDetailsDialog);
+  elements.layoutFormattingOpen?.addEventListener("click", openLayoutDefaultFormattingDialog);
+  elements.layoutDetailsSave?.addEventListener("click", saveLayoutDetails);
+  elements.layoutDetailsCancel?.addEventListener("click", requestCloseLayoutDetails);
+  elements.layoutDetailsClose?.addEventListener("click", requestCloseLayoutDetails);
+  elements.layoutFormattingCancel?.addEventListener("click", requestCloseLayoutDefaultFormatting);
+  elements.layoutFormattingClose?.addEventListener("click", requestCloseLayoutDefaultFormatting);
+  elements.layoutDetailsDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseLayoutDetails(); });
+  elements.layoutCustomFieldsDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseCustomFieldSelector(); });
+  elements.layoutDefaultFormattingDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseLayoutDefaultFormatting(); });
+  elements.layoutDetailsDialog?.addEventListener("input", updateLayoutDetailsActions);
+  elements.layoutDetailsDialog?.addEventListener("change", updateLayoutDetailsActions);
+  elements.layoutDefaultFormattingDialog?.addEventListener("input", updateLayoutFormattingActions);
+  elements.layoutDefaultFormattingDialog?.addEventListener("change", updateLayoutFormattingActions);
 elements.layoutCustomFieldList?.addEventListener("change", (event) => {
   const input = event.target; if (!input?.matches?.("input[data-field-id]")) return;
   if (input.checked) state.layoutFieldDraft.add(input.value); else state.layoutFieldDraft.delete(input.value);
@@ -512,11 +539,17 @@ elements.layoutCustomFieldList?.addEventListener("click", (event) => {
 elements.layoutFieldSearch?.addEventListener("input", () => { renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch.value); syncLayoutFieldSettingsUI(); });
   elements.layoutCustomFieldsOpen?.addEventListener("click", openCustomFieldSelector);
   elements.layoutCustomFieldsSave?.addEventListener("click", saveCustomFieldSelectorDraft);
-  elements.layoutCustomFieldsCancel?.addEventListener("click", cancelCustomFieldSelector);
+  elements.layoutCustomFieldsCancel?.addEventListener("click", requestCloseCustomFieldSelector);
   elements.layoutCustomFieldsClose?.addEventListener("click", requestCloseCustomFieldSelector);
   elements.layoutCustomFieldsRestoreStandard?.addEventListener("click", restoreStandardCustomFieldDraft);
-  elements.layoutCustomDiscardConfirm?.addEventListener("click", () => { elements.layoutCustomDiscardDialog?.close(); cancelCustomFieldSelector(); });
-  elements.layoutFormattingToggle?.addEventListener("click", toggleLayoutFormattingPanel);
+  elements.layoutCustomDiscardConfirm?.addEventListener("click", () => {
+    const target = state.layoutSettingsDiscardTarget;
+    state.layoutSettingsDiscardTarget = null;
+    elements.layoutCustomDiscardDialog?.close();
+    if (target === "details") cancelLayoutDetails();
+    else if (target === "formatting") cancelLayoutDefaultFormatting();
+    else cancelCustomFieldSelector();
+  });
   elements.layoutSettingsPdfInput?.addEventListener("change", handleLayoutReplacementPdf);
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
   elements.designerSelectionTemplate?.addEventListener("input", updateDesignerSelectionTemplatePreview);
@@ -5281,13 +5314,11 @@ function fieldSelectionIsStandard(selected) {
 }
 function syncLayoutFieldSettingsUI() {
   const selected = state.layoutFieldDraftSaved;
-  const standard = fieldSelectionIsStandard(selected);
   const totalCount = customPickerFieldDefinitions().length;
-  const standardCount = standardDesignerFieldIds().length;
-  if (elements.layoutFieldTotalCount) elements.layoutFieldTotalCount.textContent = String(totalCount);
-  if (elements.layoutFieldStandardCount) elements.layoutFieldStandardCount.textContent = String(standardCount);
-  if (elements.layoutFieldCount) elements.layoutFieldCount.textContent = standard ? "Standard Fields" : `Custom Fields · ${selected.size} selected`;
-  if (elements.layoutCustomFieldCount) elements.layoutCustomFieldCount.textContent = `${state.layoutFieldDraft.size} selected`;
+  if (elements.layoutFieldSummaryDetail) elements.layoutFieldSummaryDetail.textContent = `${selected.size} of ${totalCount} selected`;
+  if (elements.layoutCustomFieldCount) elements.layoutCustomFieldCount.textContent = `${state.layoutFieldDraft.size} of ${totalCount} selected`;
+  if (elements.layoutCustomFieldsSave) elements.layoutCustomFieldsSave.disabled = !customFieldSelectorIsDirty();
+  if (elements.layoutCustomFieldsRestoreStandard) elements.layoutCustomFieldsRestoreStandard.disabled = fieldSelectionIsStandard(state.layoutFieldDraft);
 }
 function populateLayoutFieldSettings(layout = selectedLayout()) {
   const selected = layoutSettingsSelectedIds(layout);
@@ -5302,37 +5333,57 @@ function readLayoutFieldSettings() {
   return { mode, enabledFieldIds: mode === "custom" ? Array.from(selected) : [] };
 }
 function openCustomFieldSelector() {
-  state.layoutFieldDraft = new Set(state.layoutFieldDraftSaved);
+  const layout = selectedLayout();
+  if (!layout) return;
+  const selected = layoutSettingsSelectedIds(layout);
+  state.layoutFieldDraftSaved = new Set(selected);
+  state.layoutFieldDraft = new Set(selected);
   if (elements.layoutFieldSearch) elements.layoutFieldSearch.value = "";
   renderLayoutFieldPicker(state.layoutFieldDraft); syncLayoutFieldSettingsUI();
-  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = true;
-  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = false;
+  elements.layoutCustomFieldsDialog?.showModal();
 }
-function saveCustomFieldSelectorDraft() {
+async function saveCustomFieldSelectorDraft() {
+  const layout = selectedLayout(); if (!layout) return;
   state.layoutFieldDraftSaved = new Set(state.layoutFieldDraft);
-  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = true;
-  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = false;
-  syncLayoutFieldSettingsUI();
+  const fields = readLayoutFieldSettings();
+  layout.paletteMode = fields.mode;
+  layout.enabledFieldIds = fields.enabledFieldIds;
+  layout.updatedAt = new Date().toISOString();
+  await saveLayout(layout);
+  await refreshLayouts();
+  state.selectedLayoutId = layout.id;
+  const current = selectedLayout() || layout;
+  populateLayoutFieldSettings(current);
+  refreshLayoutSettingsSummaries(current);
+  elements.layoutCustomFieldsDialog?.close();
+  populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect(); populateDesignerColumnFieldSelect(); populateDesignerIndividualFieldSelect();
+  renderDesignerPalette(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
+  setDesignerMessage("Field palette settings saved.");
 }
 function restoreStandardCustomFieldDraft() {
   state.layoutFieldDraft = new Set(standardDesignerFieldIds());
   renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || "");
   syncLayoutFieldSettingsUI();
 }
-
 function customFieldSelectorIsDirty() {
   if (state.layoutFieldDraft.size !== state.layoutFieldDraftSaved.size) return true;
   for (const id of state.layoutFieldDraft) if (!state.layoutFieldDraftSaved.has(id)) return true;
   return false;
 }
-function requestCloseCustomFieldSelector() {
-  if (!customFieldSelectorIsDirty()) return cancelCustomFieldSelector();
+function showLayoutSettingsDiscardPrompt(target, message) {
+  state.layoutSettingsDiscardTarget = target;
+  if (elements.layoutSettingsDiscardMessage) elements.layoutSettingsDiscardMessage.textContent = message;
   elements.layoutCustomDiscardDialog?.showModal();
 }
+function requestCloseCustomFieldSelector() {
+  if (!customFieldSelectorIsDirty()) return cancelCustomFieldSelector();
+  showLayoutSettingsDiscardPrompt("fields", "Your custom field selections have changed. Closing now will discard those changes.");
+}
 function cancelCustomFieldSelector() {
+  state.layoutSettingsDiscardTarget = null;
   state.layoutFieldDraft = new Set(state.layoutFieldDraftSaved);
-  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = true;
-  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = false;
+  if (elements.layoutFieldSearch) elements.layoutFieldSearch.value = "";
+  elements.layoutCustomFieldsDialog?.close();
   syncLayoutFieldSettingsUI();
 }
 
@@ -5351,7 +5402,7 @@ function createLayoutFormattingRow(group, value) {
 
 function renderLayoutColorHost(host, value) {
   host.dataset.value = normalizeColor(value);
-  renderColorPicker(host, value, (next) => renderLayoutColorHost(host, next));
+  renderColorPicker(host, value, (next) => { renderLayoutColorHost(host, next); updateLayoutFormattingActions(); });
 }
 
 function createConditionalFormattingSection(kind, title, text, enabled, groups, values) {
@@ -5375,28 +5426,115 @@ function renderLayoutFormattingEditor(values = layoutFormattingDefaults(), condi
   elements.layoutFormattingGrid.append(createConditionalFormattingSection("pitchers", "Pitcher Conditional Formatting", "Format pitchers according to their throwing arm (Left, Right, Switch)", conditional.pitchers, FORMAT_GROUPS.filter((item) => item.kind === "pitcher"), values));
 }
 
+function refreshLayoutSettingsSummaries(layout = selectedLayout()) {
+  if (!layout) return;
+  if (elements.layoutDetailsSummaryName) elements.layoutDetailsSummaryName.textContent = layout.name || "Untitled Layout";
+  if (elements.layoutDetailsSummaryDescription) elements.layoutDetailsSummaryDescription.textContent = layout.description || "No description";
+  if (elements.layoutDetailsSummaryPdf) elements.layoutDetailsSummaryPdf.textContent = `${layout.pdfFileName || "Scorecard PDF"} · ${layout.pageCount || 0} page${layout.pageCount === 1 ? "" : "s"}`;
+  const selected = layoutSettingsSelectedIds(layout);
+  state.layoutFieldDraftSaved = new Set(selected);
+  state.layoutFieldDraft = new Set(selected);
+  syncLayoutFieldSettingsUI();
+  const defaults = layoutFormattingDefaults(layout);
+  const conditional = layoutConditionalFormatting(layout);
+  const usingAppDefaults = formattingSettingsEqual(
+    { values: defaults, conditional },
+    { values: appFormattingDefaults(), conditional: appConditionalFormattingDefaults() }
+  );
+  if (elements.layoutFormattingSummary) elements.layoutFormattingSummary.textContent = usingAppDefaults ? "Currently using app defaults" : "Currently using custom formatting";
+}
+
 function openLayoutFormattingDialog() {
   const layout = selectedLayout();
   if (!layout) return setLayoutMessage("Open a layout before changing Layout Settings.", true);
-  populateLayoutFieldSettings(layout);
-  renderLayoutFormattingEditor();
+  refreshLayoutSettingsSummaries(layout);
+  elements.layoutFormattingDialog?.showModal();
+}
+
+function layoutDetailsSnapshot() {
+  return JSON.stringify({
+    name: String(elements.layoutSettingsName?.value || "").trim(),
+    description: String(elements.layoutSettingsDescription?.value || "").trim(),
+    replacementPdf: state.layoutReplacementPdf ? `${state.layoutReplacementPdf.name}|${state.layoutReplacementPdf.size}|${state.layoutReplacementPdf.lastModified}` : null
+  });
+}
+function layoutDetailsIsDirty() { return layoutDetailsSnapshot() !== state.layoutDetailsSavedSnapshot; }
+function updateLayoutDetailsActions() {
+  if (elements.layoutDetailsSave) elements.layoutDetailsSave.disabled = !layoutDetailsIsDirty();
+}
+function openLayoutDetailsDialog() {
+  const layout = selectedLayout(); if (!layout) return;
   state.layoutReplacementPdf = null;
   if (elements.layoutSettingsName) elements.layoutSettingsName.value = layout.name || "";
   if (elements.layoutSettingsDescription) elements.layoutSettingsDescription.value = layout.description || "";
   if (elements.layoutSettingsPdfSummary) elements.layoutSettingsPdfSummary.textContent = `${layout.pdfFileName} · ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
   if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "Replacement PDFs must have the same page count so existing placements remain valid.";
   if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
-  if (elements.layoutSettingsMain) elements.layoutSettingsMain.hidden = false;
-  if (elements.layoutCustomFields) elements.layoutCustomFields.hidden = true;
-  if (elements.layoutFormattingPanel) elements.layoutFormattingPanel.hidden = true;
-  if (elements.layoutFormattingToggle) elements.layoutFormattingToggle.textContent = "Open Formatting Options";
-  elements.layoutFormattingDialog?.showModal();
+  state.layoutDetailsSavedSnapshot = layoutDetailsSnapshot();
+  updateLayoutDetailsActions();
+  elements.layoutDetailsDialog?.showModal();
 }
-function toggleLayoutFormattingPanel() {
-  if (!elements.layoutFormattingPanel) return;
-  elements.layoutFormattingPanel.hidden = !elements.layoutFormattingPanel.hidden;
-  if (elements.layoutFormattingToggle) elements.layoutFormattingToggle.textContent = elements.layoutFormattingPanel.hidden ? "Open Formatting Options" : "Close Formatting Options";
+function requestCloseLayoutDetails() {
+  if (!layoutDetailsIsDirty()) return cancelLayoutDetails();
+  showLayoutSettingsDiscardPrompt("details", "Your layout details have changed. Closing now will discard those changes.");
 }
+function cancelLayoutDetails() {
+  state.layoutSettingsDiscardTarget = null;
+  state.layoutReplacementPdf = null;
+  state.layoutDetailsSavedSnapshot = null;
+  if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
+  elements.layoutDetailsDialog?.close();
+}
+
+async function saveLayoutDetails() {
+  const layout = selectedLayout(); if (!layout) return;
+  const name = String(elements.layoutSettingsName?.value || "").trim();
+  if (!name) { if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "Layout name cannot be blank."; return; }
+  layout.name = name;
+  layout.description = String(elements.layoutSettingsDescription?.value || "").trim();
+  const replacementPdf = state.layoutReplacementPdf;
+  if (replacementPdf) { await savePdfTemplate(layout.pdfTemplateId, replacementPdf); layout.pdfFileName = replacementPdf.name; }
+  layout.updatedAt = new Date().toISOString();
+  await saveLayout(layout);
+  await refreshLayouts();
+  state.selectedLayoutId = layout.id;
+  const current = selectedLayout() || layout;
+  refreshLayoutSettingsSummaries(current);
+  elements.layoutDetailsDialog?.close();
+  if (elements.designerLayoutMeta) elements.designerLayoutMeta.textContent = `${current.name} • ${current.pdfFileName} • ${current.pageCount} page${current.pageCount === 1 ? "" : "s"}`;
+  if (replacementPdf && state.designerPdfDocument) { const record = await getPdfTemplate(current.pdfTemplateId); state.designerPdfDocument = await loadPdfDocument(record.blob); await renderDesignerPage(); }
+  state.layoutReplacementPdf = null;
+  state.layoutDetailsSavedSnapshot = null;
+  setDesignerMessage("Layout details saved.");
+}
+
+function formattingSettingsEqual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+function layoutFormattingSnapshot() { return JSON.stringify(readLayoutFormattingEditor()); }
+function layoutFormattingIsDirty() { return layoutFormattingSnapshot() !== state.layoutFormattingSavedSnapshot; }
+function layoutFormattingIsAtAppDefaults() {
+  return formattingSettingsEqual(readLayoutFormattingEditor(), { values: appFormattingDefaults(), conditional: appConditionalFormattingDefaults() });
+}
+function updateLayoutFormattingActions() {
+  if (elements.layoutFormattingSaveButton) elements.layoutFormattingSaveButton.disabled = !layoutFormattingIsDirty();
+  if (elements.layoutFormattingResetButton) elements.layoutFormattingResetButton.disabled = layoutFormattingIsAtAppDefaults();
+}
+function openLayoutDefaultFormattingDialog() {
+  const layout = selectedLayout(); if (!layout) return;
+  renderLayoutFormattingEditor(layoutFormattingDefaults(layout), layoutConditionalFormatting(layout));
+  state.layoutFormattingSavedSnapshot = layoutFormattingSnapshot();
+  updateLayoutFormattingActions();
+  elements.layoutDefaultFormattingDialog?.showModal();
+}
+function requestCloseLayoutDefaultFormatting() {
+  if (!layoutFormattingIsDirty()) return cancelLayoutDefaultFormatting();
+  showLayoutSettingsDiscardPrompt("formatting", "Your default formatting has changed. Closing now will discard those changes.");
+}
+function cancelLayoutDefaultFormatting() {
+  state.layoutSettingsDiscardTarget = null;
+  state.layoutFormattingSavedSnapshot = null;
+  elements.layoutDefaultFormattingDialog?.close();
+}
+
 async function handleLayoutReplacementPdf() {
   const layout = selectedLayout(); const file = elements.layoutSettingsPdfInput?.files?.[0];
   state.layoutReplacementPdf = null; if (!file || !layout) return;
@@ -5411,10 +5549,12 @@ async function handleLayoutReplacementPdf() {
     }
     state.layoutReplacementPdf = file;
     if (elements.layoutSettingsPdfSummary) elements.layoutSettingsPdfSummary.textContent = `${file.name} · ${pdf.numPages} page${pdf.numPages === 1 ? "" : "s"} (replacement selected)`;
-    if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "PDF validated. Existing placements will be preserved.";
+    if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "PDF validated. Existing placements will be preserved when you Save.";
+    updateLayoutDetailsActions();
   } catch (error) {
     if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
     if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = errorMessage(error, "Replacement PDF could not be read.");
+    updateLayoutDetailsActions();
   }
 }
 
@@ -5435,24 +5575,22 @@ function readLayoutFormattingEditor() {
 
 async function saveLayoutFormattingDefaults() {
   const layout = selectedLayout(); if (!layout) return;
-  const name = String(elements.layoutSettingsName?.value || "").trim();
-  if (!name) { if (elements.layoutSettingsPdfMessage) elements.layoutSettingsPdfMessage.textContent = "Layout name cannot be blank."; return; }
   const editor = readLayoutFormattingEditor();
-  const fields = readLayoutFieldSettings();
-  layout.name = name; layout.description = String(elements.layoutSettingsDescription?.value || "").trim();
-  layout.paletteMode = fields.mode; layout.enabledFieldIds = fields.enabledFieldIds;
-  layout.formattingDefaults = editor.values; layout.conditionalFormatting = editor.conditional;
-  const replacementPdf = state.layoutReplacementPdf;
-  if (replacementPdf) { await savePdfTemplate(layout.pdfTemplateId, replacementPdf); layout.pdfFileName = replacementPdf.name; }
-  layout.updatedAt = new Date().toISOString(); await saveLayout(layout); await refreshLayouts(); state.selectedLayoutId = layout.id;
-  elements.layoutFormattingDialog?.close(); populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect(); populateDesignerColumnFieldSelect(); populateDesignerIndividualFieldSelect(); renderDesignerPalette(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
-  if (elements.designerLayoutMeta) elements.designerLayoutMeta.textContent = `${layout.name} • ${layout.pdfFileName} • ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
-  if (replacementPdf && state.designerPdfDocument) { const record = await getPdfTemplate(layout.pdfTemplateId); state.designerPdfDocument = await loadPdfDocument(record.blob); await renderDesignerPage(); }
-  state.layoutReplacementPdf = null;
-  setDesignerMessage("Layout settings saved.");
+  layout.formattingDefaults = editor.values;
+  layout.conditionalFormatting = editor.conditional;
+  layout.updatedAt = new Date().toISOString();
+  await saveLayout(layout);
+  await refreshLayouts();
+  state.selectedLayoutId = layout.id;
+  const current = selectedLayout() || layout;
+  refreshLayoutSettingsSummaries(current);
+  state.layoutFormattingSavedSnapshot = null;
+  elements.layoutDefaultFormattingDialog?.close();
+  renderDesignerPalette(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
+  setDesignerMessage("Default formatting saved.");
 }
 
-function resetLayoutFormattingDefaults() { renderLayoutFormattingEditor(appFormattingDefaults(), appConditionalFormattingDefaults()); }
+function resetLayoutFormattingDefaults() { renderLayoutFormattingEditor(appFormattingDefaults(), appConditionalFormattingDefaults()); updateLayoutFormattingActions(); }
 
 function handValueForContext(model, context, selector) {
   let id=null;

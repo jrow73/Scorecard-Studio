@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=028.18" />
+  <link rel="stylesheet" href="./css/styles.css?v=030" />
 </head>
 <body>
   <div class="app-shell">
@@ -733,37 +733,86 @@
 
 
   <dialog id="layout-formatting-dialog" class="formatting-dialog layout-settings-dialog">
-    <form method="dialog" class="formatting-dialog-card layout-settings-card">
-      <div id="layout-settings-main">
-        <div class="card-header-row compact-header"><div><p class="section-label">Layout Settings</p><h3>Layout Settings</h3></div></div>
-        <section class="layout-settings-section">
-          <div class="layout-settings-section-heading"><div><h4>Layout Details</h4><p class="subtle">Update the layout name, description, or replace the underlying scorecard PDF.</p></div></div>
-          <div class="layout-details-grid">
-            <label>Layout Name<input id="layout-settings-name" type="text" /></label>
-            <label class="layout-details-description">Description<textarea id="layout-settings-description" rows="2"></textarea></label>
+    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-parent-card">
+      <div class="layout-settings-parent-header">
+        <div><p class="section-label">Layout Settings</p><h3>Layout Settings</h3><p class="subtle">Review the current layout settings, then open a section to make changes.</p></div>
+      </div>
+      <div class="layout-settings-parent-body">
+        <section class="layout-settings-summary-card">
+          <div class="layout-settings-summary-copy">
+            <h4>Layout Details</h4>
+            <p class="subtle">Layout name, description, and scorecard PDF.</p>
+            <dl class="layout-settings-summary-list">
+              <div><dt>Name</dt><dd id="layout-details-summary-name"></dd></div>
+              <div><dt>Description</dt><dd id="layout-details-summary-description"></dd></div>
+              <div><dt>Scorecard PDF</dt><dd id="layout-details-summary-pdf"></dd></div>
+            </dl>
           </div>
-          <div class="layout-pdf-replace-row"><div><strong>Scorecard PDF</strong><small id="layout-settings-pdf-summary"></small></div><label class="secondary-button compact-button">Replace PDF<input id="layout-settings-pdf-input" type="file" accept="application/pdf,.pdf" hidden /></label></div>
-          <p class="subtle" id="layout-settings-pdf-message"></p>
+          <button class="secondary-button compact-button layout-settings-open-button" id="layout-details-open" type="button">Open</button>
         </section>
-        <section class="layout-settings-section">
-          <div class="layout-settings-section-heading"><div><h4>Field Palette</h4><p class="subtle">The Score Layout Designer has <strong id="layout-field-total-count">0</strong> possible fields you can place onto a scorecard. The <strong id="layout-field-standard-count">0</strong> most common fields have been pre-selected, which meets the needs of most typical scorecards. The default Standard Fields include things such as team names, player names, jersey numbers, and positions. However, many Custom Fields such as individual player stats, team stats, and additional venue information can be selected for use.</p></div><span class="pill neutral" id="layout-field-count">Standard Fields</span></div>
-          <button class="secondary-button" id="layout-custom-fields-open" type="button">Select Custom Fields</button>
+        <section class="layout-settings-summary-card">
+          <div class="layout-settings-summary-copy">
+            <h4>Field Palette</h4>
+            <p class="subtle">Choose which standard and custom fields are available in the Designer palette.</p>
+            <div class="layout-settings-summary-line"><span id="layout-field-summary-detail"></span></div>
+          </div>
+          <button class="secondary-button compact-button layout-settings-open-button" id="layout-custom-fields-open" type="button">Open</button>
         </section>
-        <section class="layout-settings-section">
-          <div class="layout-settings-section-heading"><div><h4>Default Formatting Options</h4><p class="subtle">Scorecard Studio provides default formatting for all scorecard fields. Each field category can be customized with its own defaults so that new items are placed on the scorecard using your preferred formatting. Individual items can still be formatted after placement.</p></div></div>
-          <button class="secondary-button" id="layout-formatting-toggle" type="button">Open Formatting Options</button>
-          <div id="layout-formatting-panel" hidden><div id="layout-formatting-grid" class="layout-formatting-grid"></div><button class="secondary-button" id="layout-formatting-reset-btn" type="button">Reset Formatting</button></div>
+        <section class="layout-settings-summary-card">
+          <div class="layout-settings-summary-copy">
+            <h4>Default Formatting Options</h4>
+            <p class="subtle">Set the default formatting used when new items are placed on the scorecard.</p>
+            <div class="layout-settings-summary-line" id="layout-formatting-summary"></div>
+          </div>
+          <button class="secondary-button compact-button layout-settings-open-button" id="layout-formatting-open" type="button">Open</button>
         </section>
-        <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="secondary-button" value="cancel">Cancel</button><button class="primary-button" id="layout-formatting-save-btn" type="button">Save Layout Settings</button></div>
       </div>
-      <div id="layout-custom-fields" hidden>
-        <div class="layout-custom-fields-sticky">
-          <div class="card-header-row compact-header layout-custom-fields-heading"><div><p class="section-label">Layout Settings</p><h3>Select Custom Fields</h3><p class="subtle">Choose the fields that should be available in this layout's Designer palette.</p></div><div class="layout-custom-fields-header-actions"><span class="pill neutral" id="layout-custom-field-count"></span><button class="secondary-button compact-button" id="layout-custom-fields-restore-standard" type="button">Restore Standard Fields</button><button class="icon-button layout-custom-fields-close" id="layout-custom-fields-close" type="button" aria-label="Close custom field selector" title="Close">×</button></div></div>
-          <label class="layout-custom-search">Find a field<input id="layout-field-search" type="search" placeholder="Search fields, categories, or examples…" /></label>
+      <div class="formatting-dialog-actions layout-settings-parent-footer"><span class="dialog-spacer"></span><button class="primary-button" value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="layout-details-dialog" class="formatting-dialog layout-settings-child-dialog">
+    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-child-card">
+      <div class="layout-settings-child-header">
+        <div><p class="section-label">Layout Settings</p><h3>Layout Details</h3><p class="subtle">Update the layout name, description, or replace the underlying scorecard PDF.</p></div>
+        <button class="icon-button layout-settings-child-close" id="layout-details-close" type="button" aria-label="Cancel and close Layout Details" title="Cancel">×</button>
+      </div>
+      <div class="layout-settings-child-body">
+        <div class="layout-details-grid">
+          <label>Layout Name<input id="layout-settings-name" type="text" /></label>
+          <label class="layout-details-description">Description<textarea id="layout-settings-description" rows="3"></textarea></label>
         </div>
-        <div class="layout-custom-field-list" id="layout-custom-field-list"></div>
-        <div class="formatting-dialog-actions"><button class="secondary-button" id="layout-custom-fields-cancel" type="button">Cancel</button><span class="dialog-spacer"></span><button class="primary-button" id="layout-custom-fields-save" type="button">Save</button></div>
+        <div class="layout-pdf-replace-row"><div><strong>Scorecard PDF</strong><small id="layout-settings-pdf-summary"></small></div><label class="secondary-button compact-button">Replace PDF<input id="layout-settings-pdf-input" type="file" accept="application/pdf,.pdf" hidden /></label></div>
+        <p class="subtle" id="layout-settings-pdf-message"></p>
       </div>
+      <div class="formatting-dialog-actions layout-settings-child-footer"><span class="dialog-spacer"></span><button class="secondary-button" id="layout-details-cancel" type="button">Cancel</button><button class="primary-button" id="layout-details-save" type="button" disabled>Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="layout-custom-fields-dialog" class="formatting-dialog layout-settings-child-dialog">
+    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-child-card layout-custom-fields-child-card">
+      <div class="layout-settings-child-header">
+        <div><p class="section-label">Layout Settings</p><h3>Select Custom Fields</h3><p class="subtle">Choose the fields that should be available in this layout's Designer palette.</p></div>
+        <div class="layout-custom-fields-header-actions"><button class="icon-button layout-settings-child-close" id="layout-custom-fields-close" type="button" aria-label="Cancel and close custom field selector" title="Cancel">×</button></div>
+      </div>
+      <div class="layout-settings-child-body">
+        <label class="layout-custom-search">Find a field<input id="layout-field-search" type="search" placeholder="Search fields, categories, or examples…" /></label>
+        <div class="layout-custom-field-list" id="layout-custom-field-list"></div>
+      </div>
+      <div class="formatting-dialog-actions layout-settings-child-footer"><div class="layout-custom-fields-footer-left"><span class="layout-custom-field-count" id="layout-custom-field-count"></span><button class="secondary-button" id="layout-custom-fields-restore-standard" type="button">Restore Standard Fields</button></div><span class="dialog-spacer"></span><button class="secondary-button" id="layout-custom-fields-cancel" type="button">Cancel</button><button class="primary-button" id="layout-custom-fields-save" type="button" disabled>Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="layout-default-formatting-dialog" class="formatting-dialog layout-settings-child-dialog">
+    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-child-card">
+      <div class="layout-settings-child-header">
+        <div><p class="section-label">Layout Settings</p><h3>Default Formatting Options</h3><p class="subtle">Customize the formatting applied when new items are placed. Individual items can still be formatted after placement.</p></div>
+        <button class="icon-button layout-settings-child-close" id="layout-formatting-close" type="button" aria-label="Cancel and close formatting options" title="Cancel">×</button>
+      </div>
+      <div class="layout-settings-child-body">
+        <div id="layout-formatting-grid" class="layout-formatting-grid"></div>
+      </div>
+      <div class="formatting-dialog-actions layout-settings-child-footer"><button class="secondary-button" id="layout-formatting-reset-btn" type="button">Restore App Defaults</button><span class="dialog-spacer"></span><button class="secondary-button" id="layout-formatting-cancel" type="button">Cancel</button><button class="primary-button" id="layout-formatting-save-btn" type="button" disabled>Save</button></div>
     </form>
   </dialog>
 
@@ -781,7 +830,7 @@
     <form method="dialog" class="formatting-dialog-card compact-message-card">
       <p class="section-label">Layout Settings</p>
       <h3>Discard Unsaved Changes?</h3>
-      <p>Your custom field selections have changed. Closing now will discard those changes.</p>
+      <p id="layout-settings-discard-message">Closing now will discard your unsaved changes.</p>
       <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="secondary-button" value="cancel">Cancel</button><button class="danger-button" id="layout-custom-discard-confirm" type="button">Discard Changes</button></div>
     </form>
   </dialog>
@@ -789,6 +838,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=0291"></script>
+  <script type="module" src="./js/app.js?v=0301"></script>
 </body>
 </html>
