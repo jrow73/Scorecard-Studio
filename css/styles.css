@@ -2751,3 +2751,25 @@ body.designer-mode .designer-view > .card,
 /* Build 030.2 — Custom Fields count consistency */
 .layout-custom-fields-footer-left { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
 .layout-custom-field-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+/* Build 031 — flatten generic Text Template palette workflow.
+   The category title creates a new generic template; only the chevron toggles
+   visibility of existing generic-template instances. */
+.designer-palette-category.designer-generic-template-category > summary::before {
+  content: none;
+}
+.designer-palette-category.designer-generic-template-category > summary {
+  grid-template-columns: 14px minmax(0, 1fr);
+}
+.designer-generic-template-category > summary .designer-category-chevron {
+  grid-column: 1;
+  width: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+.designer-generic-template-category > summary .designer-category-chevron::before { content: "\25B6"; }
+.designer-generic-template-category[open] > summary .designer-category-chevron::before { content: "\25BC"; }
+.designer-generic-template-category > summary strong { grid-column: 2; }

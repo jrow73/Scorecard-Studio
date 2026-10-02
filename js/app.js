@@ -3706,7 +3706,7 @@ function designerPaletteItems() {
     const hasFields = getCatalogFields({ cardinality: "repeated", collection }).some((definition) => designerFieldAllowed(definition));
     if (hasFields || designerDirectInstancesForItem({ kind:"collection", ...item }).length) items.push({ kind:"collection", ...item });
   }
-  items.push({ kind: "custom", id: "custom", groupId: "custom", label: "Text Template" });
+  items.push({ kind: "custom", id: "custom", groupId: "custom", label: "Text Template", forcedMode: "template" });
   return items;
 }
 
@@ -3835,10 +3835,52 @@ function renderDesignerPaletteCategories(container, items) {
     const summary = document.createElement("summary");
     const usedInGroup = groupItems.filter((item) => designerInstancesForItem(item).length).length;
     const groupStatus = group.id === "custom" ? "" : (usedInGroup ? `${usedInGroup} used` : `${groupItems.length} available`);
-    summary.innerHTML = `<strong>${group.label}</strong>${groupStatus ? `<span>${groupStatus}</span>` : ""}`;
+    if (group.id === "custom") {
+      // Build 031: Generic Text Template is intentionally flatter than the other
+      // palette categories. The category itself is the create-new action, while
+      // its chevron only expands/collapses already-placed template instances.
+      details.classList.add("designer-generic-template-category");
+      const chevron = document.createElement("span");
+      chevron.className = "designer-category-chevron";
+      chevron.setAttribute("role", "button");
+      chevron.setAttribute("tabindex", "0");
+      chevron.setAttribute("aria-label", "Expand or collapse Text Template instances");
+      const title = document.createElement("strong"); title.textContent = group.label;
+      summary.replaceChildren(chevron, title);
+      const toggleInstances = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        details.open = !details.open;
+      };
+      chevron.addEventListener("click", toggleInstances);
+      chevron.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") toggleInstances(event); });
+      summary.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (event.target.closest(".designer-category-chevron")) return;
+        const templateItem = groupItems.find((item) => item.kind === "custom");
+        if (templateItem) beginGenericTextTemplateCreation(templateItem);
+      });
+    } else {
+      summary.innerHTML = `<strong>${group.label}</strong>${groupStatus ? `<span>${groupStatus}</span>` : ""}`;
+    }
     details.append(summary);
     const body = document.createElement("div"); body.className = "designer-palette-category-body";
-    for (const item of groupItems) body.append(renderDesignerPaletteItem(item));
+    if (group.id === "custom") {
+      const templateItem = groupItems.find((item) => item.kind === "custom");
+      for (const instance of designerDirectInstancesForItem(templateItem)) {
+        const child = document.createElement("button"); child.type = "button"; child.className = "designer-instance-item";
+        if (!designerMultiSelectionActive() && designerSelectionsEqual(state.designerSelection, instance.selection)) child.classList.add("selected");
+        child.textContent = instance.label;
+        child.addEventListener("click", (event) => {
+          event.stopPropagation();
+          state.designerPaletteSelection = null; state.designerPendingMode = null;
+          selectDesignerObject(instance.selection, { scrollIntoView: true });
+        });
+        body.append(child);
+      }
+    } else {
+      for (const item of groupItems) body.append(renderDesignerPaletteItem(item));
+    }
     details.append(body); container.append(details);
   }
 }
@@ -4083,7 +4125,7 @@ function paletteItemForSelection(selection = state.designerSelection) {
       }
       return object.content.context
         ? { kind:"record", id:object.content.context, label:collectionDisplayLabel(object.content.context) }
-        : { kind:"custom", id:"custom", label:"Text Template" };
+        : { kind:"custom", id:"custom", label:"Text Template", forcedMode:"template" };
     }
     const def = getFieldDefinition(object.field); return def ? { kind:"field", id:def.id, label:def.label } : null;
   }
@@ -4108,6 +4150,17 @@ function individualWorkspaceDisplayLabel(collection) {
 
 function collectionDisplayLabel(collection) {
   return ({"away.lineup":"Away starting lineup","home.lineup":"Home starting lineup","away.bench":"Away bench","home.bench":"Home bench","away.bullpen":"Away bullpen","home.bullpen":"Home bullpen","game.umpires.crew":"Umpire crew","away.startingPitcher":"Away starting pitcher","home.startingPitcher":"Home starting pitcher"})[collection] || collection;
+}
+
+function beginGenericTextTemplateCreation(item = { kind:"custom", id:"custom", groupId:"custom", label:"Text Template", forcedMode:"template" }) {
+  cancelDesignerPlacement();
+  state.designerSelection = null;
+  state.designerPaletteSelection = { ...item, forcedMode: "template" };
+  state.designerPendingMode = "template";
+  configureControlsForPaletteItem(state.designerPaletteSelection);
+  if (elements.designerTemplateText) elements.designerTemplateText.value = "";
+  updateDesignerTemplatePreview();
+  renderDesignerOverlay(); renderDesignerPalette(); renderDesignerSelectionInspector();
 }
 
 function activateDesignerPaletteItem(item, placed) {
@@ -4160,6 +4213,10 @@ function beginNewInstanceFromSelection() {
   state.designerPaletteSelection = item;
   state.designerPendingMode = item.forcedMode || null;
   configureControlsForPaletteItem(item);
+  if (item.kind === "custom" && state.designerPendingMode === "template") {
+    if (elements.designerTemplateText) elements.designerTemplateText.value = "";
+    updateDesignerTemplatePreview();
+  }
   renderDesignerOverlay(); renderDesignerPalette(); renderDesignerSelectionInspector();
 }
 
@@ -4370,7 +4427,8 @@ function resetDesignerInspectorSurfaces() {
 function renderPendingDesignerCreation(pending, pendingMode) {
   if (elements.designerSubordinateWorkspace) elements.designerSubordinateWorkspace.hidden = false;
   setDesignerWorkspaceHeading("New Object", pending.label);
-  elements.designerNewItemPanel.hidden = false;
+  const directGenericTemplate = pending.kind === "custom" && pendingMode === "template";
+  elements.designerNewItemPanel.hidden = directGenericTemplate;
   elements.designerNewItemPanel.replaceChildren();
   const instances = designerInstancesForItem(pending);
 
@@ -4402,15 +4460,17 @@ function renderPendingDesignerCreation(pending, pendingMode) {
     return;
   }
 
-  const summary = document.createElement("div"); summary.className = "designer-choice-summary";
-  const names = { single:"Single Item", template:"Text Template", repeated:"Repeated Layout", record:"Record Layout", individual:"Individual Placement" };
-  const summaryText = document.createElement("div");
-  summaryText.innerHTML = `<span>Usage</span><strong>${names[pendingMode] || pendingMode}</strong>`;
-  const change = document.createElement("button"); change.type = "button"; change.className = "secondary-button compact-button"; change.textContent = "Change";
-  change.addEventListener("click", () => { state.designerPendingMode = null; renderDesignerSelectionInspector(); });
-  summary.append(summaryText);
-  if (!pending.forcedMode) summary.append(change);
-  elements.designerNewItemPanel.append(summary);
+  if (pending.kind !== "custom") {
+    const summary = document.createElement("div"); summary.className = "designer-choice-summary";
+    const names = { single:"Single Item", template:"Text Template", repeated:"Repeated Layout", record:"Record Layout", individual:"Individual Placement" };
+    const summaryText = document.createElement("div");
+    summaryText.innerHTML = `<span>Usage</span><strong>${names[pendingMode] || pendingMode}</strong>`;
+    const change = document.createElement("button"); change.type = "button"; change.className = "secondary-button compact-button"; change.textContent = "Change";
+    change.addEventListener("click", () => { state.designerPendingMode = null; renderDesignerSelectionInspector(); });
+    summary.append(summaryText);
+    if (!pending.forcedMode) summary.append(change);
+    elements.designerNewItemPanel.append(summary);
+  }
 
   configureControlsForPaletteItem(pending);
   if (pendingMode === "single") showOnlyDesignerTool(elements.designerSingleItemTool);

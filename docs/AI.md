@@ -871,7 +871,7 @@ The philosophy should remain:
 
 ## Designer Completion Roadmap — historical note
 
-The earlier post-Build-018 sequencing has been superseded by the accepted Builds 019–028 implementation path. `docs/DESIGNER_COMPLETION_INVENTORY.md` is the authoritative current roadmap. Build 028 is closed through Build 028.20. The remaining v0.2.0 Designer runway is Build 029 Pregame Data Context & Semantics, Build 030 Layout Settings Workflow, Build 031 Text Template Workflow Completion, and Build 032 v0.2.0 Designer Completion / Release Review. Accepted behavior from earlier builds should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
+The earlier post-Build-018 sequencing has been superseded by the accepted Builds 019–028 implementation path. `docs/DESIGNER_COMPLETION_INVENTORY.md` is the authoritative current roadmap. Build 028 is closed through Build 028.20. The remaining v0.2.0 Designer runway is Build 029 Pregame Data Context & Semantics, Build 030 Layout Settings Workflow, Build 031 Text Template Workflow Completion, and Build 032 Designer Remaining Tweaks, followed by the v0.2.0 release review. Accepted behavior from earlier builds should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
 
 ## Versioning
 
@@ -1128,7 +1128,7 @@ Build 028 is accepted through Build 028.20 and is closed. Builds 023–028 are c
 1. **Build 029 — Pregame Data Context & Semantics** — use a game-specific pregame cutoff, including completed earlier same-day doubleheader games; ensure team/player YTD values match that cutoff; display First Pitch in the ballpark's local timezone; add Away/Home Team Game Number from verified pregame context.
 2. **Build 030 — Layout Settings Workflow** — give the parent Layout Settings modal fixed header/footer chrome and a scrollable body; make Layout Details a read-only summary with an Edit child view; standardize Layout Details, Select Custom Fields, and Default Formatting Options as full-size child views with consistent Save/Cancel and dirty-close behavior.
 3. **Build 031 — Text Template Workflow Completion** — complete the generic Text Template creation/palette workflow, preferably flattening the redundant `Text Template -> Text Template -> instances` hierarchy if the palette architecture supports it cleanly.
-4. **Build 032 — v0.2.0 Designer Completion / Release Review** — no planned new feature scope; perform full Designer regression, persistence/reload, Representative Test PDF/live PDF comparison, viewport/multi-page checks, import/export checks, documentation reconciliation, and final release readiness.
+4. **Build 032 — Designer Remaining Tweaks** — collect the remaining small Designer defects and polish items discovered after the planned workflow builds. After Build 032 closes, proceed to the **v0.2.0 release review** for full regression, persistence/reload, PDF comparison, viewport/multi-page, import/export, documentation reconciliation, and release readiness.
 
 Build 028 final accepted behavior includes the cleanup/polish, contextual Text Template fixes, Starting Pitcher fixes, and Bench/Bullpen per-instance sorting documented in `Build_028_Implementation.md` and the decimal implementation notes through `Build_028.20_Implementation.md`.
 
@@ -1141,7 +1141,7 @@ Representative Data is deterministic test infrastructure, not a simulated live g
 - **Build 029 — Pregame Data Context & Semantics:** doubleheader-aware pregame snapshots, venue-local First Pitch, and Team Game Number.
 - **Build 030 — Layout Settings Workflow:** consistent parent/child modal workflow with fixed chrome and transactional Save/Cancel behavior.
 - **Build 031 — Text Template Workflow Completion:** finish the generic Text Template palette/creation workflow.
-- **Build 032 — v0.2.0 Designer Completion / Release Review:** final regression and release-readiness pass; no planned feature expansion.
+- **Build 032 — Designer Remaining Tweaks:** address the remaining small Designer defects/polish items, then proceed to the v0.2.0 release review.
 
 Build metadata continues to come from `/app-meta.json`; do not hard-code independent user-facing build labels. `README.md` remains intentionally untouched during intermediate builds.
 
@@ -1153,4 +1153,9 @@ Layout Settings uses the application dark theme and is organized into Layout Det
 
 The Designer palette uses accordion behavior, placed-object detail collapsing, top/bottom Collapse All behavior, and finite Available Data counts that exclude the unlimited Text Template tool. Starting Pitcher uses its record presentation and new Starting Pitcher Record creation no longer offers the obsolete Single Item path. Manager belongs to Team Information and inherits Team formatting defaults. Text Template Insert Field menus honor the layout's enabled field set, while existing or manually typed valid tokens remain resolvable for compatibility/power-user workflows. Current Player Name formats are Full Name, First Initial + Last Name (no period), Last Name, First Name, Use Name, and Boxscore Name.
 
-**Current remaining v0.2.0 roadmap after Build 028.20:** Build 029 Pregame Data Context & Semantics; Build 030 Layout Settings Workflow; Build 031 Text Template Workflow Completion; Build 032 v0.2.0 Designer Completion / Release Review.
+**Current remaining v0.2.0 roadmap after Build 028.20:** Build 029 Pregame Data Context & Semantics; Build 030 Layout Settings Workflow; Build 031 Text Template Workflow Completion; Build 032 Designer Remaining Tweaks, followed by the v0.2.0 release review.
+
+
+## Build 031 final closure (Oct 2, 2026)
+
+Build 031 — Text Template Workflow Completion is accepted and closed through Build 031.1. The generic Text Template palette is flattened to `Text Template -> instances`; creation enters the editor directly; the abandoned empty chooser panel is removed; and shared Text Template editing terminology is standardized to **Editor** and **Insert into editor**. Acceptance confirmed that the shared terminology also appears in repeated-record Text Template areas, so no Build 031.2 consistency fix is required. The next implementation bucket is **Build 032 — Designer Remaining Tweaks**, followed by the **v0.2.0 release review**.
