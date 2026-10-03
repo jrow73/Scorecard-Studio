@@ -375,7 +375,6 @@
         <section class="card">
           <div class="card-header-row">
             <div>
-              <p class="section-label" data-app-build-upper-prefix="Designer Workspace">Designer Workspace</p>
               <h3 id="designer-heading">Layout Designer</h3>
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
@@ -396,6 +395,7 @@
                 <select id="designer-palette-filter" aria-label="Filter scorecard fields">
                   <option value="all">All data</option>
                   <option value="used">Used only</option>
+                  <option value="unused">Unused only</option>
                 </select>
               </div>
               <div id="designer-palette-chooser" class="designer-palette-chooser" hidden></div>
@@ -411,9 +411,9 @@
             </aside>
             <div class="designer-stage-panel">
               <div class="pdf-toolbar">
-                <button class="secondary-button" id="designer-prev-btn" type="button" aria-label="Previous PDF page" title="Previous PDF page">←</button>
+                <button class="secondary-button designer-toolbar-icon" id="designer-prev-btn" type="button" aria-label="Previous PDF page" title="Previous PDF page">←</button>
                 <strong id="designer-page-label">Page 1 of 1</strong>
-                <button class="secondary-button" id="designer-next-btn" type="button" aria-label="Next PDF page" title="Next PDF page">→</button>
+                <button class="secondary-button designer-toolbar-icon" id="designer-next-btn" type="button" aria-label="Next PDF page" title="Next PDF page">→</button>
                 <span class="designer-toolbar-actions" aria-label="Designer actions">
                   <button class="secondary-button designer-toolbar-icon" id="designer-undo-btn" type="button" disabled title="Undo (Ctrl/Cmd+Z)" aria-label="Undo">↶</button>
                   <button class="secondary-button designer-toolbar-icon" id="designer-redo-btn" type="button" disabled title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" aria-label="Redo">↷</button>
@@ -627,7 +627,7 @@
                     <option value="grid">Grid</option>
                   </select>
                 </label>
-                <label id="designer-capacity-wrap" for="designer-lineup-capacity">Number of slots
+                <label id="designer-capacity-wrap" for="designer-lineup-capacity"><span id="designer-capacity-label">Number of rows</span>
                   <input id="designer-lineup-capacity" type="number" min="1" max="30" step="1" value="9" />
                 </label>
                 <div class="designer-column-grid" id="designer-grid-dimensions" hidden>
@@ -660,7 +660,7 @@
                       <option value="template">Text Template</option>
                     </select>
                   </label>
-                  <label id="designer-column-field-wrap" for="designer-column-field" hidden>Slot field
+                  <label id="designer-column-field-wrap" for="designer-column-field" hidden>Field
                     <select id="designer-column-field"></select>
                   </label>
                   <label id="designer-column-name-format-wrap" for="designer-column-name-format" hidden>Name format
@@ -672,14 +672,14 @@
                     </select>
                   </label>
                   <div id="designer-column-template-wrap" hidden>
-                    <label for="designer-column-template">Text template
+                    <label for="designer-column-template">Editor
                       <textarea id="designer-column-template" rows="3" placeholder="Example: ([Throws]) [Player Name] ([W-L], [ERA] ERA)"></textarea>
                     </label>
                     <div class="composite-preview"><span>Preview</span><strong id="designer-column-template-preview">Enter text or insert a field.</strong></div>
                     <div class="designer-column-grid designer-template-insert-controls">
                       <select id="designer-column-template-field" aria-label="Choose text field to insert"></select>
                       <span id="designer-column-template-name-format-wrap" hidden><select id="designer-column-template-name-format" aria-label="Choose name format"></select></span>
-                      <button class="secondary-button composite-insert-button" id="designer-column-template-insert-btn" type="button">Insert Field</button>
+                      <button class="secondary-button composite-insert-button" id="designer-column-template-insert-btn" type="button">Insert into editor</button>
                     </div>
                   </div>
                   <button class="primary-button" id="designer-place-column-btn" type="button">Place Item on Scorecard</button>
@@ -706,12 +706,30 @@
                 <label id="designer-individual-role-wrap" for="designer-individual-role">Role
                   <select id="designer-individual-role"><option value="">Choose role…</option></select>
                 </label>
+                <label id="designer-individual-content-type-wrap" for="designer-individual-content-type" hidden>Content type
+                  <select id="designer-individual-content-type">
+                    <option value="">Choose content type…</option>
+                    <option value="field">Single Item</option>
+                    <option value="template">Text Template</option>
+                  </select>
+                </label>
                 <label id="designer-individual-field-wrap" for="designer-individual-field" hidden>Field
                   <select id="designer-individual-field"></select>
                 </label>
                 <label id="designer-individual-name-format-wrap" for="designer-individual-name-format" hidden>Name format
                   <select id="designer-individual-name-format"></select>
                 </label>
+                <div id="designer-individual-template-wrap" hidden>
+                  <label for="designer-individual-template">Editor
+                    <textarea id="designer-individual-template" rows="3" placeholder="Example: #[Jersey #] [Player Name]"></textarea>
+                  </label>
+                  <div class="composite-preview"><span>Preview</span><strong id="designer-individual-template-preview">Enter text or insert a field.</strong></div>
+                  <div class="designer-column-grid designer-template-insert-controls">
+                    <select id="designer-individual-template-field" aria-label="Choose text field to insert"></select>
+                    <span id="designer-individual-template-name-format-wrap" hidden><select id="designer-individual-template-name-format" aria-label="Choose name format"></select></span>
+                    <button class="secondary-button composite-insert-button" id="designer-individual-template-insert-btn" type="button">Insert into editor</button>
+                  </div>
+                </div>
                 <label id="designer-individual-alignment-wrap" for="designer-individual-alignment" hidden>Alignment
                   <select id="designer-individual-alignment"><option value="">Choose alignment…</option><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select>
                 </label>

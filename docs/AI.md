@@ -1159,3 +1159,8 @@ The Designer palette uses accordion behavior, placed-object detail collapsing, t
 ## Build 031 final closure (Oct 2, 2026)
 
 Build 031 — Text Template Workflow Completion is accepted and closed through Build 031.1. The generic Text Template palette is flattened to `Text Template -> instances`; creation enters the editor directly; the abandoned empty chooser panel is removed; and shared Text Template editing terminology is standardized to **Editor** and **Insert into editor**. Acceptance confirmed that the shared terminology also appears in repeated-record Text Template areas, so no Build 031.2 consistency fix is required. The next implementation bucket is **Build 032 — Designer Remaining Tweaks**, followed by the **v0.2.0 release review**.
+
+
+## Build 032 final closure (Oct 3, 2026)
+
+Build 032 — Designer Remaining Tweaks is complete through Build 032.5. Accepted work includes Field Palette Unused-only filtering and dynamic used/available counts; Designer control/Inspector visual consistency; user-facing row/column/position/point terminology; Starting Pitcher Record Layout row semantics; Defensive Alignment Single Item/Text Template support with sequential role carry-forward; Player Name format initialization; repeated-record Editor/Insert into editor label consistency; and removal of the development-only Designer workspace/build eyebrow. The planned Designer feature/workflow roadmap for v0.2.0 is now complete. Next step: **v0.2.0 release review** only; do not add new Designer feature scope unless release review exposes a blocking defect.

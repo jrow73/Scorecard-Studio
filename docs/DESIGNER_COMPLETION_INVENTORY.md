@@ -185,3 +185,10 @@ The remaining v0.2.0 runway is intentionally outside Build 028: Build 029 data c
 ## Build 031 final closure (Oct 2, 2026)
 
 Build 031 — Text Template Workflow Completion is accepted and closed through Build 031.1. The generic Text Template palette is flattened to `Text Template -> instances`; creation enters the editor directly; the abandoned empty chooser panel is removed; and shared Text Template editing terminology is standardized to **Editor** and **Insert into editor**. Acceptance confirmed that the shared terminology also appears in repeated-record Text Template areas, so no Build 031.2 consistency fix is required. The next implementation bucket is **Build 032 — Designer Remaining Tweaks**, followed by the **v0.2.0 release review**.
+
+
+## Build 032 final closure (Oct 3, 2026)
+
+Build 032 — Designer Remaining Tweaks is complete through Build 032.5. The accepted final Designer cleanup includes: Unused-only Field Palette filtering and dynamic `used of available` counts; standardized Designer action/toolbar sizing and Inspector visual density; clearer Text Template Editor affordance and compact Formatting controls; removal of exposed slot/anchor terminology in favor of row/column/position/point wording; Starting Pitcher Record Layout row semantics; Defensive Alignment Text Template support with sequential role carry-forward and Player Name format handling; repeated-record Editor/Insert into editor label consistency; and removal of the development-only Designer workspace/build eyebrow.
+
+With Builds 029–032 closed, the **planned v0.2.0 Designer feature/workflow roadmap is complete**. The remaining step is the **v0.2.0 release review**, focused on full regression, persistence/reload, Representative Test PDF and Live PDF comparison, multi-page/viewport behavior, import/export, documentation reconciliation, and release readiness. New Designer feature expansion should be deferred unless the release review exposes a blocking defect.
