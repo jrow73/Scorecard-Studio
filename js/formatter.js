@@ -1,8 +1,7 @@
 /**
  * Scorecard Studio
  * Shared field formatting
- * Version: 0.2.0-dev
- * Build: 028
+ * Version: 0.2.0
  */
 
 export const DEFAULT_DATE_FORMAT = "M/D/YYYY";

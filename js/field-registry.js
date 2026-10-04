@@ -1,8 +1,7 @@
 /**
  * Scorecard Studio
  * Canonical pregame field registry
- * Version: 0.2.0-dev
- * Build: 029
+ * Version: 0.2.0
  */
 
 const SIDE_LABEL = { away: "Away", home: "Home" };

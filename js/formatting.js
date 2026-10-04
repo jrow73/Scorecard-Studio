@@ -1,7 +1,6 @@
 /**
  * Scorecard Studio formatting defaults and inheritance helpers
- * Version: 0.2.0-dev
- * Build: 026.1
+ * Version: 0.2.0
  */
 
 export const FORMAT_GROUPS = [

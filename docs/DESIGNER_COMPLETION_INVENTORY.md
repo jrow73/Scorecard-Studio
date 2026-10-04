@@ -1,8 +1,11 @@
 # Scorecard Studio — Designer Completion Inventory
 
-**Baseline:** Build 026.4 accepted; Builds 023–026 complete  
+> **Final v0.2.0 status (Oct 3, 2026):** The planned Designer roadmap is complete through Build 032.5, and Release Prep plus all RC corrections have passed acceptance. Builds 018–032 below are retained as implementation history. Post-v0.2.0 touch and game-day work is deferred to future development.
+
+
+**Baseline:** Build 032.5 accepted; planned v0.2.0 Designer roadmap complete  
 **Milestone:** v0.2.0 — Complete Field Mapping & Formatting  
-**Purpose:** Authoritative inventory of remaining work before the Layout Designer is functionally complete for the traditional pregame scorecard v1 scope.
+**Purpose:** Historical Designer completion inventory plus authoritative v0.2.0 Designer closure status for release review.
 
 ## Completion standard
 
@@ -33,7 +36,7 @@ Advanced broadcaster-style matchup research, one-click generation, backup/export
 | Capacity/overflow behavior | Functional | Required / refine | Keep under-capacity normal; improve preview guidance/warnings |
 | Undo/Redo | Complete | Required / done | Build 020 accepted |
 | Generation-result UX | Functional | v1 polish | Separate success from warnings/notices clearly |
-| Full-card regression/acceptance | Planned Build 032 | Required | Final v0.2.0 Designer completion/release-review pass after Builds 029-031 |
+| Full-card regression/acceptance | Build 032 complete; release review current | Required for release | Designer implementation closed at 032.5; final v0.2.0 release acceptance remains |
 | Advanced matchup/research | Deferred | Not v1 Designer scope | Keep in Game Day/future research |
 
 ## Accepted foundation — do not redesign without cause
@@ -119,7 +122,7 @@ Under-capacity collections are normal. Only actual membership beyond a layout's 
 
 ## Undo/Redo
 
-Full Designer Undo/Redo remains required. It should cover meaningful Designer mutations including creation, deletion, movement, nudge, property/format changes, Text Template edits, repeated geometry changes, Record Layout child changes, and repeated-slot content changes. Implement history against the accepted Build 017 interaction model rather than redesigning selection or Inspector behavior.
+Historical Build 017 note: Full Designer Undo/Redo was still required at this checkpoint. It was subsequently implemented and accepted in Build 020.
 
 ## Generation-result UX
 
@@ -192,3 +195,16 @@ Build 031 — Text Template Workflow Completion is accepted and closed through B
 Build 032 — Designer Remaining Tweaks is complete through Build 032.5. The accepted final Designer cleanup includes: Unused-only Field Palette filtering and dynamic `used of available` counts; standardized Designer action/toolbar sizing and Inspector visual density; clearer Text Template Editor affordance and compact Formatting controls; removal of exposed slot/anchor terminology in favor of row/column/position/point wording; Starting Pitcher Record Layout row semantics; Defensive Alignment Text Template support with sequential role carry-forward and Player Name format handling; repeated-record Editor/Insert into editor label consistency; and removal of the development-only Designer workspace/build eyebrow.
 
 With Builds 029–032 closed, the **planned v0.2.0 Designer feature/workflow roadmap is complete**. The remaining step is the **v0.2.0 release review**, focused on full regression, persistence/reload, Representative Test PDF and Live PDF comparison, multi-page/viewport behavior, import/export, documentation reconciliation, and release readiness. New Designer feature expansion should be deferred unless the release review exposes a blocking defect.
+
+## v0.2.0 release-candidate review closure items (Oct 3, 2026)
+
+The full manual v0.2.0 release-acceptance pass confirmed the completed Designer feature/workflow set. Release-candidate corrections are limited to: explicit Favorite Layout semantics/UI; removal of the invalid Pitcher role from lineup-derived Defensive Alignment; cleanup of abandoned brand-new repeated/record objects when initial placement is cancelled with Escape; and suppression of an iPad/WebKit child-dialog ghost outline. These are release corrections, not a new Designer feature build.
+
+### Deferred Touch-Friendly Designer investigation
+
+- Provide a touch-accessible multi-select mode (and evaluate touch lasso) so iPad users can access multi-formatting, align/distribute, multi-delete, and multi-item copy/paste.
+- Evaluate pinch-to-zoom for the PDF workspace.
+- Improve gesture arbitration so an intended swipe/pan beginning on a placed object does not unexpectedly drag that object.
+- Preserve the existing toolbar zoom, touch scrolling, and Undo recovery behavior while investigating these changes.
+
+These touch items are post-v0.2.0 roadmap work and do not block the current Designer release.

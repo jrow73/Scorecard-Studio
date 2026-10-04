@@ -1,12 +1,11 @@
 /**
  * Scorecard Studio
  * Live field-catalog diagnostic helpers
- * Version: 0.2.0-dev
- * Build: 018.3
+ * Version: 0.2.0
  */
 
-import { getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=023";
-import { formatFieldValue } from "./formatter.js?v=018";
+import { getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=020";
+import { formatFieldValue } from "./formatter.js?v=020";
 
 export const DIAGNOSTIC_STATUSES = Object.freeze({
   available: "Available",

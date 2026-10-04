@@ -1,5 +1,8 @@
 # Project: Scorecard Studio
 
+> **Current status (Oct 3, 2026):** v0.2.0 is release-ready. Designer development completed through Build 032.5; Release Prep and all four RC corrections passed manual acceptance. The final release cut promotes the app to v0.2.0, adds the MIT license, and reconciles release documentation. Older roadmap and “future capability” statements below are retained as historical implementation context.
+
+
 ## Overview
 
 Scorecard Studio is a lightweight, fully browser-based web application
@@ -871,7 +874,7 @@ The philosophy should remain:
 
 ## Designer Completion Roadmap — historical note
 
-The earlier post-Build-018 sequencing has been superseded by the accepted Builds 019–028 implementation path. `docs/DESIGNER_COMPLETION_INVENTORY.md` is the authoritative current roadmap. Build 028 is closed through Build 028.20. The remaining v0.2.0 Designer runway is Build 029 Pregame Data Context & Semantics, Build 030 Layout Settings Workflow, Build 031 Text Template Workflow Completion, and Build 032 Designer Remaining Tweaks, followed by the v0.2.0 release review. Accepted behavior from earlier builds should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
+Historical Build 028 planning note: the then-remaining runway was Builds 029–032. Those builds are now accepted and closed. See the Build 032 closure/current-status note for the authoritative state. Accepted behavior should not be reopened without a demonstrated defect or a requirement from a real scorecard workflow.
 
 ## Versioning
 
@@ -1050,7 +1053,7 @@ Individual placement adds identification by list order or semantic role. Repeate
 
 ### Deferred UX items
 
-- Undo/Redo remains a required future Designer capability. Build 015 deliberately avoids introducing a partial history model while the workspace interaction model is still settling.
+- Historical Build 015 note: Undo/Redo was still a future capability at this checkpoint. It was subsequently implemented and accepted in Build 020.
 - Synthetic sample data should eventually fill all configured collection slots so the user can judge a fully populated block even when the current sample model contains fewer records.
 - Unusually large block capacities should eventually use a soft warning rather than an MLB-specific hard limit.
 - Generation success/warning messages should eventually move to a clearer post-generation notification/popup.
@@ -1153,7 +1156,7 @@ Layout Settings uses the application dark theme and is organized into Layout Det
 
 The Designer palette uses accordion behavior, placed-object detail collapsing, top/bottom Collapse All behavior, and finite Available Data counts that exclude the unlimited Text Template tool. Starting Pitcher uses its record presentation and new Starting Pitcher Record creation no longer offers the obsolete Single Item path. Manager belongs to Team Information and inherits Team formatting defaults. Text Template Insert Field menus honor the layout's enabled field set, while existing or manually typed valid tokens remain resolvable for compatibility/power-user workflows. Current Player Name formats are Full Name, First Initial + Last Name (no period), Last Name, First Name, Use Name, and Boxscore Name.
 
-**Current remaining v0.2.0 roadmap after Build 028.20:** Build 029 Pregame Data Context & Semantics; Build 030 Layout Settings Workflow; Build 031 Text Template Workflow Completion; Build 032 Designer Remaining Tweaks, followed by the v0.2.0 release review.
+**Historical roadmap after Build 028.20:** Builds 029–032 were the remaining Designer roadmap at that checkpoint. They are now accepted and closed; v0.2.0 release review is current.
 
 
 ## Build 031 final closure (Oct 2, 2026)
@@ -1164,3 +1167,14 @@ Build 031 — Text Template Workflow Completion is accepted and closed through B
 ## Build 032 final closure (Oct 3, 2026)
 
 Build 032 — Designer Remaining Tweaks is complete through Build 032.5. Accepted work includes Field Palette Unused-only filtering and dynamic used/available counts; Designer control/Inspector visual consistency; user-facing row/column/position/point terminology; Starting Pitcher Record Layout row semantics; Defensive Alignment Single Item/Text Template support with sequential role carry-forward; Player Name format initialization; repeated-record Editor/Insert into editor label consistency; and removal of the development-only Designer workspace/build eyebrow. The planned Designer feature/workflow roadmap for v0.2.0 is now complete. Next step: **v0.2.0 release review** only; do not add new Designer feature scope unless release review exposes a blocking defect.
+
+## v0.2.0 release-candidate corrections (Oct 3, 2026)
+
+Manual release acceptance passed the core Home, Layout Manager, Designer, PDF/data, persistence/edge-case, and iPad touch workflows with four RC findings. The RC correction candidate adds an explicit Favorite Layout preference distinct from Home's remembered live-PDF selection; removes the invalid Pitcher role from Defensive Alignment and cleans obsolete development-era Pitcher placements; discards brand-new SP Record/Lineup/Bench/Bullpen objects when their initial placement is cancelled; and suppresses the iPad/WebKit ghost focus outline around Layout Settings child dialogs. First-party cache keys are bumped to `020rc1`.
+
+Deferred after v0.2.0: a Touch-Friendly Designer investigation covering touch multi-select/lasso, pinch-to-zoom, and safer scroll/pan versus object-drag behavior. Known Game 2 doubleheader limitation remains intentional: Last 10 and standings-relative fields stay at the pre-Game-1 standings snapshot, while player YTD stats, W-L, Game #, and streak can advance through completed Game 1.
+
+
+## v0.2.0 Final Release
+
+The v0.2.0 RC corrections were manually accepted. The final release uses user-facing version `0.2.0`, final first-party cache key `020`, and the MIT License. Deferred touch work includes touch-accessible multi-select/lasso, pinch-to-zoom, and safer pan-versus-object-drag behavior. Same-day Game 2 standings-derived fields, including Last 10, intentionally remain previous-day snapshots. See `Release_v0.2.0.md`.

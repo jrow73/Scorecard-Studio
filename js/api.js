@@ -1,8 +1,7 @@
 /**
  * Scorecard Studio
  * Stats API access
- * Version: 0.2.0-dev
- * Build: 029.1
+ * Version: 0.2.0
  */
 
 const STATS_API_V1 = "https://statsapi.mlb.com/api/v1";

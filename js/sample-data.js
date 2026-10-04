@@ -1,8 +1,7 @@
 /**
  * Scorecard Studio
  * Representative Designer / field-catalog sample data
- * Version: 0.2.0-dev
- * Build: 028
+ * Version: 0.2.0
  */
 
 const POSITION_INFO = {

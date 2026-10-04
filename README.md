@@ -11,45 +11,41 @@ An interactive, browser-based web application that allows baseball fans, scoreke
 ## Key Features
 
 - **Multi-Page Template Support:** Upload 1, 2, or multi-page PDF scorecard sheets. The app automatically detects total pages and renders each page on an interactive HTML canvas.
-- **Interactive Field Mapping:** Click directly on the rendered PDF preview to place MLB data fields (team names, lineups, starting pitchers, YTD statistics) at the desired location.
+- **Interactive Field Mapping:** Click directly on the rendered PDF preview to place MLB data fields (team names, lineups, starting pitchers, YTD statistics, etc.) at the desired location.
 - **Data Customization & Formatting:**
-  - Configurable name display formats (Full Name, Last Name Only, Initial + Last Name).
+  - Configurable name display formats (Full Name, Last Name Only, Initial + Last Name, etc.).
   - Multi-column lineups such as [Handedness] [Jersey#] [Name] [Position]
   - Single-column support using custom strings (e.g., `#17 - S. Ohtani (DH)`).
-  - Position formatting (numbers 1–9 vs. standard abbreviations).
+  - Position formatting (numbers 2–9+DH, standard abbreviations, or even full position names).
   - Conditional text styling and RGB color-coding if desired (e.g., Red for Left-handed batters, Green for Right, Blue for Switch hitters).
   - Font size (pt) and alignment options (Left, Center, Right).
-- **Persistent Local Browser Storage:** No account requried, nothing sent to any server. Everything is done locally in your browser. All completed scorecard layout profiles and PDF binary files stored directly in the browser.
+- **Persistent Local Browser Storage:** No account required, nothing sent to any server. Everything is done locally in your browser. All completed scorecard layout profiles and PDF binary files stored directly in the browser.
 - **Live MLB Data Fetching:** Automatically fetches daily game schedules, rosters, and player stats directly from the official, free MLB Stats API.
 - **One-Click Generation:** Easily generate "Today's Scorecard" based on pre-selected favorite team, favorite scorecard, and today's game data. 
 - **Backup & Portability:** Export and import saved layout profiles and PDF templates via `.json` backup files. Prevents needing to start over in the event you completely clear your browser or want to use a different browser or different/multiple device(s). (Since data is not stored in the cloud, each browser and each device maintains its own scorecard data and settings)
-- **Optional Cloud Storage and Synchornization:** Optionally configure your own cloud storage service, such as Google Drive, Dropbox, etc., to host saved layout profiles and app settings, keeping multiple devices and/or browsers synced with latest changes automatically. All authorization is conducted and stored in the local browser - no information is sent to nor processed by Scorecard Studio. If configured, this setting does not replace manual backup and portability capability.
+- **Optional Cloud Storage and Synchronization:** Optionally configure your own cloud storage service, such as Google Drive, Dropbox, etc., to host saved layout profiles and app settings, keeping multiple devices and/or browsers synced with latest changes automatically. All authorization is conducted and stored in the local browser - no information is sent to nor processed by Scorecard Studio. If configured, this setting does not replace manual backup and portability capability.
 
 ---
 
-## User Workflows
+## Typical Workflow
 
-### 1. Template Setup & Field Mapping
-1. Upload a blank PDF scorecard template (`.pdf`).
-2. Use the **Page Navigation** controls to switch between pages if working with a multi-page PDF.
-3. Use the **Field Customizer** panel to choose data fields you want to use on this scorecard and how you want each field to be formatted (e.g., Last Name Only, Left/Right color-coding, font size). Each scorecard can have different fields and formatting settings.
-4. Click on the canvas preview to map each field to the desired location.
-5. Save the profile with a custom name (e.g., *"My 3-Page Detailed Scorecard"*).
-
-### 2. Daily Scorecard Generation
-1. Open the app and instantly generate "today's scorecard" for your favorite team on your favorite scorecard (stored in application settings). 
-  | OR |
-  Select any available game from any date for any team, select a desired scorecard if you have multiple templates, and generate a PDF for that specific game. 
-
-2. The PDF will download to your local device (or indicated cloud-storage location).
-3. Print the PDF Scorecard and take to the ballpark 
-  | OR |
-  Open the Scorecard in your favorite tablet PDF markup application to score the game on your portable device with a stylus.
+1. Open **Layouts** and create a layout by uploading a blank PDF scorecard.
+2. Open the **Layout Designer** and choose the fields or collections you want on the scorecard.
+3. Place and format those items on the PDF, then use **Generate Test PDF** to verify the design.
+4. Return to **Home**, select an available game and the layout you want to use, and generate the live pregame PDF.
+5. Print the PDF or open it in a tablet PDF-markup application for scorekeeping.
 
 ---
 
+## Current Limitations
 
+- Availability and completeness of live pregame information depend on the data MLB has published for that game.
+- For the second game of a same-day doubleheader, Scorecard Studio can use completed Game 1 information for supported player/team values, but standings-derived values such as division/league/wild-card position and **Last 10** intentionally remain based on the previous-day snapshot.
+- The Designer works on touch devices, but touch-specific conveniences such as pinch-to-zoom, touch multi-select/lasso, and stronger protection against accidental object dragging while panning remain future work.
+- Because storage is local to the browser, layouts do not automatically synchronize between devices.
+
+---
 
 ## License
 
-This project is open-source and available under the [MIT License](LICENSE).
+Copyright (c) 2026. Scorecard Studio is open-source software released under the [MIT License](LICENSE). The license applies to the Scorecard Studio source code; third-party names, trademarks, data, and other materials remain subject to their respective owners' rights and terms.

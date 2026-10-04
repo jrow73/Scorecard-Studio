@@ -1,8 +1,7 @@
 /**
  * Scorecard Studio
  * Web Foundation
- * Version: 0.1.0-web-dev
- * Build: 004
+ * Version: 0.2.0-dev
  */
 
 :root {
@@ -2703,7 +2702,9 @@ body.designer-mode .designer-view > .card,
   border-top: 1px solid var(--line);
   background: #1b2230;
 }
-.layout-settings-child-dialog { width: min(1120px, 95vw); }
+.layout-settings-child-dialog { width: min(1120px, 95vw); outline: none; }
+.layout-settings-child-dialog:focus,
+.layout-settings-child-dialog:focus-visible { outline: none; }
 .layout-settings-child-dialog::backdrop { background: rgba(2, 6, 12, .62); }
 .layout-settings-child-card {
   display: grid;

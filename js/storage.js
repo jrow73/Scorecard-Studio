@@ -1,8 +1,7 @@
 /**
  * Scorecard Studio
  * Browser storage abstraction
- * Version: 0.1.0-web-dev
- * Build: 005
+ * Version: 0.2.0
  */
 
 const DB_NAME = "scorecard-studio";

@@ -1,22 +1,21 @@
 /**
  * Scorecard Studio
  * Application coordinator
- * Version: 0.2.0-dev
- * Build: 030.1
+ * Version: 0.2.0
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=0291";
-import { normalizePregameData } from "./normalize.js?v=0291";
-import { canonicalFieldId, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=0291";
-import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=028";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=0291";
-import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=023";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=02816";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=02816";
+import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=020";
+import { normalizePregameData } from "./normalize.js?v=020";
+import { canonicalFieldId, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=020";
+import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=020";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=020";
+import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=020";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=020";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=020";
 import {
   deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, saveLayout as persistLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=018";
+} from "./storage.js?v=020";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -32,6 +31,7 @@ const state = {
   pdfRecord: null,
   layouts: [],
   selectedLayoutId: null,
+  favoriteLayoutId: null,
   pendingLayoutPdf: null,
   layoutFieldDraft: new Set(),
   layoutFieldDraftSaved: new Set(),
@@ -160,6 +160,7 @@ const elements = {
   editLayoutDescription: document.querySelector("#edit-layout-description"),
   saveLayoutMetadataButton: document.querySelector("#save-layout-metadata-btn"),
   duplicateLayoutButton: document.querySelector("#duplicate-layout-btn"),
+  favoriteLayoutButton: document.querySelector("#favorite-layout-btn"),
   deleteLayoutButton: document.querySelector("#delete-layout-btn"),
   pdfViewer: document.querySelector("#pdf-viewer"),
   pdfCanvas: document.querySelector("#pdf-canvas"),
@@ -173,7 +174,6 @@ const elements = {
   designerBackButton: document.querySelector("#designer-back-btn"),
   designerLayoutMeta: document.querySelector("#designer-layout-meta"),
   designerFieldSelect: document.querySelector("#designer-field-select"),
-  designerFontSize: document.querySelector("#designer-font-size"),
   designerFieldAlignment: document.querySelector("#designer-field-alignment"),
   designerFieldNameFormatWrap: document.querySelector("#designer-field-name-format-wrap"),
   designerFieldNameFormat: document.querySelector("#designer-field-name-format"),
@@ -186,7 +186,6 @@ const elements = {
   designerTemplateNameFormatWrap: document.querySelector("#designer-template-name-format-wrap"),
   designerTemplateNameFormat: document.querySelector("#designer-template-name-format"),
   designerTemplateAlignment: document.querySelector("#designer-template-alignment"),
-  designerTemplateFontSize: document.querySelector("#designer-template-font-size"),
   designerTemplatePreview: document.querySelector("#designer-template-preview"),
   designerTemplatePlaceButton: document.querySelector("#designer-template-place-btn"),
   designerBlockCount: document.querySelector("#designer-block-count"),
@@ -206,7 +205,6 @@ const elements = {
   designerColumnContentType: document.querySelector("#designer-column-content-type"),
   designerColumnFieldWrap: document.querySelector("#designer-column-field-wrap"),
   designerColumnAlignment: document.querySelector("#designer-column-alignment"),
-  designerColumnFontSize: document.querySelector("#designer-column-font-size"),
   designerColumnNameFormatWrap: document.querySelector("#designer-column-name-format-wrap"),
   designerColumnNameFormat: document.querySelector("#designer-column-name-format"),
   designerColumnTemplateWrap: document.querySelector("#designer-column-template-wrap"),
@@ -220,9 +218,6 @@ const elements = {
   designerDeleteBlockButton: document.querySelector("#designer-delete-block-btn"),
   designerBlockList: document.querySelector("#designer-block-list"),
   designerIndividualCollection: document.querySelector("#designer-individual-collection"),
-  designerIndividualStrategy: document.querySelector("#designer-individual-strategy"),
-  designerIndividualSlotWrap: document.querySelector("#designer-individual-slot-wrap"),
-  designerIndividualSlot: document.querySelector("#designer-individual-slot"),
   designerIndividualRoleWrap: document.querySelector("#designer-individual-role-wrap"),
   designerIndividualRole: document.querySelector("#designer-individual-role"),
   designerIndividualContentTypeWrap: document.querySelector("#designer-individual-content-type-wrap"),
@@ -231,7 +226,6 @@ const elements = {
   designerIndividualFieldWrap: document.querySelector("#designer-individual-field-wrap"),
   designerIndividualAlignmentWrap: document.querySelector("#designer-individual-alignment-wrap"),
   designerIndividualAlignment: document.querySelector("#designer-individual-alignment"),
-  designerIndividualFontSize: document.querySelector("#designer-individual-font-size"),
   designerIndividualNameFormatWrap: document.querySelector("#designer-individual-name-format-wrap"),
   designerIndividualNameFormat: document.querySelector("#designer-individual-name-format"),
   designerIndividualTemplateWrap: document.querySelector("#designer-individual-template-wrap"),
@@ -272,7 +266,6 @@ const elements = {
   designerUnplacedList: document.querySelector("#designer-unplaced-list"),
   designerPlacedList: document.querySelector("#designer-placed-list"),
   designerSelectionTitle: document.querySelector("#designer-selection-title"),
-  designerSelectionHelp: document.querySelector("#designer-selection-help"),
   designerSelectionControls: document.querySelector("#designer-selection-controls"),
   designerSelectionClearButton: document.querySelector("#designer-selection-clear-btn"),
   designerSelectionPositionControls: document.querySelector("#designer-selection-position-controls"),
@@ -338,7 +331,6 @@ const elements = {
   layoutCustomFieldCount: document.querySelector("#layout-custom-field-count"),
   layoutFieldSearch: document.querySelector("#layout-field-search"),
   layoutCustomFieldList: document.querySelector("#layout-custom-field-list"),
-  layoutFieldCount: document.querySelector("#layout-field-count"),
   layoutCreateCustomFields: document.querySelector("#layout-create-custom-fields"),
   layoutCreateFieldSearch: document.querySelector("#layout-create-field-search"),
   layoutCreateFieldList: document.querySelector("#layout-create-field-list"),
@@ -423,6 +415,7 @@ elements.layoutCreateFieldList?.addEventListener("change", (event) => { const in
 elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLayoutFieldPicker(elements.layoutCreateFieldSearch.value));
   elements.saveLayoutMetadataButton.addEventListener("click", saveSelectedLayoutMetadata);
   elements.duplicateLayoutButton.addEventListener("click", duplicateSelectedLayout);
+  elements.favoriteLayoutButton?.addEventListener("click", setSelectedLayoutFavorite);
   elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
   elements.pdfPrevButton.addEventListener("click", () => changePdfPage(-1));
   elements.pdfNextButton.addEventListener("click", () => changePdfPage(1));
@@ -1659,6 +1652,8 @@ async function createLayout() {
 async function refreshLayouts() {
   try {
     state.layouts = await listLayouts();
+    const savedFavoriteLayoutId = await getSetting("favoriteLayoutId", "");
+    state.favoriteLayoutId = state.layouts.some((layout) => layout.id === savedFavoriteLayoutId) ? savedFavoriteLayoutId : null;
     renderLayoutList();
     await populateLivePdfLayoutSelect();
     elements.layoutStorageStatus.textContent = "IndexedDB Ready";
@@ -1675,13 +1670,16 @@ async function populateLivePdfLayoutSelect() {
   if (!elements.livePdfLayoutSelect) return;
   const previous = elements.livePdfLayoutSelect.value;
   const saved = await getSetting("livePdfLayoutId", "");
+  const favorite = state.favoriteLayoutId || "";
   const preferred = state.layouts.some((layout) => layout.id === previous)
     ? previous
-    : state.layouts.some((layout) => layout.id === saved)
-      ? saved
-      : state.selectedLayoutId && state.layouts.some((layout) => layout.id === state.selectedLayoutId)
-        ? state.selectedLayoutId
-        : state.layouts[0]?.id || "";
+    : state.layouts.some((layout) => layout.id === favorite)
+      ? favorite
+      : state.layouts.some((layout) => layout.id === saved)
+        ? saved
+        : state.selectedLayoutId && state.layouts.some((layout) => layout.id === state.selectedLayoutId)
+          ? state.selectedLayoutId
+          : state.layouts[0]?.id || "";
 
   elements.livePdfLayoutSelect.replaceChildren();
   if (!state.layouts.length) {
@@ -1744,7 +1742,8 @@ function renderLayoutList() {
     const desc = document.createElement("span");
     desc.textContent = layout.description || layout.pdfFileName || "PDF layout";
     const meta = document.createElement("small");
-    meta.textContent = `${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"} • Schema ${layout.schemaVersion}`;
+    const favoriteSuffix = layout.id === state.favoriteLayoutId ? " • ★ Favorite" : "";
+    meta.textContent = `${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"} • Schema ${layout.schemaVersion}${favoriteSuffix}`;
     copy.append(title, desc, meta);
     const open = document.createElement("button");
     open.type = "button";
@@ -1756,18 +1755,53 @@ function renderLayoutList() {
   });
 }
 
+function updateFavoriteLayoutButton() {
+  if (!elements.favoriteLayoutButton) return;
+  const layout = selectedLayout();
+  const isFavorite = Boolean(layout && layout.id === state.favoriteLayoutId);
+  elements.favoriteLayoutButton.disabled = !layout || isFavorite;
+  elements.favoriteLayoutButton.textContent = isFavorite ? "★ Favorite" : "Set as Favorite";
+}
+
+async function setSelectedLayoutFavorite() {
+  const layout = selectedLayout();
+  if (!layout) return;
+  try {
+    await setSetting("favoriteLayoutId", layout.id);
+    state.favoriteLayoutId = layout.id;
+    renderLayoutList();
+    updateFavoriteLayoutButton();
+    setLayoutMessage(`${layout.name} is now the favorite layout.`);
+  } catch (error) {
+    setLayoutMessage(errorMessage(error, "The favorite layout could not be saved."), true);
+  }
+}
+
+function removeObsoleteDefensivePitcherMappings(layout) {
+  if (!layout || !Array.isArray(layout.individualMappings)) return false;
+  const before = layout.individualMappings.length;
+  layout.individualMappings = layout.individualMappings.filter((mapping) => !(
+    ["away.lineup", "home.lineup"].includes(mapping.collection)
+    && mapping.strategy === "role"
+    && mapping.selector?.role === "P"
+  ));
+  return layout.individualMappings.length !== before;
+}
+
 async function openLayout(id) {
   const layout = state.layouts.find((item) => item.id === id);
   if (layout && !Array.isArray(layout.mappings)) layout.mappings = [];
   if (!layout) return;
   const mappingIdsAdded = ensureMappingIds(layout);
-  if (mappingIdsAdded) {
+  const obsoletePitcherRemoved = removeObsoleteDefensivePitcherMappings(layout);
+  if (mappingIdsAdded || obsoletePitcherRemoved) {
     layout.updatedAt = new Date().toISOString();
     try { await saveLayout(layout); }
-    catch (error) { console.warn("Unable to persist legacy mapping IDs:", error); }
+    catch (error) { console.warn("Unable to persist layout compatibility cleanup:", error); }
   }
   state.selectedLayoutId = id;
   renderLayoutList();
+  updateFavoriteLayoutButton();
   elements.layoutDetailCard.hidden = false;
   elements.selectedLayoutHeading.textContent = layout.name;
   elements.selectedLayoutMeta.textContent = `${layout.pdfFileName} • ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
@@ -1838,6 +1872,10 @@ async function deleteSelectedLayout() {
   try {
     await deleteLayout(layout.id);
     await deletePdfTemplate(layout.pdfTemplateId);
+    if (state.favoriteLayoutId === layout.id) {
+      await setSetting("favoriteLayoutId", "");
+      state.favoriteLayoutId = null;
+    }
     state.selectedLayoutId = null;
     state.pdfDocument = null;
     state.pdfRecord = null;
@@ -2192,7 +2230,7 @@ async function createDesignerRepeatedBlock() {
     state.designerPaletteSelection = null;
     state.designerBlockSortDraft = { field: "", direction: "asc" };
     selectDesignerObject({ kind: "block", blockId: block.id });
-    beginDesignerBlockGeometryPlacement();
+    beginDesignerBlockGeometryPlacement({ discardBlockOnCancel: true });
     setDesignerMessage(`Created ${blockLabel(block)}. Follow the placement instructions above the scorecard.`);
     await refreshLayouts();
     state.selectedLayoutId = layout.id;
@@ -2201,16 +2239,17 @@ async function createDesignerRepeatedBlock() {
   }
 }
 
-function beginDesignerBlockGeometryPlacement() {
+function beginDesignerBlockGeometryPlacement(options = {}) {
   const block = selectedDesignerBlock();
+  const discardBlockOnCancel = options?.discardBlockOnCancel === true;
   if (!block) return setDesignerMessage("Create or select a repeated block first.", true);
   if (isRecordBlock(block)) {
-    setDesignerPlacement({ mode: "blockGeometrySingle", blockId: block.id });
+    setDesignerPlacement({ mode: "blockGeometrySingle", blockId: block.id, discardBlockOnCancel });
     return setDesignerMessage(`Click the point where the ${blockLabel(block)} should be placed.`);
   }
   if (block.capacity < 2) return setDesignerMessage("A repeated layout needs at least two rows or columns to infer spacing from its outer placement points.", true);
   const { rows, columns } = blockDimensions(block);
-  setDesignerPlacement({ mode: "blockGeometryFirst", blockId: block.id });
+  setDesignerPlacement({ mode: "blockGeometryFirst", blockId: block.id, discardBlockOnCancel });
   if (rows > 1 && columns > 1) setDesignerMessage(`Click the top-left position of the ${blockLabel(block)} grid.`);
   else if (rows > 1) setDesignerMessage(`Click the top row of the ${blockLabel(block)}.`);
   else setDesignerMessage(`Click the leftmost column of the ${blockLabel(block)}.`);
@@ -2247,8 +2286,8 @@ function beginDesignerBlockColumnPlacement() {
 }
 
 const INDIVIDUAL_ROLE_OPTIONS = {
-  "away.lineup": [["C", "Catcher"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["SS", "Shortstop"], ["LF", "Left Field"], ["CF", "Center Field"], ["RF", "Right Field"], ["DH", "Designated Hitter"], ["P", "Pitcher"]],
-  "home.lineup": [["C", "Catcher"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["SS", "Shortstop"], ["LF", "Left Field"], ["CF", "Center Field"], ["RF", "Right Field"], ["DH", "Designated Hitter"], ["P", "Pitcher"]],
+  "away.lineup": [["C", "Catcher"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["SS", "Shortstop"], ["LF", "Left Field"], ["CF", "Center Field"], ["RF", "Right Field"], ["DH", "Designated Hitter"]],
+  "home.lineup": [["C", "Catcher"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["SS", "Shortstop"], ["LF", "Left Field"], ["CF", "Center Field"], ["RF", "Right Field"], ["DH", "Designated Hitter"]],
   "game.umpires.crew": [["HP", "Home Plate"], ["1B", "First Base"], ["2B", "Second Base"], ["3B", "Third Base"], ["LF", "Left Field"], ["RF", "Right Field"], ["REPLAY", "Replay Official"]]
 };
 
@@ -2669,7 +2708,8 @@ async function handleDesignerStageClick(event) {
       blockId: block.id,
       pageIndex: state.designerPageNumber - 1,
       firstXPercent: xPercent,
-      firstYPercent: yPercent
+      firstYPercent: yPercent,
+      discardBlockOnCancel: placement.discardBlockOnCancel === true
     });
     if (rows > 1 && columns > 1) setDesignerMessage("Top-left position set. Click the bottom-right position on the same PDF page.");
     else if (rows > 1) setDesignerMessage("Top row set. Click the bottom row on the same PDF page.");
@@ -3610,10 +3650,32 @@ function updateDesignerPlacementBanner() {
 }
 
 function cancelDesignerPlacement(options = {}) {
-  const wasClipboard = state.designerPlacement?.mode === "clipboard";
+  const placement = state.designerPlacement;
+  const wasClipboard = placement?.mode === "clipboard";
+  const discardBlockId = placement?.discardBlockOnCancel === true ? placement.blockId : null;
   clearDesignerPasteGhost();
   setDesignerPlacement(null);
   if (wasClipboard && options.keepClipboard !== true) clearDesignerClipboard();
+  if (discardBlockId) discardUnfinishedDesignerBlock(discardBlockId);
+}
+
+function discardUnfinishedDesignerBlock(blockId) {
+  const layout = selectedLayout();
+  if (!layout || !blockId) return;
+  const block = (layout.repeatedBlocks || []).find((item) => item.id === blockId);
+  if (!block || block.geometry || Number.isInteger(block.pageIndex)) return;
+  layout.repeatedBlocks = (layout.repeatedBlocks || []).filter((item) => item.id !== blockId);
+  layout.updatedAt = new Date().toISOString();
+  if (state.designerSelection?.kind === "block" && state.designerSelection.blockId === blockId) state.designerSelection = null;
+  state.designerMultiSelection = (state.designerMultiSelection || []).filter((selection) => !(selection.kind === "block" && selection.blockId === blockId));
+  renderDesignerOverlay();
+  renderDesignerBlockList();
+  renderDesignerPalette();
+  renderDesignerSelectionInspector();
+  saveLayout(layout)
+    .then(() => refreshLayouts())
+    .then(() => { state.selectedLayoutId = layout.id; setDesignerMessage("Placement canceled. The unfinished layout was discarded."); })
+    .catch((error) => setDesignerMessage(errorMessage(error, "The unfinished layout could not be discarded."), true));
 }
 
 const DESIGNER_ZOOM_MIN = 0.5;
