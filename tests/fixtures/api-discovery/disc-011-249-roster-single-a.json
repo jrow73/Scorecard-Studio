@@ -1,0 +1,1680 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-249-roster-single-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:39.796Z",
+  "context": {
+    "subject": "Single-A Carolina dated roster",
+    "gameState": "Historical control"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/249/roster?date=2025-06-01&hydrate=person",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 187,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 29184,
+    "bodySha256": "41c0693d4069614d3986df33671c6a21bdd310cc6b18c4c6c87575403b1e0628"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster",
+      "/rosterType",
+      "/teamId"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 703102,
+              "fullName": "Anfernny Reyes",
+              "link": "/api/v1/people/703102",
+              "firstName": "Anfernny",
+              "lastName": "Reyes",
+              "birthDate": "2004-02-23",
+              "currentAge": 22,
+              "birthCity": "San Cristobal",
+              "birthCountry": "Dominican Republic",
+              "height": "6' 3\"",
+              "weight": 170,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Anfernny",
+              "useLastName": "Reyes",
+              "middleName": "Daniel",
+              "boxscoreName": "Reyes, A",
+              "gender": "M",
+              "nameMatrilineal": "Francois",
+              "isPlayer": true,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Anfernny Reyes",
+              "nameSlug": "anfernny-reyes-703102",
+              "firstLastName": "Anfernny Reyes",
+              "lastFirstName": "Reyes, Anfernny",
+              "lastInitName": "Reyes, A",
+              "initLastName": "A Reyes",
+              "fullFMLName": "Anfernny Daniel Reyes",
+              "fullLFMName": "Reyes, Anfernny Daniel",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "31",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 807723,
+              "fullName": "Bjorn Johnson",
+              "link": "/api/v1/people/807723",
+              "firstName": "Bjorn",
+              "lastName": "Johnson",
+              "birthDate": "2005-01-11",
+              "currentAge": 21,
+              "birthCity": "Seattle",
+              "birthStateProvince": "WA",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 201,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Bjorn",
+              "useLastName": "Johnson",
+              "boxscoreName": "Johnson",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2023,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Bjorn Johnson",
+              "nameSlug": "bjorn-johnson-807723",
+              "firstLastName": "Bjorn Johnson",
+              "lastFirstName": "Johnson, Bjorn",
+              "lastInitName": "Johnson, B",
+              "initLastName": "B Johnson",
+              "fullFMLName": "Bjorn Johnson",
+              "fullLFMName": "Johnson, Bjorn",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "17",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 815520,
+              "fullName": "Braylon Payne",
+              "link": "/api/v1/people/815520",
+              "firstName": "Braylon",
+              "lastName": "Payne",
+              "birthDate": "2006-08-14",
+              "currentAge": 20,
+              "birthCity": "Houston",
+              "birthStateProvince": "TX",
+              "birthCountry": "USA",
+              "height": "6' 2\"",
+              "weight": 186,
+              "active": true,
+              "primaryPosition": {
+                "code": "O",
+                "name": "Outfield",
+                "type": "Outfielder",
+                "abbreviation": "OF"
+              },
+              "useName": "Braylon",
+              "useLastName": "Payne",
+              "middleName": "Isaiah-Todd",
+              "boxscoreName": "Payne",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Braylon Payne",
+              "nameSlug": "braylon-payne-815520",
+              "firstLastName": "Braylon Payne",
+              "lastFirstName": "Payne, Braylon",
+              "lastInitName": "Payne, B",
+              "initLastName": "B Payne",
+              "fullFMLName": "Braylon Payne",
+              "fullLFMName": "Payne, Braylon ",
+              "strikeZoneTop": 3.299,
+              "strikeZoneBottom": 1.665
+            },
+            "jerseyNumber": "9",
+            "position": {
+              "code": "O",
+              "name": "Outfield",
+              "type": "Outfielder",
+              "abbreviation": "OF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 800469,
+              "fullName": "Bryan Rivera",
+              "link": "/api/v1/people/800469",
+              "firstName": "Bryan",
+              "lastName": "Rivera",
+              "birthDate": "2005-06-17",
+              "currentAge": 21,
+              "birthCity": "Siuna",
+              "birthCountry": "Nicaragua",
+              "height": "6' 1\"",
+              "weight": 170,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Bryan",
+              "useLastName": "Rivera",
+              "middleName": "Josue",
+              "boxscoreName": "Rivera, B",
+              "gender": "M",
+              "nameMatrilineal": "Brabo",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Bryan Rivera",
+              "nameSlug": "bryan-rivera-800469",
+              "firstLastName": "Bryan Rivera",
+              "lastFirstName": "Rivera, Bryan",
+              "lastInitName": "Rivera, B",
+              "initLastName": "B Rivera",
+              "fullFMLName": "Bryan Josue Rivera",
+              "fullLFMName": "Rivera, Bryan Josue",
+              "strikeZoneTop": 3.255,
+              "strikeZoneBottom": 1.643
+            },
+            "jerseyNumber": "37",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 815501,
+              "fullName": "Bryce Meccage",
+              "link": "/api/v1/people/815501",
+              "firstName": "Bryce",
+              "lastName": "Meccage",
+              "birthDate": "2006-03-21",
+              "currentAge": 20,
+              "birthCity": "Princeton",
+              "birthStateProvince": "NJ",
+              "birthCountry": "USA",
+              "height": "6' 4\"",
+              "weight": 210,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Bryce",
+              "useLastName": "Meccage",
+              "middleName": "Robert",
+              "boxscoreName": "Meccage",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Bryce Meccage",
+              "nameSlug": "bryce-meccage-815501",
+              "firstLastName": "Bryce Meccage",
+              "lastFirstName": "Meccage, Bryce",
+              "lastInitName": "Meccage, B",
+              "initLastName": "B Meccage",
+              "fullFMLName": "Bryce Meccage",
+              "fullLFMName": "Meccage, Bryce ",
+              "strikeZoneTop": 3.388,
+              "strikeZoneBottom": 1.71
+            },
+            "jerseyNumber": "11",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 803068,
+              "fullName": "Chandler Welch",
+              "link": "/api/v1/people/803068",
+              "firstName": "Chandler",
+              "lastName": "Welch",
+              "birthDate": "2003-03-05",
+              "currentAge": 23,
+              "birthCity": "Slidell",
+              "birthStateProvince": "LA",
+              "birthCountry": "USA",
+              "height": "6' 0\"",
+              "weight": 200,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Chandler",
+              "useLastName": "Welch",
+              "middleName": "David",
+              "boxscoreName": "Welch",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Chandler Welch",
+              "nameSlug": "chandler-welch-803068",
+              "firstLastName": "Chandler Welch",
+              "lastFirstName": "Welch, Chandler",
+              "lastInitName": "Welch, C",
+              "initLastName": "C Welch",
+              "fullFMLName": "Chandler David Welch",
+              "fullLFMName": "Welch, Chandler David",
+              "strikeZoneTop": 3.21,
+              "strikeZoneBottom": 1.62
+            },
+            "jerseyNumber": "25",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 702391,
+              "fullName": "Demetrio Nadal",
+              "link": "/api/v1/people/702391",
+              "firstName": "Demetrio",
+              "lastName": "Nadal",
+              "birthDate": "2004-07-03",
+              "currentAge": 22,
+              "birthCity": "San Pedro De Macoris",
+              "birthCountry": "Dominican Republic",
+              "height": "5' 7\"",
+              "weight": 125,
+              "active": true,
+              "primaryPosition": {
+                "code": "O",
+                "name": "Outfield",
+                "type": "Outfielder",
+                "abbreviation": "OF"
+              },
+              "useName": "Demetrio",
+              "useLastName": "Nadal",
+              "boxscoreName": "Nadal",
+              "gender": "M",
+              "nameMatrilineal": "Jean",
+              "isPlayer": true,
+              "isVerified": false,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Demetrio Nadal",
+              "nameSlug": "demetrio-nadal-702391",
+              "firstLastName": "Demetrio Nadal",
+              "lastFirstName": "Nadal, Demetrio",
+              "lastInitName": "Nadal, D",
+              "initLastName": "D Nadal",
+              "fullFMLName": "Demetrio  Nadal",
+              "fullLFMName": "Nadal, Demetrio",
+              "strikeZoneTop": 2.987,
+              "strikeZoneBottom": 1.508
+            },
+            "jerseyNumber": "6",
+            "position": {
+              "code": "O",
+              "name": "Outfield",
+              "type": "Outfielder",
+              "abbreviation": "OF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 699129,
+              "fullName": "Dikember Sanchez",
+              "link": "/api/v1/people/699129",
+              "firstName": "Dikember",
+              "lastName": "Sanchez",
+              "birthDate": "2004-02-20",
+              "currentAge": 22,
+              "birthCity": "Caracas",
+              "birthCountry": "Venezuela",
+              "height": "5' 11\"",
+              "weight": 160,
+              "active": false,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Dikember",
+              "useLastName": "Sanchez",
+              "middleName": "Ronaldo",
+              "boxscoreName": "Sanchez",
+              "gender": "M",
+              "nameMatrilineal": "Marquez",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Dikember Sanchez",
+              "nameSlug": "dikember-sanchez-699129",
+              "firstLastName": "Dikember Sanchez",
+              "lastFirstName": "Sanchez, Dikember",
+              "lastInitName": "Sanchez, D",
+              "initLastName": "D Sanchez",
+              "fullFMLName": "Dikember Ronaldo Sanchez",
+              "fullLFMName": "Sanchez, Dikember Ronaldo",
+              "strikeZoneTop": 3.165,
+              "strikeZoneBottom": 1.598
+            },
+            "jerseyNumber": "16",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 699166,
+              "fullName": "Edgardo Ordonez",
+              "link": "/api/v1/people/699166",
+              "firstName": "Edgardo",
+              "lastName": "Ordonez",
+              "birthDate": "2003-09-24",
+              "currentAge": 23,
+              "birthCity": "Villa de Cura",
+              "birthCountry": "Venezuela",
+              "height": "5' 11\"",
+              "weight": 155,
+              "active": true,
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Edgardo",
+              "useLastName": "Ordonez",
+              "middleName": "Josuee",
+              "boxscoreName": "Ordonez",
+              "gender": "M",
+              "nameMatrilineal": "Caballero",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Edgardo Ordonez",
+              "nameSlug": "edgardo-ordonez-699166",
+              "firstLastName": "Edgardo Ordonez",
+              "lastFirstName": "Ordonez, Edgardo",
+              "lastInitName": "Ordonez, E",
+              "initLastName": "E Ordonez",
+              "fullFMLName": "Edgardo Josuee Ordonez",
+              "fullLFMName": "Ordonez, Edgardo Josuee",
+              "strikeZoneTop": 3.165,
+              "strikeZoneBottom": 1.598
+            },
+            "jerseyNumber": "3",
+            "position": {
+              "code": "2",
+              "name": "Catcher",
+              "type": "Catcher",
+              "abbreviation": "C"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 800724,
+              "fullName": "Eric Bitonti",
+              "link": "/api/v1/people/800724",
+              "firstName": "Eric",
+              "lastName": "Bitonti",
+              "birthDate": "2005-11-17",
+              "currentAge": 20,
+              "birthCity": "Hesperia",
+              "birthStateProvince": "CA",
+              "birthCountry": "USA",
+              "height": "6' 5\"",
+              "weight": 218,
+              "active": true,
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Eric",
+              "useLastName": "Bitonti",
+              "middleName": "Eugene",
+              "boxscoreName": "Bitonti",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2023,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Eric Bitonti",
+              "nameSlug": "eric-bitonti-800724",
+              "firstLastName": "Eric Bitonti",
+              "lastFirstName": "Bitonti, Eric",
+              "lastInitName": "Bitonti, E",
+              "initLastName": "E Bitonti",
+              "fullFMLName": "Eric Bitonti",
+              "fullLFMName": "Bitonti, Eric",
+              "strikeZoneTop": 3.45,
+              "strikeZoneBottom": 1.74
+            },
+            "jerseyNumber": "10",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 806995,
+              "fullName": "Filippo Di Turi",
+              "link": "/api/v1/people/806995",
+              "firstName": "Filippo",
+              "lastName": "Di Turi",
+              "birthDate": "2005-11-09",
+              "currentAge": 20,
+              "birthCity": "Valencia",
+              "birthCountry": "Venezuela",
+              "height": "5' 11\"",
+              "weight": 165,
+              "active": true,
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Filippo",
+              "useLastName": "Di Turi",
+              "boxscoreName": "Di Turi",
+              "gender": "M",
+              "nameMatrilineal": "De Frenza",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "S",
+                "description": "Switch"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Filippo Di Turi",
+              "nameSlug": "filippo-di-turi-806995",
+              "firstLastName": "Filippo Di Turi",
+              "lastFirstName": "Di Turi, Filippo",
+              "lastInitName": "Di Turi, F",
+              "initLastName": "F Di Turi",
+              "fullFMLName": "Filippo Di Turi",
+              "fullLFMName": "Di Turi, Filippo ",
+              "strikeZoneTop": 3.165,
+              "strikeZoneBottom": 1.598
+            },
+            "jerseyNumber": "4",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 823748,
+              "fullName": "Garrett Hodges",
+              "link": "/api/v1/people/823748",
+              "firstName": "Garrett",
+              "lastName": "Hodges",
+              "birthDate": "2003-06-26",
+              "currentAge": 23,
+              "birthCity": "Greenwood",
+              "birthStateProvince": "SC",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 220,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Garrett",
+              "useLastName": "Hodges",
+              "middleName": "McAuley",
+              "boxscoreName": "Hodges",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Garrett Hodges",
+              "nameTitle": "IV",
+              "nameSuffix": "IV",
+              "nameSlug": "garrett-hodges-823748",
+              "firstLastName": "Garrett Hodges",
+              "lastFirstName": "Hodges, Garrett",
+              "lastInitName": "Hodges, G",
+              "initLastName": "G Hodges",
+              "fullFMLName": "Garrett McAuley Hodges",
+              "fullLFMName": "Hodges, Garrett McAuley",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "21",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 828774,
+              "fullName": "Jack Hostetler",
+              "link": "/api/v1/people/828774",
+              "firstName": "Jack",
+              "lastName": "Hostetler",
+              "birthDate": "2003-08-02",
+              "currentAge": 23,
+              "birthCity": "La Jolla",
+              "birthStateProvince": "CA",
+              "birthCountry": "USA",
+              "height": "6' 2\"",
+              "weight": 210,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Jack",
+              "useLastName": "Hostetler",
+              "middleName": "Alexander",
+              "boxscoreName": "Hostetler",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Jack Hostetler",
+              "nameSlug": "jack-hostetler-828774",
+              "firstLastName": "Jack Hostetler",
+              "lastFirstName": "Hostetler, Jack",
+              "lastInitName": "Hostetler, J",
+              "initLastName": "J Hostetler",
+              "fullFMLName": "Jack Hostetler",
+              "fullLFMName": "Hostetler, Jack ",
+              "strikeZoneTop": 3.299,
+              "strikeZoneBottom": 1.665
+            },
+            "jerseyNumber": "18",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 808952,
+              "fullName": "Jack Seppings",
+              "link": "/api/v1/people/808952",
+              "firstName": "Jack",
+              "lastName": "Seppings",
+              "birthDate": "2002-07-03",
+              "currentAge": 24,
+              "birthCity": "Stillwater",
+              "birthStateProvince": "MN",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 190,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Jack",
+              "useLastName": "Seppings",
+              "middleName": "Stanley",
+              "boxscoreName": "Seppings",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Jack Seppings",
+              "nameSlug": "jack-seppings-808952",
+              "firstLastName": "Jack Seppings",
+              "lastFirstName": "Seppings, Jack",
+              "lastInitName": "Seppings, J",
+              "initLastName": "J Seppings",
+              "fullFMLName": "Jack Seppings",
+              "fullLFMName": "Seppings, Jack ",
+              "strikeZoneTop": 3.255,
+              "strikeZoneBottom": 1.643
+            },
+            "jerseyNumber": "32",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 808222,
+              "fullName": "Jesus Flores",
+              "link": "/api/v1/people/808222",
+              "firstName": "Jesus",
+              "lastName": "Flores",
+              "birthDate": "2005-03-16",
+              "currentAge": 21,
+              "birthCity": "Chivacoa",
+              "birthCountry": "Venezuela",
+              "height": "6' 2\"",
+              "weight": 180,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Jesus",
+              "useLastName": "Flores",
+              "middleName": "Manuel",
+              "boxscoreName": "Flores, J",
+              "gender": "M",
+              "nameMatrilineal": "Escudero",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "S",
+                "description": "Switch"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Jesus Flores",
+              "nameSlug": "jesus-flores-808222",
+              "firstLastName": "Jesus Flores",
+              "lastFirstName": "Flores, Jesus",
+              "lastInitName": "Flores, J",
+              "initLastName": "J Flores",
+              "fullFMLName": "Jesus Manuel Flores",
+              "fullLFMName": "Flores, Jesus Manuel",
+              "strikeZoneTop": 3.299,
+              "strikeZoneBottom": 1.665
+            },
+            "jerseyNumber": "34",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 815908,
+              "fullName": "Jesús Made",
+              "link": "/api/v1/people/815908",
+              "firstName": "Jesús",
+              "lastName": "Made",
+              "birthDate": "2007-05-08",
+              "currentAge": 19,
+              "birthCity": "San Cristobal",
+              "birthCountry": "Dominican Republic",
+              "height": "6' 1\"",
+              "weight": 221,
+              "active": true,
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Jesús",
+              "useLastName": "Made",
+              "middleName": "Alexander",
+              "boxscoreName": "Made",
+              "gender": "M",
+              "nameMatrilineal": "Valdez",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "S",
+                "description": "Switch"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Jesús Made",
+              "nameSlug": "jesus-made-815908",
+              "firstLastName": "Jesús Made",
+              "lastFirstName": "Made, Jesús",
+              "lastInitName": "Made, J",
+              "initLastName": "J Made",
+              "fullFMLName": "Jesús Alexander Made",
+              "fullLFMName": "Made, Jesús Alexander",
+              "strikeZoneTop": 3.25,
+              "strikeZoneBottom": 1.64
+            },
+            "jerseyNumber": "12",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 821262,
+              "fullName": "José Anderson",
+              "link": "/api/v1/people/821262",
+              "firstName": "José",
+              "lastName": "Anderson",
+              "birthDate": "2006-11-28",
+              "currentAge": 19,
+              "birthCity": "Puerto Plata",
+              "birthCountry": "Dominican Republic",
+              "height": "6' 0\"",
+              "weight": 183,
+              "active": true,
+              "primaryPosition": {
+                "code": "O",
+                "name": "Outfield",
+                "type": "Outfielder",
+                "abbreviation": "OF"
+              },
+              "useName": "José",
+              "useLastName": "Anderson",
+              "middleName": "Manuel",
+              "boxscoreName": "Anderson",
+              "gender": "M",
+              "nameMatrilineal": "Vasquez",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "José Anderson",
+              "nameSlug": "jose-anderson-821262",
+              "firstLastName": "José Anderson",
+              "lastFirstName": "Anderson, José",
+              "lastInitName": "Anderson, J",
+              "initLastName": "J Anderson",
+              "fullFMLName": "José Manuel Anderson",
+              "fullLFMName": "Anderson, José Manuel",
+              "strikeZoneTop": 3.21,
+              "strikeZoneBottom": 1.62
+            },
+            "jerseyNumber": "15",
+            "position": {
+              "code": "8",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "CF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 808288,
+              "fullName": "Luis Lameda",
+              "link": "/api/v1/people/808288",
+              "firstName": "Luis",
+              "lastName": "Lameda",
+              "birthDate": "2006-01-17",
+              "currentAge": 20,
+              "birthCity": "Barquisimeto",
+              "birthCountry": "Venezuela",
+              "height": "5' 10\"",
+              "weight": 160,
+              "active": true,
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Luis",
+              "useLastName": "Lameda",
+              "middleName": "David",
+              "boxscoreName": "Lameda",
+              "gender": "M",
+              "nameMatrilineal": "Morin",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "S",
+                "description": "Switch"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Luis Lameda",
+              "nameSlug": "luis-lameda-808288",
+              "firstLastName": "Luis Lameda",
+              "lastFirstName": "Lameda, Luis",
+              "lastInitName": "Lameda, L",
+              "initLastName": "L Lameda",
+              "fullFMLName": "Luis David Lameda",
+              "fullLFMName": "Lameda, Luis David",
+              "strikeZoneTop": 3.121,
+              "strikeZoneBottom": 1.575
+            },
+            "jerseyNumber": "5",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 821270,
+              "fullName": "Luis Peña",
+              "link": "/api/v1/people/821270",
+              "firstName": "Luis",
+              "lastName": "Peña",
+              "birthDate": "2006-11-13",
+              "currentAge": 19,
+              "birthCity": "El Limon",
+              "birthCountry": "Dominican Republic",
+              "height": "5' 11\"",
+              "weight": 185,
+              "active": true,
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Luis",
+              "useLastName": "Peña",
+              "middleName": "Mario",
+              "boxscoreName": "Peña",
+              "gender": "M",
+              "nameMatrilineal": "Medina",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Luis Peña",
+              "nameSlug": "luis-pena-821270",
+              "firstLastName": "Luis Peña",
+              "lastFirstName": "Peña, Luis",
+              "lastInitName": "Peña, L",
+              "initLastName": "L Peña",
+              "fullFMLName": "Luis Mario Peña",
+              "fullLFMName": "Peña, Luis Mario",
+              "strikeZoneTop": 3.152,
+              "strikeZoneBottom": 1.591
+            },
+            "jerseyNumber": "13",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 808329,
+              "fullName": "Melvin Hernandez",
+              "link": "/api/v1/people/808329",
+              "firstName": "Melvin",
+              "lastName": "Hernandez",
+              "birthDate": "2006-07-03",
+              "currentAge": 20,
+              "birthCity": "Rivas",
+              "birthCountry": "Nicaragua",
+              "height": "5' 11\"",
+              "weight": 139,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Melvin",
+              "useLastName": "Hernandez",
+              "middleName": "De Jesus",
+              "boxscoreName": "Hernandez",
+              "gender": "M",
+              "nameMatrilineal": "Gazo",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Melvin Hernandez",
+              "nameSlug": "melvin-hernandez-808329",
+              "firstLastName": "Melvin Hernandez",
+              "lastFirstName": "Hernandez, Melvin",
+              "lastInitName": "Hernandez, M",
+              "initLastName": "M Hernandez",
+              "fullFMLName": "Melvin De Jesus Hernandez",
+              "fullLFMName": "Hernandez, Melvin De Jesus",
+              "strikeZoneTop": 3.165,
+              "strikeZoneBottom": 1.598
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 695680,
+              "fullName": "Miles Langhorne",
+              "link": "/api/v1/people/695680",
+              "firstName": "Miles",
+              "lastName": "Langhorne",
+              "birthDate": "2003-04-30",
+              "currentAge": 23,
+              "birthCity": "Greenwich",
+              "birthStateProvince": "CT",
+              "birthCountry": "USA",
+              "height": "6' 4\"",
+              "weight": 215,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Miles",
+              "useLastName": "Langhorne",
+              "boxscoreName": "Langhorne",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Miles Langhorne",
+              "nameSlug": "miles-langhorne-695680",
+              "firstLastName": "Miles Langhorne",
+              "lastFirstName": "Langhorne, Miles",
+              "lastInitName": "Langhorne, M",
+              "initLastName": "M Langhorne",
+              "fullFMLName": "Miles Langhorne",
+              "fullLFMName": "Langhorne, Miles ",
+              "strikeZoneTop": 3.388,
+              "strikeZoneBottom": 1.71
+            },
+            "jerseyNumber": "24",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 800617,
+              "fullName": "Reece Walling",
+              "link": "/api/v1/people/800617",
+              "firstName": "Reece",
+              "lastName": "Walling",
+              "birthDate": "2003-09-22",
+              "currentAge": 23,
+              "birthCity": "Longview",
+              "birthStateProvince": "WA",
+              "birthCountry": "USA",
+              "height": "6' 5\"",
+              "weight": 202,
+              "active": false,
+              "primaryPosition": {
+                "code": "O",
+                "name": "Outfield",
+                "type": "Outfielder",
+                "abbreviation": "OF"
+              },
+              "useName": "Reece",
+              "useLastName": "Walling",
+              "middleName": "David",
+              "boxscoreName": "Walling",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2022,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Reece Walling",
+              "nameSlug": "reece-walling-800617",
+              "firstLastName": "Reece Walling",
+              "lastFirstName": "Walling, Reece",
+              "lastInitName": "Walling, R",
+              "initLastName": "R Walling",
+              "fullFMLName": "Reece David Walling",
+              "fullLFMName": "Walling, Reece David",
+              "strikeZoneTop": 3.433,
+              "strikeZoneBottom": 1.733
+            },
+            "jerseyNumber": "22",
+            "position": {
+              "code": "9",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "RF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 822760,
+              "fullName": "Sam Garcia",
+              "link": "/api/v1/people/822760",
+              "firstName": "Samuel",
+              "lastName": "Garcia",
+              "birthDate": "2002-05-22",
+              "currentAge": 24,
+              "birthCity": "Wilmington",
+              "birthStateProvince": "NC",
+              "birthCountry": "USA",
+              "height": "6' 4\"",
+              "weight": 218,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Sam",
+              "useLastName": "Garcia",
+              "middleName": "Cooper",
+              "boxscoreName": "Garcia, S",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Sam Garcia",
+              "nameSlug": "sam-garcia-822760",
+              "firstLastName": "Sam Garcia",
+              "lastFirstName": "Garcia, Sam",
+              "lastInitName": "Garcia, S",
+              "initLastName": "S Garcia",
+              "fullFMLName": "Samuel Cooper Garcia",
+              "fullLFMName": "Garcia, Samuel Cooper",
+              "strikeZoneTop": 3.388,
+              "strikeZoneBottom": 1.71
+            },
+            "jerseyNumber": "49",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 695605,
+              "fullName": "Travis Smith",
+              "link": "/api/v1/people/695605",
+              "firstName": "Travis",
+              "lastName": "Smith",
+              "birthDate": "2002-11-09",
+              "currentAge": 23,
+              "birthCity": "Walton",
+              "birthStateProvince": "KY",
+              "birthCountry": "USA",
+              "height": "6' 4\"",
+              "weight": 220,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Travis",
+              "useLastName": "Smith",
+              "middleName": "Wayne",
+              "boxscoreName": "Smith",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2024,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Travis Smith",
+              "nameSlug": "travis-smith-695605",
+              "firstLastName": "Travis Smith",
+              "lastFirstName": "Smith, Travis",
+              "lastInitName": "Smith, T",
+              "initLastName": "T Smith",
+              "fullFMLName": "Travis Wayne Smith",
+              "fullLFMName": "Smith, Travis Wayne",
+              "strikeZoneTop": 3.388,
+              "strikeZoneBottom": 1.71
+            },
+            "jerseyNumber": "36",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 808291,
+              "fullName": "Tyler Rodriguez",
+              "link": "/api/v1/people/808291",
+              "firstName": "Tyler",
+              "lastName": "Rodriguez",
+              "birthDate": "2006-02-08",
+              "currentAge": 20,
+              "birthCity": "Santo Domingo",
+              "birthCountry": "Dominican Republic",
+              "height": "5' 10\"",
+              "weight": 165,
+              "active": true,
+              "primaryPosition": {
+                "code": "O",
+                "name": "Outfield",
+                "type": "Outfielder",
+                "abbreviation": "OF"
+              },
+              "useName": "Tyler",
+              "useLastName": "Rodriguez",
+              "middleName": "Antonio",
+              "boxscoreName": "Rodriguez, T",
+              "gender": "M",
+              "nameMatrilineal": "Heredia",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Tyler Rodriguez",
+              "nameSlug": "tyler-rodriguez-808291",
+              "firstLastName": "Tyler Rodriguez",
+              "lastFirstName": "Rodriguez, Tyler",
+              "lastInitName": "Rodriguez, T",
+              "initLastName": "T Rodriguez",
+              "fullFMLName": "Tyler Antonio Rodriguez",
+              "fullLFMName": "Rodriguez, Tyler Antonio",
+              "strikeZoneTop": 3.121,
+              "strikeZoneBottom": 1.575
+            },
+            "jerseyNumber": "28",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 800485,
+              "fullName": "Wande Torres",
+              "link": "/api/v1/people/800485",
+              "firstName": "Wande",
+              "lastName": "Torres",
+              "birthDate": "2005-01-31",
+              "currentAge": 21,
+              "birthCity": "San Pedro de Macoris",
+              "birthCountry": "DOM",
+              "height": "6' 3\"",
+              "weight": 190,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Wande",
+              "useLastName": "Torres",
+              "boxscoreName": "Torres",
+              "gender": "M",
+              "nameMatrilineal": "Mercedes",
+              "isPlayer": true,
+              "isVerified": true,
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Wande Torres",
+              "nameSlug": "wande-torres-800485",
+              "firstLastName": "Wande Torres",
+              "lastFirstName": "Torres, Wande",
+              "lastInitName": "Torres, W",
+              "initLastName": "W Torres",
+              "fullFMLName": "Wande Torres",
+              "fullLFMName": "Torres, Wande",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "20",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          },
+          {
+            "person": {
+              "id": 806921,
+              "fullName": "Yannic Walther",
+              "link": "/api/v1/people/806921",
+              "firstName": "Yannic",
+              "lastName": "Walther",
+              "primaryNumber": "92",
+              "birthDate": "2004-04-12",
+              "currentAge": 22,
+              "birthCity": "Heidelberg",
+              "birthCountry": "Germany",
+              "height": "6' 0\"",
+              "weight": 185,
+              "active": true,
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Yannic",
+              "useLastName": "Walther",
+              "boxscoreName": "Walther",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": false,
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Yannic Walther",
+              "nameSlug": "yannic-walther-806921",
+              "firstLastName": "Yannic Walther",
+              "lastFirstName": "Walther, Yannic",
+              "lastInitName": "Walther, Y",
+              "initLastName": "Y Walther",
+              "fullFMLName": "Yannic Walther",
+              "fullLFMName": "Walther, Yannic",
+              "strikeZoneTop": 3.21,
+              "strikeZoneBottom": 1.62
+            },
+            "jerseyNumber": "17",
+            "position": {
+              "code": "2",
+              "name": "Catcher",
+              "type": "Catcher",
+              "abbreviation": "C"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 158
+          }
+        ]
+      },
+      "/rosterType": {
+        "found": true,
+        "value": "active"
+      },
+      "/teamId": {
+        "found": true,
+        "value": 249
+      }
+    }
+  },
+  "notes": []
+}

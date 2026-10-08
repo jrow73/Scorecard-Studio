@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scorecard.studio/schemas/v030-compatibility-map.schema.json",
+  "title": "Scorecard Studio schema-v1 field compatibility map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "contractRevision", "sourceModel", "targetModel", "capabilityVocabulary", "aliases", "fields", "unknownFieldPolicy", "persistencePolicy"],
+  "properties": {
+    "schemaId": { "const": "scorecard-studio.compatibility-map" },
+    "schemaVersion": { "const": 1 },
+    "contractRevision": { "const": "0.3.0-draft.1" },
+    "sourceModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "fieldCount", "catalogCount"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "fieldCount": { "const": 223 },
+        "catalogCount": { "const": 171 }
+      }
+    },
+    "targetModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion"],
+      "properties": { "schemaVersion": { "const": 2 } }
+    },
+    "capabilityVocabulary": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "aliases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["alias", "canonical", "policy"],
+        "properties": {
+          "alias": { "type": "string", "minLength": 1 },
+          "canonical": { "type": "string", "minLength": 1 },
+          "policy": { "const": "canonicalize-in-memory" }
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 223,
+      "maxItems": 223,
+      "items": { "$ref": "#/$defs/fieldMapping" }
+    },
+    "unknownFieldPolicy": { "$ref": "#/$defs/unknownPolicy" },
+    "persistencePolicy": { "$ref": "#/$defs/persistencePolicy" }
+  },
+  "$defs": {
+    "nullableString": { "type": ["string", "null"] },
+    "capability": { "enum": ["corePregame", "officials", "extendedVenue", "staff", "pitcherRoles", "game2Overlay"] },
+    "v1Field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog", "visibilityTier", "kind", "cardinality", "path", "collection", "rowPath", "sourceRequirements"],
+      "properties": {
+        "catalog": { "type": "boolean" },
+        "visibilityTier": { "enum": ["standard", "custom", "compatibility-only"] },
+        "kind": { "enum": ["atomic", "composite"] },
+        "cardinality": { "enum": ["single", "repeated"] },
+        "path": { "$ref": "#/$defs/nullableString" },
+        "collection": { "$ref": "#/$defs/nullableString" },
+        "rowPath": { "$ref": "#/$defs/nullableString" },
+        "sourceRequirements": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "v2Field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "path", "collection", "rowPath", "dependencies", "projection", "capabilityRequirements", "unavailableBehavior"],
+      "properties": {
+        "disposition": { "enum": ["direct", "projected", "derived", "unsupported"] },
+        "path": { "$ref": "#/$defs/nullableString" },
+        "collection": { "$ref": "#/$defs/nullableString" },
+        "rowPath": { "$ref": "#/$defs/nullableString" },
+        "dependencies": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "projection": { "$ref": "#/$defs/nullableString" },
+        "capabilityRequirements": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/capability" } },
+        "unavailableBehavior": { "const": "blank-with-availability-state" }
+      }
+    },
+    "fieldMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fieldId", "v1", "v2"],
+      "properties": {
+        "fieldId": { "type": "string", "minLength": 1 },
+        "v1": { "$ref": "#/$defs/v1Field" },
+        "v2": { "$ref": "#/$defs/v2Field" }
+      }
+    },
+    "unknownPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolution", "render", "preserveOnLoadAndSave", "diagnostics"],
+      "properties": {
+        "resolution": { "const": "unsupported" },
+        "render": { "const": "blank-placeholder" },
+        "preserveOnLoadAndSave": { "const": true },
+        "diagnostics": { "type": "string", "minLength": 1 }
+      }
+    },
+    "persistencePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layouts", "normalizedSnapshots", "adapterCache", "generatedArtifacts"],
+      "properties": {
+        "layouts": { "type": "object" },
+        "normalizedSnapshots": { "type": "object" },
+        "adapterCache": { "type": "object" },
+        "generatedArtifacts": { "type": "object" }
+      }
+    }
+  }
+}

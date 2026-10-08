@@ -1,0 +1,973 @@
+{
+  "schemaId": "scorecard-studio.normalized-game",
+  "schemaVersion": 2,
+  "contractRevision": "0.3.0-draft.2",
+  "context": {
+    "gamePk": "800202",
+    "season": 2025,
+    "sport": {
+      "id": 1,
+      "name": "Major League Baseball"
+    },
+    "gameType": "R",
+    "competitionSegment": "regular",
+    "selectedDate": "2025-07-03",
+    "officialDate": "2025-07-03",
+    "selectedViewKey": "800202:2025-07-03:1"
+  },
+  "game": {
+    "status": {
+      "canonical": "scheduled",
+      "raw": {
+        "abstractGameState": "Preview",
+        "codedGameState": "S",
+        "detailedState": "Scheduled",
+        "statusCode": "S",
+        "abstractGameCode": "P"
+      },
+      "reason": null,
+      "startTimeTBD": false,
+      "teamsTBD": false
+    },
+    "dates": {
+      "scheduledStart": "2025-07-03T23:10:00Z",
+      "originalScheduledStart": "2025-07-03T23:10:00Z",
+      "officialDate": "2025-07-03",
+      "rescheduledStart": null,
+      "rescheduledDate": null,
+      "resumeStart": null,
+      "resumeDate": null
+    },
+    "dayNight": "night",
+    "gameNumber": 1,
+    "venue": {
+      "id": 4,
+      "name": "Contract Park",
+      "location": {
+        "city": null,
+        "state": null,
+        "country": null
+      },
+      "timeZone": {
+        "iana": null
+      },
+      "fieldInfo": {
+        "capacity": null,
+        "turfType": null,
+        "roofType": null,
+        "dimensions": {}
+      }
+    },
+    "weather": {
+      "temperature": 78,
+      "condition": "Partly Cloudy",
+      "wind": "8 mph, Out To RF"
+    },
+    "umpires": {
+      "crew": []
+    }
+  },
+  "away": {
+    "team": {
+      "id": 145,
+      "name": "Chicago White Sox",
+      "locationName": "Chicago White",
+      "shortName": "Chicago White Sox",
+      "clubName": "Sox",
+      "abbreviation": "CWS",
+      "sport": {
+        "id": 1,
+        "name": "Major League Baseball"
+      },
+      "league": {
+        "id": 103,
+        "name": "American League"
+      },
+      "division": {
+        "id": 202,
+        "name": "Contract Division"
+      },
+      "record": {
+        "gamesPlayed": 85,
+        "wins": 42,
+        "losses": 43,
+        "pct": 0.494
+      },
+      "gameNumber": null,
+      "standings": {
+        "divisionRank": {
+          "raw": null,
+          "value": null
+        },
+        "leagueRank": {
+          "raw": null,
+          "value": null
+        },
+        "wildCardRank": {
+          "raw": null,
+          "value": null
+        },
+        "divisionGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "leagueGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "wildCardGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "streak": null,
+        "lastTen": {
+          "wins": null,
+          "losses": null
+        },
+        "elimination": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        },
+        "clinch": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        }
+      },
+      "logo": {
+        "url": null,
+        "brandScope": null
+      }
+    },
+    "manager": {
+      "state": "notRequested",
+      "candidates": [],
+      "selected": null
+    },
+    "coaches": [],
+    "lineup": {
+      "state": "notPosted",
+      "slots": []
+    },
+    "startingPitcher": {
+      "player": {
+        "id": 730001,
+        "name": "Away Fixture Probable",
+        "number": null,
+        "bats": null,
+        "throws": null,
+        "primaryPosition": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "type": "Pitcher"
+        }
+      },
+      "position": {
+        "abbreviation": "P",
+        "name": "Pitcher",
+        "number": 1,
+        "roleLabel": "probable-starter"
+      },
+      "stats": {}
+    },
+    "additionalStarters": [],
+    "bench": [],
+    "bullpen": [],
+    "defense": {}
+  },
+  "home": {
+    "team": {
+      "id": 138,
+      "name": "St. Louis Cardinals",
+      "locationName": "St. Louis",
+      "shortName": "St. Louis Cardinals",
+      "clubName": "Cardinals",
+      "abbreviation": "STL",
+      "sport": {
+        "id": 1,
+        "name": "Major League Baseball"
+      },
+      "league": {
+        "id": 104,
+        "name": "National League"
+      },
+      "division": {
+        "id": 205,
+        "name": "Contract Division"
+      },
+      "record": {
+        "gamesPlayed": 85,
+        "wins": 45,
+        "losses": 40,
+        "pct": 0.529
+      },
+      "gameNumber": null,
+      "standings": {
+        "divisionRank": {
+          "raw": null,
+          "value": null
+        },
+        "leagueRank": {
+          "raw": null,
+          "value": null
+        },
+        "wildCardRank": {
+          "raw": null,
+          "value": null
+        },
+        "divisionGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "leagueGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "wildCardGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "streak": null,
+        "lastTen": {
+          "wins": null,
+          "losses": null
+        },
+        "elimination": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        },
+        "clinch": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        }
+      },
+      "logo": {
+        "url": null,
+        "brandScope": null
+      }
+    },
+    "manager": {
+      "state": "notRequested",
+      "candidates": [],
+      "selected": null
+    },
+    "coaches": [],
+    "lineup": {
+      "state": "notPosted",
+      "slots": []
+    },
+    "startingPitcher": {
+      "player": {
+        "id": 730002,
+        "name": "Home Fixture Probable",
+        "number": null,
+        "bats": null,
+        "throws": null,
+        "primaryPosition": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "type": "Pitcher"
+        }
+      },
+      "position": {
+        "abbreviation": "P",
+        "name": "Pitcher",
+        "number": 1,
+        "roleLabel": "probable-starter"
+      },
+      "stats": {}
+    },
+    "additionalStarters": [],
+    "bench": [],
+    "bullpen": [],
+    "defense": {}
+  },
+  "standings": {
+    "groups": []
+  },
+  "meta": {
+    "snapshot": {
+      "id": "schedule-missing-lineup",
+      "createdAtUtc": "2026-10-07T19:00:00.200Z",
+      "producer": {
+        "applicationVersion": "0.3.0-design",
+        "build": "004.3"
+      },
+      "fixtureKind": "synthetic-contract"
+    },
+    "sourceResults": [
+      {
+        "id": "schedule.800202.0.0",
+        "adapter": "schedule",
+        "request": {
+          "key": "schedule|v1|gamePk=800202|sportId=1|selectedDate=2025-07-03|hydrateProfile=pregame-v1",
+          "endpointFamily": "schedule",
+          "method": "GET",
+          "parameters": {
+            "gamePk": "800202",
+            "sportId": 1,
+            "selectedDate": "2025-07-03",
+            "hydrateProfile": "pregame-v1"
+          }
+        },
+        "scope": {
+          "gamePk": "800202",
+          "selectedViewKey": "800202:2025-07-03:1"
+        },
+        "requestedAtUtc": "2026-10-07T19:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T19:00:00.100Z",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      }
+    ],
+    "lineage": [
+      {
+        "id": "lineage.context",
+        "target": "/context",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-schedule-view",
+          "normalize-competition-segment"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.game",
+        "target": "/game",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "normalize-status",
+          "separate-game-dates",
+          "suppress-active-tbd-placeholder-time"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.venue-extended",
+        "target": "/game/venue/location",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.venue-time-zone",
+        "target": "/game/venue/timeZone",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.venue-field-info",
+        "target": "/game/venue/fieldInfo",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.weather",
+        "target": "/game/weather",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/weather",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.umpires",
+        "target": "/game/umpires",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team",
+        "target": "/away/team",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/teams/away/team",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.record",
+        "target": "/away/team/record",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/teams/away/leagueRecord",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team-game-number",
+        "target": "/away/team/gameNumber",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team-standings",
+        "target": "/away/team/standings",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team-logo",
+        "target": "/away/team/logo",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.manager",
+        "target": "/away/manager",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.coaches",
+        "target": "/away/coaches",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.lineup",
+        "target": "/away/lineup",
+        "coverage": "subtree",
+        "state": "unposted",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/dates/0/games/0/lineups/awayPlayers",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": "Schedule did not publish the lineup path.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.starter",
+        "target": "/away/startingPitcher",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/teams/away/probablePitcher",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "normalize-probable-pitcher"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.additional-starters",
+        "target": "/away/additionalStarters",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.bench",
+        "target": "/away/bench",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.bullpen",
+        "target": "/away/bullpen",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.defense",
+        "target": "/away/defense",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.starter-stats",
+        "target": "/away/startingPitcher/stats",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team",
+        "target": "/home/team",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/teams/home/team",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.record",
+        "target": "/home/team/record",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/teams/home/leagueRecord",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team-game-number",
+        "target": "/home/team/gameNumber",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team-standings",
+        "target": "/home/team/standings",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team-logo",
+        "target": "/home/team/logo",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.manager",
+        "target": "/home/manager",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.coaches",
+        "target": "/home/coaches",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.lineup",
+        "target": "/home/lineup",
+        "coverage": "subtree",
+        "state": "unposted",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/dates/0/games/0/lineups/homePlayers",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": "Schedule did not publish the lineup path.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.starter",
+        "target": "/home/startingPitcher",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800202.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800202.0.0",
+        "sourcePath": "/dates/0/games/0/teams/home/probablePitcher",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800202",
+          "canonicalGameState": "scheduled",
+          "rawGameState": "Scheduled"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "normalize-probable-pitcher"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.additional-starters",
+        "target": "/home/additionalStarters",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.bench",
+        "target": "/home/bench",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.bullpen",
+        "target": "/home/bullpen",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.defense",
+        "target": "/home/defense",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.starter-stats",
+        "target": "/home/startingPitcher/stats",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.standings",
+        "target": "/standings",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      }
+    ]
+  }
+}

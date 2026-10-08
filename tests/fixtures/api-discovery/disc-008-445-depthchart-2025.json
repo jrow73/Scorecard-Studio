@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-008-445-depthchart-2025",
+  "investigationId": "DISC-008",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:35:33.314Z",
+  "context": {
+    "subject": "Columbus Clippers Triple-A depth chart, 2025",
+    "gameState": "Season depth chart"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/445/roster/depthChart?season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 168,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 253,
+    "bodySha256": "77879ee316875340ae753bbc280ec5d7e7a6b6ec4aee8ea1a92c7e0f4d782a33"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster",
+      "/rosterType",
+      "/teamId"
+    ],
+    "values": {
+      "/roster": {
+        "found": false,
+        "value": null
+      },
+      "/rosterType": {
+        "found": true,
+        "value": "depthChart"
+      },
+      "/teamId": {
+        "found": true,
+        "value": 445
+      }
+    }
+  },
+  "notes": []
+}

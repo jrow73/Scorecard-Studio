@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-001-777164-feed-rescheduled-final",
+  "investigationId": "DISC-001",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T18:53:42.383Z",
+  "context": {
+    "subject": "2025-07-10 CLE at CWS postponed/rescheduled feed control",
+    "gameState": "Final rescheduled game at current retrieval"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1.1/game/777164/feed/live",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 413,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=10, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 721235,
+    "bodySha256": "90a3e5b0b530661751f78d97d4b3274670fe849c6038ec7de130ddec66f5dcce"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/gamePk",
+      "/gameData/status",
+      "/gameData/datetime",
+      "/liveData/boxscore/officials"
+    ],
+    "values": {
+      "/gamePk": {
+        "found": true,
+        "value": 777164
+      },
+      "/gameData/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/gameData/datetime": {
+        "found": true,
+        "value": {
+          "dateTime": "2025-07-11T19:10:00Z",
+          "originalDate": "2025-07-11",
+          "officialDate": "2025-07-11",
+          "dayNight": "day",
+          "time": "2:10",
+          "ampm": "PM"
+        }
+      },
+      "/liveData/boxscore/officials": {
+        "found": true,
+        "value": [
+          {
+            "official": {
+              "id": 521889,
+              "fullName": "Stu Scheurwater",
+              "link": "/api/v1/people/521889"
+            },
+            "officialType": "Home Plate"
+          },
+          {
+            "official": {
+              "id": 605671,
+              "fullName": "Charlie Ramos",
+              "link": "/api/v1/people/605671"
+            },
+            "officialType": "First Base"
+          },
+          {
+            "official": {
+              "id": 490319,
+              "fullName": "Jordan Baker",
+              "link": "/api/v1/people/490319"
+            },
+            "officialType": "Second Base"
+          },
+          {
+            "official": {
+              "id": 605670,
+              "fullName": "Dan Merzel",
+              "link": "/api/v1/people/605670"
+            },
+            "officialType": "Third Base"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Paired with the Schedule fixture: feed identifies the completed rescheduled contest while Schedule retains Postponed metadata."
+  ]
+}

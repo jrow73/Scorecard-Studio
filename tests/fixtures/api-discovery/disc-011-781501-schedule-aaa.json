@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-781501-schedule-aaa",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:10:57.936Z",
+  "context": {
+    "subject": "Triple-A Memphis at Durham Schedule",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=781501&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 261,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7198,
+    "bodySha256": "a10d87ec78d00a99e6c57cda381273aced4d853da1253ad7f1872d10b3de9c8a"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 781501
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 235,
+              "name": "Memphis Redbirds",
+              "link": "/api/v1/teams/235",
+              "season": 2025,
+              "venue": {
+                "id": 2542,
+                "name": "AutoZone Park",
+                "link": "/api/v1/venues/2542"
+              },
+              "teamCode": "mrb",
+              "fileCode": "t235",
+              "abbreviation": "MEM",
+              "teamName": "Redbirds",
+              "locationName": "Memphis",
+              "firstYearOfPlay": "1998",
+              "league": {
+                "id": 117,
+                "name": "International League",
+                "link": "/api/v1/league/117"
+              },
+              "division": {
+                "id": 221,
+                "name": "International League West",
+                "link": "/api/v1/divisions/221"
+              },
+              "sport": {
+                "id": 11,
+                "link": "/api/v1/sports/11",
+                "name": "Triple-A"
+              },
+              "shortName": "Memphis",
+              "parentOrgName": "St. Louis Cardinals",
+              "parentOrgId": 138,
+              "franchiseName": "Memphis",
+              "clubName": "Redbirds",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 31,
+              "losses": 24,
+              "ties": 0,
+              "pct": ".564"
+            },
+            "score": 5,
+            "isWinner": false,
+            "probablePitcher": {
+              "id": 668954,
+              "fullName": "Curtis Taylor",
+              "link": "/api/v1/people/668954"
+            },
+            "splitSquad": false,
+            "seriesNumber": 10
+          },
+          "home": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 234,
+              "name": "Durham Bulls",
+              "link": "/api/v1/teams/234",
+              "season": 2025,
+              "venue": {
+                "id": 2541,
+                "name": "Durham Bulls Athletic Park",
+                "link": "/api/v1/venues/2541"
+              },
+              "teamCode": "drm",
+              "fileCode": "t234",
+              "abbreviation": "DUR",
+              "teamName": "Bulls",
+              "locationName": "Durham",
+              "firstYearOfPlay": "1945",
+              "league": {
+                "id": 117,
+                "name": "International League",
+                "link": "/api/v1/league/117"
+              },
+              "division": {
+                "id": 219,
+                "name": "International League East",
+                "link": "/api/v1/divisions/219"
+              },
+              "sport": {
+                "id": 11,
+                "link": "/api/v1/sports/11",
+                "name": "Triple-A"
+              },
+              "shortName": "Durham",
+              "parentOrgName": "Tampa Bay Rays",
+              "parentOrgId": 139,
+              "franchiseName": "Durham",
+              "clubName": "Bulls",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 32,
+              "losses": 25,
+              "ties": 0,
+              "pct": ".561"
+            },
+            "score": 10,
+            "isWinner": true,
+            "probablePitcher": {
+              "id": 671212,
+              "fullName": "Joe Boyle",
+              "link": "/api/v1/people/671212"
+            },
+            "splitSquad": false,
+            "seriesNumber": 10
+          }
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 608671,
+              "fullName": "Travis Jankowski",
+              "link": "/api/v1/people/608671",
+              "firstName": "Travis",
+              "lastName": "Jankowski",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Travis"
+            },
+            {
+              "id": 673490,
+              "fullName": "Ha-Seong Kim",
+              "link": "/api/v1/people/673490",
+              "firstName": "Ha-Seong",
+              "lastName": "Kim",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Ha-Seong"
+            },
+            {
+              "id": 695020,
+              "fullName": "Tanner Murray",
+              "link": "/api/v1/people/695020",
+              "firstName": "Tanner",
+              "lastName": "Murray",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Tanner"
+            },
+            {
+              "id": 676044,
+              "fullName": "Bob Seymour",
+              "link": "/api/v1/people/676044",
+              "firstName": "Robert",
+              "lastName": "Seymour",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Bob"
+            },
+            {
+              "id": 681371,
+              "fullName": "Dom Keegan",
+              "link": "/api/v1/people/681371",
+              "firstName": "Dominic",
+              "lastName": "Keegan",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Dom"
+            },
+            {
+              "id": 700246,
+              "fullName": "Carson Williams",
+              "link": "/api/v1/people/700246",
+              "firstName": "Carson",
+              "lastName": "Williams",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Carson"
+            },
+            {
+              "id": 671976,
+              "fullName": "Tristan Peters",
+              "link": "/api/v1/people/671976",
+              "firstName": "Tristan",
+              "lastName": "Peters",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Tristan"
+            },
+            {
+              "id": 642197,
+              "fullName": "Jamie Westbrook",
+              "link": "/api/v1/people/642197",
+              "firstName": "Jamie",
+              "lastName": "Westbrook",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Jamie"
+            },
+            {
+              "id": 700652,
+              "fullName": "Kenny Piper",
+              "link": "/api/v1/people/700652",
+              "firstName": "Kenneth",
+              "lastName": "Piper",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Kenny"
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 665877,
+              "fullName": "José Fermín",
+              "link": "/api/v1/people/665877",
+              "firstName": "José",
+              "lastName": "Fermín",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "José"
+            },
+            {
+              "id": 693409,
+              "fullName": "César Prieto",
+              "link": "/api/v1/people/693409",
+              "firstName": "Cesar",
+              "lastName": "Prieto",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "César"
+            },
+            {
+              "id": 695336,
+              "fullName": "Thomas Saggese",
+              "link": "/api/v1/people/695336",
+              "firstName": "Thomas",
+              "lastName": "Saggese",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Thomas"
+            },
+            {
+              "id": 663609,
+              "fullName": "Luken Baker",
+              "link": "/api/v1/people/663609",
+              "firstName": "Luken",
+              "lastName": "Baker",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Luken"
+            },
+            {
+              "id": 647378,
+              "fullName": "Andy Yerzy",
+              "link": "/api/v1/people/647378",
+              "firstName": "Andrew",
+              "lastName": "Yerzy",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Andy"
+            },
+            {
+              "id": 641468,
+              "fullName": "Gavin Collins",
+              "link": "/api/v1/people/641468",
+              "firstName": "Gavin",
+              "lastName": "Collins",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Gavin"
+            },
+            {
+              "id": 663494,
+              "fullName": "Bryan Torres",
+              "link": "/api/v1/people/663494",
+              "firstName": "Bryan",
+              "lastName": "Torres",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Bryan"
+            },
+            {
+              "id": 690914,
+              "fullName": "Brody Moore",
+              "link": "/api/v1/people/690914",
+              "firstName": "Brody",
+              "lastName": "Moore",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Brody"
+            },
+            {
+              "id": 690443,
+              "fullName": "Mike Antico",
+              "link": "/api/v1/people/690443",
+              "firstName": "Michael",
+              "lastName": "Antico",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Mike"
+            }
+          ]
+        }
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 2541,
+          "name": "Durham Bulls Athletic Park",
+          "link": "/api/v1/venues/2541",
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

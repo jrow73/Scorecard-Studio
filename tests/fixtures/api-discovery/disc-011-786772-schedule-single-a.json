@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-786772-schedule-single-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:07.412Z",
+  "context": {
+    "subject": "Single-A Salem at Carolina Schedule",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=786772&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 201,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7212,
+    "bodySha256": "f3074ad550b9149458c44c43b4e404b52f8344bd9128968d46d1742ded30bcb8"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 786772
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 414,
+              "name": "Salem Red Sox",
+              "link": "/api/v1/teams/414",
+              "season": 2025,
+              "venue": {
+                "id": 2840,
+                "name": "Carilion Clinic Field",
+                "link": "/api/v1/venues/2840"
+              },
+              "teamCode": "slm",
+              "fileCode": "t414",
+              "abbreviation": "SAL",
+              "teamName": "Red Sox",
+              "locationName": "Salem",
+              "firstYearOfPlay": "1957",
+              "league": {
+                "id": 122,
+                "name": "Carolina League",
+                "link": "/api/v1/league/122"
+              },
+              "division": {
+                "id": 210,
+                "name": "Carolina League North",
+                "link": "/api/v1/divisions/210"
+              },
+              "sport": {
+                "id": 14,
+                "link": "/api/v1/sports/14",
+                "name": "Single-A"
+              },
+              "shortName": "Salem",
+              "parentOrgName": "Boston Red Sox",
+              "parentOrgId": 111,
+              "franchiseName": "Salem",
+              "clubName": "Red Sox",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 20,
+              "losses": 29,
+              "ties": 0,
+              "pct": ".408"
+            },
+            "score": 2,
+            "isWinner": false,
+            "probablePitcher": {
+              "id": 679977,
+              "fullName": "Noah Song",
+              "link": "/api/v1/people/679977"
+            },
+            "splitSquad": false,
+            "seriesNumber": 9
+          },
+          "home": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 249,
+              "name": "Carolina Mudcats",
+              "link": "/api/v1/teams/249",
+              "season": 2025,
+              "venue": {
+                "id": 2625,
+                "name": "Five County Stadium",
+                "link": "/api/v1/venues/2625"
+              },
+              "teamCode": "cmc",
+              "fileCode": "t249",
+              "abbreviation": "CAR",
+              "teamName": "Mudcats",
+              "locationName": "Zebulon",
+              "firstYearOfPlay": "1969",
+              "league": {
+                "id": 122,
+                "name": "Carolina League",
+                "link": "/api/v1/league/122"
+              },
+              "division": {
+                "id": 210,
+                "name": "Carolina League North",
+                "link": "/api/v1/divisions/210"
+              },
+              "sport": {
+                "id": 14,
+                "link": "/api/v1/sports/14",
+                "name": "Single-A"
+              },
+              "shortName": "Carolina",
+              "parentOrgName": "Milwaukee Brewers",
+              "parentOrgId": 158,
+              "franchiseName": "Carolina",
+              "clubName": "Mudcats",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 33,
+              "losses": 16,
+              "ties": 0,
+              "pct": ".673"
+            },
+            "score": 4,
+            "isWinner": true,
+            "probablePitcher": {
+              "id": 803068,
+              "fullName": "Chandler Welch",
+              "link": "/api/v1/people/803068"
+            },
+            "splitSquad": false,
+            "seriesNumber": 9
+          }
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 815520,
+              "fullName": "Braylon Payne",
+              "link": "/api/v1/people/815520",
+              "firstName": "Braylon",
+              "lastName": "Payne",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Braylon"
+            },
+            {
+              "id": 815908,
+              "fullName": "Jesús Made",
+              "link": "/api/v1/people/815908",
+              "firstName": "Jesús",
+              "lastName": "Made",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Jesús"
+            },
+            {
+              "id": 800724,
+              "fullName": "Eric Bitonti",
+              "link": "/api/v1/people/800724",
+              "firstName": "Eric",
+              "lastName": "Bitonti",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Eric"
+            },
+            {
+              "id": 821270,
+              "fullName": "Luis Peña",
+              "link": "/api/v1/people/821270",
+              "firstName": "Luis",
+              "lastName": "Peña",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Luis"
+            },
+            {
+              "id": 821262,
+              "fullName": "José Anderson",
+              "link": "/api/v1/people/821262",
+              "firstName": "José",
+              "lastName": "Anderson",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "José"
+            },
+            {
+              "id": 806995,
+              "fullName": "Filippo Di Turi",
+              "link": "/api/v1/people/806995",
+              "firstName": "Filippo",
+              "lastName": "Di Turi",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Filippo"
+            },
+            {
+              "id": 702391,
+              "fullName": "Demetrio Nadal",
+              "link": "/api/v1/people/702391",
+              "firstName": "Demetrio",
+              "lastName": "Nadal",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Demetrio"
+            },
+            {
+              "id": 800617,
+              "fullName": "Reece Walling",
+              "link": "/api/v1/people/800617",
+              "firstName": "Reece",
+              "lastName": "Walling",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Reece"
+            },
+            {
+              "id": 806921,
+              "fullName": "Yannic Walther",
+              "link": "/api/v1/people/806921",
+              "firstName": "Yannic",
+              "lastName": "Walther",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Yannic"
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 821100,
+              "fullName": "Justin Gonzales",
+              "link": "/api/v1/people/821100",
+              "firstName": "Justin",
+              "lastName": "Gonzales",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Justin"
+            },
+            {
+              "id": 806985,
+              "fullName": "Yoeilin Cespedes",
+              "link": "/api/v1/people/806985",
+              "firstName": "Yoeilin",
+              "lastName": "Cespedes",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Yoeilin"
+            },
+            {
+              "id": 703175,
+              "fullName": "Freili Encarnacion",
+              "link": "/api/v1/people/703175",
+              "firstName": "Freili",
+              "lastName": "Encarnacion",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Freili"
+            },
+            {
+              "id": 808307,
+              "fullName": "Kleyver Salazar",
+              "link": "/api/v1/people/808307",
+              "firstName": "Kleyver",
+              "lastName": "Salazar",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Kleyver"
+            },
+            {
+              "id": 821150,
+              "fullName": "Enddy Azocar",
+              "link": "/api/v1/people/821150",
+              "firstName": "Enddy",
+              "lastName": "Azocar",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Enddy"
+            },
+            {
+              "id": 808245,
+              "fullName": "Starlyn Nunez",
+              "link": "/api/v1/people/808245",
+              "firstName": "Starlyn",
+              "lastName": "Nunez",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Starlyn"
+            },
+            {
+              "id": 800256,
+              "fullName": "Natanael Yuten",
+              "link": "/api/v1/people/800256",
+              "firstName": "Natanael",
+              "lastName": "Yuten",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Natanael"
+            },
+            {
+              "id": 699142,
+              "fullName": "Karim Ayubi",
+              "link": "/api/v1/people/699142",
+              "firstName": "Karim",
+              "lastName": "Ayubi",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Karim"
+            },
+            {
+              "id": 703205,
+              "fullName": "Fraymi De Leon",
+              "link": "/api/v1/people/703205",
+              "firstName": "Fraymi",
+              "lastName": "De Leon",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Fraymi"
+            }
+          ]
+        }
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 2625,
+          "name": "Five County Stadium",
+          "link": "/api/v1/venues/2625",
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

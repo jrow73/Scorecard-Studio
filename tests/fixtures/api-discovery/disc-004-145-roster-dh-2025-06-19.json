@@ -1,0 +1,1634 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-004-145-roster-dh-2025-06-19",
+  "investigationId": "DISC-004",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:06:50.101Z",
+  "context": {
+    "subject": "Chicago White Sox calendar-date roster for both 2025-06-19 doubleheader games",
+    "gameState": "Dated active roster 2025-06-19"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/145/roster?date=2025-06-19&hydrate=person",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 220,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 28653,
+    "bodySha256": "8b91033b6a3a890fcc1c09666731b0ec5bdf0db6b51ed5687904c5eba9c112b9"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/rosterType",
+      "/roster"
+    ],
+    "values": {
+      "/rosterType": {
+        "found": true,
+        "value": "active"
+      },
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 650644,
+              "fullName": "Aaron Civale",
+              "link": "/api/v1/people/650644",
+              "firstName": "Aaron",
+              "lastName": "Civale",
+              "primaryNumber": "38",
+              "birthDate": "1995-06-12",
+              "currentAge": 31,
+              "birthCity": "East Windsor",
+              "birthStateProvince": "CT",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 245,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Aaron",
+              "useLastName": "Civale",
+              "middleName": "James",
+              "boxscoreName": "Civale",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": false,
+              "draftYear": 2016,
+              "pronunciation": "sih-VAH-lee",
+              "mlbDebutDate": "2019-06-22",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Aaron Civale",
+              "nameSlug": "aaron-civale-650644",
+              "firstLastName": "Aaron Civale",
+              "lastFirstName": "Civale, Aaron",
+              "lastInitName": "Civale, A",
+              "initLastName": "A Civale",
+              "fullFMLName": "Aaron James Civale",
+              "fullLFMName": "Civale, Aaron James",
+              "strikeZoneTop": 3.255,
+              "strikeZoneBottom": 1.643
+            },
+            "jerseyNumber": "43",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 643217,
+              "fullName": "Andrew Benintendi",
+              "link": "/api/v1/people/643217",
+              "firstName": "Andrew",
+              "lastName": "Benintendi",
+              "primaryNumber": "23",
+              "birthDate": "1994-07-06",
+              "currentAge": 32,
+              "birthCity": "Cincinnati",
+              "birthStateProvince": "OH",
+              "birthCountry": "USA",
+              "height": "5' 9\"",
+              "weight": 185,
+              "active": true,
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Andrew",
+              "useLastName": "Benintendi",
+              "middleName": "Sebastian",
+              "boxscoreName": "Benintendi",
+              "nickName": "Benny",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2015,
+              "mlbDebutDate": "2016-08-02",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Andrew Benintendi",
+              "nameSlug": "andrew-benintendi-643217",
+              "firstLastName": "Andrew Benintendi",
+              "lastFirstName": "Benintendi, Andrew",
+              "lastInitName": "Benintendi, A",
+              "initLastName": "A Benintendi",
+              "fullFMLName": "Andrew Sebastian Benintendi",
+              "fullLFMName": "Benintendi, Andrew Sebastian",
+              "strikeZoneTop": 3.068,
+              "strikeZoneBottom": 1.548
+            },
+            "jerseyNumber": "23",
+            "position": {
+              "code": "7",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "LF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 596103,
+              "fullName": "Austin Slater",
+              "link": "/api/v1/people/596103",
+              "firstName": "Austin",
+              "lastName": "Slater",
+              "birthDate": "1992-12-13",
+              "currentAge": 33,
+              "birthCity": "Jacksonville",
+              "birthStateProvince": "FL",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 205,
+              "active": true,
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Austin",
+              "useLastName": "Slater",
+              "middleName": "Thomas",
+              "boxscoreName": "Slater",
+              "nickName": "AC",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": false,
+              "draftYear": 2014,
+              "mlbDebutDate": "2017-06-02",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Austin Slater",
+              "nameSlug": "austin-slater-596103",
+              "firstLastName": "Austin Slater",
+              "lastFirstName": "Slater, Austin",
+              "lastInitName": "Slater, A",
+              "initLastName": "A Slater",
+              "fullFMLName": "Austin Thomas Slater",
+              "fullLFMName": "Slater, Austin Thomas",
+              "strikeZoneTop": 3.258,
+              "strikeZoneBottom": 1.644
+            },
+            "jerseyNumber": "15",
+            "position": {
+              "code": "7",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "LF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 685126,
+              "fullName": "Brandon Eisert",
+              "link": "/api/v1/people/685126",
+              "firstName": "Brandon",
+              "lastName": "Eisert",
+              "primaryNumber": "14",
+              "birthDate": "1998-01-19",
+              "currentAge": 28,
+              "birthCity": "Portland",
+              "birthStateProvince": "OR",
+              "birthCountry": "USA",
+              "height": "6' 2\"",
+              "weight": 210,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Brandon",
+              "useLastName": "Eisert",
+              "middleName": "Michael",
+              "boxscoreName": "Eisert",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2019,
+              "pronunciation": "EYE-sert",
+              "mlbDebutDate": "2024-06-17",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Brandon Eisert",
+              "nameSlug": "brandon-eisert-685126",
+              "firstLastName": "Brandon Eisert",
+              "lastFirstName": "Eisert, Brandon",
+              "lastInitName": "Eisert, B",
+              "initLastName": "B Eisert",
+              "fullFMLName": "Brandon Michael Eisert",
+              "fullLFMName": "Eisert, Brandon Michael",
+              "strikeZoneTop": 3.299,
+              "strikeZoneBottom": 1.665
+            },
+            "jerseyNumber": "53",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 592155,
+              "fullName": "Cam Booser",
+              "link": "/api/v1/people/592155",
+              "firstName": "Cameron",
+              "lastName": "Booser",
+              "primaryNumber": "62",
+              "birthDate": "1992-05-04",
+              "currentAge": 34,
+              "birthCity": "Seattle",
+              "birthStateProvince": "WA",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 230,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Cam",
+              "useLastName": "Booser",
+              "middleName": "Joseph",
+              "boxscoreName": "Booser",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "mlbDebutDate": "2024-04-19",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Cam Booser",
+              "nameSlug": "cam-booser-592155",
+              "firstLastName": "Cam Booser",
+              "lastFirstName": "Booser, Cam",
+              "lastInitName": "Booser, C",
+              "initLastName": "C Booser",
+              "fullFMLName": "Cameron Joseph Booser",
+              "fullLFMName": "Booser, Cameron Joseph",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "71",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 805367,
+              "fullName": "Chase Meidroth",
+              "link": "/api/v1/people/805367",
+              "firstName": "Chase",
+              "lastName": "Meidroth",
+              "primaryNumber": "10",
+              "birthDate": "2001-07-23",
+              "currentAge": 25,
+              "birthCity": "Torrance",
+              "birthStateProvince": "CA",
+              "birthCountry": "USA",
+              "height": "5' 9\"",
+              "weight": 190,
+              "active": true,
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Chase",
+              "useLastName": "Meidroth",
+              "middleName": "Gregory",
+              "boxscoreName": "Meidroth",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2022,
+              "pronunciation": "MY-drawth",
+              "mlbDebutDate": "2025-04-11",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Chase Meidroth",
+              "nameSlug": "chase-meidroth-805367",
+              "firstLastName": "Chase Meidroth",
+              "lastFirstName": "Meidroth, Chase",
+              "lastInitName": "Meidroth, C",
+              "initLastName": "C Meidroth",
+              "fullFMLName": "Chase Gregory Meidroth",
+              "fullLFMName": "Meidroth, Chase Gregory",
+              "strikeZoneTop": 3.07,
+              "strikeZoneBottom": 1.55
+            },
+            "jerseyNumber": "10",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 656186,
+              "fullName": "Dan Altavilla",
+              "link": "/api/v1/people/656186",
+              "firstName": "Daniel",
+              "lastName": "Altavilla",
+              "birthDate": "1992-09-08",
+              "currentAge": 34,
+              "birthCity": "Greenock",
+              "birthStateProvince": "PA",
+              "birthCountry": "USA",
+              "height": "5' 11\"",
+              "weight": 235,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Dan",
+              "useLastName": "Altavilla",
+              "boxscoreName": "Altavilla",
+              "nickName": "Buzzy",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2014,
+              "pronunciation": "all-ta-VIL-uh",
+              "mlbDebutDate": "2016-08-27",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Dan Altavilla",
+              "nameSlug": "dan-altavilla-656186",
+              "firstLastName": "Dan Altavilla",
+              "lastFirstName": "Altavilla, Dan",
+              "lastInitName": "Altavilla, D",
+              "initLastName": "D Altavilla",
+              "fullFMLName": "Daniel Altavilla",
+              "fullLFMName": "Altavilla, Daniel",
+              "strikeZoneTop": 3.165,
+              "strikeZoneBottom": 1.598
+            },
+            "jerseyNumber": "58",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 700337,
+              "fullName": "Edgar Quero",
+              "link": "/api/v1/people/700337",
+              "firstName": "Edgar",
+              "lastName": "Quero",
+              "primaryNumber": "26",
+              "birthDate": "2003-04-06",
+              "currentAge": 23,
+              "birthCity": "Cienfuegos",
+              "birthCountry": "Cuba",
+              "height": "5' 10\"",
+              "weight": 205,
+              "active": true,
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Edgar",
+              "useLastName": "Quero",
+              "middleName": "Yoel",
+              "boxscoreName": "Quero",
+              "gender": "M",
+              "nameMatrilineal": "Aguila",
+              "isPlayer": true,
+              "isVerified": true,
+              "pronunciation": "CARE-oh",
+              "mlbDebutDate": "2025-04-17",
+              "batSide": {
+                "code": "S",
+                "description": "Switch"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Edgar Quero",
+              "nameSlug": "edgar-quero-700337",
+              "firstLastName": "Edgar Quero",
+              "lastFirstName": "Quero, Edgar",
+              "lastInitName": "Quero, E",
+              "initLastName": "E Quero",
+              "fullFMLName": "Edgar Yoel Quero",
+              "fullLFMName": "Quero, Edgar Yoel",
+              "strikeZoneTop": 3.134,
+              "strikeZoneBottom": 1.582
+            },
+            "jerseyNumber": "7",
+            "position": {
+              "code": "2",
+              "name": "Catcher",
+              "type": "Catcher",
+              "abbreviation": "C"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 691799,
+              "fullName": "Grant Taylor",
+              "link": "/api/v1/people/691799",
+              "firstName": "Grant",
+              "lastName": "Taylor",
+              "primaryNumber": "31",
+              "birthDate": "2002-05-20",
+              "currentAge": 24,
+              "birthCity": "Florence",
+              "birthStateProvince": "AL",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 230,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Grant",
+              "useLastName": "Taylor",
+              "middleName": "Alan",
+              "boxscoreName": "Taylor, G",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2023,
+              "mlbDebutDate": "2025-06-10",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Grant Taylor",
+              "nameSlug": "grant-taylor-691799",
+              "firstLastName": "Grant Taylor",
+              "lastFirstName": "Taylor, Grant",
+              "lastInitName": "Taylor, G",
+              "initLastName": "G Taylor",
+              "fullFMLName": "Grant Alan Taylor",
+              "fullLFMName": "Taylor, Grant Alan",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "31",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 673929,
+              "fullName": "Jordan Leasure",
+              "link": "/api/v1/people/673929",
+              "firstName": "Jordan",
+              "lastName": "Leasure",
+              "primaryNumber": "49",
+              "birthDate": "1998-08-15",
+              "currentAge": 28,
+              "birthCity": "Riverview",
+              "birthStateProvince": "FL",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 220,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Jordan",
+              "useLastName": "Leasure",
+              "middleName": "Davis",
+              "boxscoreName": "Leasure",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2021,
+              "mlbDebutDate": "2024-03-30",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Jordan Leasure",
+              "nameSlug": "jordan-leasure-673929",
+              "firstLastName": "Jordan Leasure",
+              "lastFirstName": "Leasure, Jordan",
+              "lastInitName": "Leasure, J",
+              "initLastName": "J Leasure",
+              "fullFMLName": "Jordan Davis Leasure",
+              "fullLFMName": "Leasure, Jordan Davis",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "49",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 668942,
+              "fullName": "Josh Rojas",
+              "link": "/api/v1/people/668942",
+              "firstName": "Joshua",
+              "lastName": "Rojas",
+              "primaryNumber": "40",
+              "birthDate": "1994-06-30",
+              "currentAge": 32,
+              "birthCity": "Litchfield Park",
+              "birthStateProvince": "AZ",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 200,
+              "active": true,
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Josh",
+              "useLastName": "Rojas",
+              "middleName": "Luke",
+              "boxscoreName": "Rojas, J",
+              "nickName": "Ro",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2017,
+              "mlbDebutDate": "2019-08-12",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Josh Rojas",
+              "nameSlug": "josh-rojas-668942",
+              "firstLastName": "Josh Rojas",
+              "lastFirstName": "Rojas, Josh",
+              "lastInitName": "Rojas, J",
+              "initLastName": "J Rojas",
+              "fullFMLName": "Joshua Luke Rojas",
+              "fullLFMName": "Rojas, Joshua Luke",
+              "strikeZoneTop": 3.23,
+              "strikeZoneBottom": 1.63
+            },
+            "jerseyNumber": "5",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 691019,
+              "fullName": "Kyle Teel",
+              "link": "/api/v1/people/691019",
+              "firstName": "Kyle",
+              "lastName": "Teel",
+              "primaryNumber": "8",
+              "birthDate": "2002-02-15",
+              "currentAge": 24,
+              "birthCity": "Ridgewood",
+              "birthStateProvince": "NJ",
+              "birthCountry": "USA",
+              "height": "5' 11\"",
+              "weight": 210,
+              "active": true,
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Kyle",
+              "useLastName": "Teel",
+              "middleName": "Henry",
+              "boxscoreName": "Teel",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2023,
+              "mlbDebutDate": "2025-06-06",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Kyle Teel",
+              "nameSlug": "kyle-teel-691019",
+              "firstLastName": "Kyle Teel",
+              "lastFirstName": "Teel, Kyle",
+              "lastInitName": "Teel, K",
+              "initLastName": "K Teel",
+              "fullFMLName": "Kyle Henry Teel",
+              "fullLFMName": "Teel, Kyle Henry",
+              "strikeZoneTop": 3.154,
+              "strikeZoneBottom": 1.592
+            },
+            "jerseyNumber": "8",
+            "position": {
+              "code": "2",
+              "name": "Catcher",
+              "type": "Catcher",
+              "abbreviation": "C"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 672820,
+              "fullName": "Lenyn Sosa",
+              "link": "/api/v1/people/672820",
+              "firstName": "Lenyn",
+              "lastName": "Sosa",
+              "primaryNumber": "50",
+              "birthDate": "2000-01-25",
+              "currentAge": 26,
+              "birthCity": "Puerto Ordaz",
+              "birthCountry": "Venezuela",
+              "height": "5' 11\"",
+              "weight": 210,
+              "active": true,
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Lenyn",
+              "useLastName": "Sosa",
+              "middleName": "Jose",
+              "boxscoreName": "Sosa, L",
+              "gender": "M",
+              "nameMatrilineal": "Salazar",
+              "isPlayer": true,
+              "isVerified": true,
+              "pronunciation": "LEN-een",
+              "mlbDebutDate": "2022-06-23",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Lenyn Sosa",
+              "nameSlug": "lenyn-sosa-672820",
+              "firstLastName": "Lenyn Sosa",
+              "lastFirstName": "Sosa, Lenyn",
+              "lastInitName": "Sosa, L",
+              "initLastName": "L Sosa",
+              "fullFMLName": "Lenyn Jose Sosa",
+              "fullLFMName": "Sosa, Lenyn Jose",
+              "strikeZoneTop": 3.153,
+              "strikeZoneBottom": 1.591
+            },
+            "jerseyNumber": "50",
+            "position": {
+              "code": "4",
+              "name": "Second Base",
+              "type": "Infielder",
+              "abbreviation": "2B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 673357,
+              "fullName": "Luis Robert Jr.",
+              "link": "/api/v1/people/673357",
+              "firstName": "Luis",
+              "lastName": "Robert",
+              "primaryNumber": "88",
+              "birthDate": "1997-08-03",
+              "currentAge": 29,
+              "birthCity": "Ciego de Avila",
+              "birthCountry": "Cuba",
+              "height": "6' 2\"",
+              "weight": 225,
+              "active": true,
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Luis",
+              "useLastName": "Robert Jr.",
+              "boxscoreName": "Robert Jr.",
+              "gender": "M",
+              "nameMatrilineal": "Moirant",
+              "isPlayer": true,
+              "isVerified": true,
+              "pronunciation": "RAH-bert",
+              "mlbDebutDate": "2020-07-24",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Luis Robert Jr.",
+              "nameTitle": "Jr.",
+              "nameSuffix": "Jr.",
+              "nameSlug": "luis-robert-jr-673357",
+              "firstLastName": "Luis Robert Jr.",
+              "lastFirstName": "Robert Jr., Luis",
+              "lastInitName": "Robert Jr., L",
+              "initLastName": "L Robert Jr.",
+              "fullFMLName": "Luis Robert Jr.",
+              "fullLFMName": "Robert Jr., Luis",
+              "strikeZoneTop": 3.31,
+              "strikeZoneBottom": 1.671
+            },
+            "jerseyNumber": "88",
+            "position": {
+              "code": "8",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "CF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 572191,
+              "fullName": "Michael A. Taylor",
+              "link": "/api/v1/people/572191",
+              "firstName": "Michael",
+              "lastName": "Taylor",
+              "primaryNumber": "21",
+              "birthDate": "1991-03-26",
+              "currentAge": 35,
+              "birthCity": "Lake Forest",
+              "birthStateProvince": "IL",
+              "birthCountry": "USA",
+              "height": "6' 4\"",
+              "weight": 215,
+              "active": true,
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Michael A.",
+              "useLastName": "Taylor",
+              "middleName": "Anthony",
+              "boxscoreName": "Taylor, M",
+              "nickName": "Miggy",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2009,
+              "mlbDebutDate": "2014-08-12",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Michael A. Taylor",
+              "nameSlug": "michael-a-taylor-572191",
+              "firstLastName": "Michael A. Taylor",
+              "lastFirstName": "Taylor, Michael A.",
+              "lastInitName": "Taylor, M",
+              "initLastName": "M Taylor",
+              "fullFMLName": "Michael Anthony Taylor",
+              "fullLFMName": "Taylor, Michael Anthony",
+              "strikeZoneTop": 3.372,
+              "strikeZoneBottom": 1.702
+            },
+            "jerseyNumber": "21",
+            "position": {
+              "code": "9",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "RF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 678246,
+              "fullName": "Miguel Vargas",
+              "link": "/api/v1/people/678246",
+              "firstName": "Miguel",
+              "lastName": "Vargas",
+              "primaryNumber": "20",
+              "birthDate": "1999-11-17",
+              "currentAge": 26,
+              "birthCity": "Havana",
+              "birthCountry": "Cuba",
+              "height": "6' 2\"",
+              "weight": 225,
+              "active": true,
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Miguel",
+              "useLastName": "Vargas",
+              "middleName": "Antonio",
+              "boxscoreName": "Vargas, M",
+              "gender": "M",
+              "nameMatrilineal": "Echarry",
+              "isPlayer": true,
+              "isVerified": true,
+              "mlbDebutDate": "2022-08-03",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Miguel Vargas",
+              "nameSlug": "miguel-vargas-678246",
+              "firstLastName": "Miguel Vargas",
+              "lastFirstName": "Vargas, Miguel",
+              "lastInitName": "Vargas, M",
+              "initLastName": "M Vargas",
+              "fullFMLName": "Miguel Antonio Vargas",
+              "fullLFMName": "Vargas, Miguel Antonio",
+              "strikeZoneTop": 3.29,
+              "strikeZoneBottom": 1.66
+            },
+            "jerseyNumber": "20",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 643565,
+              "fullName": "Mike Tauchman",
+              "link": "/api/v1/people/643565",
+              "firstName": "Michael",
+              "lastName": "Tauchman",
+              "primaryNumber": "50",
+              "birthDate": "1990-12-03",
+              "currentAge": 35,
+              "birthCity": "Palatine",
+              "birthStateProvince": "IL",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 215,
+              "active": true,
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Mike",
+              "useLastName": "Tauchman",
+              "middleName": "Robert",
+              "boxscoreName": "Tauchman",
+              "nickName": "Tauch",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2013,
+              "pronunciation": "TAWK-man",
+              "mlbDebutDate": "2017-06-27",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Mike Tauchman",
+              "nameSlug": "mike-tauchman-643565",
+              "firstLastName": "Mike Tauchman",
+              "lastFirstName": "Tauchman, Mike",
+              "lastInitName": "Tauchman, M",
+              "initLastName": "M Tauchman",
+              "fullFMLName": "Michael Robert Tauchman",
+              "fullLFMName": "Tauchman, Michael Robert",
+              "strikeZoneTop": 3.254,
+              "strikeZoneBottom": 1.642
+            },
+            "jerseyNumber": "18",
+            "position": {
+              "code": "9",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "RF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 678024,
+              "fullName": "Mike Vasil",
+              "link": "/api/v1/people/678024",
+              "firstName": "Michael",
+              "lastName": "Vasil",
+              "primaryNumber": "61",
+              "birthDate": "2000-03-19",
+              "currentAge": 26,
+              "birthCity": "Boston",
+              "birthStateProvince": "MA",
+              "birthCountry": "USA",
+              "height": "6' 5\"",
+              "weight": 225,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Mike",
+              "useLastName": "Vasil",
+              "boxscoreName": "Vasil",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2021,
+              "pronunciation": "VASS-uhl",
+              "mlbDebutDate": "2025-03-31",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Mike Vasil",
+              "nameSlug": "mike-vasil-678024",
+              "firstLastName": "Mike Vasil",
+              "lastFirstName": "Vasil, Mike",
+              "lastInitName": "Vasil, M",
+              "initLastName": "M Vasil",
+              "fullFMLName": "Michael  Vasil",
+              "fullLFMName": "Vasil, Michael",
+              "strikeZoneTop": 3.55,
+              "strikeZoneBottom": 1.63
+            },
+            "jerseyNumber": "61",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 676116,
+              "fullName": "Ryan Noda",
+              "link": "/api/v1/people/676116",
+              "firstName": "Ryan",
+              "lastName": "Noda",
+              "primaryNumber": "41",
+              "birthDate": "1996-03-30",
+              "currentAge": 30,
+              "birthCity": "Volo",
+              "birthStateProvince": "IL",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 217,
+              "active": true,
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Ryan",
+              "useLastName": "Noda",
+              "middleName": "Anthony",
+              "boxscoreName": "Noda",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": false,
+              "draftYear": 2017,
+              "pronunciation": "NO-dah",
+              "mlbDebutDate": "2023-03-30",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Ryan Noda",
+              "nameSlug": "ryan-noda-676116",
+              "firstLastName": "Ryan Noda",
+              "lastFirstName": "Noda, Ryan",
+              "lastInitName": "Noda, R",
+              "initLastName": "R Noda",
+              "fullFMLName": "Ryan Anthony Noda",
+              "fullLFMName": "Noda, Ryan Anthony",
+              "strikeZoneTop": 3.27,
+              "strikeZoneBottom": 1.65
+            },
+            "jerseyNumber": "29",
+            "position": {
+              "code": "3",
+              "name": "First Base",
+              "type": "Infielder",
+              "abbreviation": "1B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 680732,
+              "fullName": "Sean Burke",
+              "link": "/api/v1/people/680732",
+              "firstName": "Sean",
+              "lastName": "Burke",
+              "primaryNumber": "59",
+              "birthDate": "1999-12-18",
+              "currentAge": 26,
+              "birthCity": "Sutton",
+              "birthStateProvince": "MA",
+              "birthCountry": "USA",
+              "height": "6' 6\"",
+              "weight": 240,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Sean",
+              "useLastName": "Burke",
+              "middleName": "Michael",
+              "boxscoreName": "Burke, S",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2021,
+              "mlbDebutDate": "2024-09-10",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Sean Burke",
+              "nameSlug": "sean-burke-680732",
+              "firstLastName": "Sean Burke",
+              "lastFirstName": "Burke, Sean",
+              "lastInitName": "Burke, S",
+              "initLastName": "S Burke",
+              "fullFMLName": "Sean Michael Burke",
+              "fullLFMName": "Burke, Sean Michael",
+              "strikeZoneTop": 3.58,
+              "strikeZoneBottom": 1.68
+            },
+            "jerseyNumber": "59",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 681343,
+              "fullName": "Shane Smith",
+              "link": "/api/v1/people/681343",
+              "firstName": "Shane",
+              "lastName": "Smith",
+              "primaryNumber": "64",
+              "birthDate": "2000-04-04",
+              "currentAge": 26,
+              "birthCity": "Danvers",
+              "birthStateProvince": "MA",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 240,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Shane",
+              "useLastName": "Smith",
+              "middleName": "Jeffrey",
+              "boxscoreName": "Smith, S",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2021,
+              "mlbDebutDate": "2025-04-01",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Shane Smith",
+              "nameSlug": "shane-smith-681343",
+              "firstLastName": "Shane Smith",
+              "lastFirstName": "Smith, Shane",
+              "lastInitName": "Smith, S",
+              "initLastName": "S Smith",
+              "fullFMLName": "Shane Jeffrey Smith",
+              "fullLFMName": "Smith, Shane Jeffrey",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "64",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 621051,
+              "fullName": "Steven Wilson",
+              "link": "/api/v1/people/621051",
+              "firstName": "Steven",
+              "lastName": "Wilson",
+              "primaryNumber": "24",
+              "birthDate": "1994-08-24",
+              "currentAge": 32,
+              "birthCity": "Littleton",
+              "birthStateProvince": "CO",
+              "birthCountry": "USA",
+              "height": "6' 4\"",
+              "weight": 220,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Steven",
+              "useLastName": "Wilson",
+              "middleName": "Christopher",
+              "boxscoreName": "Wilson, S",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2018,
+              "mlbDebutDate": "2022-04-09",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Steven Wilson",
+              "nameSlug": "steven-wilson-621051",
+              "firstLastName": "Steven Wilson",
+              "lastFirstName": "Wilson, Steven",
+              "lastInitName": "Wilson, S",
+              "initLastName": "S Wilson",
+              "fullFMLName": "Steven Christopher Wilson",
+              "fullLFMName": "Wilson, Steven Christopher",
+              "strikeZoneTop": 3.388,
+              "strikeZoneBottom": 1.71
+            },
+            "jerseyNumber": "36",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 641302,
+              "fullName": "Tyler Alexander",
+              "link": "/api/v1/people/641302",
+              "firstName": "Tyler",
+              "lastName": "Alexander",
+              "primaryNumber": "13",
+              "birthDate": "1994-07-14",
+              "currentAge": 32,
+              "birthCity": "Chicago",
+              "birthStateProvince": "IL",
+              "birthCountry": "USA",
+              "height": "6' 1\"",
+              "weight": 214,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Tyler",
+              "useLastName": "Alexander",
+              "middleName": "John",
+              "boxscoreName": "Alexander, T",
+              "nickName": "Todd The Painter",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2015,
+              "mlbDebutDate": "2019-07-03",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Tyler Alexander",
+              "nameSlug": "tyler-alexander-641302",
+              "firstLastName": "Tyler Alexander",
+              "lastFirstName": "Alexander, Tyler",
+              "lastInitName": "Alexander, T",
+              "initLastName": "T Alexander",
+              "fullFMLName": "Tyler John Alexander",
+              "fullLFMName": "Alexander, Tyler John",
+              "strikeZoneTop": 3.255,
+              "strikeZoneBottom": 1.643
+            },
+            "jerseyNumber": "70",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 656457,
+              "fullName": "Tyler Gilbert",
+              "link": "/api/v1/people/656457",
+              "firstName": "Tyler",
+              "lastName": "Gilbert",
+              "primaryNumber": "40",
+              "birthDate": "1993-12-22",
+              "currentAge": 32,
+              "birthCity": "Santa Cruz",
+              "birthStateProvince": "CA",
+              "birthCountry": "USA",
+              "height": "6' 3\"",
+              "weight": 225,
+              "active": true,
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "useName": "Tyler",
+              "useLastName": "Gilbert",
+              "boxscoreName": "Gilbert, T",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": true,
+              "draftYear": 2015,
+              "mlbDebutDate": "2021-08-03",
+              "batSide": {
+                "code": "L",
+                "description": "Left"
+              },
+              "pitchHand": {
+                "code": "L",
+                "description": "Left"
+              },
+              "nameFirstLast": "Tyler Gilbert",
+              "nameSlug": "tyler-gilbert-656457",
+              "firstLastName": "Tyler Gilbert",
+              "lastFirstName": "Gilbert, Tyler",
+              "lastInitName": "Gilbert, T",
+              "initLastName": "T Gilbert",
+              "fullFMLName": "Tyler Gilbert",
+              "fullLFMName": "Gilbert, Tyler",
+              "strikeZoneTop": 3.344,
+              "strikeZoneBottom": 1.688
+            },
+            "jerseyNumber": "40",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          },
+          {
+            "person": {
+              "id": 681962,
+              "fullName": "Vinny Capra",
+              "link": "/api/v1/people/681962",
+              "firstName": "Vincent",
+              "lastName": "Capra",
+              "primaryNumber": "31",
+              "birthDate": "1996-07-07",
+              "currentAge": 30,
+              "birthCity": "Melbourne",
+              "birthStateProvince": "FL",
+              "birthCountry": "USA",
+              "height": "5' 8\"",
+              "weight": 188,
+              "active": true,
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Vinny",
+              "useLastName": "Capra",
+              "middleName": "James",
+              "boxscoreName": "Capra",
+              "gender": "M",
+              "isPlayer": true,
+              "isVerified": false,
+              "draftYear": 2018,
+              "mlbDebutDate": "2022-05-01",
+              "batSide": {
+                "code": "R",
+                "description": "Right"
+              },
+              "pitchHand": {
+                "code": "R",
+                "description": "Right"
+              },
+              "nameFirstLast": "Vinny Capra",
+              "nameSlug": "vinny-capra-681962",
+              "firstLastName": "Vinny Capra",
+              "lastFirstName": "Capra, Vinny",
+              "lastInitName": "Capra, V",
+              "initLastName": "V Capra",
+              "fullFMLName": "Vincent James Capra",
+              "fullLFMName": "Capra, Vincent James",
+              "strikeZoneTop": 3.043,
+              "strikeZoneBottom": 1.536
+            },
+            "jerseyNumber": "41",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            },
+            "parentTeamId": 145
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "The endpoint accepts date, not gamePk; both games resolve to this same request key and cannot express between-game roster membership."
+  ]
+}

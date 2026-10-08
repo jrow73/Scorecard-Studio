@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-802105-people-high-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:15:45.364Z",
+  "context": {
+    "subject": "high-a sport-scoped player statistics",
+    "gameState": "historical"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=802105&hydrate=stats(group%3D%5Bhitting%2Cpitching%5D%2Ctype%3D%5BbyDateRange%5D%2CsportId%3D13%2CgameType%3D%5BR%5D%2CstartDate%3D2025-01-01%2CendDate%3D2025-09-30)",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 133,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3721,
+    "bodySha256": "1ac558a8aed495a06134d420de85784500b9b779a1ae73e211f2bf89f1b210eb"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people/0/id",
+      "/people/0/primaryPosition",
+      "/people/0/stats"
+    ],
+    "values": {
+      "/people/0/id": {
+        "found": true,
+        "value": 802105
+      },
+      "/people/0/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "1",
+          "name": "Pitcher",
+          "type": "Pitcher",
+          "abbreviation": "P"
+        }
+      },
+      "/people/0/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "pitching"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 25,
+                  "gamesStarted": 15,
+                  "flyOuts": 55,
+                  "groundOuts": 92,
+                  "airOuts": 97,
+                  "runs": 93,
+                  "doubles": 19,
+                  "triples": 2,
+                  "homeRuns": 15,
+                  "strikeOuts": 85,
+                  "baseOnBalls": 63,
+                  "intentionalWalks": 0,
+                  "hits": 106,
+                  "hitByPitch": 7,
+                  "avg": ".282",
+                  "atBats": 376,
+                  "obp": ".391",
+                  "slg": ".463",
+                  "ops": ".854",
+                  "caughtStealing": 7,
+                  "stolenBases": 26,
+                  "stolenBasePercentage": ".788",
+                  "caughtStealingPercentage": ".212",
+                  "groundIntoDoublePlay": 6,
+                  "numberOfPitches": 1757,
+                  "era": "8.16",
+                  "inningsPitched": "92.2",
+                  "wins": 1,
+                  "losses": 11,
+                  "saves": 2,
+                  "saveOpportunities": 2,
+                  "holds": 0,
+                  "blownSaves": 0,
+                  "earnedRuns": 84,
+                  "whip": "1.82",
+                  "battersFaced": 450,
+                  "outs": 278,
+                  "gamesPitched": 25,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 1028,
+                  "strikePercentage": ".590",
+                  "hitBatsmen": 7,
+                  "balks": 5,
+                  "wildPitches": 9,
+                  "pickoffs": 1,
+                  "totalBases": 174,
+                  "groundOutsToAirouts": "0.95",
+                  "winPercentage": ".083",
+                  "pitchesPerInning": "18.96",
+                  "gamesFinished": 4,
+                  "strikeoutWalkRatio": "1.35",
+                  "strikeoutsPer9Inn": "8.26",
+                  "walksPer9Inn": "6.12",
+                  "hitsPer9Inn": "10.29",
+                  "runsScoredPer9": "9.03",
+                  "homeRunsPer9": "1.46",
+                  "inheritedRunners": 1,
+                  "inheritedRunnersScored": 0,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 4
+                },
+                "team": {
+                  "id": 573,
+                  "name": "Asheville Tourists",
+                  "link": "/api/v1/teams/573"
+                },
+                "sport": {
+                  "id": 13,
+                  "link": "/api/v1/sports/13",
+                  "abbreviation": "A+"
+                },
+                "numTeams": 1,
+                "numLeagues": 25
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 25,
+                  "gamesStarted": 15,
+                  "flyOuts": 55,
+                  "groundOuts": 92,
+                  "airOuts": 97,
+                  "runs": 93,
+                  "doubles": 19,
+                  "triples": 2,
+                  "homeRuns": 15,
+                  "strikeOuts": 85,
+                  "baseOnBalls": 63,
+                  "intentionalWalks": 0,
+                  "hits": 106,
+                  "hitByPitch": 7,
+                  "avg": ".282",
+                  "atBats": 376,
+                  "obp": ".391",
+                  "slg": ".463",
+                  "ops": ".854",
+                  "caughtStealing": 7,
+                  "stolenBases": 26,
+                  "stolenBasePercentage": ".788",
+                  "caughtStealingPercentage": ".212",
+                  "groundIntoDoublePlay": 6,
+                  "numberOfPitches": 1757,
+                  "era": "8.16",
+                  "inningsPitched": "92.2",
+                  "wins": 1,
+                  "losses": 11,
+                  "saves": 2,
+                  "saveOpportunities": 2,
+                  "holds": 0,
+                  "blownSaves": 0,
+                  "earnedRuns": 84,
+                  "whip": "1.82",
+                  "battersFaced": 450,
+                  "outs": 278,
+                  "gamesPitched": 25,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 1028,
+                  "strikePercentage": ".590",
+                  "hitBatsmen": 7,
+                  "balks": 5,
+                  "wildPitches": 9,
+                  "pickoffs": 1,
+                  "totalBases": 174,
+                  "groundOutsToAirouts": "0.95",
+                  "winPercentage": ".083",
+                  "pitchesPerInning": "18.96",
+                  "gamesFinished": 4,
+                  "strikeoutWalkRatio": "1.35",
+                  "strikeoutsPer9Inn": "8.26",
+                  "walksPer9Inn": "6.12",
+                  "hitsPer9Inn": "10.29",
+                  "runsScoredPer9": "9.03",
+                  "homeRunsPer9": "1.46",
+                  "inheritedRunners": 1,
+                  "inheritedRunnersScored": 0,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 4
+                },
+                "team": {
+                  "id": 573,
+                  "name": "Asheville Tourists",
+                  "link": "/api/v1/teams/573"
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 1,
+                "numLeagues": 25
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "notes": []
+}

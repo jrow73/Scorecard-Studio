@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-432-logo-high-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-06T12:12:03.150Z",
+  "context": {
+    "subject": "Rome Emperors High-A logo",
+    "gameState": null
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://www.mlbstatic.com/team-logos/432.svg",
+    "headers": {
+      "Accept": "image/svg+xml,*/*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 170,
+    "finalUrl": "https://www.mlbstatic.com/team-logos/432.svg",
+    "redirected": false,
+    "headers": {
+      "contentType": "image/svg+xml",
+      "cacheControl": "max-age=1209600",
+      "etag": "\"0014d3de80d86a5787176a01be875b74\"",
+      "lastModified": "Thu, 07 Nov 2024 16:08:47 GMT",
+      "accessControlAllowOrigin": "*"
+    },
+    "bodyBytes": 10219,
+    "bodySha256": "68aa46cfaa694f5a3ed59495a7b5393e672967593fbc2c7450fe5386a009a48c"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/asset"
+    ],
+    "values": {
+      "/asset": {
+        "found": true,
+        "value": {
+          "isSvg": true,
+          "viewBox": "0 0 42.835 54",
+          "width": null,
+          "height": null,
+          "transparentCanvasByDefault": true,
+          "hasOpacityAttributes": false,
+          "hasRasterImage": false,
+          "hasStyleElement": false,
+          "hasTitle": false
+        }
+      }
+    }
+  },
+  "notes": []
+}

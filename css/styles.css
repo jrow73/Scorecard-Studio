@@ -2038,6 +2038,10 @@ body.designer-mode .designer-view > .card,
 
 
 /* Build 026.3 — final palette/settings polish */
+.pitcher-display-option { display:flex; align-items:flex-start; gap:.55rem; margin:.2rem 0 1rem; padding:.7rem .8rem; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.025); cursor:pointer; }
+.pitcher-display-option input { margin-top:.2rem; }
+.pitcher-display-option span { display:grid; gap:.15rem; }
+.pitcher-display-option small { color:var(--muted); }
 #layout-custom-fields { position: relative; }
 .layout-custom-fields-sticky {
   position: sticky;

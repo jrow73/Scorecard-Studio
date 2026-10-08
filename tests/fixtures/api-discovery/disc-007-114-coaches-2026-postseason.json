@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-007-114-coaches-2026-postseason",
+  "investigationId": "DISC-007",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-05T19:08:31.619Z",
+  "context": {
+    "subject": "Cleveland Guardians current postseason coaching staff role breadth",
+    "gameState": "Dated staff 2026-10-05"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/114/coaches?date=2026-10-05&season=2026",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 193,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3103,
+    "bodySha256": "bc6645461e9b3298eb2ffe7dd6d6b764d0e7e39275a49f1a889b0d7458ab2756"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 519390,
+              "fullName": "Stephen Vogt",
+              "link": "/api/v1/people/519390"
+            },
+            "jerseyNumber": "12",
+            "job": "Manager",
+            "jobId": "MNGR",
+            "title": "Manager"
+          },
+          {
+            "person": {
+              "id": 455743,
+              "fullName": "Tony Arnerich",
+              "link": "/api/v1/people/455743"
+            },
+            "jerseyNumber": "57",
+            "job": "Bench Coach",
+            "jobId": "COAB",
+            "title": "Bench Coach"
+          },
+          {
+            "person": {
+              "id": 110184,
+              "fullName": "Sandy Alomar Jr.",
+              "link": "/api/v1/people/110184"
+            },
+            "jerseyNumber": "15",
+            "job": "First Base Coach",
+            "jobId": "COA1",
+            "title": "First Base and Catching Coach"
+          },
+          {
+            "person": {
+              "id": 445870,
+              "fullName": "Junior Betances",
+              "link": "/api/v1/people/445870"
+            },
+            "jerseyNumber": "85",
+            "job": "Assistant Hitting Coach",
+            "jobId": "COAA",
+            "title": "Assistant Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 643302,
+              "fullName": "Grant Fink",
+              "link": "/api/v1/people/643302"
+            },
+            "jerseyNumber": "56",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 643329,
+              "fullName": "Brad Goldberg",
+              "link": "/api/v1/people/643329"
+            },
+            "jerseyNumber": "81",
+            "job": "Assistant Pitching Coach",
+            "jobId": "COPA",
+            "title": "Assistant Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 124356,
+              "fullName": "Carl Willis",
+              "link": "/api/v1/people/124356"
+            },
+            "jerseyNumber": "51",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 445229,
+              "fullName": "Joe Torres",
+              "link": "/api/v1/people/445229"
+            },
+            "jerseyNumber": "86",
+            "job": "Assistant Pitching Coach",
+            "jobId": "COPA",
+            "title": "Assistant Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 492514,
+              "fullName": "Rouglas Odor",
+              "link": "/api/v1/people/492514"
+            },
+            "jerseyNumber": "53",
+            "job": "Third Base Coach",
+            "jobId": "COA3",
+            "title": "Third Base and Infield Coach"
+          },
+          {
+            "person": {
+              "id": 452064,
+              "fullName": "Dan Puente",
+              "link": "/api/v1/people/452064"
+            },
+            "jerseyNumber": "83",
+            "job": "Major League Assistant Hitting Coach",
+            "jobId": "MLAH",
+            "title": "Major League Assistant Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 800116,
+              "fullName": "Caleb Longshore",
+              "link": "/api/v1/people/800116"
+            },
+            "jerseyNumber": "88",
+            "job": "Bullpen Coach",
+            "jobId": "COAU",
+            "title": "Bullpen Coach"
+          },
+          {
+            "person": {
+              "id": 815861,
+              "fullName": "Agustin Rivero",
+              "link": "/api/v1/people/815861"
+            },
+            "jerseyNumber": "89",
+            "job": "Major League Coach",
+            "jobId": "MAJC",
+            "title": "Coach / Interpreter"
+          },
+          {
+            "person": {
+              "id": 607671,
+              "fullName": "Ricky Pacione",
+              "link": "/api/v1/people/607671"
+            },
+            "jerseyNumber": "82",
+            "job": "Bullpen Catcher",
+            "jobId": "BCAT",
+            "title": "Bullpen Catcher"
+          },
+          {
+            "person": {
+              "id": 681995,
+              "fullName": "Eric Rodriguez",
+              "link": "/api/v1/people/681995"
+            },
+            "jerseyNumber": "72",
+            "job": "Bullpen Catcher",
+            "jobId": "BCAT",
+            "title": "Bullpen Catcher"
+          },
+          {
+            "person": {
+              "id": 691632,
+              "fullName": "J.T. Maguire",
+              "link": "/api/v1/people/691632"
+            },
+            "jerseyNumber": "84",
+            "job": "Baserunning/Outfield and First Base Coach",
+            "jobId": "BOFF",
+            "title": "Outfield & Baserunning Coach"
+          },
+          {
+            "person": {
+              "id": 800001,
+              "fullName": "Andy McKay",
+              "link": "/api/v1/people/800001"
+            },
+            "jerseyNumber": "",
+            "job": "Major League Field Coordinator",
+            "jobId": "MLFC",
+            "title": "Major League Field Coordinator"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Sixteen entries include manager, multiple assistant pitching/hitting roles, combined titles, bullpen catchers, interpreter, and field coordinator."
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "fixtureVersion": 1,
+  "description": "Representative saved-layout compatibility cases for Build 004.6.",
+  "layout": {
+    "schemaVersion": 7,
+    "name": "Build 004.6 representative legacy layout",
+    "mappings": [
+      {
+        "slot": "title",
+        "field": "away.teamName"
+      },
+      {
+        "slot": "date",
+        "field": "game.date"
+      },
+      {
+        "slot": "official",
+        "field": "game.umpires.home.name"
+      },
+      {
+        "slot": "unknown-one",
+        "field": "extension.futureField"
+      },
+      {
+        "slot": "unknown-two",
+        "field": "extension.futureField"
+      }
+    ],
+    "repeatedBlocks": [
+      {
+        "collection": "away.lineup",
+        "columns": [
+          {
+            "field": "away.lineup[].player.name",
+            "slot": 1
+          }
+        ]
+      },
+      {
+        "collection": "away.bullpen",
+        "columns": [
+          {
+            "field": "away.bullpen[].player.name",
+            "slot": 1
+          },
+          {
+            "field": "away.bullpen[].player.name",
+            "slot": 2
+          }
+        ]
+      }
+    ],
+    "individualMappings": [
+      {
+        "field": "away.startingPitcher.name"
+      },
+      {
+        "field": "away.startingPitcher.stats.record"
+      }
+    ],
+    "metadata": {
+      "customPayload": {
+        "field": "extension.preservedMetadataField"
+      }
+    }
+  },
+  "expected": {
+    "aliasesCanonicalized": [
+      {
+        "path": "$.mappings[0].field",
+        "from": "away.teamName",
+        "to": "away.team.name"
+      },
+      {
+        "path": "$.individualMappings[0].field",
+        "from": "away.startingPitcher.name",
+        "to": "away.startingPitcher.player.name"
+      }
+    ],
+    "diagnostics": [
+      {
+        "code": "UNKNOWN_FIELDS_PRESERVED",
+        "severity": "warning",
+        "fieldIds": [
+          "extension.futureField",
+          "extension.preservedMetadataField"
+        ],
+        "message": "2 unknown field IDs were preserved and will render blank."
+      }
+    ],
+    "bindings": [
+      {
+        "path": "$.mappings[0].field",
+        "requestedFieldId": "away.teamName",
+        "fieldId": "away.team.name",
+        "supported": true,
+        "displayValue": "Away Club",
+        "state": "available",
+        "disposition": "direct"
+      },
+      {
+        "path": "$.mappings[1].field",
+        "requestedFieldId": "game.date",
+        "fieldId": "game.date",
+        "supported": true,
+        "displayValue": "2025-07-03",
+        "state": "available",
+        "disposition": "projected"
+      },
+      {
+        "path": "$.mappings[2].field",
+        "requestedFieldId": "game.umpires.home.name",
+        "fieldId": "game.umpires.home.name",
+        "supported": true,
+        "displayValue": "Home Plate Official",
+        "state": "available",
+        "disposition": "projected"
+      },
+      {
+        "path": "$.mappings[3].field",
+        "requestedFieldId": "extension.futureField",
+        "fieldId": "extension.futureField",
+        "supported": false,
+        "displayValue": "",
+        "state": "unsupported",
+        "disposition": "unsupported"
+      },
+      {
+        "path": "$.mappings[4].field",
+        "requestedFieldId": "extension.futureField",
+        "fieldId": "extension.futureField",
+        "supported": false,
+        "displayValue": "",
+        "state": "unsupported",
+        "disposition": "unsupported"
+      },
+      {
+        "path": "$.repeatedBlocks[0].columns[0].field",
+        "requestedFieldId": "away.lineup[].player.name",
+        "fieldId": "away.lineup[].player.name",
+        "supported": true,
+        "displayValue": "Two-Way Contract Player",
+        "state": "available",
+        "disposition": "projected"
+      },
+      {
+        "path": "$.repeatedBlocks[1].columns[0].field",
+        "requestedFieldId": "away.bullpen[].player.name",
+        "fieldId": "away.bullpen[].player.name",
+        "supported": true,
+        "displayValue": "Away Reliever",
+        "state": "available",
+        "disposition": "projected"
+      },
+      {
+        "path": "$.repeatedBlocks[1].columns[1].field",
+        "requestedFieldId": "away.bullpen[].player.name",
+        "fieldId": "away.bullpen[].player.name",
+        "supported": true,
+        "displayValue": "Away Additional Starter",
+        "state": "available",
+        "disposition": "projected"
+      },
+      {
+        "path": "$.individualMappings[0].field",
+        "requestedFieldId": "away.startingPitcher.name",
+        "fieldId": "away.startingPitcher.player.name",
+        "supported": true,
+        "displayValue": "Two-Way Contract Player",
+        "state": "available",
+        "disposition": "direct"
+      },
+      {
+        "path": "$.individualMappings[1].field",
+        "requestedFieldId": "away.startingPitcher.stats.record",
+        "fieldId": "away.startingPitcher.stats.record",
+        "supported": true,
+        "displayValue": "8-4",
+        "state": "available",
+        "disposition": "derived"
+      },
+      {
+        "path": "$.metadata.customPayload.field",
+        "requestedFieldId": "extension.preservedMetadataField",
+        "fieldId": "extension.preservedMetadataField",
+        "supported": false,
+        "displayValue": "",
+        "state": "unsupported",
+        "disposition": "unsupported"
+      }
+    ]
+  }
+}

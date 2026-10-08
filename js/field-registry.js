@@ -4,6 +4,13 @@
  * Version: 0.2.0
  */
 
+import {
+  compatibilityCapabilities,
+  getCompatibilityCollectionRows,
+  getCompatibilityDefinition,
+  resolveCompatibilityField
+} from "./v030-compatibility-resolver.js?v=030b0054";
+
 const SIDE_LABEL = { away: "Away", home: "Home" };
 
 const LEGACY_ALIASES = new Map([
@@ -158,6 +165,7 @@ export function getFieldExampleValue(fieldId) {
 }
 
 export function resolveField(model, fieldId, selector = null) {
+  if (model?.schemaVersion === 2) return resolveCompatibilityField(model, fieldId, selector);
   const canonicalId = canonicalFieldId(fieldId);
   const definition = byId.get(canonicalId);
   if (!definition) return { value: null, state: "unsupported", reason: `Unsupported field: ${fieldId}`, fieldId: canonicalId };
@@ -205,7 +213,16 @@ export function sourceRequirementsForFields(fieldIds) {
   return requirements;
 }
 
+export function capabilityRequirementsForFields(fieldIds) {
+  return compatibilityCapabilities(fieldIds);
+}
+
+export function capabilityRequirementsForField(fieldId) {
+  return [...(getCompatibilityDefinition(fieldId)?.v2.capabilityRequirements ?? [])];
+}
+
 export function getCollectionRows(model, collection) {
+  if (model?.schemaVersion === 2) return getCompatibilityCollectionRows(model, collection);
   if (!supportedCollections.has(collection)) return [];
   const value = readPath(model, collection);
   return Array.isArray(value) ? value : [];

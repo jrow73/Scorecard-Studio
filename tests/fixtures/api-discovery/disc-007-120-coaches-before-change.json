@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-007-120-coaches-before-change",
+  "investigationId": "DISC-007",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:08:20.667Z",
+  "context": {
+    "subject": "Washington Nationals coaching staff before manager change",
+    "gameState": "Dated staff 2025-07-05"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/120/coaches?date=2025-07-05&season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 244,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1926,
+    "bodySha256": "cda96dd99f9233eac5a12b244dbb70e8f5b573cebaf9fc3707ce37e7d09525c0"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 118363,
+              "fullName": "Dave Martinez",
+              "link": "/api/v1/people/118363"
+            },
+            "jerseyNumber": "4",
+            "job": "Manager",
+            "jobId": "MNGR",
+            "title": "Manager"
+          },
+          {
+            "person": {
+              "id": 111867,
+              "fullName": "Miguel Cairo",
+              "link": "/api/v1/people/111867"
+            },
+            "jerseyNumber": "22",
+            "job": "Bench Coach",
+            "jobId": "COAB",
+            "title": "Bench Coach"
+          },
+          {
+            "person": {
+              "id": 112491,
+              "fullName": "Darnell Coles",
+              "link": "/api/v1/people/112491"
+            },
+            "jerseyNumber": "7",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 433717,
+              "fullName": "Jim Hickey",
+              "link": "/api/v1/people/433717"
+            },
+            "jerseyNumber": "48",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 467827,
+              "fullName": "Gerardo Parra",
+              "link": "/api/v1/people/467827"
+            },
+            "jerseyNumber": "88",
+            "job": "First Base Coach",
+            "jobId": "COA1",
+            "title": "First Base Coach"
+          },
+          {
+            "person": {
+              "id": 115263,
+              "fullName": "Ricky Gutierrez",
+              "link": "/api/v1/people/115263"
+            },
+            "jerseyNumber": "12",
+            "job": "Third Base Coach",
+            "jobId": "COA3",
+            "title": "Third Base Coach"
+          },
+          {
+            "person": {
+              "id": 111072,
+              "fullName": "Henry Blanco",
+              "link": "/api/v1/people/111072"
+            },
+            "jerseyNumber": "35",
+            "job": "Catching Coach",
+            "jobId": "CATC",
+            "title": "Catching Coach"
+          },
+          {
+            "person": {
+              "id": 111191,
+              "fullName": "Ricky Bones",
+              "link": "/api/v1/people/111191"
+            },
+            "jerseyNumber": "25",
+            "job": "Bullpen Coach",
+            "jobId": "COAU",
+            "title": "Bullpen Coach"
+          },
+          {
+            "person": {
+              "id": 453400,
+              "fullName": "Chris Johnson",
+              "link": "/api/v1/people/453400"
+            },
+            "jerseyNumber": "23",
+            "job": "Assistant Hitting Coach",
+            "jobId": "COAA",
+            "title": "Assistant Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 448281,
+              "fullName": "Sean Doolittle",
+              "link": "/api/v1/people/448281"
+            },
+            "jerseyNumber": "63",
+            "job": "Pitching Strategist",
+            "jobId": "PSTG",
+            "title": "Pitching Strategist"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Dave Martinez is exact Manager; Miguel Cairo is Bench Coach."
+  ]
+}

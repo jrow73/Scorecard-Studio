@@ -5,10 +5,12 @@
  */
 
 const DB_NAME = "scorecard-studio";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const SETTINGS_STORE = "settings";
 const PDF_STORE = "pdfTemplates";
 const LAYOUT_STORE = "layouts";
+const NORMALIZED_SNAPSHOT_STORE = "normalizedSnapshotsV2";
+const ADAPTER_RESULT_STORE = "adapterResultsV1";
 
 let databasePromise = null;
 
@@ -116,6 +118,19 @@ export async function deleteLayout(id) {
   }
 }
 
+export function createV030StorageBackend() {
+  const allowed = new Set([NORMALIZED_SNAPSHOT_STORE, ADAPTER_RESULT_STORE]);
+  const checked = (storeName) => {
+    if (!allowed.has(storeName)) throw new Error(`Unsupported v0.3.0 persistence store: ${storeName}.`);
+    return storeName;
+  };
+  return Object.freeze({
+    get: (storeName, key) => getRecord(checked(storeName), key),
+    put: (storeName, record) => putRecord(checked(storeName), record),
+    delete: (storeName, key) => deleteRecord(checked(storeName), key)
+  });
+}
+
 async function getRecord(storeName, key) {
   const database = await openDatabase();
   return runRequest(database, storeName, "readonly", (store) => store.get(key));
@@ -143,6 +158,8 @@ function openDatabase() {
       if (!database.objectStoreNames.contains(SETTINGS_STORE)) database.createObjectStore(SETTINGS_STORE, { keyPath: "key" });
       if (!database.objectStoreNames.contains(PDF_STORE)) database.createObjectStore(PDF_STORE, { keyPath: "key" });
       if (!database.objectStoreNames.contains(LAYOUT_STORE)) database.createObjectStore(LAYOUT_STORE, { keyPath: "id" });
+      if (!database.objectStoreNames.contains(NORMALIZED_SNAPSHOT_STORE)) database.createObjectStore(NORMALIZED_SNAPSHOT_STORE, { keyPath: "key" });
+      if (!database.objectStoreNames.contains(ADAPTER_RESULT_STORE)) database.createObjectStore(ADAPTER_RESULT_STORE, { keyPath: "key" });
     };
 
     request.onsuccess = () => {

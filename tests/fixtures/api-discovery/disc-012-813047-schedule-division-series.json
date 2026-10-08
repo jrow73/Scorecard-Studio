@@ -1,0 +1,479 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-012-813047-schedule-division-series",
+  "investigationId": "DISC-012",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:13:53.342Z",
+  "context": {
+    "subject": "division-series game 813047",
+    "gameState": "final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=813047&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 195,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7612,
+    "bodySha256": "6a8904c4d81b51b149062e9e9e8c0644150f73f15409efec2085368628681009"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 813047
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "D"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 112,
+              "name": "Chicago Cubs",
+              "link": "/api/v1/teams/112",
+              "season": 2025,
+              "venue": {
+                "id": 17,
+                "name": "Wrigley Field",
+                "link": "/api/v1/venues/17"
+              },
+              "springVenue": {
+                "id": 4629,
+                "link": "/api/v1/venues/4629"
+              },
+              "teamCode": "chn",
+              "fileCode": "chc",
+              "abbreviation": "CHC",
+              "teamName": "Cubs",
+              "locationName": "Chicago",
+              "firstYearOfPlay": "1874",
+              "league": {
+                "id": 104,
+                "name": "National League",
+                "link": "/api/v1/league/104"
+              },
+              "division": {
+                "id": 205,
+                "name": "National League Central",
+                "link": "/api/v1/divisions/205"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Chi Cubs",
+              "franchiseName": "Chicago",
+              "clubName": "Cubs",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 0,
+              "losses": 1,
+              "ties": 0,
+              "pct": ".000"
+            },
+            "score": 3,
+            "isWinner": false,
+            "probablePitcher": {
+              "id": 571510,
+              "fullName": "Matthew Boyd",
+              "link": "/api/v1/people/571510"
+            },
+            "splitSquad": false,
+            "seriesNumber": 3,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          },
+          "home": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 158,
+              "name": "Milwaukee Brewers",
+              "link": "/api/v1/teams/158",
+              "season": 2025,
+              "venue": {
+                "id": 32,
+                "name": "American Family Field",
+                "link": "/api/v1/venues/32"
+              },
+              "springVenue": {
+                "id": 2518,
+                "link": "/api/v1/venues/2518"
+              },
+              "teamCode": "mil",
+              "fileCode": "mil",
+              "abbreviation": "MIL",
+              "teamName": "Brewers",
+              "locationName": "Milwaukee",
+              "firstYearOfPlay": "1968",
+              "league": {
+                "id": 104,
+                "name": "National League",
+                "link": "/api/v1/league/104"
+              },
+              "division": {
+                "id": 205,
+                "name": "National League Central",
+                "link": "/api/v1/divisions/205"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Milwaukee",
+              "franchiseName": "Milwaukee",
+              "clubName": "Brewers",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 1,
+              "losses": 0,
+              "ties": 0,
+              "pct": "1.000"
+            },
+            "score": 9,
+            "isWinner": true,
+            "probablePitcher": {
+              "id": 642547,
+              "fullName": "Freddy Peralta",
+              "link": "/api/v1/people/642547"
+            },
+            "splitSquad": false,
+            "seriesNumber": 3,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          }
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 694192,
+              "fullName": "Jackson Chourio",
+              "link": "/api/v1/people/694192",
+              "firstName": "Jackson",
+              "lastName": "Chourio",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Jackson"
+            },
+            {
+              "id": 668930,
+              "fullName": "Brice Turang",
+              "link": "/api/v1/people/668930",
+              "firstName": "Brice",
+              "lastName": "Turang",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Brice"
+            },
+            {
+              "id": 661388,
+              "fullName": "William Contreras",
+              "link": "/api/v1/people/661388",
+              "firstName": "William",
+              "lastName": "Contreras",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "William"
+            },
+            {
+              "id": 592885,
+              "fullName": "Christian Yelich",
+              "link": "/api/v1/people/592885",
+              "firstName": "Christian",
+              "lastName": "Yelich",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Christian"
+            },
+            {
+              "id": 683734,
+              "fullName": "Andrew Vaughn",
+              "link": "/api/v1/people/683734",
+              "firstName": "Andrew",
+              "lastName": "Vaughn",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Andrew"
+            },
+            {
+              "id": 686217,
+              "fullName": "Sal Frelick",
+              "link": "/api/v1/people/686217",
+              "firstName": "Salvatore",
+              "lastName": "Frelick",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Sal"
+            },
+            {
+              "id": 702332,
+              "fullName": "Caleb Durbin",
+              "link": "/api/v1/people/702332",
+              "firstName": "Caleb",
+              "lastName": "Durbin",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Caleb"
+            },
+            {
+              "id": 663368,
+              "fullName": "Blake Perkins",
+              "link": "/api/v1/people/663368",
+              "firstName": "Blake",
+              "lastName": "Perkins",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Blake"
+            },
+            {
+              "id": 687401,
+              "fullName": "Joey Ortiz",
+              "link": "/api/v1/people/687401",
+              "firstName": "Joseph",
+              "lastName": "Ortiz",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Joey"
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 683737,
+              "fullName": "Michael Busch",
+              "link": "/api/v1/people/683737",
+              "firstName": "Michael",
+              "lastName": "Busch",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Michael"
+            },
+            {
+              "id": 663538,
+              "fullName": "Nico Hoerner",
+              "link": "/api/v1/people/663538",
+              "firstName": "Nicholas",
+              "lastName": "Hoerner",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Nico"
+            },
+            {
+              "id": 663656,
+              "fullName": "Kyle Tucker",
+              "link": "/api/v1/people/663656",
+              "firstName": "Kyle",
+              "lastName": "Tucker",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Kyle"
+            },
+            {
+              "id": 673548,
+              "fullName": "Seiya Suzuki",
+              "link": "/api/v1/people/673548",
+              "firstName": "Seiya",
+              "lastName": "Suzuki",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Seiya"
+            },
+            {
+              "id": 664023,
+              "fullName": "Ian Happ",
+              "link": "/api/v1/people/664023",
+              "firstName": "Ian",
+              "lastName": "Happ",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Ian"
+            },
+            {
+              "id": 608348,
+              "fullName": "Carson Kelly",
+              "link": "/api/v1/people/608348",
+              "firstName": "Carson",
+              "lastName": "Kelly",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Carson"
+            },
+            {
+              "id": 691718,
+              "fullName": "Pete Crow-Armstrong",
+              "link": "/api/v1/people/691718",
+              "firstName": "Pete",
+              "lastName": "Crow-Armstrong",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Pete"
+            },
+            {
+              "id": 621020,
+              "fullName": "Dansby Swanson",
+              "link": "/api/v1/people/621020",
+              "firstName": "James",
+              "lastName": "Swanson",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Dansby"
+            },
+            {
+              "id": 807713,
+              "fullName": "Matt Shaw",
+              "link": "/api/v1/people/807713",
+              "firstName": "Matthew",
+              "lastName": "Shaw",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Matt"
+            }
+          ]
+        }
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 32,
+          "name": "American Family Field",
+          "link": "/api/v1/venues/32",
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

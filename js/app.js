@@ -4,18 +4,21 @@
  * Version: 0.2.0
  */
 
-import { fetchFavoriteTeamSchedule, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings } from "./api.js?v=020";
-import { normalizePregameData } from "./normalize.js?v=020";
-import { canonicalFieldId, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField, sourceRequirementsForFields } from "./field-registry.js?v=020";
-import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=020";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=020";
-import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=020";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=020";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=020";
+import { fetchFavoriteTeamScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails } from "./api.js?v=030b0054";
+import { canonicalFieldId, capabilityRequirementsForFields, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=030b0054";
+import { getPitcherDisplayRows } from "./v030-compatibility-resolver.js?v=030b0054";
+import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=030b0054";
+import { createV030PersistenceController } from "./v030-persistence.js?v=030b0054";
+import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=030b0054";
+import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=030b0054";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=030b0054";
+import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=030b0054";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=030b0054";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=030b0054";
 import {
-  deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
-  listLayouts, saveLayout as persistLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=020";
+  createV030StorageBackend, deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
+  listLayouts, saveLayout as persistRawLayout, savePdfTemplate, setSetting
+} from "./storage.js?v=030b0054";
 
 const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
 
@@ -23,6 +26,7 @@ const state = {
   favoriteTeam: DEFAULT_FAVORITE_TEAM,
   selectedDate: null,
   schedule: [],
+  schedulePayload: null,
   selectedGamePk: null,
   selectedFeed: null,
   selectedSupplemental: null,
@@ -68,6 +72,9 @@ const state = {
   designerPageWidthPoints: 0,
   designerPageHeightPoints: 0,
   normalizedPregame: null,
+  v030Persistence: null,
+  includeAdditionalStarters: false,
+  v030Availability: null,
   fieldDiagnosticRows: [],
   fieldDiagnosticLoadToken: 0,
   gameDayLoadToken: 0
@@ -92,6 +99,7 @@ const elements = {
   firstPitch: document.querySelector("#first-pitch"),
   venue: document.querySelector("#venue"),
   weather: document.querySelector("#weather"),
+  includeAdditionalStarters: document.querySelector("#include-additional-starters"),
   livePdfLayoutSelect: document.querySelector("#live-pdf-layout-select"),
   livePdfGenerateButton: document.querySelector("#live-pdf-generate-btn"),
   livePdfMessage: document.querySelector("#live-pdf-message"),
@@ -389,7 +397,8 @@ async function initialize() {
   populateNameFormatSelects();
   updateDesignerTemplatePreview();
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
-  elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today));
+  elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today, { trigger: "manual" }));
+  elements.includeAdditionalStarters?.addEventListener("change", handleAdditionalStartersPreference);
   elements.gameDateInput.addEventListener("change", handleGameDateChange);
   elements.gameDateTodayButton.addEventListener("click", () => setSelectedGameDate(getLocalDateString()));
   elements.livePdfGenerateButton?.addEventListener("click", generateLivePdf);
@@ -580,7 +589,7 @@ async function loadAppMetadata() {
     const meta = await response.json();
     const version = String(meta.version || "").trim();
     const build = String(meta.build || "").trim();
-    const full = version && build ? `${version} • Build ${build}` : version || (build ? `Build ${build}` : "Scorecard Studio");
+    const full = version || (build ? `Build ${build}` : "Scorecard Studio");
     document.querySelectorAll("[data-app-version-label]").forEach((el) => { el.textContent = full; });
     document.querySelectorAll("[data-app-build-label]").forEach((el) => { el.textContent = build ? `Build ${build}` : full; });
     document.querySelectorAll("[data-app-build-prefix]").forEach((el) => { el.textContent = build ? `Build ${build} • ${el.dataset.appBuildPrefix}` : el.dataset.appBuildPrefix; });
@@ -593,7 +602,10 @@ async function loadAppMetadata() {
 async function initializeFavoriteTeamSetting() {
   try {
     await initializeStorage();
+    state.v030Persistence = createV030PersistenceController(createV030StorageBackend());
     const savedTeam = await getSetting("favoriteTeam", null);
+    state.includeAdditionalStarters = await getSetting("includeAdditionalStarters", false) === true;
+    if (elements.includeAdditionalStarters) elements.includeAdditionalStarters.checked = state.includeAdditionalStarters;
     state.favoriteTeam = isValidFavoriteTeam(savedTeam) ? savedTeam : DEFAULT_FAVORITE_TEAM;
 
     if (!isValidFavoriteTeam(savedTeam)) {
@@ -611,6 +623,17 @@ async function initializeFavoriteTeamSetting() {
     elements.favoriteTeamSelect.disabled = true;
     elements.saveFavoriteTeamButton.disabled = true;
     setAppStatus("Browser storage unavailable", "error");
+  }
+}
+
+async function handleAdditionalStartersPreference() {
+  state.includeAdditionalStarters = elements.includeAdditionalStarters?.checked === true;
+  try { await setSetting("includeAdditionalStarters", state.includeAdditionalStarters); }
+  catch (error) { console.warn("Unable to save the additional-starters display preference:", error); }
+  const game = currentScheduleGame();
+  if (game && state.normalizedPregame) {
+    renderSelectedGame(game, state.normalizedPregame);
+    if (!document.querySelector('[data-view="gameday"]')?.hidden) renderGameDay(state.normalizedPregame);
   }
 }
 
@@ -644,7 +667,7 @@ async function saveFavoriteTeam() {
   }
 }
 
-async function loadFavoriteTeamPregame(date) {
+async function loadFavoriteTeamPregame(date, options = {}) {
   const requestedDate = date || getLocalDateString();
   const dateChanged = state.selectedDate !== requestedDate;
   state.selectedDate = requestedDate;
@@ -661,8 +684,10 @@ async function loadFavoriteTeamPregame(date) {
   setPregameLoading(true, `Finding ${state.favoriteTeam.name} game for ${formatDisplayDate(requestedDate)}…`);
 
   try {
-    const schedule = await fetchFavoriteTeamSchedule(requestedDate, state.favoriteTeam.id);
+    const scheduleBundle = await fetchFavoriteTeamScheduleBundle(requestedDate, state.favoriteTeam.id);
+    const schedule = scheduleBundle.games;
     state.schedule = schedule;
+    state.schedulePayload = scheduleBundle.payload;
 
     if (schedule.length === 0) {
       state.selectedGamePk = null;
@@ -678,7 +703,7 @@ async function loadFavoriteTeamPregame(date) {
     renderGameChoices(schedule);
 
     const preferredGame = chooseInitialGame(schedule);
-    await selectGame(preferredGame.gamePk);
+    await selectGame(preferredGame.gamePk, { trigger: options.trigger || "selection" });
     setAppStatus("Pregame data ready", "ready");
   } catch (error) {
     console.error("Unable to load pregame data:", error);
@@ -717,7 +742,7 @@ function chooseInitialGame(games) {
   return games[0];
 }
 
-async function selectGame(gamePk) {
+async function selectGame(gamePk, options = {}) {
   let selected = state.schedule.find((game) => game.gamePk === String(gamePk));
   if (!selected) return;
 
@@ -733,10 +758,23 @@ async function selectGame(gamePk) {
   setPregameLoading(true, `Loading pregame data for ${selected.awayTeam} at ${selected.homeTeam}…`);
 
   try {
+    const expected = { gamePk: String(selected.gamePk), selectedViewKey: selectedViewKey(selected) };
+    if (state.v030Persistence && (options.trigger || "selection") === "selection") {
+      const cached = await state.v030Persistence.loadNormalizedSnapshot(expected, { trigger: "selection" });
+      if (cached.usable) {
+        state.normalizedPregame = cached.snapshot;
+        state.v030Availability = summarizeV030Availability(cached.snapshot);
+        renderSelectedGame(selected, cached.snapshot);
+        updateLivePdfAvailability();
+        setLiveGenerateMessage(`Ready from the schema-v2 cache. Refresh to retrieve current pregame data.`);
+        return;
+      }
+    }
     const supplemental = await loadPregameCore(selected);
     if (String(state.selectedGamePk) !== String(selected.gamePk)) return;
     state.selectedSupplemental = supplemental;
-    state.normalizedPregame = normalizePregameData(null, supplemental, selected);
+    state.normalizedPregame = buildV030Model(selected, supplemental);
+    await persistCurrentSnapshot(state.normalizedPregame);
     renderSelectedGame(selected, state.normalizedPregame);
     updateLivePdfAvailability();
     setLiveGenerateMessage(`Ready to generate ${selected.awayTeam} at ${selected.homeTeam} from pregame data.`);
@@ -756,8 +794,10 @@ async function refreshDoubleheaderSelectionContext(game) {
   if (!teamId || !game.officialDate) return game;
 
   try {
-    const refreshed = await fetchFavoriteTeamSchedule(game.officialDate, teamId, game.sportId || 1);
+    const bundle = await fetchFavoriteTeamScheduleBundle(game.officialDate, teamId, game.sportId || 1);
+    const refreshed = bundle.games;
     if (!Array.isArray(refreshed) || !refreshed.length) return game;
+    state.schedulePayload = bundle.payload;
     const byPk = new Map(refreshed.map((item) => [String(item.gamePk), item]));
     state.schedule = state.schedule.map((item) => byPk.get(String(item.gamePk)) || item);
     return byPk.get(String(game.gamePk)) || game;
@@ -788,18 +828,27 @@ async function loadPregameCore(game) {
   ].filter(Boolean))];
 
   const earlierSameDayGame = findEarlierSameDayCompletedGame(game);
-  const [peopleResult, standingsResult, earlierBoxscoreResult] = await Promise.allSettled([
-    fetchPeoplePregameStats(personIds, seasonStart, cutoffDate),
+  const gameTypes = [String(game.gameType || "R")];
+  const [peopleResult, standingsResult, earlierBoxscoreResult, awayDepthResult, homeDepthResult] = await Promise.allSettled([
+    fetchPeoplePregameStats(personIds, seasonStart, cutoffDate, { sportId: Number(game.sportId || 1), gameTypes, statGroups: ["hitting", "pitching"] }),
     fetchPregameStandings(game, cutoffDate, season),
-    earlierSameDayGame ? fetchGameBoxscore(earlierSameDayGame.gamePk) : Promise.resolve(null)
+    earlierSameDayGame ? fetchGameBoxscore(earlierSameDayGame.gamePk) : Promise.resolve(null),
+    fetchTeamDepthChart(game.awayTeamId),
+    fetchTeamDepthChart(game.homeTeamId)
   ]);
 
   return {
     rosters: { away: awayRoster, home: homeRoster },
-    people: peopleResult.status === "fulfilled" ? peopleResult.value : { people: [] },
-    standingsPayloads: standingsResult.status === "fulfilled" ? standingsResult.value : [],
+    people: peopleResult.status === "fulfilled" ? peopleResult.value : { people: [], units: [{ outcome: "failed", personIds, payload: null, error: sourceError(peopleResult.reason) }] },
+    peopleInput: { personIds, sportId: Number(game.sportId || 1), gameTypes, statGroups: ["hitting", "pitching"], statType: "byDateRange", startDate: seasonStart, endDate: cutoffDate, chunkSize: 100 },
+    standings: standingsResult.status === "fulfilled" ? standingsResult.value : [],
+    depthChart: {
+      away: sourceConfig({ teamId: Number(game.awayTeamId), season }, awayDepthResult),
+      home: sourceConfig({ teamId: Number(game.homeTeamId), season }, homeDepthResult)
+    },
     earlierSameDayGame,
-    earlierSameDayBoxscore: earlierBoxscoreResult.status === "fulfilled" ? earlierBoxscoreResult.value : null
+    earlierSameDayBoxscore: earlierBoxscoreResult.status === "fulfilled" ? earlierBoxscoreResult.value : null,
+    earlierSameDayBoxscoreOutcome: earlierBoxscoreResult.status === "rejected" ? "failed" : "success"
   };
 }
 
@@ -826,8 +875,65 @@ function isCompletedScheduleGame(game) {
 
 async function fetchPregameStandings(game, cutoffDate, season) {
   const leagueIds = [...new Set([game.awayLeagueId, game.homeLeagueId].filter(Boolean))];
-  const results = await Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, cutoffDate, season)));
-  return results.filter((result) => result.status === "fulfilled" && result.value).map((result) => result.value);
+  if (!leagueIds.length) return [];
+  const standingsType = game.gameType === "S" ? "springTraining" : ["F", "D", "L", "W"].includes(game.gameType) ? "postseason" : "regularSeason";
+  const result = await Promise.allSettled([fetchLeagueStandings(leagueIds.join(","), cutoffDate, season, { sportId: Number(game.sportId || 1), standingsType })]);
+  return result.map((entry) => sourceConfig({ sportId: Number(game.sportId || 1), leagueIds: leagueIds.map(Number), standingsType, season, cutoffDate }, entry));
+}
+
+function sourceError(reason) {
+  return { code: "REQUEST_FAILED", summary: String(reason?.message ?? reason ?? "Source request failed."), retryable: true };
+}
+
+function sourceConfig(input, settled) {
+  return settled?.status === "fulfilled"
+    ? { input, payload: settled.value, outcome: "success" }
+    : { input, payload: null, outcome: "failed", error: sourceError(settled?.reason) };
+}
+
+function selectedViewKey(game) {
+  return `${game.gamePk}:${game.officialDate}:${Number(game.gameNumber || 1)}`;
+}
+
+function buildV030Model(game, supplemental) {
+  if (!state.schedulePayload) throw new Error("The selected schedule response is unavailable.");
+  const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
+  const season = Number(game.season || officialDate.slice(0, 4));
+  const input = {
+    schedulePayload: state.schedulePayload,
+    scheduleSelection: { gamePk: String(game.gamePk), sportId: Number(game.sportId || 1), selectedDate: state.selectedDate || officialDate, hydrateProfile: "pregame-v1" },
+    roster: {
+      away: { input: { teamId: Number(game.awayTeamId), date: officialDate, rosterType: "active", hydrateProfile: "person-v1" }, payload: supplemental.rosters.away, outcome: "success" },
+      home: { input: { teamId: Number(game.homeTeamId), date: officialDate, rosterType: "active", hydrateProfile: "person-v1" }, payload: supplemental.rosters.home, outcome: "success" }
+    },
+    people: { input: supplemental.peopleInput, units: supplemental.people.units },
+    depthChart: supplemental.depthChart,
+    coaches: supplemental.coaches,
+    standings: supplemental.standings,
+    feed: supplemental.feed,
+    venue: supplemental.venue,
+    boxscore: supplemental.earlierSameDayGame ? {
+      input: { gamePk: String(supplemental.earlierSameDayGame.gamePk), relationship: "earlierSameDayGame" },
+      payload: supplemental.earlierSameDayBoxscore,
+      outcome: supplemental.earlierSameDayBoxscoreOutcome,
+      earlierGame: {
+        gamePk: String(supplemental.earlierSameDayGame.gamePk), officialDate,
+        canonicalStatus: "final", rawGameState: supplemental.earlierSameDayGame.status || "Final",
+        awayTeamId: Number(supplemental.earlierSameDayGame.awayTeamId), homeTeamId: Number(supplemental.earlierSameDayGame.homeTeamId),
+        awayIsWinner: supplemental.earlierSameDayGame.awayIsWinner, homeIsWinner: supplemental.earlierSameDayGame.homeIsWinner,
+        isTie: supplemental.earlierSameDayGame.isTie
+      }
+    } : null
+  };
+  const snapshot = normalizeV030Pregame(input, { applicationVersion: "0.3.0", build: "005.2", createdAtUtc: new Date().toISOString() });
+  state.v030Availability = summarizeV030Availability(snapshot);
+  return snapshot;
+}
+
+async function persistCurrentSnapshot(snapshot) {
+  if (!state.v030Persistence || !snapshot) return;
+  try { await state.v030Persistence.saveNormalizedSnapshot(snapshot); }
+  catch (error) { console.warn("Unable to cache the schema-v2 snapshot:", error); }
 }
 
 function previousDateString(dateText) {
@@ -886,14 +992,14 @@ function renderSelectedGame(selected, model) {
   const venue = model?.game?.venue ?? {};
   const weather = model?.game?.weather ?? {};
 
-  const awayLineup = (model?.away?.lineup || []).map(uiPlayerFromNormalizedRecord);
-  const homeLineup = (model?.home?.lineup || []).map(uiPlayerFromNormalizedRecord);
+  const awayLineup = lineupSlots(model?.away).map(uiPlayerFromNormalizedRecord);
+  const homeLineup = lineupSlots(model?.home).map(uiPlayerFromNormalizedRecord);
   const awayBench = (model?.away?.bench || []).map(uiPlayerFromNormalizedRecord);
   const homeBench = (model?.home?.bench || []).map(uiPlayerFromNormalizedRecord);
   const awayStarter = model?.away?.startingPitcher ? uiPlayerFromNormalizedRecord(model.away.startingPitcher) : null;
   const homeStarter = model?.home?.startingPitcher ? uiPlayerFromNormalizedRecord(model.home.startingPitcher) : null;
-  const awayBullpen = (model?.away?.bullpen || []).map(uiPlayerFromNormalizedRecord);
-  const homeBullpen = (model?.home?.bullpen || []).map(uiPlayerFromNormalizedRecord);
+  const awayBullpen = pitcherDisplayRows(model, "away").map(uiPlayerFromNormalizedRecord);
+  const homeBullpen = pitcherDisplayRows(model, "home").map(uiPlayerFromNormalizedRecord);
 
   elements.matchupHeading.textContent = `${awayTeam} at ${homeTeam}`;
   elements.gameStatusText.textContent = selected.status || "Scheduled";
@@ -919,6 +1025,15 @@ function renderSelectedGame(selected, model) {
   elements.pregameMessage.hidden = true;
   elements.pregameMessage.classList.remove("error");
   elements.pregameContent.hidden = false;
+}
+
+function lineupSlots(side) {
+  return Array.isArray(side?.lineup) ? side.lineup : Array.isArray(side?.lineup?.slots) ? side.lineup.slots : [];
+}
+
+function pitcherDisplayRows(model, side) {
+  if (model?.schemaVersion === 2) return getPitcherDisplayRows(model, side, { includeAdditionalStarters: state.includeAdditionalStarters });
+  return Array.isArray(model?.[side]?.bullpen) ? model[side].bullpen : [];
 }
 
 function uiPlayerFromNormalizedRecord(record) {
@@ -949,78 +1064,39 @@ async function loadGameDay(forceSupplemental = false) {
     return;
   }
 
-  let feed = state.selectedFeed;
-  if (!feed) {
-    try {
-      feed = await fetchGameFeed(game.gamePk);
-      if (String(state.selectedGamePk) !== String(game.gamePk)) return;
-      state.selectedFeed = feed;
-    } catch (error) {
-      elements.gameDayMessage.hidden = false;
-      elements.gameDayMessage.classList.add("error");
-      elements.gameDayMessage.textContent = `Game Day feed unavailable. ${errorMessage(error, "Unknown error.")}`;
-      return;
-    }
-  }
-
   const token = ++state.gameDayLoadToken;
-  const gd = feed.gameData || {};
-  const officialDate = gd.datetime?.officialDate || game.officialDate || getLocalDateString();
-  const season = Number(gd.game?.season || officialDate.slice(0, 4));
-  const away = gd.teams?.away || {};
-  const home = gd.teams?.home || {};
-  elements.gameDaySubtitle.textContent = `${away.name || game.awayTeam} at ${home.name || game.homeTeam} • ${formatDisplayDate(officialDate)}`;
+  const officialDate = game.officialDate || getLocalDateString();
+  elements.gameDaySubtitle.textContent = `${game.awayTeam} at ${game.homeTeam} • ${formatDisplayDate(officialDate)}`;
   elements.gameDayMessage.hidden = false;
   elements.gameDayMessage.classList.remove("error");
-  elements.gameDayMessage.textContent = "Game Pack loaded. Checking supplemental manager and standings data…";
+  elements.gameDayMessage.textContent = "Loading schema-v2 game, staff, standings, officials, and venue data…";
   elements.gameDayContent.hidden = false;
   elements.gameDaySources.hidden = false;
-
-  const baseModel = normalizePregameData(feed, state.selectedSupplemental || {}, game);
-  state.normalizedPregame = baseModel;
-  renderGameDay(baseModel);
-
   elements.refreshGameDayButton.disabled = true;
   elements.coachesSourcePill.textContent = "Coaches API: loading…";
   elements.standingsSourcePill.textContent = "Standings API: loading…";
 
-  const awayId = away.id || game.awayTeamId;
-  const homeId = home.id || game.homeTeamId;
-  const leagueIds = [...new Set([away.league?.id, home.league?.id].filter(Boolean))];
-
   try {
-    const [coachResults, standingsResults] = await Promise.all([
-      Promise.allSettled([
-        awayId ? fetchTeamCoaches(awayId, officialDate, season) : Promise.resolve(null),
-        homeId ? fetchTeamCoaches(homeId, officialDate, season) : Promise.resolve(null)
-      ]),
-      Promise.allSettled(leagueIds.map((id) => fetchLeagueStandings(id, previousDateString(officialDate), season)))
-    ]);
+    if (forceSupplemental) state.selectedSupplemental = await loadPregameCore(game);
+    const model = await hydrateSelectedGameModel(getCatalogFields().map((definition) => definition.id), String(game.gamePk));
     if (token !== state.gameDayLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
-
-    const coaches = {
-      away: coachResults[0]?.status === "fulfilled" ? coachResults[0].value : null,
-      home: coachResults[1]?.status === "fulfilled" ? coachResults[1].value : null
-    };
-    const standingsPayloads = standingsResults.filter((r) => r.status === "fulfilled").map((r) => r.value);
-    const model = normalizePregameData(feed, { ...(state.selectedSupplemental || {}), coaches, standingsPayloads }, game);
-    state.normalizedPregame = model;
-
-    const coachOk = Boolean(coaches.away || coaches.home);
-    const standingsOk = standingsPayloads.length > 0;
+    const sourceResults = model.meta?.sourceResults || [];
+    const coachOk = sourceResults.some((source) => source.adapter === "coaches" && source.outcome === "success");
+    const standingsOk = sourceResults.some((source) => source.adapter === "standings" && source.outcome === "success");
     elements.coachesSourcePill.textContent = coachOk ? "Coaches API: loaded" : "Coaches API: unavailable";
     elements.coachesSourcePill.className = `pill ${coachOk ? "ready" : "error"}`;
     elements.standingsSourcePill.textContent = standingsOk ? "Standings API: loaded" : "Standings API: unavailable";
     elements.standingsSourcePill.className = `pill ${standingsOk ? "ready" : "error"}`;
     renderGameDay(model);
-    elements.gameDayMessage.textContent = coachOk && standingsOk
-      ? "Game Pack + supplemental data loaded successfully."
-      : "Game Pack is available. One or more supplemental requests did not return data; the page shows everything that loaded.";
+    const failures = state.v030Availability?.sourceOutcomes?.failed || 0;
+    elements.gameDayMessage.textContent = failures
+      ? `Schema v2 loaded with ${failures} unavailable source request${failures === 1 ? "" : "s"}; available data remains usable.`
+      : "Schema-v2 pregame data loaded successfully.";
   } catch (error) {
     if (token !== state.gameDayLoadToken) return;
     console.error("Game Day supplemental hydration failed:", error);
     elements.gameDayMessage.classList.add("error");
-    elements.gameDayMessage.textContent = `Game Pack loaded, but supplemental hydration failed. ${errorMessage(error, "Unknown error.")}`;
+    elements.gameDayMessage.textContent = `Schema-v2 hydration failed. ${errorMessage(error, "Unknown error.")}`;
   } finally {
     if (token === state.gameDayLoadToken) elements.refreshGameDayButton.disabled = false;
   }
@@ -1043,33 +1119,18 @@ async function loadFieldDiagnostic(force = false) {
     return;
   }
 
-  let feed = state.selectedFeed;
-  if (!feed) {
-    try {
-      feed = await fetchGameFeed(game.gamePk);
-      if (String(state.selectedGamePk) !== String(game.gamePk)) return;
-      state.selectedFeed = feed;
-    } catch (error) {
-      elements.fieldDiagnosticMessage.hidden = false;
-      elements.fieldDiagnosticMessage.classList.add("error");
-      elements.fieldDiagnosticMessage.textContent = `Field Diagnostic feed unavailable. ${errorMessage(error, "Unknown error.")}`;
-      return;
-    }
-  }
-
   const token = ++state.fieldDiagnosticLoadToken;
-  const gd = feed.gameData || {};
-  const officialDate = gd.datetime?.officialDate || game.officialDate || getLocalDateString();
-  const away = gd.teams?.away?.name || game.awayTeam || "Away";
-  const home = gd.teams?.home?.name || game.homeTeam || "Home";
+  const officialDate = game.officialDate || getLocalDateString();
+  const away = game.awayTeam || "Away";
+  const home = game.homeTeam || "Home";
   elements.fieldDiagnosticSubtitle.textContent = `${away} at ${home} • ${formatDisplayDate(officialDate)}`;
   elements.fieldDiagnosticMessage.hidden = false;
   elements.fieldDiagnosticMessage.classList.remove("error");
-  elements.fieldDiagnosticMessage.textContent = "Resolving every active field against the selected Game Pack and required supplemental sources…";
+  elements.fieldDiagnosticMessage.textContent = "Resolving every active field against the schema-v2 snapshot and its capability sources…";
   elements.fieldDiagnosticContent.hidden = true;
   elements.fieldDiagnosticSources.hidden = false;
   elements.refreshFieldDiagnosticButton.disabled = true;
-  elements.diagnosticGamePackSourcePill.textContent = "Game Pack: loaded";
+  elements.diagnosticGamePackSourcePill.textContent = "Core pregame: loaded";
   elements.diagnosticGamePackSourcePill.className = "pill ready";
   elements.diagnosticCoachesSourcePill.textContent = "Coaches API: loading…";
   elements.diagnosticCoachesSourcePill.className = "pill neutral";
@@ -1098,10 +1159,11 @@ async function loadFieldDiagnostic(force = false) {
 }
 
 function renderDiagnosticSourcePills(model) {
-  const sources = model?.meta?.sources || {};
-  setDiagnosticSourcePill(elements.diagnosticGamePackSourcePill, "Game Pack", sources.gamePack);
-  setDiagnosticSourcePill(elements.diagnosticCoachesSourcePill, "Coaches API", sources.coaches);
-  setDiagnosticSourcePill(elements.diagnosticStandingsSourcePill, "Standings API", sources.standings);
+  const sources = model?.meta?.sourceResults || [];
+  const sourceOk = (adapters) => sources.some((source) => adapters.includes(source.adapter) && ["success", "partial"].includes(source.outcome));
+  setDiagnosticSourcePill(elements.diagnosticGamePackSourcePill, "Core pregame", sourceOk(["schedule", "roster", "people"]));
+  setDiagnosticSourcePill(elements.diagnosticCoachesSourcePill, "Coaches API", sourceOk(["coaches"]));
+  setDiagnosticSourcePill(elements.diagnosticStandingsSourcePill, "Standings API", sourceOk(["standings"]));
 }
 
 function setDiagnosticSourcePill(element, label, loaded) {
@@ -1172,13 +1234,13 @@ function renderGameDay(model) {
 
   elements.gameDayAwayLineupHeading.textContent = model.away?.team?.name || "Away";
   elements.gameDayHomeLineupHeading.textContent = model.home?.team?.name || "Home";
-  renderGameDayLineup(elements.gameDayAwayLineup, model.away?.lineup || []);
-  renderGameDayLineup(elements.gameDayHomeLineup, model.home?.lineup || []);
+  renderGameDayLineup(elements.gameDayAwayLineup, lineupSlots(model.away));
+  renderGameDayLineup(elements.gameDayHomeLineup, lineupSlots(model.home));
 
   elements.gameDayAwayPitchingHeading.textContent = model.away?.team?.name || "Away";
   elements.gameDayHomePitchingHeading.textContent = model.home?.team?.name || "Home";
-  renderGameDayPitching(elements.gameDayAwayPitching, model.away?.startingPitcher, model.away?.bullpen || []);
-  renderGameDayPitching(elements.gameDayHomePitching, model.home?.startingPitcher, model.home?.bullpen || []);
+  renderGameDayPitching(elements.gameDayAwayPitching, model.away?.startingPitcher, pitcherDisplayRows(model, "away"));
+  renderGameDayPitching(elements.gameDayHomePitching, model.home?.startingPitcher, pitcherDisplayRows(model, "home"));
 
   elements.gameDayAwayBenchHeading.textContent = model.away?.team?.name || "Away";
   elements.gameDayHomeBenchHeading.textContent = model.home?.team?.name || "Home";
@@ -1201,11 +1263,11 @@ function renderGameDayTeamCards(away, home) {
         ${gameDayStat("Record", record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—")}
         ${gameDayStat("PCT", record.pct != null ? formatRate(record.pct, 3) : "—")}
         ${gameDayStat("Division", team.division?.name || "—")}
-        ${gameDayStat("Manager", data?.manager?.name || "Not loaded")}
-        ${gameDayStat("Division Rank", standings.divisionRank ?? "—")}
-        ${gameDayStat("Games Back", standings.divisionGamesBack ?? "—")}
+        ${gameDayStat("Manager", data?.manager?.selected?.name || data?.manager?.name || "Not loaded")}
+        ${gameDayStat("Division Rank", typedRank(standings.divisionRank))}
+        ${gameDayStat("Games Back", typedGamesBack(standings.divisionGamesBack))}
         ${gameDayStat("Streak", standings.streak || "—")}
-        ${gameDayStat("Last 10", standings.last10?.display || "—")}
+        ${gameDayStat("Last 10", standings.lastTen?.wins != null ? `${standings.lastTen.wins}-${standings.lastTen.losses}` : standings.last10?.display || "—")}
       </div>`;
     elements.gameDayTeamGrid.append(card);
   });
@@ -1223,7 +1285,7 @@ function renderGameDayLineup(tbody, slots) {
   }
   slots.forEach((slot, index) => {
     if (!slot?.player?.name) return;
-    const stats = slot.stats || {};
+    const stats = slot.stats?.hitting?.totals || slot.stats || {};
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${slot.battingOrder || index + 1}</td><td><strong>${escapeHtml(slot.player.name)}</strong><span class="gameday-number">${slot.player.number ? `#${escapeHtml(slot.player.number)}` : ""}</span></td><td>${escapeHtml(slot.position?.abbreviation || "—")}</td><td>${escapeHtml(slot.player.bats || "—")}</td><td>${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td>`;
     tbody.append(tr);
@@ -1238,10 +1300,10 @@ function renderGameDayPitching(container, starter, bullpen) {
 }
 
 function gameDayPitcherRow(item, role) {
-  const stats = item?.stats || {};
+  const stats = item?.stats?.pitching?.totals || item?.stats || {};
   const row = document.createElement("div"); row.className = "gameday-person-row";
   const record = stats.wins != null && stats.losses != null ? `${stats.wins}-${stats.losses}` : "—";
-  row.innerHTML = `<div><strong>${escapeHtml(role)} ${escapeHtml(item?.player?.name || "Player")}</strong><span>${item?.player?.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item?.player?.throws || "—")}HP</span></div><div class="gameday-person-stats"><span>${escapeHtml(record)} W-L</span><span>${escapeHtml(formatRate(stats.era, 2) || "—")} ERA</span><span>${escapeHtml(formatRate(stats.whip, 2) || "—")} WHIP</span><span>${escapeHtml(String(stats.strikeouts ?? "—"))} K</span></div>`;
+  row.innerHTML = `<div><strong>${escapeHtml(role)} ${escapeHtml(item?.player?.name || "Player")}</strong><span>${item?.player?.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item?.player?.throws || "—")}HP</span></div><div class="gameday-person-stats"><span>${escapeHtml(record)} W-L</span><span>${escapeHtml(formatRate(stats.era, 2) || "—")} ERA</span><span>${escapeHtml(formatRate(stats.whip, 2) || "—")} WHIP</span><span>${escapeHtml(String(stats.strikeOuts ?? stats.strikeouts ?? "—"))} K</span></div>`;
   return row;
 }
 
@@ -1250,7 +1312,7 @@ function renderGameDayBench(container, players) {
   const known = players.filter((item) => item?.player?.name);
   if (!known.length) { container.append(emptyRow("Bench not listed.")); return; }
   known.forEach((item) => {
-    const stats = item.stats || {};
+    const stats = item.stats?.hitting?.totals || item.stats || {};
     const row = document.createElement("div"); row.className = "gameday-person-row";
     row.innerHTML = `<div><strong>${escapeHtml(item.player.name)}</strong><span>${item.player.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item.position?.abbreviation || item.player.primaryPosition?.abbreviation || "—")} • Bats ${escapeHtml(item.player.bats || "—")}</span></div><div class="gameday-person-stats"><span>${escapeHtml(formatRate(stats.avg, 3) || "—")} AVG</span><span>${escapeHtml(formatRate(stats.ops, 3) || "—")} OPS</span><span>${escapeHtml(String(stats.homeRuns ?? "—"))} HR</span></div>`;
     container.append(row);
@@ -1259,12 +1321,13 @@ function renderGameDayBench(container, players) {
 
 function renderGameDayUmpires(umpires) {
   elements.gameDayUmpires.replaceChildren();
-  const rows = [
+  const rows = Array.isArray(umpires?.crew) ? umpires.crew.map((item) => [item.role || "Official", item]) : [
     ["Home Plate", umpires?.home], ["First Base", umpires?.first], ["Second Base", umpires?.second], ["Third Base", umpires?.third],
     ...(umpires?.additional || []).map((item) => [item.role || "Official", item])
-  ].filter(([, item]) => item?.name);
-  if (!rows.length) { elements.gameDayUmpires.append(emptyRow("Umpire crew not listed yet.")); return; }
-  rows.forEach(([role, item]) => {
+  ];
+  const knownRows = rows.filter(([, item]) => item?.name);
+  if (!knownRows.length) { elements.gameDayUmpires.append(emptyRow("Umpire crew not listed yet.")); return; }
+  knownRows.forEach(([role, item]) => {
     const row = document.createElement("div"); row.className = "gameday-person-row simple";
     row.innerHTML = `<strong>${escapeHtml(role)}</strong><span>${escapeHtml(item.name)}</span>`;
     elements.gameDayUmpires.append(row);
@@ -1275,10 +1338,23 @@ function renderGameDayVenue(game) {
   const venue = game?.venue || {}; const weather = game?.weather || {};
   const weatherParts = [weather.condition, weather.temperature != null ? `${weather.temperature}°` : "", weather.wind].filter(Boolean);
   const values = [
-    ["Venue", venue.name || "—"], ["Capacity", venue.capacity != null ? Number(venue.capacity).toLocaleString() : "—"], ["Surface", venue.turfType || "—"], ["Roof", venue.roofType || "—"],
-    ["Weather", weatherParts.join(" • ") || "—"], ["Location", [venue.city, venue.state].filter(Boolean).join(", ") || "—"]
+    ["Venue", venue.name || "—"], ["Capacity", (venue.fieldInfo?.capacity ?? venue.capacity) != null ? Number(venue.fieldInfo?.capacity ?? venue.capacity).toLocaleString() : "—"], ["Surface", venue.fieldInfo?.turfType || venue.turfType || "—"], ["Roof", venue.fieldInfo?.roofType || venue.roofType || "—"],
+    ["Weather", weatherParts.join(" • ") || "—"], ["Location", [venue.location?.city ?? venue.city, venue.location?.state ?? venue.state].filter(Boolean).join(", ") || "—"]
   ];
   elements.gameDayVenue.innerHTML = `<div class="gameday-stat-grid">${values.map(([a,b]) => gameDayStat(a,b)).join("")}</div>`;
+}
+
+function typedRank(value) {
+  if (value && typeof value === "object") return value.value ?? value.raw ?? "—";
+  return value ?? "—";
+}
+
+function typedGamesBack(value) {
+  if (value && typeof value === "object") {
+    if (value.state === "leader") return "—";
+    return value.games ?? value.raw ?? "—";
+  }
+  return value ?? "—";
 }
 
 function formatRate(value, precision) {
@@ -1651,7 +1727,7 @@ async function createLayout() {
 
 async function refreshLayouts() {
   try {
-    state.layouts = await listLayouts();
+    state.layouts = (await listLayouts()).map((layout) => loadCompatibleLayout(layout).layout);
     const savedFavoriteLayoutId = await getSetting("favoriteLayoutId", "");
     state.favoriteLayoutId = state.layouts.some((layout) => layout.id === savedFavoriteLayoutId) ? savedFavoriteLayoutId : null;
     renderLayoutList();
@@ -1664,6 +1740,10 @@ async function refreshLayouts() {
     elements.layoutStorageStatus.className = "pill error";
     setLayoutMessage(errorMessage(error, "Layouts could not be loaded."), true);
   }
+}
+
+async function persistLayout(layout) {
+  return persistRawLayout(prepareCompatibleLayoutForExplicitSave(layout).layout);
 }
 
 async function populateLivePdfLayoutSelect() {
@@ -6778,9 +6858,10 @@ async function buildModelForMappings(fieldIds, expectedGameKey) {
 }
 
 async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
-  const requirements = sourceRequirementsForFields(fieldIds);
+  const requirements = capabilityRequirementsForFields(fieldIds);
   const game = currentScheduleGame();
-  if (!game || !state.selectedSupplemental) throw new Error("No selected game data is available.");
+  if (!game) throw new Error("No selected game data is available.");
+  if (!state.selectedSupplemental) state.selectedSupplemental = await loadPregameCore(game);
 
   const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
   const season = Number(game.season || officialDate.slice(0, 4));
@@ -6788,29 +6869,21 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
     ...state.selectedSupplemental,
     rosters: state.selectedSupplemental.rosters,
     people: state.selectedSupplemental.people,
-    standingsPayloads: state.selectedSupplemental.standingsPayloads || []
+    standings: state.selectedSupplemental.standings || []
   };
 
-  if (requirements.has("coaches")) {
+  if (requirements.has("staff") && !supplemental.coaches) {
     const coachResults = await Promise.allSettled([
       game.awayTeamId ? fetchTeamCoaches(game.awayTeamId, officialDate, season) : Promise.resolve(null),
       game.homeTeamId ? fetchTeamCoaches(game.homeTeamId, officialDate, season) : Promise.resolve(null)
     ]);
-    const coaches = {
-      away: coachResults[0]?.status === "fulfilled" ? coachResults[0].value : null,
-      home: coachResults[1]?.status === "fulfilled" ? coachResults[1].value : null
+    supplemental.coaches = {
+      away: sourceConfig({ teamId: Number(game.awayTeamId), date: officialDate, season }, coachResults[0]),
+      home: sourceConfig({ teamId: Number(game.homeTeamId), date: officialDate, season }, coachResults[1])
     };
-    if (coaches.away || coaches.home) supplemental.coaches = coaches;
   }
 
-  const needsLiveFeed = fieldIds.some((id) => {
-    const key = String(id || "");
-    if (key === "game.startTime" && !game.venueData?.timeZone) return true;
-    return key.startsWith("game.umpires.") || [
-      "game.venue.capacity", "game.venue.turfType", "game.venue.roofType",
-      "game.venue.city", "game.venue.state", "game.venue.country", "game.venue.timeZone"
-    ].includes(key);
-  });
+  const needsLiveFeed = requirements.has("officials") || requirements.has("extendedVenue");
 
   let feed = state.selectedFeed;
   if (needsLiveFeed && !feed) {
@@ -6818,10 +6891,18 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
     if (String(state.selectedGamePk || "") !== String(expectedGameKey)) throw new Error("Game selection changed during game-feed hydration.");
     state.selectedFeed = feed;
   }
+  if (feed) supplemental.feed = { input: { gamePk: String(game.gamePk), profile: "officials-venue-v1" }, payload: feed, outcome: "success" };
+
+  if (requirements.has("extendedVenue") && !supplemental.venue && game.venueData?.id) {
+    const venueResult = await Promise.allSettled([fetchVenueDetails(game.venueData.id, season)]);
+    supplemental.venue = sourceConfig({ venueId: Number(game.venueData.id), season, hydrateProfile: "location-fieldInfo-timezone-v1" }, venueResult[0]);
+  }
 
   if (String(state.selectedGamePk || "") !== String(expectedGameKey)) throw new Error("Game selection changed during supplemental hydration.");
-  const model = normalizePregameData(feed, supplemental, game);
+  state.selectedSupplemental = supplemental;
+  const model = buildV030Model(game, supplemental);
   state.normalizedPregame = model;
+  await persistCurrentSnapshot(model);
   return model;
 }
 

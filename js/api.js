@@ -8,6 +8,10 @@ const STATS_API_V1 = "https://statsapi.mlb.com/api/v1";
 const GAME_FEED = "https://statsapi.mlb.com/api/v1.1/game";
 
 export async function fetchFavoriteTeamSchedule(date, teamId, sportId = 1) {
+  return (await fetchFavoriteTeamScheduleBundle(date, teamId, sportId)).games;
+}
+
+export async function fetchFavoriteTeamScheduleBundle(date, teamId, sportId = 1) {
   try {
     const params = new URLSearchParams({
       sportId: String(sportId || 1),
@@ -23,7 +27,8 @@ export async function fetchFavoriteTeamSchedule(date, teamId, sportId = 1) {
     });
 
     if (!response.ok) throw new Error(`Stats API returned HTTP ${response.status}.`);
-    return normalizeSchedule(await response.json(), sportId);
+    const payload = await response.json();
+    return { games: normalizeSchedule(payload, sportId), payload };
   } catch (error) {
     console.error("Unable to load favorite-team schedule:", error);
     throw new Error(error instanceof Error ? error.message : "Unable to load the selected date's schedule.");
@@ -45,19 +50,26 @@ export async function fetchTeamRoster(teamId, date) {
   return fetchJson(`${STATS_API_V1}/teams/${encodeURIComponent(String(teamId))}/roster?${params.toString()}`, "roster API");
 }
 
-export async function fetchPeoplePregameStats(personIds, startDate, endDate) {
+export async function fetchPeoplePregameStats(personIds, startDate, endDate, options = {}) {
   const ids = [...new Set((personIds || []).map((id) => Number(id)).filter(Number.isFinite))];
-  if (!ids.length) return { people: [] };
+  if (!ids.length) return { people: [], units: [] };
+  const chunkSize = Number.isInteger(options.chunkSize) && options.chunkSize > 0 ? options.chunkSize : 100;
   const chunks = [];
-  for (let index = 0; index < ids.length; index += 100) chunks.push(ids.slice(index, index + 100));
+  for (let index = 0; index < ids.length; index += chunkSize) chunks.push(ids.slice(index, index + chunkSize));
 
-  const results = await Promise.all(chunks.map(async (chunk) => {
-    const hydrate = `stats(group=[hitting,pitching],type=[byDateRange],startDate=${startDate},endDate=${endDate})`;
+  const gameTypes = Array.isArray(options.gameTypes) && options.gameTypes.length ? options.gameTypes : ["R"];
+  const statGroups = Array.isArray(options.statGroups) && options.statGroups.length ? options.statGroups : ["hitting", "pitching"];
+  const sportScope = Number.isInteger(options.sportId) ? `,sportId=${options.sportId}` : "";
+  const results = await Promise.allSettled(chunks.map(async (chunk) => {
+    const hydrate = `stats(group=[${statGroups.join(",")}],type=[byDateRange]${sportScope},gameType=[${gameTypes.join(",")}],startDate=${startDate},endDate=${endDate})`;
     const params = new URLSearchParams({ personIds: chunk.join(","), hydrate });
     return fetchJson(`${STATS_API_V1}/people?${params.toString()}`, "people stats API");
   }));
 
-  return { people: results.flatMap((result) => Array.isArray(result?.people) ? result.people : []) };
+  const units = results.map((result, index) => result.status === "fulfilled"
+    ? { outcome: "success", personIds: chunks[index], payload: result.value }
+    : { outcome: "failed", personIds: chunks[index], payload: null, error: { code: "REQUEST_FAILED", summary: String(result.reason?.message ?? result.reason ?? "People request failed."), retryable: true } });
+  return { people: units.flatMap((unit) => Array.isArray(unit.payload?.people) ? unit.payload.people : []), units };
 }
 
 export async function fetchTeamCoaches(teamId, date, season) {
@@ -67,11 +79,21 @@ export async function fetchTeamCoaches(teamId, date, season) {
   return fetchJson(`${STATS_API_V1}/teams/${encodeURIComponent(String(teamId))}/coaches?${params.toString()}`, "coaches API");
 }
 
-export async function fetchLeagueStandings(leagueId, date, season) {
-  const params = new URLSearchParams({ leagueId: String(leagueId), standingsTypes: "regularSeason" });
+export async function fetchLeagueStandings(leagueId, date, season, options = {}) {
+  const params = new URLSearchParams({ leagueId: String(leagueId), standingsTypes: options.standingsType || "regularSeason" });
+  if (options.sportId) params.set("sportId", String(options.sportId));
   if (date) params.set("date", date);
   if (season) params.set("season", String(season));
   return fetchJson(`${STATS_API_V1}/standings?${params.toString()}`, "standings API");
+}
+
+export async function fetchTeamDepthChart(teamId) {
+  return fetchJson(`${STATS_API_V1}/teams/${encodeURIComponent(String(teamId))}/roster/depthChart`, "depth chart API");
+}
+
+export async function fetchVenueDetails(venueId, season) {
+  const params = new URLSearchParams({ season: String(season), hydrate: "location,fieldInfo,timezone" });
+  return fetchJson(`${STATS_API_V1}/venues/${encodeURIComponent(String(venueId))}?${params.toString()}`, "venue API");
 }
 
 async function fetchJson(url, label) {

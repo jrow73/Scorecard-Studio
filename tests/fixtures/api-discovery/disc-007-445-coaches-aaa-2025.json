@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-007-445-coaches-aaa-2025",
+  "investigationId": "DISC-007",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:08:37.054Z",
+  "context": {
+    "subject": "Columbus Clippers Triple-A dated coaching staff",
+    "gameState": "Dated staff 2025-06-01"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/445/coaches?date=2025-06-01&season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 183,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1430,
+    "bodySha256": "789480e31ce5813077b15618772234be0bc1f1e42bc961f0d0c3e7afaedcb7d4"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 282905,
+              "fullName": "Andy Tracy",
+              "link": "/api/v1/people/282905"
+            },
+            "jerseyNumber": "28",
+            "job": "Manager",
+            "jobId": "MNGR",
+            "title": "Manager"
+          },
+          {
+            "person": {
+              "id": 543706,
+              "fullName": "Daniel Robertson",
+              "link": "/api/v1/people/543706"
+            },
+            "jerseyNumber": "23",
+            "job": "Bench Coach",
+            "jobId": "COAB",
+            "title": "Bench Coach/Asst. Baserunning Coordinator"
+          },
+          {
+            "person": {
+              "id": 518408,
+              "fullName": "Matt Angle",
+              "link": "/api/v1/people/518408"
+            },
+            "jerseyNumber": "9",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 445870,
+              "fullName": "Junior Betances",
+              "link": "/api/v1/people/445870"
+            },
+            "jerseyNumber": "16",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 547182,
+              "fullName": "Cody Buckel",
+              "link": "/api/v1/people/547182"
+            },
+            "jerseyNumber": "10",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 434181,
+              "fullName": "Brandon League",
+              "link": "/api/v1/people/434181"
+            },
+            "jerseyNumber": "10",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 689505,
+              "fullName": "Chase Barbary",
+              "link": "/api/v1/people/689505"
+            },
+            "jerseyNumber": "",
+            "job": "Development Coach ",
+            "jobId": "DEVE",
+            "title": "Development Coach"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Seven entries include duplicate hitting and pitching roles; arrays must preserve multiple people per role."
+  ]
+}

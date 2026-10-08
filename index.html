@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=020" />
+  <link rel="stylesheet" href="./css/styles.css?v=030b0054" />
 </head>
 <body>
   <div class="app-shell">
@@ -167,6 +167,7 @@
 
           <details class="detail-panel">
             <summary>Pitchers</summary>
+            <label class="pitcher-display-option"><input id="include-additional-starters" type="checkbox" /><span><strong>Include additional starters</strong><small>Add pitchers labeled SP by the depth chart to the displayed bullpen list.</small></span></label>
             <div class="team-detail-grid">
               <div>
                 <h4 id="away-pitchers-heading">Away Team</h4>
@@ -199,7 +200,7 @@
         <section class="card gameday-header-card">
           <div class="card-header-row">
             <div>
-              <p class="section-label">Build 008 • Pregame Reference</p>
+              <p class="section-label" data-app-build-prefix="Pregame Reference">Pregame Reference</p>
               <h3 id="gameday-heading">Game Day</h3>
               <p class="subtle" id="gameday-subtitle">Select a game on Home, then open Game Day.</p>
             </div>
@@ -207,7 +208,7 @@
           </div>
           <div class="message-panel" id="gameday-message" role="status" aria-live="polite">Game Day uses the game currently selected on Home.</div>
           <div class="source-pills" id="gameday-sources" hidden>
-            <span class="pill ready">Game Pack</span>
+            <span class="pill ready">Core Pregame</span>
             <span class="pill neutral" id="coaches-source-pill">Coaches API: not requested</span>
             <span class="pill neutral" id="standings-source-pill">Standings API: not requested</span>
           </div>
@@ -248,7 +249,7 @@
           </div>
           <div class="message-panel" id="field-diagnostic-message" role="status" aria-live="polite">The diagnostic resolves every active catalog field against the currently selected game.</div>
           <div class="source-pills" id="field-diagnostic-sources" hidden>
-            <span class="pill neutral" id="diagnostic-gamepack-source-pill">Game Pack: not loaded</span>
+            <span class="pill neutral" id="diagnostic-gamepack-source-pill">Core pregame: not loaded</span>
             <span class="pill neutral" id="diagnostic-coaches-source-pill">Coaches API: not requested</span>
             <span class="pill neutral" id="diagnostic-standings-source-pill">Standings API: not requested</span>
           </div>
@@ -857,6 +858,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=020"></script>
+  <script type="module" src="./js/app.js?v=030b0054"></script>
 </body>
 </html>

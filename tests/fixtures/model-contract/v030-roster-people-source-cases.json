@@ -1,0 +1,1884 @@
+[
+  {
+    "id": "mlb-two-way-manager-depth-partial-people",
+    "schedule": {
+      "payload": {
+        "dates": [
+          {
+            "date": "2025-07-03",
+            "games": [
+              {
+                "gamePk": 800044,
+                "gameDate": "2025-07-03T23:10:00.000Z",
+                "officialDate": "2025-07-03",
+                "season": "2025",
+                "gameType": "R",
+                "gameNumber": 1,
+                "status": {
+                  "abstractGameState": "Preview",
+                  "codedGameState": "P",
+                  "detailedState": "Pre-Game",
+                  "statusCode": "P"
+                },
+                "sport": {
+                  "id": 1,
+                  "name": "Major League Baseball"
+                },
+                "venue": {
+                  "id": 4,
+                  "name": "Contract Park"
+                },
+                "dayNight": "night",
+                "teams": {
+                  "away": {
+                    "team": {
+                      "id": 138,
+                      "name": "Away Club",
+                      "sport": {
+                        "id": 1,
+                        "name": "Major League Baseball"
+                      }
+                    },
+                    "probablePitcher": {
+                      "id": 660271,
+                      "fullName": "Two-Way Contract Player",
+                      "primaryPosition": {
+                        "code": "Y",
+                        "name": "Two-Way Player",
+                        "type": "Two-Way Player",
+                        "abbreviation": "TWP"
+                      },
+                      "batSide": {
+                        "code": "L"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": "17"
+                    },
+                    "leagueRecord": {
+                      "wins": 10,
+                      "losses": 8,
+                      "pct": ".556"
+                    }
+                  },
+                  "home": {
+                    "team": {
+                      "id": 145,
+                      "name": "Home Club",
+                      "sport": {
+                        "id": 1,
+                        "name": "Major League Baseball"
+                      }
+                    },
+                    "probablePitcher": {
+                      "id": 610012,
+                      "fullName": "Home Starter",
+                      "primaryPosition": {
+                        "code": "1",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "abbreviation": "P"
+                      },
+                      "batSide": {
+                        "code": "R"
+                      },
+                      "pitchHand": {
+                        "code": "L"
+                      },
+                      "primaryNumber": "41"
+                    },
+                    "leagueRecord": {
+                      "wins": 9,
+                      "losses": 9,
+                      "pct": ".500"
+                    }
+                  }
+                },
+                "lineups": {
+                  "awayPlayers": [
+                    {
+                      "id": 660271,
+                      "fullName": "Two-Way Contract Player",
+                      "primaryPosition": {
+                        "code": "Y",
+                        "name": "Two-Way Player",
+                        "type": "Two-Way Player",
+                        "abbreviation": "TWP"
+                      },
+                      "batSide": {
+                        "code": "L"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": "17"
+                    }
+                  ],
+                  "homePlayers": [
+                    {
+                      "id": 610002,
+                      "fullName": "Home Hitter",
+                      "primaryPosition": {
+                        "code": "6",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "abbreviation": "SS"
+                      },
+                      "batSide": {
+                        "code": "L"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": "18"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "selection": {
+        "gamePk": "800044",
+        "selectedDate": "2025-07-03",
+        "sportId": 1,
+        "hydrateProfile": "pregame-v1"
+      }
+    },
+    "sources": {
+      "roster": {
+        "away": {
+          "input": {
+            "teamId": 138,
+            "date": "2025-07-03",
+            "rosterType": "active",
+            "hydrateProfile": "person-v1"
+          },
+          "payload": {
+            "rosterType": "active",
+            "roster": [
+              {
+                "person": {
+                  "id": 660271,
+                  "fullName": "Two-Way Contract Player",
+                  "primaryPosition": {
+                    "code": "Y",
+                    "name": "Two-Way Player",
+                    "type": "Two-Way Player",
+                    "abbreviation": "TWP"
+                  },
+                  "batSide": {
+                    "code": "L"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "17"
+                },
+                "jerseyNumber": "17",
+                "position": {
+                  "code": "Y",
+                  "name": "Two-Way Player",
+                  "type": "Two-Way Player",
+                  "abbreviation": "TWP"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610031,
+                  "fullName": "Away Additional Starter",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "31"
+                },
+                "jerseyNumber": "31",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610021,
+                  "fullName": "Away Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "55"
+                },
+                "jerseyNumber": "55",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610041,
+                  "fullName": "Away Bench",
+                  "primaryPosition": {
+                    "code": "2",
+                    "name": "Catcher",
+                    "type": "Catcher",
+                    "abbreviation": "C"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "12"
+                },
+                "jerseyNumber": "12",
+                "position": {
+                  "code": "2",
+                  "name": "Catcher",
+                  "type": "Catcher",
+                  "abbreviation": "C"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "roster.away"
+          }
+        },
+        "home": {
+          "input": {
+            "teamId": 145,
+            "date": "2025-07-03",
+            "rosterType": "active",
+            "hydrateProfile": "person-v1"
+          },
+          "payload": {
+            "rosterType": "active",
+            "roster": [
+              {
+                "person": {
+                  "id": 610012,
+                  "fullName": "Home Starter",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "L"
+                  },
+                  "primaryNumber": "41"
+                },
+                "jerseyNumber": "41",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610002,
+                  "fullName": "Home Hitter",
+                  "primaryPosition": {
+                    "code": "6",
+                    "name": "Shortstop",
+                    "type": "Infielder",
+                    "abbreviation": "SS"
+                  },
+                  "batSide": {
+                    "code": "L"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "18"
+                },
+                "jerseyNumber": "18",
+                "position": {
+                  "code": "6",
+                  "name": "Shortstop",
+                  "type": "Infielder",
+                  "abbreviation": "SS"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610022,
+                  "fullName": "Home Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "58"
+                },
+                "jerseyNumber": "58",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610042,
+                  "fullName": "Home Bench",
+                  "primaryPosition": {
+                    "code": "2",
+                    "name": "Catcher",
+                    "type": "Catcher",
+                    "abbreviation": "C"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "19"
+                },
+                "jerseyNumber": "19",
+                "position": {
+                  "code": "2",
+                  "name": "Catcher",
+                  "type": "Catcher",
+                  "abbreviation": "C"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "roster.home"
+          }
+        }
+      },
+      "people": {
+        "input": {
+          "personIds": [
+            660271,
+            610031,
+            610021,
+            610041,
+            610012,
+            610002,
+            610022,
+            610042
+          ],
+          "sportId": 1,
+          "gameTypes": [
+            "R"
+          ],
+          "statGroups": [
+            "hitting",
+            "pitching"
+          ],
+          "statType": "byDateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03",
+          "chunkSize": 4
+        },
+        "units": [
+          {
+            "outcome": "success",
+            "personIds": [
+              660271,
+              610021,
+              610041,
+              610002
+            ],
+            "payload": {
+              "people": [
+                {
+                  "id": 660271,
+                  "fullName": "Two-Way Contract Player",
+                  "primaryPosition": {
+                    "code": "Y",
+                    "name": "Two-Way Player",
+                    "type": "Two-Way Player",
+                    "abbreviation": "TWP"
+                  },
+                  "batSide": {
+                    "code": "L"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "17",
+                  "stats": [
+                    {
+                      "type": {
+                        "displayName": "byDateRange"
+                      },
+                      "group": {
+                        "displayName": "hitting"
+                      },
+                      "splits": [
+                        {
+                          "sport": {
+                            "id": 1
+                          },
+                          "stat": {
+                            "gamesPlayed": 70,
+                            "avg": ".275",
+                            "obp": ".350",
+                            "slg": ".440",
+                            "homeRuns": 11,
+                            "rbi": 42
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": {
+                        "displayName": "byDateRange"
+                      },
+                      "group": {
+                        "displayName": "pitching"
+                      },
+                      "splits": [
+                        {
+                          "sport": {
+                            "id": 1
+                          },
+                          "stat": {
+                            "gamesPlayed": 18,
+                            "gamesPitched": 18,
+                            "gamesStarted": 4,
+                            "wins": 8,
+                            "losses": 4,
+                            "era": "3.21",
+                            "whip": "1.18"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": 610021,
+                  "fullName": "Away Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "55",
+                  "stats": [
+                    {
+                      "type": {
+                        "displayName": "byDateRange"
+                      },
+                      "group": {
+                        "displayName": "pitching"
+                      },
+                      "splits": [
+                        {
+                          "sport": {
+                            "id": 1
+                          },
+                          "stat": {
+                            "gamesPlayed": 18,
+                            "gamesPitched": 18,
+                            "gamesStarted": 4,
+                            "wins": 8,
+                            "losses": 4,
+                            "era": "3.21",
+                            "whip": "1.18"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": 610041,
+                  "fullName": "Away Bench",
+                  "primaryPosition": {
+                    "code": "2",
+                    "name": "Catcher",
+                    "type": "Catcher",
+                    "abbreviation": "C"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "12",
+                  "stats": [
+                    {
+                      "type": {
+                        "displayName": "byDateRange"
+                      },
+                      "group": {
+                        "displayName": "hitting"
+                      },
+                      "splits": [
+                        {
+                          "sport": {
+                            "id": 1
+                          },
+                          "stat": {
+                            "gamesPlayed": 70,
+                            "avg": ".275",
+                            "obp": ".350",
+                            "slg": ".440",
+                            "homeRuns": 11,
+                            "rbi": 42
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": 610002,
+                  "fullName": "Home Hitter",
+                  "primaryPosition": {
+                    "code": "6",
+                    "name": "Shortstop",
+                    "type": "Infielder",
+                    "abbreviation": "SS"
+                  },
+                  "batSide": {
+                    "code": "L"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "18",
+                  "stats": [
+                    {
+                      "type": {
+                        "displayName": "byDateRange"
+                      },
+                      "group": {
+                        "displayName": "hitting"
+                      },
+                      "splits": [
+                        {
+                          "sport": {
+                            "id": 1
+                          },
+                          "stat": {
+                            "gamesPlayed": 70,
+                            "avg": ".275",
+                            "obp": ".350",
+                            "slg": ".440",
+                            "homeRuns": 11,
+                            "rbi": 42
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "outcome": "failed",
+            "personIds": [
+              610031,
+              610012,
+              610022,
+              610042
+            ]
+          }
+        ],
+        "execution": {
+          "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+          "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+          "sourceResultId": "people.partial",
+          "error": {
+            "code": "REQUEST_FAILED",
+            "summary": "One independently retryable People unit failed."
+          }
+        }
+      },
+      "coaches": {
+        "away": {
+          "input": {
+            "teamId": 138,
+            "date": "2025-07-03",
+            "season": 2025
+          },
+          "payload": {
+            "roster": [
+              {
+                "person": {
+                  "id": 1001,
+                  "fullName": "Manager One",
+                  "primaryPosition": {},
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "1",
+                "job": "Manager",
+                "jobId": "MNGR",
+                "title": "Manager"
+              },
+              {
+                "person": {
+                  "id": 1002,
+                  "fullName": "Manager Two",
+                  "primaryPosition": {},
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "2",
+                "job": "Manager",
+                "jobId": "MNGR",
+                "title": "Interim Manager"
+              },
+              {
+                "person": {
+                  "id": 1003,
+                  "fullName": "Bench Coach",
+                  "primaryPosition": {},
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "3",
+                "job": "Bench Coach",
+                "jobId": "COAB",
+                "title": "Bench Coach"
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "coaches.away"
+          }
+        },
+        "home": {
+          "input": {
+            "teamId": 145,
+            "date": "2025-07-03",
+            "season": 2025
+          },
+          "payload": {
+            "roster": [
+              {
+                "person": {
+                  "id": 2001,
+                  "fullName": "Home Manager",
+                  "primaryPosition": {},
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "4",
+                "job": "Manager",
+                "jobId": "MNGR",
+                "title": "Manager"
+              },
+              {
+                "person": {
+                  "id": 2002,
+                  "fullName": "Pitching Coach",
+                  "primaryPosition": {},
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "5",
+                "job": "Pitching Coach",
+                "jobId": "COAP",
+                "title": "Pitching Coach"
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "coaches.home"
+          }
+        }
+      },
+      "depthChart": {
+        "away": {
+          "input": {
+            "teamId": 138,
+            "season": 2025
+          },
+          "payload": {
+            "roster": [
+              {
+                "person": {
+                  "id": 610031,
+                  "fullName": "Away Additional Starter",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "31"
+                },
+                "jerseyNumber": "",
+                "position": {
+                  "code": "S",
+                  "name": "Starting Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "SP"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 610021,
+                  "fullName": "Away Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "55"
+                },
+                "jerseyNumber": "",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 999999,
+                  "fullName": "Inactive Starter",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "",
+                "position": {
+                  "code": "S",
+                  "name": "Starting Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "SP"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "depth.away"
+          }
+        },
+        "home": {
+          "input": {
+            "teamId": 145,
+            "season": 2025
+          },
+          "payload": {
+            "roster": [
+              {
+                "person": {
+                  "id": 610022,
+                  "fullName": "Home Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": "58"
+                },
+                "jerseyNumber": "",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "depth.home"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "milb-depth-absence-fallback",
+    "schedule": {
+      "payload": {
+        "dates": [
+          {
+            "date": "2025-07-03",
+            "games": [
+              {
+                "gamePk": 800045,
+                "gameDate": "2025-07-03T23:10:00.000Z",
+                "officialDate": "2025-07-03",
+                "season": "2025",
+                "gameType": "R",
+                "gameNumber": 1,
+                "status": {
+                  "abstractGameState": "Preview",
+                  "codedGameState": "P",
+                  "detailedState": "Pre-Game",
+                  "statusCode": "P"
+                },
+                "sport": {
+                  "id": 14,
+                  "name": "Single-A"
+                },
+                "venue": {
+                  "id": 4,
+                  "name": "Contract Park"
+                },
+                "dayNight": "night",
+                "teams": {
+                  "away": {
+                    "team": {
+                      "id": 249,
+                      "name": "Single-A Away",
+                      "sport": {
+                        "id": 14,
+                        "name": "Single-A"
+                      }
+                    },
+                    "probablePitcher": {
+                      "id": 700001,
+                      "fullName": "MiLB Away Starter",
+                      "primaryPosition": {
+                        "code": "1",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "abbreviation": "P"
+                      },
+                      "batSide": {
+                        "code": "R"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": null
+                    },
+                    "leagueRecord": {
+                      "wins": 10,
+                      "losses": 8,
+                      "pct": ".556"
+                    }
+                  },
+                  "home": {
+                    "team": {
+                      "id": 432,
+                      "name": "Single-A Home",
+                      "sport": {
+                        "id": 14,
+                        "name": "Single-A"
+                      }
+                    },
+                    "probablePitcher": {
+                      "id": 700002,
+                      "fullName": "MiLB Home Starter",
+                      "primaryPosition": {
+                        "code": "1",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "abbreviation": "P"
+                      },
+                      "batSide": {
+                        "code": "R"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": null
+                    },
+                    "leagueRecord": {
+                      "wins": 9,
+                      "losses": 9,
+                      "pct": ".500"
+                    }
+                  }
+                },
+                "lineups": {
+                  "awayPlayers": [
+                    {
+                      "id": 700011,
+                      "fullName": "MiLB Away Hitter",
+                      "primaryPosition": {
+                        "code": "6",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "abbreviation": "SS"
+                      },
+                      "batSide": {
+                        "code": "R"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": null
+                    }
+                  ],
+                  "homePlayers": [
+                    {
+                      "id": 700012,
+                      "fullName": "MiLB Home Hitter",
+                      "primaryPosition": {
+                        "code": "6",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "abbreviation": "SS"
+                      },
+                      "batSide": {
+                        "code": "R"
+                      },
+                      "pitchHand": {
+                        "code": "R"
+                      },
+                      "primaryNumber": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "selection": {
+        "gamePk": "800045",
+        "selectedDate": "2025-07-03",
+        "sportId": 14,
+        "hydrateProfile": "pregame-v1"
+      }
+    },
+    "sources": {
+      "roster": {
+        "away": {
+          "input": {
+            "teamId": 249,
+            "date": "2025-07-03",
+            "rosterType": "active",
+            "hydrateProfile": "person-v1"
+          },
+          "payload": {
+            "rosterType": "active",
+            "roster": [
+              {
+                "person": {
+                  "id": 700001,
+                  "fullName": "MiLB Away Starter",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "1",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 700011,
+                  "fullName": "MiLB Away Hitter",
+                  "primaryPosition": {
+                    "code": "6",
+                    "name": "Shortstop",
+                    "type": "Infielder",
+                    "abbreviation": "SS"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "2",
+                "position": {
+                  "code": "6",
+                  "name": "Shortstop",
+                  "type": "Infielder",
+                  "abbreviation": "SS"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 700021,
+                  "fullName": "MiLB Away Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "3",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 700022,
+                  "fullName": "MiLB Rotation Pitcher",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "4",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "roster.milb-away"
+          }
+        },
+        "home": {
+          "input": {
+            "teamId": 432,
+            "date": "2025-07-03",
+            "rosterType": "active",
+            "hydrateProfile": "person-v1"
+          },
+          "payload": {
+            "rosterType": "active",
+            "roster": [
+              {
+                "person": {
+                  "id": 700002,
+                  "fullName": "MiLB Home Starter",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "5",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 700012,
+                  "fullName": "MiLB Home Hitter",
+                  "primaryPosition": {
+                    "code": "6",
+                    "name": "Shortstop",
+                    "type": "Infielder",
+                    "abbreviation": "SS"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "6",
+                "position": {
+                  "code": "6",
+                  "name": "Shortstop",
+                  "type": "Infielder",
+                  "abbreviation": "SS"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              },
+              {
+                "person": {
+                  "id": 700023,
+                  "fullName": "MiLB Home Reliever",
+                  "primaryPosition": {
+                    "code": "1",
+                    "name": "Pitcher",
+                    "type": "Pitcher",
+                    "abbreviation": "P"
+                  },
+                  "batSide": {
+                    "code": "R"
+                  },
+                  "pitchHand": {
+                    "code": "R"
+                  },
+                  "primaryNumber": null
+                },
+                "jerseyNumber": "7",
+                "position": {
+                  "code": "1",
+                  "name": "Pitcher",
+                  "type": "Pitcher",
+                  "abbreviation": "P"
+                },
+                "status": {
+                  "code": "A",
+                  "description": "Active"
+                }
+              }
+            ]
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "roster.milb-home"
+          }
+        }
+      },
+      "people": {
+        "input": {
+          "personIds": [
+            700001,
+            700011,
+            700021,
+            700022,
+            700002,
+            700012,
+            700023
+          ],
+          "sportId": 14,
+          "gameTypes": [
+            "R"
+          ],
+          "statGroups": [
+            "hitting",
+            "pitching"
+          ],
+          "statType": "byDateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03",
+          "chunkSize": 100
+        },
+        "payload": {
+          "people": [
+            {
+              "id": 700001,
+              "fullName": "MiLB Away Starter",
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 700011,
+              "fullName": "MiLB Away Hitter",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 700021,
+              "fullName": "MiLB Away Reliever",
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 700022,
+              "fullName": "MiLB Rotation Pitcher",
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 700002,
+              "fullName": "MiLB Home Starter",
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 700012,
+              "fullName": "MiLB Home Hitter",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 700023,
+              "fullName": "MiLB Home Reliever",
+              "primaryPosition": {
+                "code": "1",
+                "name": "Pitcher",
+                "type": "Pitcher",
+                "abbreviation": "P"
+              },
+              "batSide": {
+                "code": "R"
+              },
+              "pitchHand": {
+                "code": "R"
+              },
+              "primaryNumber": null,
+              "stats": [
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "hitting"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 70,
+                        "avg": ".275",
+                        "obp": ".350",
+                        "slg": ".440",
+                        "homeRuns": 11,
+                        "rbi": 42
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "displayName": "byDateRange"
+                  },
+                  "group": {
+                    "displayName": "pitching"
+                  },
+                  "splits": [
+                    {
+                      "sport": {
+                        "id": 14
+                      },
+                      "stat": {
+                        "gamesPlayed": 18,
+                        "gamesPitched": 18,
+                        "gamesStarted": 4,
+                        "wins": 8,
+                        "losses": 4,
+                        "era": "3.21",
+                        "whip": "1.18"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "execution": {
+          "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+          "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+          "sourceResultId": "people.milb"
+        }
+      },
+      "depthChart": {
+        "away": {
+          "input": {
+            "teamId": 249,
+            "season": 2025
+          },
+          "payload": {
+            "rosterType": "depthChart"
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "depth.milb-away"
+          }
+        },
+        "home": {
+          "input": {
+            "teamId": 432,
+            "season": 2025
+          },
+          "payload": {
+            "rosterType": "depthChart"
+          },
+          "execution": {
+            "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+            "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+            "sourceResultId": "depth.milb-home"
+          }
+        }
+      }
+    }
+  }
+]

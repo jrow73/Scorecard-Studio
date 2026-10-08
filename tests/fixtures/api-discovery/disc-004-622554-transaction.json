@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-004-622554-transaction",
+  "investigationId": "DISC-004",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:05:30.550Z",
+  "context": {
+    "subject": "Seranthony Dominguez Baltimore to Toronto trade corroboration",
+    "gameState": "Transaction interval 2025-07-28 through 2025-07-31"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/transactions?playerId=622554&startDate=2025-07-28&endDate=2025-07-31",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 208,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=600, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1414,
+    "bodySha256": "2608b99d6bbbaf37f4e2baa09e92181b08304988e9036317f9c131dd522aea89"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/transactions"
+    ],
+    "values": {
+      "/transactions": {
+        "found": true,
+        "value": [
+          {
+            "id": 859674,
+            "person": {
+              "id": 622554,
+              "fullName": "Seranthony Domínguez",
+              "link": "/api/v1/people/622554"
+            },
+            "toTeam": {
+              "id": 110,
+              "name": "Baltimore Orioles",
+              "link": "/api/v1/teams/110"
+            },
+            "date": "2025-07-28",
+            "effectiveDate": "2025-07-28",
+            "resolutionDate": "2025-07-28",
+            "typeCode": "SC",
+            "typeDesc": "Status Change",
+            "description": "RHP Seranthony Domínguez roster status changed by Baltimore Orioles."
+          },
+          {
+            "id": 859673,
+            "person": {
+              "id": 622554,
+              "fullName": "Seranthony Domínguez",
+              "link": "/api/v1/people/622554"
+            },
+            "toTeam": {
+              "id": 141,
+              "name": "Toronto Blue Jays",
+              "link": "/api/v1/teams/141"
+            },
+            "date": "2025-07-29",
+            "effectiveDate": "2025-07-29",
+            "resolutionDate": "2025-07-29",
+            "typeCode": "SC",
+            "typeDesc": "Status Change",
+            "description": "Toronto Blue Jays activated RHP Seranthony Domínguez."
+          },
+          {
+            "id": 859669,
+            "person": {
+              "id": 622554,
+              "fullName": "Seranthony Domínguez",
+              "link": "/api/v1/people/622554"
+            },
+            "fromTeam": {
+              "id": 110,
+              "name": "Baltimore Orioles",
+              "link": "/api/v1/teams/110"
+            },
+            "toTeam": {
+              "id": 141,
+              "name": "Toronto Blue Jays",
+              "link": "/api/v1/teams/141"
+            },
+            "date": "2025-07-29",
+            "effectiveDate": "2025-07-29",
+            "typeCode": "TR",
+            "typeDesc": "Trade",
+            "description": "Baltimore Orioles traded RHP Seranthony Domínguez and cash to Toronto Blue Jays for RHP Juaron Watts-Brown."
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Supporting discovery evidence only; transactions are not proposed as a production dependency."
+  ]
+}

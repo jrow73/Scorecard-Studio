@@ -1,0 +1,1399 @@
+/**
+ * Generated from tests/fixtures/model-contract/v030-adapter-registry.json.
+ * Run tools/generate-v030-adapter-definitions.mjs to refresh.
+ */
+
+function deepFreeze(value) {
+  if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+}
+
+export const V030_ADAPTER_REGISTRY = deepFreeze({
+  "schemaId": "scorecard-studio.adapter-registry",
+  "schemaVersion": 1,
+  "contractRevision": "0.3.0-draft.1",
+  "requestKeyFormat": {
+    "version": 1,
+    "separator": "|",
+    "arrayPolicy": "declared-set-arrays-deduplicate-and-sort",
+    "encoding": "utf8-percent-encoding"
+  },
+  "availabilityStates": [
+    "available",
+    "unposted",
+    "present-empty",
+    "omitted",
+    "not-requested",
+    "unsupported",
+    "not-applicable",
+    "ambiguous",
+    "partial",
+    "failed",
+    "stale"
+  ],
+  "adapters": [
+    {
+      "id": "schedule",
+      "endpointFamily": "schedule",
+      "planning": "core",
+      "inputFields": [
+        {
+          "name": "gamePk",
+          "type": "string",
+          "required": true,
+          "semantic": "Selected MLB game identifier.",
+          "keyOrder": 1
+        },
+        {
+          "name": "sportId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Explicit sport/level context.",
+          "keyOrder": 2
+        },
+        {
+          "name": "selectedDate",
+          "type": "date",
+          "required": true,
+          "semantic": "Schedule selection date used to choose a matching response view.",
+          "keyOrder": 3
+        },
+        {
+          "name": "hydrateProfile",
+          "type": "enum",
+          "required": true,
+          "semantic": "Versioned controlled hydration set.",
+          "keyOrder": 4,
+          "default": "pregame-v1",
+          "allowed": [
+            "pregame-v1"
+          ]
+        }
+      ],
+      "keyFields": [
+        "gamePk",
+        "sportId",
+        "selectedDate",
+        "hydrateProfile"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "selectedGame",
+          "targetHint": "/game",
+          "authority": "authoritative",
+          "identityKeys": [
+            "gamePk",
+            "selectedViewKey"
+          ]
+        },
+        {
+          "concept": "competitionContext",
+          "targetHint": "/context",
+          "authority": "authoritative",
+          "identityKeys": [
+            "sportId",
+            "gameType",
+            "season"
+          ]
+        },
+        {
+          "concept": "teamIdentity",
+          "targetHint": "/away/team",
+          "authority": "authoritative",
+          "identityKeys": [
+            "teamId"
+          ]
+        },
+        {
+          "concept": "originalLineup",
+          "targetHint": "/away/lineup",
+          "authority": "authoritative",
+          "identityKeys": [
+            "teamId",
+            "personId",
+            "battingOrder"
+          ]
+        },
+        {
+          "concept": "probablePitcher",
+          "targetHint": "/away/startingPitcher",
+          "authority": "authoritative",
+          "identityKeys": [
+            "teamId",
+            "personId"
+          ]
+        },
+        {
+          "concept": "venueIdentity",
+          "targetHint": "/game/venue",
+          "authority": "authoritative",
+          "identityKeys": [
+            "venueId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "mlb-regular",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "MLB regular-season current historical and bounded live controls.",
+          "fallback": null
+        },
+        {
+          "id": "milb-regular",
+          "match": {
+            "sportIds": [
+              11,
+              12,
+              13,
+              14
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Completed historical games preserved the tested shape; pregame timing remains untested.",
+          "fallback": null
+        },
+        {
+          "id": "mlb-other-competition",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "S",
+              "F",
+              "D",
+              "L",
+              "W"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Historical Final controls plus bounded postseason pregame observations.",
+          "fallback": null
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader universal claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "game-state",
+        "refreshTriggers": [
+          "selection",
+          "status-transition",
+          "milestone",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "gamePk",
+        "mergeSuccesses": false,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": true,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID",
+        "SELECTION_AMBIGUOUS",
+        "MATCHING_VIEW_MISSING"
+      ]
+    },
+    {
+      "id": "feed",
+      "endpointFamily": "game-feed",
+      "planning": "lazy",
+      "inputFields": [
+        {
+          "name": "gamePk",
+          "type": "string",
+          "required": true,
+          "semantic": "Selected game identifier.",
+          "keyOrder": 1
+        },
+        {
+          "name": "profile",
+          "type": "enum",
+          "required": true,
+          "semantic": "Bounded accepted feed concepts.",
+          "keyOrder": 2,
+          "default": "officials-venue-v1",
+          "allowed": [
+            "officials-venue-v1"
+          ]
+        }
+      ],
+      "keyFields": [
+        "gamePk",
+        "profile"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "officials",
+          "targetHint": "/game/umpires",
+          "authority": "authoritative",
+          "identityKeys": [
+            "gamePk",
+            "officialId",
+            "officialType"
+          ]
+        },
+        {
+          "concept": "venueDetail",
+          "targetHint": "/game/venue",
+          "authority": "conditional",
+          "identityKeys": [
+            "venueId"
+          ]
+        },
+        {
+          "concept": "feedState",
+          "targetHint": "/game/status",
+          "authority": "observation",
+          "identityKeys": [
+            "gamePk"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "mlb",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "R",
+              "S",
+              "F",
+              "D",
+              "L",
+              "W"
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "Officials and venue detail observed across regular, spring, and postseason controls.",
+          "fallback": "Officials have no accepted alternate; venue detail may use the Venue adapter."
+        },
+        {
+          "id": "milb-regular",
+          "match": {
+            "sportIds": [
+              11,
+              12,
+              13,
+              14
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Historical Final feeds returned variable officials and populated team/player maps; pregame timing untested.",
+          "fallback": null
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader universal claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "game-state",
+        "refreshTriggers": [
+          "consumer-demand",
+          "status-transition",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "gamePk",
+        "mergeSuccesses": false,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID"
+      ]
+    },
+    {
+      "id": "boxscore",
+      "endpointFamily": "game-boxscore",
+      "planning": "conditional",
+      "inputFields": [
+        {
+          "name": "gamePk",
+          "type": "string",
+          "required": true,
+          "semantic": "Related completed game identifier.",
+          "keyOrder": 1
+        },
+        {
+          "name": "relationship",
+          "type": "enum",
+          "required": true,
+          "semantic": "Why this boxscore may affect the selected game.",
+          "keyOrder": 2,
+          "default": "earlierSameDayGame",
+          "allowed": [
+            "earlierSameDayGame"
+          ]
+        }
+      ],
+      "keyFields": [
+        "gamePk",
+        "relationship"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "postgamePlayerTotals",
+          "targetHint": "/away/lineup",
+          "authority": "conditional",
+          "identityKeys": [
+            "gamePk",
+            "personId",
+            "statGroup"
+          ]
+        },
+        {
+          "concept": "postgameTeamRecord",
+          "targetHint": "/away/team/record",
+          "authority": "conditional",
+          "identityKeys": [
+            "gamePk",
+            "teamId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "mlb-earlier-final",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Accepted only after the earlier same-day game is Final.",
+          "fallback": "People prior-day totals and prior-day Standings record."
+        },
+        {
+          "id": "milb",
+          "match": {
+            "sportIds": [
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "state": "untested",
+          "evidenceScope": "Embedded Feed boxscore data does not prove separate endpoint parity.",
+          "fallback": "People and Standings within their supported scopes."
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "prior-game-finality",
+        "refreshTriggers": [
+          "prior-game-final",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "gamePk",
+        "mergeSuccesses": false,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "CAPABILITY_UNSUPPORTED",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID"
+      ]
+    },
+    {
+      "id": "roster",
+      "endpointFamily": "team-roster",
+      "planning": "core",
+      "inputFields": [
+        {
+          "name": "teamId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Team whose dated active membership is requested.",
+          "keyOrder": 1
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "semantic": "Official calendar date scope.",
+          "keyOrder": 2
+        },
+        {
+          "name": "rosterType",
+          "type": "enum",
+          "required": true,
+          "semantic": "Explicit membership scope.",
+          "keyOrder": 3,
+          "default": "active",
+          "allowed": [
+            "active"
+          ]
+        },
+        {
+          "name": "hydrateProfile",
+          "type": "enum",
+          "required": true,
+          "semantic": "Versioned person hydration.",
+          "keyOrder": 4,
+          "default": "person-v1",
+          "allowed": [
+            "person-v1"
+          ]
+        }
+      ],
+      "keyFields": [
+        "teamId",
+        "date",
+        "rosterType",
+        "hydrateProfile"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "activeMembership",
+          "targetHint": "/away/bench",
+          "authority": "authoritative",
+          "identityKeys": [
+            "teamId",
+            "date",
+            "personId"
+          ]
+        },
+        {
+          "concept": "rosterIdentity",
+          "targetHint": "/away/lineup",
+          "authority": "conditional",
+          "identityKeys": [
+            "teamId",
+            "date",
+            "personId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "regular",
+          "match": {
+            "sportIds": [
+              1,
+              11,
+              12,
+              13,
+              14
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "Dated active rosters sampled through Single-A.",
+          "fallback": null
+        },
+        {
+          "id": "mlb-other-competition",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "S",
+              "F",
+              "D",
+              "L",
+              "W"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Endpoint is date-scoped and does not prove competition-specific eligibility.",
+          "fallback": null
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "date-scope",
+        "refreshTriggers": [
+          "team-date-change",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "team-date",
+        "mergeSuccesses": true,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID",
+        "IDENTITY_JOIN_FAILED"
+      ]
+    },
+    {
+      "id": "people",
+      "endpointFamily": "people-stats",
+      "planning": "core",
+      "inputFields": [
+        {
+          "name": "personIds",
+          "type": "integerSet",
+          "required": true,
+          "semantic": "Canonical deduplicated player identities.",
+          "keyOrder": 1
+        },
+        {
+          "name": "sportId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Explicit statistics sport/level.",
+          "keyOrder": 2
+        },
+        {
+          "name": "gameTypes",
+          "type": "stringSet",
+          "required": true,
+          "semantic": "Explicit competition segments.",
+          "keyOrder": 3
+        },
+        {
+          "name": "statGroups",
+          "type": "stringSet",
+          "required": true,
+          "semantic": "Requested independent hitting/pitching groups.",
+          "keyOrder": 4
+        },
+        {
+          "name": "statType",
+          "type": "enum",
+          "required": true,
+          "semantic": "Statistics aggregation type.",
+          "keyOrder": 5,
+          "default": "byDateRange",
+          "allowed": [
+            "byDateRange"
+          ]
+        },
+        {
+          "name": "startDate",
+          "type": "date",
+          "required": true,
+          "semantic": "Inclusive statistics start date.",
+          "keyOrder": 6
+        },
+        {
+          "name": "endDate",
+          "type": "date",
+          "required": true,
+          "semantic": "Inclusive effective cutoff date.",
+          "keyOrder": 7
+        },
+        {
+          "name": "chunkSize",
+          "type": "integer",
+          "required": true,
+          "semantic": "Explicit configured maximum IDs per independently retryable unit.",
+          "keyOrder": 8,
+          "default": 100,
+          "minimum": 1
+        }
+      ],
+      "keyFields": [
+        "personIds",
+        "sportId",
+        "gameTypes",
+        "statGroups",
+        "statType",
+        "startDate",
+        "endDate",
+        "chunkSize"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "personIdentity",
+          "targetHint": "/away/lineup",
+          "authority": "conditional",
+          "identityKeys": [
+            "personId"
+          ]
+        },
+        {
+          "concept": "scopedPlayerStats",
+          "targetHint": "/away/lineup",
+          "authority": "authoritative",
+          "identityKeys": [
+            "personId",
+            "sportId",
+            "gameTypes",
+            "statGroup",
+            "startDate",
+            "endDate"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "mlb-regular",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "Regular-season hitting/pitching and aggregate controls.",
+          "fallback": "One unambiguous scoped split; otherwise ambiguous."
+        },
+        {
+          "id": "milb-regular",
+          "match": {
+            "sportIds": [
+              11,
+              12,
+              13,
+              14
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Explicit sport-scoped pitching controls through Single-A.",
+          "fallback": "One unambiguous scoped split; otherwise ambiguous."
+        },
+        {
+          "id": "mlb-other-competition",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "S",
+              "F",
+              "D",
+              "L",
+              "W"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Explicit spring and postseason game-type totals verified for selected controls.",
+          "fallback": "Do not substitute regular-season totals."
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No cross-level or unscoped aggregate claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "date-range-scope",
+        "refreshTriggers": [
+          "person-set-change",
+          "scope-change",
+          "cutoff-change",
+          "retry-failed-units"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "person-id-chunk",
+        "mergeSuccesses": true,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": "chunkSize",
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "CAPABILITY_UNSUPPORTED",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID",
+        "IDENTITY_JOIN_FAILED",
+        "SELECTION_AMBIGUOUS"
+      ]
+    },
+    {
+      "id": "coaches",
+      "endpointFamily": "team-coaches",
+      "planning": "lazy",
+      "inputFields": [
+        {
+          "name": "teamId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Team staff scope.",
+          "keyOrder": 1
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "semantic": "Historical staff date.",
+          "keyOrder": 2
+        },
+        {
+          "name": "season",
+          "type": "integer",
+          "required": true,
+          "semantic": "Explicit source season.",
+          "keyOrder": 3
+        }
+      ],
+      "keyFields": [
+        "teamId",
+        "date",
+        "season"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "managerCandidates",
+          "targetHint": "/away/manager",
+          "authority": "conditional",
+          "identityKeys": [
+            "teamId",
+            "personId",
+            "jobId"
+          ]
+        },
+        {
+          "concept": "coachingStaff",
+          "targetHint": "/away/coaches",
+          "authority": "authoritative",
+          "identityKeys": [
+            "teamId",
+            "personId",
+            "jobId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "regular",
+          "match": {
+            "sportIds": [
+              1,
+              11,
+              12,
+              13,
+              14
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "Dated staff and manager change plus sampled MiLB levels.",
+          "fallback": "Manager remains missing/ambiguous when no safe candidate exists."
+        },
+        {
+          "id": "mlb-other-competition",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "S",
+              "F",
+              "D",
+              "L",
+              "W"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Date-scoped endpoint does not prove competition-specific staff rules.",
+          "fallback": null
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "date-scope",
+        "refreshTriggers": [
+          "team-date-season-change",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "team-date-season",
+        "mergeSuccesses": true,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID",
+        "SELECTION_AMBIGUOUS"
+      ]
+    },
+    {
+      "id": "standings",
+      "endpointFamily": "standings",
+      "planning": "core",
+      "inputFields": [
+        {
+          "name": "sportId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Explicit standings sport/level.",
+          "keyOrder": 1
+        },
+        {
+          "name": "leagueIds",
+          "type": "integerSet",
+          "required": true,
+          "semantic": "Canonical league scope.",
+          "keyOrder": 2
+        },
+        {
+          "name": "standingsType",
+          "type": "string",
+          "required": true,
+          "semantic": "Explicit source standings type.",
+          "keyOrder": 3
+        },
+        {
+          "name": "season",
+          "type": "integer",
+          "required": true,
+          "semantic": "Standings season.",
+          "keyOrder": 4
+        },
+        {
+          "name": "cutoffDate",
+          "type": "date",
+          "required": true,
+          "semantic": "End-of-day standings cutoff.",
+          "keyOrder": 5
+        }
+      ],
+      "keyFields": [
+        "sportId",
+        "leagueIds",
+        "standingsType",
+        "season",
+        "cutoffDate"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "teamStandings",
+          "targetHint": "/away/team/standings",
+          "authority": "authoritative",
+          "identityKeys": [
+            "teamId",
+            "standingsType",
+            "cutoffDate"
+          ]
+        },
+        {
+          "concept": "standingsGroups",
+          "targetHint": "/standings/groups",
+          "authority": "authoritative",
+          "identityKeys": [
+            "standingsType",
+            "sportId",
+            "leagueId",
+            "divisionId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "regular",
+          "match": {
+            "sportIds": [
+              1,
+              11,
+              12,
+              13,
+              14
+            ],
+            "gameTypes": [
+              "R"
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "MLB and sampled MiLB regular-season groups/cutoffs.",
+          "fallback": "Missing values remain unavailable; do not reconstruct league state."
+        },
+        {
+          "id": "mlb-spring",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "S"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Explicit springTraining response verified.",
+          "fallback": null
+        },
+        {
+          "id": "mlb-postseason",
+          "match": {
+            "sportIds": [
+              1
+            ],
+            "gameTypes": [
+              "F",
+              "D",
+              "L",
+              "W"
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Explicit postseason standings response verified; it is not a bracket.",
+          "fallback": null
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "end-of-day-cutoff",
+        "refreshTriggers": [
+          "scope-change",
+          "cutoff-change",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "sport-leagues-type-season-cutoff",
+        "mergeSuccesses": true,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "CAPABILITY_UNSUPPORTED",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID"
+      ]
+    },
+    {
+      "id": "venue",
+      "endpointFamily": "venue-detail",
+      "planning": "conditional",
+      "inputFields": [
+        {
+          "name": "venueId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Selected game's venue identity.",
+          "keyOrder": 1
+        },
+        {
+          "name": "season",
+          "type": "integer",
+          "required": true,
+          "semantic": "Requested venue season context.",
+          "keyOrder": 2
+        },
+        {
+          "name": "hydrateProfile",
+          "type": "enum",
+          "required": true,
+          "semantic": "Controlled location/field/timezone hydration.",
+          "keyOrder": 3,
+          "default": "location-fieldInfo-timezone-v1",
+          "allowed": [
+            "location-fieldInfo-timezone-v1"
+          ]
+        }
+      ],
+      "keyFields": [
+        "venueId",
+        "season",
+        "hydrateProfile"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "venueDetail",
+          "targetHint": "/game/venue",
+          "authority": "conditional",
+          "identityKeys": [
+            "venueId",
+            "season"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "mlb-aaa",
+          "match": {
+            "sportIds": [
+              1,
+              11
+            ]
+          },
+          "state": "supported",
+          "evidenceScope": "Narrow response matched Feed venue objects in sampled MLB/international/spring/Triple-A controls.",
+          "fallback": "Already-loaded Feed venue detail."
+        },
+        {
+          "id": "lower-milb",
+          "match": {
+            "sportIds": [
+              12,
+              13,
+              14
+            ]
+          },
+          "state": "untested",
+          "evidenceScope": "Game venue identity exists; narrow endpoint parity was not compared.",
+          "fallback": "Already-loaded Feed detail when available; otherwise optional fields remain unavailable."
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader claim.",
+          "fallback": null
+        }
+      ],
+      "freshness": {
+        "basis": "season-scope",
+        "refreshTriggers": [
+          "venue-season-change",
+          "required-field-missing",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "venue-season",
+        "mergeSuccesses": false,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "CAPABILITY_UNSUPPORTED",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID"
+      ]
+    },
+    {
+      "id": "depthChart",
+      "endpointFamily": "team-depth-chart",
+      "planning": "optional",
+      "inputFields": [
+        {
+          "name": "teamId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Team whose current depth annotations are requested.",
+          "keyOrder": 1
+        },
+        {
+          "name": "season",
+          "type": "integer",
+          "required": true,
+          "semantic": "Requested parameter retained despite unproven historical behavior.",
+          "keyOrder": 2
+        }
+      ],
+      "keyFields": [
+        "teamId",
+        "season"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "pitcherRoleAnnotations",
+          "targetHint": "/away/additionalStarters",
+          "authority": "optional-annotation",
+          "identityKeys": [
+            "teamId",
+            "personId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "mlb",
+          "match": {
+            "sportIds": [
+              1
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Useful SP/P/CP labels observed, but current-only, incomplete, and includes inactive players.",
+          "fallback": "Dated-roster pitchers minus selected starter."
+        },
+        {
+          "id": "milb",
+          "match": {
+            "sportIds": [
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "state": "absent",
+          "evidenceScope": "Sampled successful responses omitted roster through Single-A.",
+          "fallback": "Dated-roster pitchers minus selected starter."
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "No broader claim.",
+          "fallback": "Dated-roster pitchers minus selected starter."
+        }
+      ],
+      "freshness": {
+        "basis": "current-only",
+        "refreshTriggers": [
+          "consumer-demand",
+          "team-season-change",
+          "manual"
+        ],
+        "ttlSeconds": null,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "team-season",
+        "mergeSuccesses": true,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": false,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "CAPABILITY_UNSUPPORTED",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "PARSE_FAILED",
+        "SOURCE_SHAPE_INVALID",
+        "IDENTITY_JOIN_FAILED"
+      ]
+    },
+    {
+      "id": "teamLogo",
+      "endpointFamily": "team-logo-svg",
+      "planning": "optional",
+      "inputFields": [
+        {
+          "name": "teamId",
+          "type": "integer",
+          "required": true,
+          "semantic": "Current team asset identity.",
+          "keyOrder": 1
+        },
+        {
+          "name": "assetProfile",
+          "type": "enum",
+          "required": true,
+          "semantic": "Required validated vector format.",
+          "keyOrder": 2,
+          "default": "svg-v1",
+          "allowed": [
+            "svg-v1"
+          ]
+        }
+      ],
+      "keyFields": [
+        "teamId",
+        "assetProfile"
+      ],
+      "outputConcepts": [
+        {
+          "concept": "currentTeamLogo",
+          "targetHint": "/away/team/logo",
+          "authority": "optional-asset",
+          "identityKeys": [
+            "teamId"
+          ]
+        }
+      ],
+      "capabilityRules": [
+        {
+          "id": "sampled-levels",
+          "match": {
+            "sportIds": [
+              1,
+              11,
+              12,
+              13,
+              14
+            ]
+          },
+          "state": "conditional",
+          "evidenceScope": "Current SVG assets observed across sampled levels; not historical branding.",
+          "fallback": "Team abbreviation/text, then empty placeholder."
+        },
+        {
+          "id": "default",
+          "match": {
+            "default": true
+          },
+          "state": "untested",
+          "evidenceScope": "Missing and special IDs require validation.",
+          "fallback": "Team abbreviation/text, then empty placeholder."
+        }
+      ],
+      "freshness": {
+        "basis": "http-cache",
+        "refreshTriggers": [
+          "consumer-demand",
+          "http-cache-expired",
+          "manual"
+        ],
+        "ttlSeconds": 1209600,
+        "cacheFailureAsEmpty": false
+      },
+      "partialPolicy": {
+        "unit": "team-asset",
+        "mergeSuccesses": true,
+        "failedUnitAvailability": "failed",
+        "retryFailedOnly": true,
+        "emptyIsFailure": true,
+        "chunkSizeInput": null,
+        "zeroFillFailedUnits": false
+      },
+      "errorCodes": [
+        "INPUT_INVALID",
+        "REQUEST_FAILED",
+        "HTTP_STATUS",
+        "CONTENT_TYPE_INVALID",
+        "ASSET_INVALID"
+      ]
+    }
+  ]
+});
+
+export const ADAPTER_DEFINITIONS = V030_ADAPTER_REGISTRY.adapters;

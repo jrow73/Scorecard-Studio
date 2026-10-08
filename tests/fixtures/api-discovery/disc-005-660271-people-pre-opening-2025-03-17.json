@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-005-660271-people-pre-opening-2025-03-17",
+  "investigationId": "DISC-005",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:07:52.554Z",
+  "context": {
+    "subject": "Shohei Ohtani pre-regular-season range with spring games excluded",
+    "gameState": "byDateRange ends before 2025 Tokyo regular-season opener"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=660271&hydrate=stats%28group%3D%5Bhitting%2Cpitching%5D%2Ctype%3D%5BbyDateRange%5D%2CstartDate%3D2025-01-01%2CendDate%3D2025-03-17%29",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 196,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1349,
+    "bodySha256": "3c10c429199d2244c6757a84fe7e05b3209c6e6b6945478adbed30f0ad39a347"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people/0/id",
+      "/people/0/fullName",
+      "/people/0/primaryPosition",
+      "/people/0/stats"
+    ],
+    "values": {
+      "/people/0/id": {
+        "found": true,
+        "value": 660271
+      },
+      "/people/0/fullName": {
+        "found": true,
+        "value": "Shohei Ohtani"
+      },
+      "/people/0/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "Y",
+          "name": "Two-Way Player",
+          "type": "Two-Way Player",
+          "abbreviation": "TWP"
+        }
+      },
+      "/people/0/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "pitching"
+            },
+            "exemptions": [],
+            "splits": []
+          },
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "hitting"
+            },
+            "exemptions": [],
+            "splits": []
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "The default byDateRange groups do not import spring-training totals into this MLB range."
+  ]
+}

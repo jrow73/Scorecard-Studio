@@ -1,0 +1,660 @@
+{
+  "schemaId": "scorecard-studio.normalized-game",
+  "schemaVersion": 2,
+  "contractRevision": "0.3.0-draft.1",
+  "context": {
+    "gamePk": "777458",
+    "season": 2025,
+    "sport": { "id": 1, "name": "Major League Baseball" },
+    "gameType": "R",
+    "competitionSegment": "regular",
+    "selectedDate": "2025-06-19",
+    "officialDate": "2025-06-19",
+    "selectedViewKey": "777458:2025-06-19:2"
+  },
+  "game": {
+    "status": {
+      "canonical": "pregame",
+      "raw": {
+        "abstractGameState": "Preview",
+        "codedGameState": "P",
+        "detailedState": "Pre-Game",
+        "statusCode": "P"
+      },
+      "reason": null,
+      "startTimeTBD": false,
+      "teamsTBD": false
+    },
+    "dates": {
+      "scheduledStart": "2025-06-19T23:10:00.000Z",
+      "originalScheduledStart": "2025-06-19T23:10:00.000Z",
+      "officialDate": "2025-06-19",
+      "rescheduledStart": null,
+      "rescheduledDate": null,
+      "resumeStart": null,
+      "resumeDate": null
+    },
+    "dayNight": "night",
+    "gameNumber": 2,
+    "venue": {
+      "id": 4,
+      "name": "Rate Field",
+      "location": { "city": "Chicago", "state": "Illinois", "country": "USA" },
+      "timeZone": { "iana": "America/Chicago" },
+      "fieldInfo": { "capacity": null, "turfType": null, "roofType": null, "dimensions": {} }
+    },
+    "weather": { "temperature": null, "condition": null, "wind": null },
+    "umpires": { "crew": [] }
+  },
+  "away": {
+    "team": {
+      "id": 138,
+      "name": "St. Louis Cardinals",
+      "locationName": "St. Louis",
+      "shortName": "St. Louis",
+      "clubName": "Cardinals",
+      "abbreviation": "STL",
+      "sport": { "id": 1, "name": "Major League Baseball" },
+      "league": { "id": 104, "name": "National League" },
+      "division": { "id": 205, "name": "National League Central" },
+      "record": { "gamesPlayed": 75, "wins": 39, "losses": 36, "pct": 0.52 },
+      "gameNumber": 76,
+      "standings": {
+        "divisionRank": { "raw": "2", "value": 2 },
+        "leagueRank": { "raw": "7", "value": 7 },
+        "wildCardRank": { "raw": "3", "value": 3 },
+        "divisionGamesBack": { "raw": "4.0", "state": "behind", "games": 4 },
+        "leagueGamesBack": { "raw": "8.0", "state": "behind", "games": 8 },
+        "wildCardGamesBack": { "raw": "-", "state": "leader", "games": 0 },
+        "streak": "W2",
+        "lastTen": { "wins": 6, "losses": 4 },
+        "elimination": { "raw": "-", "state": "notEliminated", "value": null },
+        "clinch": { "raw": null, "state": "none", "value": null }
+      },
+      "logo": { "url": null, "brandScope": null }
+    },
+    "manager": { "state": "notRequested", "candidates": [], "selected": null },
+    "coaches": [],
+    "lineup": {
+      "state": "partial",
+      "slots": [
+        {
+          "battingOrder": 1,
+          "slotState": "available",
+          "player": {
+            "id": 600000,
+            "name": "Contract Example Player",
+            "number": "7",
+            "bats": "R",
+            "throws": "R",
+            "primaryPosition": { "abbreviation": "CF", "name": "Center Fielder", "type": "Outfielder" }
+          },
+          "position": { "abbreviation": "CF", "name": "Center Field", "number": 8, "roleLabel": null },
+          "stats": {
+            "hitting": {
+              "scope": {
+                "sportId": 1,
+                "gameTypes": ["R"],
+                "statType": "seasonStats",
+                "startDate": "2025-01-01",
+                "endDate": "2025-06-19",
+                "aggregate": { "sportId": 1, "code": "game1-postgame", "selection": "single-unambiguous" }
+              },
+              "totals": { "gamesPlayed": 70, "avg": 0.271, "homeRuns": 8 }
+            }
+          }
+        }
+      ]
+    },
+    "startingPitcher": null,
+    "additionalStarters": [],
+    "bench": [],
+    "bullpen": [],
+    "defense": {}
+  },
+  "home": {
+    "team": {
+      "id": 145,
+      "name": "Chicago White Sox",
+      "locationName": "Chicago",
+      "shortName": "Chi White Sox",
+      "clubName": "White Sox",
+      "abbreviation": "CWS",
+      "sport": { "id": 1, "name": "Major League Baseball" },
+      "league": { "id": 103, "name": "American League" },
+      "division": { "id": 202, "name": "American League Central" },
+      "record": { "gamesPlayed": 75, "wins": 23, "losses": 52, "pct": 0.307 },
+      "gameNumber": 76,
+      "standings": {
+        "divisionRank": { "raw": "5", "value": 5 },
+        "leagueRank": { "raw": "15", "value": 15 },
+        "wildCardRank": { "raw": "12", "value": 12 },
+        "divisionGamesBack": { "raw": "24.0", "state": "behind", "games": 24 },
+        "leagueGamesBack": { "raw": "30.0", "state": "behind", "games": 30 },
+        "wildCardGamesBack": { "raw": "18.0", "state": "behind", "games": 18 },
+        "streak": "L3",
+        "lastTen": { "wins": 3, "losses": 7 },
+        "elimination": { "raw": "-", "state": "notEliminated", "value": null },
+        "clinch": { "raw": null, "state": "none", "value": null }
+      },
+      "logo": { "url": null, "brandScope": null }
+    },
+    "manager": { "state": "notRequested", "candidates": [], "selected": null },
+    "coaches": [],
+    "lineup": { "state": "notPosted", "slots": [] },
+    "startingPitcher": null,
+    "additionalStarters": [],
+    "bench": [],
+    "bullpen": [],
+    "defense": {}
+  },
+  "standings": {
+    "groups": [
+      {
+        "key": "regularSeason:1:104:205",
+        "standingsType": "regularSeason",
+        "sport": { "id": 1, "name": "Major League Baseball" },
+        "league": { "id": 104, "name": "National League" },
+        "division": { "id": 205, "name": "National League Central" },
+        "rows": []
+      }
+    ]
+  },
+  "meta": {
+    "snapshot": {
+      "id": "contract-game2-mixed-cutoff",
+      "createdAtUtc": "2026-10-06T18:00:00.000Z",
+      "producer": { "applicationVersion": "0.3.0-design", "build": "003.1" },
+      "fixtureKind": "synthetic-contract"
+    },
+    "sourceResults": [
+      {
+        "id": "schedule.game2",
+        "adapter": "schedule",
+        "request": {
+          "key": "schedule:gamePk=777458:hydrate=pregame",
+          "endpointFamily": "schedule",
+          "method": "GET",
+          "parameters": { "gamePk": "777458", "hydrate": "lineups,weather,venue,team,probablePitcher" }
+        },
+        "scope": { "gamePk": "777458", "selectedViewKey": "777458:2025-06-19:2" },
+        "requestedAtUtc": "2026-10-06T18:00:00.000Z",
+        "retrievedAtUtc": "2026-10-06T18:00:00.100Z",
+        "effective": { "kind": "gameState", "gamePk": "777458", "canonicalGameState": "pregame", "rawGameState": "Pre-Game" },
+        "outcome": "success",
+        "response": { "status": 200, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "boxscore.game1",
+        "adapter": "boxscore",
+        "request": {
+          "key": "boxscore:gamePk=777447",
+          "endpointFamily": "game-boxscore",
+          "method": "GET",
+          "parameters": { "gamePk": "777447" }
+        },
+        "scope": { "gamePk": "777447", "relationship": "earlierSameDayGame" },
+        "requestedAtUtc": "2026-10-06T18:00:00.000Z",
+        "retrievedAtUtc": "2026-10-06T18:00:00.150Z",
+        "effective": { "kind": "gameState", "gamePk": "777447", "canonicalGameState": "final", "rawGameState": "Final" },
+        "outcome": "success",
+        "response": { "status": 200, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "standings.prior-day",
+        "adapter": "standings",
+        "request": {
+          "key": "standings:sport=1:type=regularSeason:date=2025-06-18",
+          "endpointFamily": "standings",
+          "method": "GET",
+          "parameters": { "sportId": 1, "standingsType": "regularSeason", "date": "2025-06-18", "season": 2025 }
+        },
+        "scope": { "sportId": 1, "standingsType": "regularSeason", "cutoffDate": "2025-06-18" },
+        "requestedAtUtc": "2026-10-06T18:00:00.000Z",
+        "retrievedAtUtc": "2026-10-06T18:00:00.200Z",
+        "effective": { "kind": "endOfDay", "cutoffDate": "2025-06-18" },
+        "outcome": "success",
+        "response": { "status": 200, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "roster.away.not-requested",
+        "adapter": "roster",
+        "request": {
+          "key": "roster:team=138:date=2025-06-19",
+          "endpointFamily": "team-roster",
+          "method": "GET",
+          "parameters": { "teamId": 138, "date": "2025-06-19" }
+        },
+        "scope": { "teamId": 138, "date": "2025-06-19" },
+        "requestedAtUtc": null,
+        "retrievedAtUtc": null,
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "outcome": "notRequested",
+        "response": { "status": null, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "roster.home.not-requested",
+        "adapter": "roster",
+        "request": {
+          "key": "roster:team=145:date=2025-06-19",
+          "endpointFamily": "team-roster",
+          "method": "GET",
+          "parameters": { "teamId": 145, "date": "2025-06-19" }
+        },
+        "scope": { "teamId": 145, "date": "2025-06-19" },
+        "requestedAtUtc": null,
+        "retrievedAtUtc": null,
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "outcome": "notRequested",
+        "response": { "status": null, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "feed.not-requested",
+        "adapter": "feed",
+        "request": {
+          "key": "feed:gamePk=777458",
+          "endpointFamily": "game-feed",
+          "method": "GET",
+          "parameters": { "gamePk": "777458" }
+        },
+        "scope": { "gamePk": "777458" },
+        "requestedAtUtc": null,
+        "retrievedAtUtc": null,
+        "effective": { "kind": "unknown" },
+        "outcome": "notRequested",
+        "response": { "status": null, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "coaches.not-requested",
+        "adapter": "coaches",
+        "request": {
+          "key": "coaches:not-requested",
+          "endpointFamily": "team-coaches",
+          "method": "GET",
+          "parameters": {}
+        },
+        "scope": { "gamePk": "777458" },
+        "requestedAtUtc": null,
+        "retrievedAtUtc": null,
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "outcome": "notRequested",
+        "response": { "status": null, "bodySha256": null },
+        "error": null
+      },
+      {
+        "id": "depth.not-requested",
+        "adapter": "depthChart",
+        "request": {
+          "key": "depth-chart:not-requested",
+          "endpointFamily": "team-depth-chart",
+          "method": "GET",
+          "parameters": {}
+        },
+        "scope": { "gamePk": "777458" },
+        "requestedAtUtc": null,
+        "retrievedAtUtc": null,
+        "effective": { "kind": "current" },
+        "outcome": "notRequested",
+        "response": { "status": null, "bodySha256": null },
+        "error": null
+      }
+    ],
+    "lineage": [
+      {
+        "id": "lineage.game",
+        "target": "/game",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["schedule.game2"],
+        "selectedSourceResultRef": "schedule.game2",
+        "sourcePath": "/dates/1/games/0",
+        "effective": { "kind": "gameState", "gamePk": "777458", "canonicalGameState": "pregame", "rawGameState": "Pre-Game" },
+        "selectionReason": "Selected Schedule view matching gamePk, official date, and game number.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["normalize-status", "separate-game-dates", "suppress-tbd-placeholder-time"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.umpires",
+        "target": "/game/umpires",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": ["feed.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/liveData/boxscore/officials",
+        "effective": null,
+        "selectionReason": "Feed was not required for this synthetic snapshot.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team",
+        "target": "/away/team",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["schedule.game2"],
+        "selectedSourceResultRef": "schedule.game2",
+        "sourcePath": "/dates/1/games/0/teams/away/team",
+        "effective": { "kind": "gameState", "gamePk": "777458", "canonicalGameState": "pregame", "rawGameState": "Pre-Game" },
+        "selectionReason": "Schedule is selected-game team identity authority.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.record",
+        "target": "/away/team/record",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["boxscore.game1", "standings.prior-day"],
+        "selectedSourceResultRef": "boxscore.game1",
+        "sourcePath": "/teams/away/team/record",
+        "effective": { "kind": "gameState", "gamePk": "777447", "canonicalGameState": "final", "rawGameState": "Final" },
+        "selectionReason": "Earlier same-day game is Final, so Game 1 postgame record overrides prior-day standings.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [
+          { "sourceResultRef": "standings.prior-day", "reason": "Valid fallback but older than the completed earlier game." }
+        ],
+        "transformations": ["normalize-team-record"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.standings",
+        "target": "/away/team/standings",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["standings.prior-day"],
+        "selectedSourceResultRef": "standings.prior-day",
+        "sourcePath": "/records/*/teamRecords/*",
+        "effective": { "kind": "endOfDay", "cutoffDate": "2025-06-18" },
+        "selectionReason": "League-wide standings remain at the accepted prior-day cutoff.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["parse-rank-tokens", "parse-games-back-tokens"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.streak",
+        "target": "/away/team/standings/streak",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": ["standings.prior-day", "schedule.game2", "boxscore.game1"],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": { "kind": "gameState", "gamePk": "777447", "canonicalGameState": "final", "rawGameState": "Final" },
+        "selectionReason": "Locally advanced the prior-day streak by the known Game 1 result.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["advance-streak-one-known-result"],
+        "derivationInputs": ["/away/team/standings/streak@standings.prior-day", "game-result@boxscore.game1"]
+      },
+      {
+        "id": "lineage.away.lineup",
+        "target": "/away/lineup",
+        "coverage": "subtree",
+        "state": "partial",
+        "sourceResultRefs": ["schedule.game2"],
+        "selectedSourceResultRef": "schedule.game2",
+        "sourcePath": "/dates/1/games/0/lineups/awayPlayers",
+        "effective": { "kind": "gameState", "gamePk": "777458", "canonicalGameState": "pregame", "rawGameState": "Pre-Game" },
+        "selectionReason": "Synthetic fixture retains one slot to demonstrate a mixed-cutoff stat override.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["preserve-source-order"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.player-stats",
+        "target": "/away/lineup/slots/0/stats",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["boxscore.game1"],
+        "selectedSourceResultRef": "boxscore.game1",
+        "sourcePath": "/teams/away/players/ID600000/seasonStats",
+        "effective": { "kind": "gameState", "gamePk": "777447", "canonicalGameState": "final", "rawGameState": "Final" },
+        "selectionReason": "Game 1 Final seasonStats override prior-day People totals for Game 2.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["normalize-hitting-stats", "attach-explicit-stat-scope"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.roster-groups",
+        "target": "/away/bench",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["roster.away.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Dated roster was not requested in this contract fixture.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.bullpen",
+        "target": "/away/bullpen",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["roster.away.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Dated roster was not requested in this contract fixture.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.additional-starters",
+        "target": "/away/additionalStarters",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["depth.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "current" },
+        "selectionReason": "Depth-chart annotation was not requested; no SP classification is inferred.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.staff",
+        "target": "/away/manager",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": ["coaches.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Coaches adapter was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.coaches",
+        "target": "/away/coaches",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["coaches.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Coaches adapter was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home",
+        "target": "/home",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["schedule.game2"],
+        "selectedSourceResultRef": "schedule.game2",
+        "sourcePath": "/dates/1/games/0/teams/home",
+        "effective": { "kind": "gameState", "gamePk": "777458", "canonicalGameState": "pregame", "rawGameState": "Pre-Game" },
+        "selectionReason": "Schedule supplies selected-game home-team identity.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.record",
+        "target": "/home/team/record",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["boxscore.game1", "standings.prior-day"],
+        "selectedSourceResultRef": "boxscore.game1",
+        "sourcePath": "/teams/home/team/record",
+        "effective": { "kind": "gameState", "gamePk": "777447", "canonicalGameState": "final", "rawGameState": "Final" },
+        "selectionReason": "Earlier same-day game is Final.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [
+          { "sourceResultRef": "standings.prior-day", "reason": "Valid fallback but older than the completed earlier game." }
+        ],
+        "transformations": ["normalize-team-record"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.standings",
+        "target": "/home/team/standings",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["standings.prior-day"],
+        "selectedSourceResultRef": "standings.prior-day",
+        "sourcePath": "/records/*/teamRecords/*",
+        "effective": { "kind": "endOfDay", "cutoffDate": "2025-06-18" },
+        "selectionReason": "League-wide standings remain prior-day.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["parse-rank-tokens", "parse-games-back-tokens"],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.lineup",
+        "target": "/home/lineup",
+        "coverage": "subtree",
+        "state": "unposted",
+        "sourceResultRefs": ["schedule.game2"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/dates/1/games/0/lineups/homePlayers",
+        "effective": { "kind": "gameState", "gamePk": "777458", "canonicalGameState": "pregame", "rawGameState": "Pre-Game" },
+        "selectionReason": "Schedule did not supply a posted home lineup in this synthetic case.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.roster-groups",
+        "target": "/home/bench",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["roster.home.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Dated roster was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.bullpen",
+        "target": "/home/bullpen",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["roster.home.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Dated roster was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.additional-starters",
+        "target": "/home/additionalStarters",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["depth.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "current" },
+        "selectionReason": "Depth-chart annotation was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.staff",
+        "target": "/home/manager",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": ["coaches.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Coaches adapter was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.coaches",
+        "target": "/home/coaches",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": ["coaches.not-requested"],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": { "kind": "date", "date": "2025-06-19" },
+        "selectionReason": "Coaches adapter was not requested.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.groups",
+        "target": "/standings/groups",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": ["standings.prior-day"],
+        "selectedSourceResultRef": "standings.prior-day",
+        "sourcePath": "/records",
+        "effective": { "kind": "endOfDay", "cutoffDate": "2025-06-18" },
+        "selectionReason": "Preserve only source groups returned by the scoped standings request.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": ["normalize-source-groups"],
+        "derivationInputs": []
+      }
+    ]
+  }
+}

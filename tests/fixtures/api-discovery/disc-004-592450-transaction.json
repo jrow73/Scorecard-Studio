@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-004-592450-transaction",
+  "investigationId": "DISC-004",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:05:50.950Z",
+  "context": {
+    "subject": "Aaron Judge injured-list placement and activation corroboration",
+    "gameState": "Transaction interval 2025-07-20 through 2025-08-15"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/transactions?playerId=592450&startDate=2025-07-20&endDate=2025-08-15",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 266,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=600, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 994,
+    "bodySha256": "5ab24f00092484049b6de7091a25035659f7c71ef63fa7eb63c8e6cd14da06a1"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/transactions"
+    ],
+    "values": {
+      "/transactions": {
+        "found": true,
+        "value": [
+          {
+            "id": 858922,
+            "person": {
+              "id": 592450,
+              "fullName": "Aaron Judge",
+              "link": "/api/v1/people/592450"
+            },
+            "toTeam": {
+              "id": 147,
+              "name": "New York Yankees",
+              "link": "/api/v1/teams/147"
+            },
+            "date": "2025-07-27",
+            "effectiveDate": "2025-07-26",
+            "resolutionDate": "2025-07-26",
+            "typeCode": "SC",
+            "typeDesc": "Status Change",
+            "description": "New York Yankees placed RF Aaron Judge on the 10-day injured list retroactive to July 26, 2025. Right flexor strain."
+          },
+          {
+            "id": 862347,
+            "person": {
+              "id": 592450,
+              "fullName": "Aaron Judge",
+              "link": "/api/v1/people/592450"
+            },
+            "toTeam": {
+              "id": 147,
+              "name": "New York Yankees",
+              "link": "/api/v1/teams/147"
+            },
+            "date": "2025-08-05",
+            "effectiveDate": "2025-08-05",
+            "resolutionDate": "2025-08-05",
+            "typeCode": "SC",
+            "typeDesc": "Status Change",
+            "description": "New York Yankees activated RF Aaron Judge from the 10-day injured list."
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Supporting discovery evidence only; transactions are not proposed as a production dependency."
+  ]
+}

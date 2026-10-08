@@ -1,0 +1,455 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "ordinary",
+      "payload": {
+        "dates": [
+          {
+            "date": "2025-07-03",
+            "games": [
+              {
+                "gamePk": 800201,
+                "gameType": "R",
+                "season": "2025",
+                "gameDate": "2025-07-03T23:10:00Z",
+                "officialDate": "2025-07-03",
+                "dayNight": "night",
+                "gameNumber": 1,
+                "status": {
+                  "abstractGameState": "Preview",
+                  "codedGameState": "P",
+                  "detailedState": "Pre-Game",
+                  "statusCode": "P",
+                  "startTimeTBD": false,
+                  "abstractGameCode": "P"
+                },
+                "teams": {
+                  "away": {
+                    "team": {
+                      "id": 145,
+                      "name": "Chicago White Sox",
+                      "locationName": "Chicago White",
+                      "shortName": "Chicago White Sox",
+                      "clubName": "Sox",
+                      "abbreviation": "CWS",
+                      "sport": {
+                        "id": 1,
+                        "name": "Major League Baseball"
+                      },
+                      "league": {
+                        "id": 103,
+                        "name": "American League"
+                      },
+                      "division": {
+                        "id": 202,
+                        "name": "Contract Division"
+                      }
+                    },
+                    "leagueRecord": {
+                      "wins": 42,
+                      "losses": 43,
+                      "ties": 0,
+                      "pct": ".494"
+                    },
+                    "probablePitcher": {
+                      "id": 730001,
+                      "fullName": "Away Fixture Probable",
+                      "primaryPosition": {
+                        "abbreviation": "P",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "code": "1"
+                      }
+                    }
+                  },
+                  "home": {
+                    "team": {
+                      "id": 138,
+                      "name": "St. Louis Cardinals",
+                      "locationName": "St. Louis",
+                      "shortName": "St. Louis Cardinals",
+                      "clubName": "Cardinals",
+                      "abbreviation": "STL",
+                      "sport": {
+                        "id": 1,
+                        "name": "Major League Baseball"
+                      },
+                      "league": {
+                        "id": 104,
+                        "name": "National League"
+                      },
+                      "division": {
+                        "id": 205,
+                        "name": "Contract Division"
+                      }
+                    },
+                    "leagueRecord": {
+                      "wins": 45,
+                      "losses": 40,
+                      "ties": 0,
+                      "pct": ".529"
+                    },
+                    "probablePitcher": {
+                      "id": 730002,
+                      "fullName": "Home Fixture Probable",
+                      "primaryPosition": {
+                        "abbreviation": "P",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "code": "1"
+                      }
+                    }
+                  }
+                },
+                "venue": {
+                  "id": 4,
+                  "name": "Contract Park"
+                },
+                "weather": {
+                  "temp": 78,
+                  "condition": "Partly Cloudy",
+                  "wind": "8 mph, Out To RF"
+                },
+                "lineups": {
+                  "awayPlayers": [
+                    {
+                      "id": 710000,
+                      "fullName": "Away Fixture Player 1",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710001,
+                      "fullName": "Away Fixture Player 2",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710002,
+                      "fullName": "Away Fixture Player 3",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710003,
+                      "fullName": "Away Fixture Player 4",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710004,
+                      "fullName": "Away Fixture Player 5",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710005,
+                      "fullName": "Away Fixture Player 6",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710006,
+                      "fullName": "Away Fixture Player 7",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710007,
+                      "fullName": "Away Fixture Player 8",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    },
+                    {
+                      "id": 710008,
+                      "fullName": "Away Fixture Player 9",
+                      "primaryPosition": {
+                        "abbreviation": "CF",
+                        "name": "Center Fielder",
+                        "type": "Outfielder",
+                        "code": "8"
+                      }
+                    }
+                  ],
+                  "homePlayers": [
+                    {
+                      "id": 720000,
+                      "fullName": "Home Fixture Player 1",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720001,
+                      "fullName": "Home Fixture Player 2",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720002,
+                      "fullName": "Home Fixture Player 3",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720003,
+                      "fullName": "Home Fixture Player 4",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720004,
+                      "fullName": "Home Fixture Player 5",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720005,
+                      "fullName": "Home Fixture Player 6",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720006,
+                      "fullName": "Home Fixture Player 7",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720007,
+                      "fullName": "Home Fixture Player 8",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    },
+                    {
+                      "id": 720008,
+                      "fullName": "Home Fixture Player 9",
+                      "primaryPosition": {
+                        "abbreviation": "SS",
+                        "name": "Shortstop",
+                        "type": "Infielder",
+                        "code": "6"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "selection": {
+        "gamePk": "800201",
+        "sportId": 1,
+        "selectedDate": "2025-07-03"
+      },
+      "execution": {
+        "requestedAtUtc": "2026-10-07T19:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T19:00:00.100Z",
+        "createdAtUtc": "2026-10-07T19:00:00.200Z",
+        "responseStatus": 200,
+        "bodySha256": null,
+        "snapshotId": "schedule-ordinary",
+        "applicationVersion": "0.3.0-design",
+        "build": "004.3",
+        "fixtureKind": "synthetic-contract"
+      }
+    },
+    {
+      "name": "missing-lineup",
+      "payload": {
+        "dates": [
+          {
+            "date": "2025-07-03",
+            "games": [
+              {
+                "gamePk": 800202,
+                "gameType": "R",
+                "season": "2025",
+                "gameDate": "2025-07-03T23:10:00Z",
+                "officialDate": "2025-07-03",
+                "dayNight": "night",
+                "gameNumber": 1,
+                "status": {
+                  "abstractGameState": "Preview",
+                  "codedGameState": "S",
+                  "detailedState": "Scheduled",
+                  "statusCode": "S",
+                  "startTimeTBD": false,
+                  "abstractGameCode": "P"
+                },
+                "teams": {
+                  "away": {
+                    "team": {
+                      "id": 145,
+                      "name": "Chicago White Sox",
+                      "locationName": "Chicago White",
+                      "shortName": "Chicago White Sox",
+                      "clubName": "Sox",
+                      "abbreviation": "CWS",
+                      "sport": {
+                        "id": 1,
+                        "name": "Major League Baseball"
+                      },
+                      "league": {
+                        "id": 103,
+                        "name": "American League"
+                      },
+                      "division": {
+                        "id": 202,
+                        "name": "Contract Division"
+                      }
+                    },
+                    "leagueRecord": {
+                      "wins": 42,
+                      "losses": 43,
+                      "ties": 0,
+                      "pct": ".494"
+                    },
+                    "probablePitcher": {
+                      "id": 730001,
+                      "fullName": "Away Fixture Probable",
+                      "primaryPosition": {
+                        "abbreviation": "P",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "code": "1"
+                      }
+                    }
+                  },
+                  "home": {
+                    "team": {
+                      "id": 138,
+                      "name": "St. Louis Cardinals",
+                      "locationName": "St. Louis",
+                      "shortName": "St. Louis Cardinals",
+                      "clubName": "Cardinals",
+                      "abbreviation": "STL",
+                      "sport": {
+                        "id": 1,
+                        "name": "Major League Baseball"
+                      },
+                      "league": {
+                        "id": 104,
+                        "name": "National League"
+                      },
+                      "division": {
+                        "id": 205,
+                        "name": "Contract Division"
+                      }
+                    },
+                    "leagueRecord": {
+                      "wins": 45,
+                      "losses": 40,
+                      "ties": 0,
+                      "pct": ".529"
+                    },
+                    "probablePitcher": {
+                      "id": 730002,
+                      "fullName": "Home Fixture Probable",
+                      "primaryPosition": {
+                        "abbreviation": "P",
+                        "name": "Pitcher",
+                        "type": "Pitcher",
+                        "code": "1"
+                      }
+                    }
+                  }
+                },
+                "venue": {
+                  "id": 4,
+                  "name": "Contract Park"
+                },
+                "weather": {
+                  "temp": 78,
+                  "condition": "Partly Cloudy",
+                  "wind": "8 mph, Out To RF"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "selection": {
+        "gamePk": "800202",
+        "sportId": 1,
+        "selectedDate": "2025-07-03"
+      },
+      "execution": {
+        "requestedAtUtc": "2026-10-07T19:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T19:00:00.100Z",
+        "createdAtUtc": "2026-10-07T19:00:00.200Z",
+        "responseStatus": 200,
+        "bodySha256": null,
+        "snapshotId": "schedule-missing-lineup",
+        "applicationVersion": "0.3.0-design",
+        "build": "004.3",
+        "fixtureKind": "synthetic-contract"
+      }
+    }
+  ]
+}

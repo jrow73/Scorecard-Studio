@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-001-777164-schedule-postponed",
+  "investigationId": "DISC-001",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T18:53:55.999Z",
+  "context": {
+    "subject": "2025-07-10 CLE at CWS postponed and rescheduled control",
+    "gameState": "Current Schedule representation retains Postponed while the rescheduled game is complete"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=777164&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 293,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 11008,
+    "bodySha256": "3147524ec3d87bf4c6741daea700b1a689d7ca23de3049ceafc7eac2fe6d3b53"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameDate",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/rescheduleDate",
+      "/dates/0/games/0/rescheduleGameDate",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams/away/team/id",
+      "/dates/0/games/0/teams/home/team/id",
+      "/dates/0/games/0/teams/away/probablePitcher",
+      "/dates/0/games/0/teams/home/probablePitcher",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/doubleHeader",
+      "/dates/0/games/0/gameNumber"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 777164
+      },
+      "/dates/0/games/0/gameDate": {
+        "found": true,
+        "value": "2025-07-10T23:40:00Z"
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2025-07-11"
+      },
+      "/dates/0/games/0/rescheduleDate": {
+        "found": true,
+        "value": "2025-07-11T19:10:00Z"
+      },
+      "/dates/0/games/0/rescheduleGameDate": {
+        "found": true,
+        "value": "2025-07-11"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "D",
+          "detailedState": "Postponed",
+          "statusCode": "DR",
+          "startTimeTBD": false,
+          "reason": "Rain",
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams/away/team/id": {
+        "found": true,
+        "value": 114
+      },
+      "/dates/0/games/0/teams/home/team/id": {
+        "found": true,
+        "value": 145
+      },
+      "/dates/0/games/0/teams/away/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 671106,
+          "fullName": "Logan Allen",
+          "link": "/api/v1/people/671106"
+        }
+      },
+      "/dates/0/games/0/teams/home/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 686563,
+          "fullName": "Jonathan Cannon",
+          "link": "/api/v1/people/686563"
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": false,
+        "value": null
+      },
+      "/dates/0/games/0/doubleHeader": {
+        "found": true,
+        "value": "N"
+      },
+      "/dates/0/games/0/gameNumber": {
+        "found": true,
+        "value": 1
+      }
+    }
+  },
+  "notes": [
+    "Current historical Schedule representation; paired feed capture is required because the two source families expose different lifecycle views."
+  ]
+}

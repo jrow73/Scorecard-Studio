@@ -1,0 +1,738 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-008-139-depthchart-2025",
+  "investigationId": "DISC-008",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:35:36.275Z",
+  "context": {
+    "subject": "Tampa Bay Rays depth chart, 2025",
+    "gameState": "Season depth chart"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/139/roster/depthChart?season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 421,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 8937,
+    "bodySha256": "be9ea14a791ac27555488d9cf8c900e80b3f7bfdd958135afcb653e12c4af78a"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster",
+      "/rosterType",
+      "/teamId"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 687330,
+              "fullName": "Kevin Kelly",
+              "link": "/api/v1/people/687330"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 669330,
+              "fullName": "Tyler Wells",
+              "link": "/api/v1/people/669330"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 664076,
+              "fullName": "Garrett Cleavinger",
+              "link": "/api/v1/people/664076"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 592155,
+              "fullName": "Cam Booser",
+              "link": "/api/v1/people/592155"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 571927,
+              "fullName": "Steven Matz",
+              "link": "/api/v1/people/571927"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 642121,
+              "fullName": "Cole Sulser",
+              "link": "/api/v1/people/642121"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 689414,
+              "fullName": "Liam Hicks",
+              "link": "/api/v1/people/689414"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "2",
+              "name": "Catcher",
+              "type": "Catcher",
+              "abbreviation": "C"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 663743,
+              "fullName": "Nick Fortes",
+              "link": "/api/v1/people/663743"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "2",
+              "name": "Catcher",
+              "type": "Catcher",
+              "abbreviation": "C"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 666018,
+              "fullName": "Jonathan Aranda",
+              "link": "/api/v1/people/666018"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "3",
+              "name": "First Base",
+              "type": "Infielder",
+              "abbreviation": "1B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 668723,
+              "fullName": "Ryan Vilade",
+              "link": "/api/v1/people/668723"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "3",
+              "name": "First Base",
+              "type": "Infielder",
+              "abbreviation": "1B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 689414,
+              "fullName": "Liam Hicks",
+              "link": "/api/v1/people/689414"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "3",
+              "name": "First Base",
+              "type": "Infielder",
+              "abbreviation": "1B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 680700,
+              "fullName": "Richie Palacios",
+              "link": "/api/v1/people/680700"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "4",
+              "name": "Second Base",
+              "type": "Infielder",
+              "abbreviation": "2B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 810938,
+              "fullName": "Ben Williamson",
+              "link": "/api/v1/people/810938"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "4",
+              "name": "Second Base",
+              "type": "Infielder",
+              "abbreviation": "2B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 622761,
+              "fullName": "Jorge Mateo",
+              "link": "/api/v1/people/622761"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "4",
+              "name": "Second Base",
+              "type": "Infielder",
+              "abbreviation": "2B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 691406,
+              "fullName": "Junior Caminero",
+              "link": "/api/v1/people/691406"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 810938,
+              "fullName": "Ben Williamson",
+              "link": "/api/v1/people/810938"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 622761,
+              "fullName": "Jorge Mateo",
+              "link": "/api/v1/people/622761"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "5",
+              "name": "Third Base",
+              "type": "Infielder",
+              "abbreviation": "3B"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 670764,
+              "fullName": "Taylor Walls",
+              "link": "/api/v1/people/670764"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 810938,
+              "fullName": "Ben Williamson",
+              "link": "/api/v1/people/810938"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 622761,
+              "fullName": "Jorge Mateo",
+              "link": "/api/v1/people/622761"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "6",
+              "name": "Shortstop",
+              "type": "Infielder",
+              "abbreviation": "SS"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 802415,
+              "fullName": "Chandler Simpson",
+              "link": "/api/v1/people/802415"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "7",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "LF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 676356,
+              "fullName": "Jonny DeLuca",
+              "link": "/api/v1/people/676356"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "7",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "LF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 683748,
+              "fullName": "Victor Mesa Jr.",
+              "link": "/api/v1/people/683748"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "7",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "LF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 668723,
+              "fullName": "Ryan Vilade",
+              "link": "/api/v1/people/668723"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "7",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "LF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 656775,
+              "fullName": "Cedric Mullins",
+              "link": "/api/v1/people/656775"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "8",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "CF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 676356,
+              "fullName": "Jonny DeLuca",
+              "link": "/api/v1/people/676356"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "8",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "CF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 683748,
+              "fullName": "Victor Mesa Jr.",
+              "link": "/api/v1/people/683748"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "8",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "CF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 676356,
+              "fullName": "Jonny DeLuca",
+              "link": "/api/v1/people/676356"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "9",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "RF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 683748,
+              "fullName": "Victor Mesa Jr.",
+              "link": "/api/v1/people/683748"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "9",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "RF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 668723,
+              "fullName": "Ryan Vilade",
+              "link": "/api/v1/people/668723"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "9",
+              "name": "Outfielder",
+              "type": "Outfielder",
+              "abbreviation": "RF"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 641329,
+              "fullName": "Bryan Baker",
+              "link": "/api/v1/people/641329"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "C",
+              "name": "Closer",
+              "type": "Pitcher",
+              "abbreviation": "CP"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 650490,
+              "fullName": "Yandy Díaz",
+              "link": "/api/v1/people/650490"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "10",
+              "name": "Designated Hitter",
+              "type": "Hitter",
+              "abbreviation": "DH"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 666018,
+              "fullName": "Jonathan Aranda",
+              "link": "/api/v1/people/666018"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "10",
+              "name": "Designated Hitter",
+              "type": "Hitter",
+              "abbreviation": "DH"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 656876,
+              "fullName": "Drew Rasmussen",
+              "link": "/api/v1/people/656876"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "S",
+              "name": "Starting Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "SP"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 607259,
+              "fullName": "Nick Martinez",
+              "link": "/api/v1/people/607259"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "S",
+              "name": "Starting Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "SP"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 642547,
+              "fullName": "Freddy Peralta",
+              "link": "/api/v1/people/642547"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "S",
+              "name": "Starting Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "SP"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 693855,
+              "fullName": "Ian Seymour",
+              "link": "/api/v1/people/693855"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "S",
+              "name": "Starting Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "SP"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          },
+          {
+            "person": {
+              "id": 643377,
+              "fullName": "Griffin Jax",
+              "link": "/api/v1/people/643377"
+            },
+            "jerseyNumber": "",
+            "position": {
+              "code": "S",
+              "name": "Starting Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "SP"
+            },
+            "status": {
+              "code": "A",
+              "description": "Active"
+            }
+          }
+        ]
+      },
+      "/rosterType": {
+        "found": true,
+        "value": "depthChart"
+      },
+      "/teamId": {
+        "found": true,
+        "value": 139
+      }
+    }
+  },
+  "notes": []
+}

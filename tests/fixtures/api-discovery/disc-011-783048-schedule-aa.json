@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-783048-schedule-aa",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:10:59.246Z",
+  "context": {
+    "subject": "Double-A Akron at Somerset Schedule",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=783048&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 203,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7195,
+    "bodySha256": "26503adcaf872e5a04c885be6cb3207a60cbf7cedd5b377056009f0959814ee5"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 783048
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 402,
+              "name": "Akron RubberDucks",
+              "link": "/api/v1/teams/402",
+              "season": 2025,
+              "venue": {
+                "id": 2740,
+                "name": "Canal Park",
+                "link": "/api/v1/venues/2740"
+              },
+              "teamCode": "akr",
+              "fileCode": "t402",
+              "abbreviation": "AKR",
+              "teamName": "RubberDucks",
+              "locationName": "Akron",
+              "firstYearOfPlay": "1989",
+              "league": {
+                "id": 113,
+                "name": "Eastern League",
+                "link": "/api/v1/league/113"
+              },
+              "division": {
+                "id": 213,
+                "name": "Eastern League Southwest",
+                "link": "/api/v1/divisions/213"
+              },
+              "sport": {
+                "id": 12,
+                "link": "/api/v1/sports/12",
+                "name": "Double-A"
+              },
+              "shortName": "Akron",
+              "parentOrgName": "Cleveland Guardians",
+              "parentOrgId": 114,
+              "franchiseName": "Akron",
+              "clubName": "RubberDucks",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 34,
+              "losses": 17,
+              "ties": 0,
+              "pct": ".667"
+            },
+            "score": 1,
+            "isWinner": false,
+            "probablePitcher": {
+              "id": 674868,
+              "fullName": "Rodney Boone",
+              "link": "/api/v1/people/674868"
+            },
+            "splitSquad": false,
+            "seriesNumber": 9
+          },
+          "home": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 1956,
+              "name": "Somerset Patriots",
+              "link": "/api/v1/teams/1956",
+              "season": 2025,
+              "venue": {
+                "id": 5418,
+                "name": "TD Bank Ballpark",
+                "link": "/api/v1/venues/5418"
+              },
+              "teamCode": "som",
+              "fileCode": "t1956",
+              "abbreviation": "SOM",
+              "teamName": "Patriots",
+              "locationName": "Bridgewater",
+              "firstYearOfPlay": "1998",
+              "league": {
+                "id": 113,
+                "name": "Eastern League",
+                "link": "/api/v1/league/113"
+              },
+              "division": {
+                "id": 212,
+                "name": "Eastern League Northeast",
+                "link": "/api/v1/divisions/212"
+              },
+              "sport": {
+                "id": 12,
+                "link": "/api/v1/sports/12",
+                "name": "Double-A"
+              },
+              "shortName": "Somerset",
+              "parentOrgName": "New York Yankees",
+              "parentOrgId": 147,
+              "franchiseName": "Somerset",
+              "clubName": "Patriots",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 24,
+              "losses": 26,
+              "ties": 0,
+              "pct": ".480"
+            },
+            "score": 3,
+            "isWinner": true,
+            "probablePitcher": {
+              "id": 693645,
+              "fullName": "Cam Schlittler",
+              "link": "/api/v1/people/693645"
+            },
+            "splitSquad": false,
+            "seriesNumber": 9
+          }
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 665862,
+              "fullName": "Jazz Chisholm",
+              "link": "/api/v1/people/665862",
+              "firstName": "Jasrado",
+              "lastName": "Chisholm",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Jazz"
+            },
+            {
+              "id": 806146,
+              "fullName": "George Lombard",
+              "link": "/api/v1/people/806146",
+              "firstName": "George",
+              "lastName": "Lombard",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "George"
+            },
+            {
+              "id": 682987,
+              "fullName": "Spencer Jones",
+              "link": "/api/v1/people/682987",
+              "firstName": "Spencer",
+              "lastName": "Jones",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Spencer"
+            },
+            {
+              "id": 804668,
+              "fullName": "Rafael Flores",
+              "link": "/api/v1/people/804668",
+              "firstName": "Rafael",
+              "lastName": "Flores",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Rafael"
+            },
+            {
+              "id": 815734,
+              "fullName": "Dylan Jasso",
+              "link": "/api/v1/people/815734",
+              "firstName": "Javier",
+              "lastName": "Jasso",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Dylan"
+            },
+            {
+              "id": 680695,
+              "fullName": "Brennen Davis",
+              "link": "/api/v1/people/680695",
+              "firstName": "Brennen",
+              "lastName": "Davis",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Brennen"
+            },
+            {
+              "id": 682003,
+              "fullName": "Garrett Martin",
+              "link": "/api/v1/people/682003",
+              "firstName": "Garrett",
+              "lastName": "Martin",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Garrett"
+            },
+            {
+              "id": 676205,
+              "fullName": "Tyler Hardman",
+              "link": "/api/v1/people/676205",
+              "firstName": "Tyler",
+              "lastName": "Hardman",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Tyler"
+            },
+            {
+              "id": 683061,
+              "fullName": "Alexander Vargas",
+              "link": "/api/v1/people/683061",
+              "firstName": "Alexander",
+              "lastName": "Vargas",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Alexander"
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 694876,
+              "fullName": "Cooper Ingle",
+              "link": "/api/v1/people/694876",
+              "firstName": "John",
+              "lastName": "Ingle",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Cooper"
+            },
+            {
+              "id": 695780,
+              "fullName": "Jake Fox",
+              "link": "/api/v1/people/695780",
+              "firstName": "Jacob",
+              "lastName": "Fox",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Jake"
+            },
+            {
+              "id": 684222,
+              "fullName": "Jorge Burgos",
+              "link": "/api/v1/people/684222",
+              "firstName": "Jorge",
+              "lastName": "Burgos",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Jorge"
+            },
+            {
+              "id": 682679,
+              "fullName": "Dayan Frias",
+              "link": "/api/v1/people/682679",
+              "firstName": "Dayan",
+              "lastName": "Frias",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Dayan"
+            },
+            {
+              "id": 802407,
+              "fullName": "Joe Lampe",
+              "link": "/api/v1/people/802407",
+              "firstName": "Joseph",
+              "lastName": "Lampe",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Joe"
+            },
+            {
+              "id": 805865,
+              "fullName": "Guy Lipscomb",
+              "link": "/api/v1/people/805865",
+              "firstName": "Michael",
+              "lastName": "Lipscomb",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Guy"
+            },
+            {
+              "id": 695612,
+              "fullName": "Alex Mooney",
+              "link": "/api/v1/people/695612",
+              "firstName": "Alexander",
+              "lastName": "Mooney",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Alex"
+            },
+            {
+              "id": 681580,
+              "fullName": "Michael Turconi",
+              "link": "/api/v1/people/681580",
+              "firstName": "Michael",
+              "lastName": "Turconi",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Michael"
+            },
+            {
+              "id": 687930,
+              "fullName": "Tyresse Turner",
+              "link": "/api/v1/people/687930",
+              "firstName": "Tyresse",
+              "lastName": "Turner",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Tyresse"
+            }
+          ]
+        }
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 5418,
+          "name": "TD Bank Ballpark",
+          "link": "/api/v1/venues/5418",
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

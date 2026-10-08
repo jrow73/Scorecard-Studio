@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-009-119-logo-current-mlb",
+  "investigationId": "DISC-009",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-06T01:36:18.245Z",
+  "context": {
+    "subject": "Los Angeles Dodgers current MLB logo",
+    "gameState": null
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://www.mlbstatic.com/team-logos/119.svg",
+    "headers": {
+      "Accept": "image/svg+xml,*/*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 119,
+    "finalUrl": "https://www.mlbstatic.com/team-logos/119.svg",
+    "redirected": false,
+    "headers": {
+      "contentType": "image/svg+xml",
+      "cacheControl": "max-age=1209600",
+      "etag": "\"e0ea2135c95851bde8914cf89d061df4\"",
+      "lastModified": "Mon, 15 Dec 2025 16:43:27 GMT",
+      "accessControlAllowOrigin": "*"
+    },
+    "bodyBytes": 1188,
+    "bodySha256": "9840fd7c20fb4614a1797f1fcf9613586fb54dac49dbe4b894086aa07555280f"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/asset"
+    ],
+    "values": {
+      "/asset": {
+        "found": true,
+        "value": {
+          "isSvg": true,
+          "viewBox": "0 0 141.848 185.66",
+          "width": null,
+          "height": null,
+          "transparentCanvasByDefault": true,
+          "hasOpacityAttributes": false,
+          "hasRasterImage": false,
+          "hasStyleElement": false,
+          "hasTitle": true
+        }
+      }
+    }
+  },
+  "notes": []
+}

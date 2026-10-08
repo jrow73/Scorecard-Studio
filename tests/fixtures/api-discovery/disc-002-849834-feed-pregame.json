@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-002-849834-feed-pregame",
+  "investigationId": "DISC-002",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-05T18:54:32.765Z",
+  "context": {
+    "subject": "2026 ALDS Game 1 CWS at CLE live pregame officials control",
+    "gameState": "Pre-Game at retrieval; scheduled 2026-10-05T21:00:00Z"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1.1/game/849834/feed/live",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 200,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=10, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 223432,
+    "bodySha256": "e49ccc1b7b3d7fa0b97690aa9476200b4af05ddba1f4e60aab0a94314109a076"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/gamePk",
+      "/gameData/status",
+      "/gameData/datetime",
+      "/liveData/boxscore/officials"
+    ],
+    "values": {
+      "/gamePk": {
+        "found": true,
+        "value": 849834
+      },
+      "/gameData/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Preview",
+          "codedGameState": "P",
+          "detailedState": "Pre-Game",
+          "statusCode": "P",
+          "startTimeTBD": false,
+          "abstractGameCode": "P"
+        }
+      },
+      "/gameData/datetime": {
+        "found": true,
+        "value": {
+          "dateTime": "2026-10-05T21:00:00Z",
+          "originalDate": "2026-10-05",
+          "officialDate": "2026-10-05",
+          "dayNight": "day",
+          "time": "5:00",
+          "ampm": "PM"
+        }
+      },
+      "/liveData/boxscore/officials": {
+        "found": true,
+        "value": [
+          {
+            "official": {
+              "id": 573597,
+              "fullName": "Gabe Morales",
+              "link": "/api/v1/people/573597"
+            },
+            "officialType": "Home Plate"
+          },
+          {
+            "official": {
+              "id": 429805,
+              "fullName": "Todd Tichenor",
+              "link": "/api/v1/people/429805"
+            },
+            "officialType": "First Base"
+          },
+          {
+            "official": {
+              "id": 596740,
+              "fullName": "Jansen Visconti",
+              "link": "/api/v1/people/596740"
+            },
+            "officialType": "Second Base"
+          },
+          {
+            "official": {
+              "id": 483569,
+              "fullName": "Vic Carapazza",
+              "link": "/api/v1/people/483569"
+            },
+            "officialType": "Third Base"
+          },
+          {
+            "official": {
+              "id": 665297,
+              "fullName": "Tom Hanahan",
+              "link": "/api/v1/people/665297"
+            },
+            "officialType": "Left Field"
+          },
+          {
+            "official": {
+              "id": 484183,
+              "fullName": "Cory Blaser",
+              "link": "/api/v1/people/484183"
+            },
+            "officialType": "Right Field"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Live snapshot: a complete six-person postseason field crew was present before first pitch."
+  ]
+}

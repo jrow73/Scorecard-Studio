@@ -1,0 +1,362 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-004-777447-schedule-dh-g1",
+  "investigationId": "DISC-004",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:06:37.277Z",
+  "context": {
+    "subject": "2025-06-19 STL at CWS doubleheader Game 1",
+    "gameState": "Final current historical Schedule response"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=777447&hydrate=lineups%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 290,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7478,
+    "bodySha256": "f857e4e0e0a7acad6b7e14709dad69c0e3fac6c13b49ace4f6f596983dc00660"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/doubleHeader",
+      "/dates/0/games/0/gameNumber",
+      "/dates/0/games/0/teams/away/team/id",
+      "/dates/0/games/0/teams/home/team/id",
+      "/dates/0/games/0/teams/away/probablePitcher",
+      "/dates/0/games/0/teams/home/probablePitcher",
+      "/dates/0/games/0/lineups"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 777447
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2025-06-19"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/doubleHeader": {
+        "found": true,
+        "value": "Y"
+      },
+      "/dates/0/games/0/gameNumber": {
+        "found": true,
+        "value": 1
+      },
+      "/dates/0/games/0/teams/away/team/id": {
+        "found": true,
+        "value": 138
+      },
+      "/dates/0/games/0/teams/home/team/id": {
+        "found": true,
+        "value": 145
+      },
+      "/dates/0/games/0/teams/away/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 607200,
+          "fullName": "Erick Fedde",
+          "link": "/api/v1/people/607200"
+        }
+      },
+      "/dates/0/games/0/teams/home/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 680732,
+          "fullName": "Sean Burke",
+          "link": "/api/v1/people/680732"
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 643565,
+              "fullName": "Mike Tauchman",
+              "link": "/api/v1/people/643565",
+              "firstName": "Michael",
+              "lastName": "Tauchman",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Mike"
+            },
+            {
+              "id": 805367,
+              "fullName": "Chase Meidroth",
+              "link": "/api/v1/people/805367",
+              "firstName": "Chase",
+              "lastName": "Meidroth",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Chase"
+            },
+            {
+              "id": 643217,
+              "fullName": "Andrew Benintendi",
+              "link": "/api/v1/people/643217",
+              "firstName": "Andrew",
+              "lastName": "Benintendi",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Andrew"
+            },
+            {
+              "id": 678246,
+              "fullName": "Miguel Vargas",
+              "link": "/api/v1/people/678246",
+              "firstName": "Miguel",
+              "lastName": "Vargas",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Miguel"
+            },
+            {
+              "id": 691019,
+              "fullName": "Kyle Teel",
+              "link": "/api/v1/people/691019",
+              "firstName": "Kyle",
+              "lastName": "Teel",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Kyle"
+            },
+            {
+              "id": 673357,
+              "fullName": "Luis Robert",
+              "link": "/api/v1/people/673357",
+              "firstName": "Luis",
+              "lastName": "Robert",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Luis"
+            },
+            {
+              "id": 676116,
+              "fullName": "Ryan Noda",
+              "link": "/api/v1/people/676116",
+              "firstName": "Ryan",
+              "lastName": "Noda",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Ryan"
+            },
+            {
+              "id": 668942,
+              "fullName": "Josh Rojas",
+              "link": "/api/v1/people/668942",
+              "firstName": "Joshua",
+              "lastName": "Rojas",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Josh"
+            },
+            {
+              "id": 572191,
+              "fullName": "Michael A. Taylor",
+              "link": "/api/v1/people/572191",
+              "firstName": "Michael",
+              "lastName": "Taylor",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Michael A."
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 691026,
+              "fullName": "Masyn Winn",
+              "link": "/api/v1/people/691026",
+              "firstName": "Masyn",
+              "lastName": "Winn",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Masyn"
+            },
+            {
+              "id": 671056,
+              "fullName": "Iván Herrera",
+              "link": "/api/v1/people/671056",
+              "firstName": "Ivan",
+              "lastName": "Herrera",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Iván"
+            },
+            {
+              "id": 676475,
+              "fullName": "Alec Burleson",
+              "link": "/api/v1/people/676475",
+              "firstName": "Alec",
+              "lastName": "Burleson",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Alec"
+            },
+            {
+              "id": 575929,
+              "fullName": "Willson Contreras",
+              "link": "/api/v1/people/575929",
+              "firstName": "Willson",
+              "lastName": "Contreras",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Willson"
+            },
+            {
+              "id": 669357,
+              "fullName": "Nolan Gorman",
+              "link": "/api/v1/people/669357",
+              "firstName": "Nolan",
+              "lastName": "Gorman",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Nolan"
+            },
+            {
+              "id": 571448,
+              "fullName": "Nolan Arenado",
+              "link": "/api/v1/people/571448",
+              "firstName": "Nolan",
+              "lastName": "Arenado",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Nolan"
+            },
+            {
+              "id": 663457,
+              "fullName": "Lars Nootbaar",
+              "link": "/api/v1/people/663457",
+              "firstName": "Lars",
+              "lastName": "Nootbaar",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Lars"
+            },
+            {
+              "id": 691023,
+              "fullName": "Jordan Walker",
+              "link": "/api/v1/people/691023",
+              "firstName": "Jordan",
+              "lastName": "Walker",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Jordan"
+            },
+            {
+              "id": 687363,
+              "fullName": "Victor Scott",
+              "link": "/api/v1/people/687363",
+              "firstName": "Victor",
+              "lastName": "Scott",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Victor"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "notes": [
+    "Paired with Game 2 and the one calendar-date roster request."
+  ]
+}

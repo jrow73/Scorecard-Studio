@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-784002-schedule-high-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:04.668Z",
+  "context": {
+    "subject": "High-A Asheville at Rome Schedule",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=784002&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 196,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7222,
+    "bodySha256": "235574154176dfbfac5fe173fd058c9ce9321fb90a6dbf0fbf560e5f6b85aed2"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 784002
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 573,
+              "name": "Asheville Tourists",
+              "link": "/api/v1/teams/573",
+              "season": 2025,
+              "venue": {
+                "id": 2807,
+                "name": "McCormick Field",
+                "link": "/api/v1/venues/2807"
+              },
+              "teamCode": "ash",
+              "fileCode": "t573",
+              "abbreviation": "ASH",
+              "teamName": "Tourists",
+              "locationName": "Asheville",
+              "firstYearOfPlay": "1959",
+              "league": {
+                "id": 116,
+                "name": "South Atlantic League",
+                "link": "/api/v1/league/116"
+              },
+              "division": {
+                "id": 238,
+                "name": "South Atlantic League South",
+                "link": "/api/v1/divisions/238"
+              },
+              "sport": {
+                "id": 13,
+                "link": "/api/v1/sports/13",
+                "name": "High-A"
+              },
+              "shortName": "Asheville",
+              "parentOrgName": "Houston Astros",
+              "parentOrgId": 117,
+              "franchiseName": "Asheville",
+              "clubName": "Tourists",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 22,
+              "losses": 29,
+              "ties": 0,
+              "pct": ".431"
+            },
+            "score": 0,
+            "isWinner": false,
+            "probablePitcher": {
+              "id": 802105,
+              "fullName": "Yeriel Santos",
+              "link": "/api/v1/people/802105"
+            },
+            "splitSquad": false,
+            "seriesNumber": 9
+          },
+          "home": {
+            "team": {
+              "allStarStatus": "N",
+              "id": 432,
+              "name": "Rome Emperors",
+              "link": "/api/v1/teams/432",
+              "season": 2025,
+              "venue": {
+                "id": 2851,
+                "name": "AdventHealth Stadium",
+                "link": "/api/v1/venues/2851"
+              },
+              "teamCode": "rom",
+              "fileCode": "t432",
+              "abbreviation": "ROM",
+              "teamName": "Emperors",
+              "locationName": "Rome",
+              "firstYearOfPlay": "2003",
+              "league": {
+                "id": 116,
+                "name": "South Atlantic League",
+                "link": "/api/v1/league/116"
+              },
+              "division": {
+                "id": 238,
+                "name": "South Atlantic League South",
+                "link": "/api/v1/divisions/238"
+              },
+              "sport": {
+                "id": 13,
+                "link": "/api/v1/sports/13",
+                "name": "High-A"
+              },
+              "shortName": "Rome",
+              "parentOrgName": "Atlanta Braves",
+              "parentOrgId": 144,
+              "franchiseName": "Rome",
+              "clubName": "Emperors",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 26,
+              "losses": 25,
+              "ties": 0,
+              "pct": ".510"
+            },
+            "score": 3,
+            "isWinner": true,
+            "probablePitcher": {
+              "id": 678142,
+              "fullName": "Cedric De Grandpre",
+              "link": "/api/v1/people/678142"
+            },
+            "splitSquad": false,
+            "seriesNumber": 9
+          }
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 802117,
+              "fullName": "Patrick Clohisy",
+              "link": "/api/v1/people/802117",
+              "firstName": "Patrick",
+              "lastName": "Clohisy",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Patrick"
+            },
+            {
+              "id": 815299,
+              "fullName": "Will Verdung",
+              "link": "/api/v1/people/815299",
+              "firstName": "Philip",
+              "lastName": "Verdung",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Will"
+            },
+            {
+              "id": 828335,
+              "fullName": "Titus Dumitru",
+              "link": "/api/v1/people/828335",
+              "firstName": "Titus",
+              "lastName": "Dumitru",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Titus"
+            },
+            {
+              "id": 802991,
+              "fullName": "E.J. Exposito",
+              "link": "/api/v1/people/802991",
+              "firstName": "Eladio",
+              "lastName": "Exposito",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "E.J."
+            },
+            {
+              "id": 694222,
+              "fullName": "Ambioris Tavarez",
+              "link": "/api/v1/people/694222",
+              "firstName": "Ambioris",
+              "lastName": "Tavarez",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Ambioris"
+            },
+            {
+              "id": 805332,
+              "fullName": "Justin Janas",
+              "link": "/api/v1/people/805332",
+              "firstName": "Justin",
+              "lastName": "Janas",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Justin"
+            },
+            {
+              "id": 691944,
+              "fullName": "Mac Guscette",
+              "link": "/api/v1/people/691944",
+              "firstName": "Mac",
+              "lastName": "Guscette",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Mac"
+            },
+            {
+              "id": 800056,
+              "fullName": "Jace Grady",
+              "link": "/api/v1/people/800056",
+              "firstName": "Jace",
+              "lastName": "Grady",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Jace"
+            },
+            {
+              "id": 815586,
+              "fullName": "Joe Olsavsky",
+              "link": "/api/v1/people/815586",
+              "firstName": "Joseph",
+              "lastName": "Olsavsky",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Joe"
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 813896,
+              "fullName": "Joseph Sullivan",
+              "link": "/api/v1/people/813896",
+              "firstName": "Patrick",
+              "lastName": "Sullivan",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Joseph"
+            },
+            {
+              "id": 801075,
+              "fullName": "Walker Janek",
+              "link": "/api/v1/people/801075",
+              "firstName": "Walker",
+              "lastName": "Janek",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Walker"
+            },
+            {
+              "id": 805168,
+              "fullName": "Alejandro Nuñez",
+              "link": "/api/v1/people/805168",
+              "firstName": "Alejandro",
+              "lastName": "Nuñez",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Alejandro"
+            },
+            {
+              "id": 828599,
+              "fullName": "Lucas Spence",
+              "link": "/api/v1/people/828599",
+              "firstName": "Lucas",
+              "lastName": "Spence",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Lucas"
+            },
+            {
+              "id": 703198,
+              "fullName": "Kenni Gomez",
+              "link": "/api/v1/people/703198",
+              "firstName": "Kenni",
+              "lastName": "Gomez",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Kenni"
+            },
+            {
+              "id": 695048,
+              "fullName": "Garret Guillemette",
+              "link": "/api/v1/people/695048",
+              "firstName": "Garret",
+              "lastName": "Guillemette",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Garret"
+            },
+            {
+              "id": 826164,
+              "fullName": "Drew Vogel",
+              "link": "/api/v1/people/826164",
+              "firstName": "Andrew",
+              "lastName": "Vogel",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Drew"
+            },
+            {
+              "id": 701324,
+              "fullName": "Oliver Carrillo",
+              "link": "/api/v1/people/701324",
+              "firstName": "Oliver",
+              "lastName": "Carrillo",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Oliver"
+            },
+            {
+              "id": 696264,
+              "fullName": "Tyler Whitaker",
+              "link": "/api/v1/people/696264",
+              "firstName": "Tyler",
+              "lastName": "Whitaker",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Tyler"
+            }
+          ]
+        }
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 2851,
+          "name": "AdventHealth Stadium",
+          "link": "/api/v1/venues/2851",
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

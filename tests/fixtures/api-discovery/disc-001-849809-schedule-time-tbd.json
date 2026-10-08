@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-001-849809-schedule-time-tbd",
+  "investigationId": "DISC-001",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-05T18:56:20.208Z",
+  "context": {
+    "subject": "2026 NLCS Game 1 placeholder teams and start time TBD",
+    "gameState": "Scheduled future postseason game with startTimeTBD true"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=849809&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 216,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 2824,
+    "bodySha256": "5df4ffb9423c4c80f82265e7e64ef8a754018315536166252beb2638c80723f8"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/gameDate",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams/away/team",
+      "/dates/0/games/0/teams/home/team",
+      "/dates/0/games/0/teams/away/probablePitcher",
+      "/dates/0/games/0/teams/home/probablePitcher",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/doubleHeader",
+      "/dates/0/games/0/gameNumber",
+      "/dates/0/games/0/seriesDescription",
+      "/dates/0/games/0/ifNecessary"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 849809
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "L"
+      },
+      "/dates/0/games/0/gameDate": {
+        "found": true,
+        "value": "2026-10-11T07:33:00Z"
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2026-10-11"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Preview",
+          "codedGameState": "S",
+          "detailedState": "Scheduled",
+          "statusCode": "S",
+          "startTimeTBD": true,
+          "abstractGameCode": "P"
+        }
+      },
+      "/dates/0/games/0/teams/away/team": {
+        "found": true,
+        "value": {
+          "allStarStatus": "T",
+          "id": 5525,
+          "name": "NL Lower Seed",
+          "link": "/api/v1/teams/5525",
+          "season": 2026,
+          "venue": {
+            "id": 3833,
+            "name": "NL Stadium",
+            "link": "/api/v1/venues/3833"
+          },
+          "teamCode": "nls",
+          "fileCode": "t5525",
+          "abbreviation": "NL Low",
+          "teamName": "NL Lower Seed",
+          "locationName": "NL City",
+          "firstYearOfPlay": "2020",
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "name": "Major League Baseball"
+          },
+          "shortName": "NL Lower Seed",
+          "parentOrgName": "Office of the Commissioner",
+          "parentOrgId": 11,
+          "franchiseName": "NL Lower Seed",
+          "clubName": "NL Lower Seed",
+          "active": true,
+          "placeholder": true
+        }
+      },
+      "/dates/0/games/0/teams/home/team": {
+        "found": true,
+        "value": {
+          "allStarStatus": "T",
+          "id": 5517,
+          "name": "NL Higher Seed",
+          "link": "/api/v1/teams/5517",
+          "season": 2026,
+          "venue": {
+            "id": 3833,
+            "name": "NL Stadium",
+            "link": "/api/v1/venues/3833"
+          },
+          "teamCode": "nhs",
+          "fileCode": "t5517",
+          "abbreviation": "NL High",
+          "teamName": "NL Higher Seed",
+          "locationName": "NL City",
+          "firstYearOfPlay": "2020",
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "name": "Major League Baseball"
+          },
+          "shortName": "NL Higher Seed",
+          "parentOrgName": "Office of the Commissioner",
+          "parentOrgId": 11,
+          "franchiseName": "NL Higher Seed",
+          "clubName": "NL Higher Seed",
+          "active": true,
+          "placeholder": true
+        }
+      },
+      "/dates/0/games/0/teams/away/probablePitcher": {
+        "found": false,
+        "value": null
+      },
+      "/dates/0/games/0/teams/home/probablePitcher": {
+        "found": false,
+        "value": null
+      },
+      "/dates/0/games/0/lineups": {
+        "found": false,
+        "value": null
+      },
+      "/dates/0/games/0/doubleHeader": {
+        "found": true,
+        "value": "N"
+      },
+      "/dates/0/games/0/gameNumber": {
+        "found": true,
+        "value": 1
+      },
+      "/dates/0/games/0/seriesDescription": {
+        "found": true,
+        "value": "NL Championship Series"
+      },
+      "/dates/0/games/0/ifNecessary": {
+        "found": true,
+        "value": "N"
+      }
+    }
+  },
+  "notes": [
+    "The placeholder 07:33Z value is not a trustworthy first-pitch time when startTimeTBD is true."
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-012-660271-people-spring-2025",
+  "investigationId": "DISC-012",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:14:29.760Z",
+  "context": {
+    "subject": "Shohei Ohtani spring-2025 scoped statistics",
+    "gameState": "historical"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=660271&hydrate=stats(group%3D%5Bhitting%2Cpitching%5D%2Ctype%3D%5BbyDateRange%5D%2CgameType%3D%5BS%5D%2CstartDate%3D2025-01-01%2CendDate%3D2025-03-17)",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 162,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 2782,
+    "bodySha256": "860e87d54004a148b4b48b6fe40ac9330e0fd2d7a9f3d7858e13d1ca39926f8a"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people/0/id",
+      "/people/0/primaryPosition",
+      "/people/0/stats"
+    ],
+    "values": {
+      "/people/0/id": {
+        "found": true,
+        "value": 660271
+      },
+      "/people/0/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "Y",
+          "name": "Two-Way Player",
+          "type": "Two-Way Player",
+          "abbreviation": "TWP"
+        }
+      },
+      "/people/0/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "hitting"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 7,
+                  "flyOuts": 1,
+                  "groundOuts": 5,
+                  "airOuts": 2,
+                  "runs": 4,
+                  "doubles": 2,
+                  "triples": 0,
+                  "homeRuns": 1,
+                  "strikeOuts": 5,
+                  "baseOnBalls": 3,
+                  "intentionalWalks": 0,
+                  "hits": 6,
+                  "hitByPitch": 0,
+                  "avg": ".333",
+                  "atBats": 18,
+                  "obp": ".429",
+                  "slg": ".611",
+                  "ops": "1.040",
+                  "caughtStealing": 0,
+                  "stolenBases": 0,
+                  "stolenBasePercentage": ".---",
+                  "caughtStealingPercentage": ".---",
+                  "groundIntoDoublePlay": 0,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 86,
+                  "plateAppearances": 21,
+                  "totalBases": 11,
+                  "rbi": 2,
+                  "leftOnBase": 3,
+                  "sacBunts": 0,
+                  "sacFlies": 0,
+                  "babip": ".417",
+                  "groundOutsToAirouts": "2.50",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "18.00"
+                },
+                "team": {
+                  "id": 119,
+                  "name": "Los Angeles Dodgers",
+                  "link": "/api/v1/teams/119"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "abbreviation": "MLB"
+                },
+                "numTeams": 1,
+                "numLeagues": 7
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 7,
+                  "flyOuts": 1,
+                  "groundOuts": 5,
+                  "airOuts": 2,
+                  "runs": 4,
+                  "doubles": 2,
+                  "triples": 0,
+                  "homeRuns": 1,
+                  "strikeOuts": 5,
+                  "baseOnBalls": 3,
+                  "intentionalWalks": 0,
+                  "hits": 6,
+                  "hitByPitch": 0,
+                  "avg": ".333",
+                  "atBats": 18,
+                  "obp": ".429",
+                  "slg": ".611",
+                  "ops": "1.040",
+                  "caughtStealing": 0,
+                  "stolenBases": 0,
+                  "stolenBasePercentage": ".---",
+                  "caughtStealingPercentage": ".---",
+                  "groundIntoDoublePlay": 0,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 86,
+                  "plateAppearances": 21,
+                  "totalBases": 11,
+                  "rbi": 2,
+                  "leftOnBase": 3,
+                  "sacBunts": 0,
+                  "sacFlies": 0,
+                  "babip": ".417",
+                  "groundOutsToAirouts": "2.50",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "18.00"
+                },
+                "team": {
+                  "id": 119,
+                  "name": "Los Angeles Dodgers",
+                  "link": "/api/v1/teams/119"
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 1,
+                "numLeagues": 7
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "notes": []
+}

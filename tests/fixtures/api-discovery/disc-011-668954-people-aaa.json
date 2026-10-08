@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-668954-people-aaa",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:15:44.078Z",
+  "context": {
+    "subject": "aaa sport-scoped player statistics",
+    "gameState": "historical"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=668954&hydrate=stats(group%3D%5Bhitting%2Cpitching%5D%2Ctype%3D%5BbyDateRange%5D%2CsportId%3D11%2CgameType%3D%5BR%5D%2CstartDate%3D2025-01-01%2CendDate%3D2025-09-30)",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 204,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3771,
+    "bodySha256": "68eb83861a0bc599d67d2609338a5dac85733a1c9a5fab4b9f82e9a237ef3f3b"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people/0/id",
+      "/people/0/primaryPosition",
+      "/people/0/stats"
+    ],
+    "values": {
+      "/people/0/id": {
+        "found": true,
+        "value": 668954
+      },
+      "/people/0/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "1",
+          "name": "Pitcher",
+          "type": "Pitcher",
+          "abbreviation": "P"
+        }
+      },
+      "/people/0/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "pitching"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 31,
+                  "gamesStarted": 24,
+                  "flyOuts": 82,
+                  "groundOuts": 127,
+                  "airOuts": 145,
+                  "runs": 55,
+                  "doubles": 25,
+                  "triples": 3,
+                  "homeRuns": 14,
+                  "strikeOuts": 118,
+                  "baseOnBalls": 51,
+                  "intentionalWalks": 1,
+                  "hits": 112,
+                  "hitByPitch": 8,
+                  "avg": ".226",
+                  "atBats": 495,
+                  "obp": ".305",
+                  "slg": ".374",
+                  "ops": ".679",
+                  "caughtStealing": 9,
+                  "stolenBases": 23,
+                  "stolenBasePercentage": ".719",
+                  "caughtStealingPercentage": ".281",
+                  "groundIntoDoublePlay": 13,
+                  "numberOfPitches": 2144,
+                  "era": "3.21",
+                  "inningsPitched": "137.1",
+                  "wins": 10,
+                  "losses": 4,
+                  "saves": 1,
+                  "saveOpportunities": 1,
+                  "holds": 1,
+                  "blownSaves": 0,
+                  "earnedRuns": 49,
+                  "whip": "1.19",
+                  "battersFaced": 561,
+                  "outs": 412,
+                  "gamesPitched": 31,
+                  "completeGames": 1,
+                  "shutouts": 0,
+                  "strikes": 1352,
+                  "strikePercentage": ".630",
+                  "hitBatsmen": 8,
+                  "balks": 1,
+                  "wildPitches": 2,
+                  "pickoffs": 1,
+                  "totalBases": 185,
+                  "groundOutsToAirouts": "0.88",
+                  "winPercentage": ".714",
+                  "pitchesPerInning": "15.61",
+                  "gamesFinished": 1,
+                  "strikeoutWalkRatio": "2.31",
+                  "strikeoutsPer9Inn": "7.73",
+                  "walksPer9Inn": "3.34",
+                  "hitsPer9Inn": "7.34",
+                  "runsScoredPer9": "3.60",
+                  "homeRunsPer9": "0.92",
+                  "inheritedRunners": 5,
+                  "inheritedRunnersScored": 0,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 7
+                },
+                "team": {
+                  "id": 235,
+                  "name": "Memphis Redbirds",
+                  "link": "/api/v1/teams/235"
+                },
+                "sport": {
+                  "id": 11,
+                  "link": "/api/v1/sports/11",
+                  "abbreviation": "AAA"
+                },
+                "numTeams": 1,
+                "numLeagues": 31
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 31,
+                  "gamesStarted": 24,
+                  "flyOuts": 82,
+                  "groundOuts": 127,
+                  "airOuts": 145,
+                  "runs": 55,
+                  "doubles": 25,
+                  "triples": 3,
+                  "homeRuns": 14,
+                  "strikeOuts": 118,
+                  "baseOnBalls": 51,
+                  "intentionalWalks": 1,
+                  "hits": 112,
+                  "hitByPitch": 8,
+                  "avg": ".226",
+                  "atBats": 495,
+                  "obp": ".305",
+                  "slg": ".374",
+                  "ops": ".679",
+                  "caughtStealing": 9,
+                  "stolenBases": 23,
+                  "stolenBasePercentage": ".719",
+                  "caughtStealingPercentage": ".281",
+                  "groundIntoDoublePlay": 13,
+                  "numberOfPitches": 2144,
+                  "era": "3.21",
+                  "inningsPitched": "137.1",
+                  "wins": 10,
+                  "losses": 4,
+                  "saves": 1,
+                  "saveOpportunities": 1,
+                  "holds": 1,
+                  "blownSaves": 0,
+                  "earnedRuns": 49,
+                  "whip": "1.19",
+                  "battersFaced": 561,
+                  "outs": 412,
+                  "gamesPitched": 31,
+                  "completeGames": 1,
+                  "shutouts": 0,
+                  "strikes": 1352,
+                  "strikePercentage": ".630",
+                  "hitBatsmen": 8,
+                  "balks": 1,
+                  "wildPitches": 2,
+                  "pickoffs": 1,
+                  "totalBases": 185,
+                  "groundOutsToAirouts": "0.88",
+                  "winPercentage": ".714",
+                  "pitchesPerInning": "15.61",
+                  "gamesFinished": 1,
+                  "strikeoutWalkRatio": "2.31",
+                  "strikeoutsPer9Inn": "7.73",
+                  "walksPer9Inn": "3.34",
+                  "hitsPer9Inn": "7.34",
+                  "runsScoredPer9": "3.60",
+                  "homeRunsPer9": "0.92",
+                  "inheritedRunners": 5,
+                  "inheritedRunnersScored": 0,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 7
+                },
+                "team": {
+                  "id": 235,
+                  "name": "Memphis Redbirds",
+                  "link": "/api/v1/teams/235"
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 1,
+                "numLeagues": 31
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "notes": []
+}

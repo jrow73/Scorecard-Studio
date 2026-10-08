@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-249-logo-single-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-06T12:12:06.232Z",
+  "context": {
+    "subject": "Carolina Mudcats Single-A logo",
+    "gameState": null
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://www.mlbstatic.com/team-logos/249.svg",
+    "headers": {
+      "Accept": "image/svg+xml,*/*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 121,
+    "finalUrl": "https://www.mlbstatic.com/team-logos/249.svg",
+    "redirected": false,
+    "headers": {
+      "contentType": "image/svg+xml",
+      "cacheControl": "max-age=1209600",
+      "etag": "\"cbb6ffebb5bcba4aa0d1a8302569550a\"",
+      "lastModified": "Wed, 12 Nov 2025 16:05:04 GMT",
+      "accessControlAllowOrigin": "*"
+    },
+    "bodyBytes": 58565,
+    "bodySha256": "53fb34afd22afce6bd4ba16644975c87797e9dcbc50337a293ef0b8c337f2ba6"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/asset"
+    ],
+    "values": {
+      "/asset": {
+        "found": true,
+        "value": {
+          "isSvg": true,
+          "viewBox": "0 0 54 54",
+          "width": null,
+          "height": null,
+          "transparentCanvasByDefault": true,
+          "hasOpacityAttributes": false,
+          "hasRasterImage": false,
+          "hasStyleElement": false,
+          "hasTitle": false
+        }
+      }
+    }
+  },
+  "notes": []
+}

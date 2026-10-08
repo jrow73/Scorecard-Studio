@@ -1,0 +1,630 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-005-aggregate-controls-2026-10-04",
+  "investigationId": "DISC-005",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:07:22.503Z",
+  "context": {
+    "subject": "Traded hitting, traded pitching, and single-team aggregate controls",
+    "gameState": "2026 byDateRange through 2026-10-04"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=621493%2C622554%2C663728&hydrate=stats%28group%3D%5Bhitting%2Cpitching%5D%2Ctype%3D%5BbyDateRange%5D%2CstartDate%3D2026-01-01%2CendDate%3D2026-10-04%29",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 268,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 11126,
+    "bodySha256": "0ea2e30c5c36a4903a921f85bcbeae3dc5aa7803febb8ff337d1e34840472583"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people/0/id",
+      "/people/0/fullName",
+      "/people/0/primaryPosition",
+      "/people/0/stats",
+      "/people/1/id",
+      "/people/1/fullName",
+      "/people/1/primaryPosition",
+      "/people/1/stats",
+      "/people/2/id",
+      "/people/2/fullName",
+      "/people/2/primaryPosition",
+      "/people/2/stats"
+    ],
+    "values": {
+      "/people/0/id": {
+        "found": true,
+        "value": 621493
+      },
+      "/people/0/fullName": {
+        "found": true,
+        "value": "Taylor Ward"
+      },
+      "/people/0/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "10",
+          "name": "Designated Hitter",
+          "type": "Hitter",
+          "abbreviation": "DH"
+        }
+      },
+      "/people/0/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "hitting"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 111,
+                  "flyOuts": 70,
+                  "groundOuts": 93,
+                  "airOuts": 116,
+                  "runs": 64,
+                  "doubles": 20,
+                  "triples": 0,
+                  "homeRuns": 7,
+                  "strikeOuts": 103,
+                  "baseOnBalls": 87,
+                  "intentionalWalks": 2,
+                  "hits": 101,
+                  "hitByPitch": 6,
+                  "avg": ".246",
+                  "atBats": 410,
+                  "obp": ".383",
+                  "slg": ".346",
+                  "ops": ".729",
+                  "caughtStealing": 3,
+                  "stolenBases": 4,
+                  "stolenBasePercentage": ".571",
+                  "caughtStealingPercentage": ".429",
+                  "groundIntoDoublePlay": 7,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 2117,
+                  "plateAppearances": 506,
+                  "totalBases": 142,
+                  "rbi": 30,
+                  "leftOnBase": 146,
+                  "sacBunts": 0,
+                  "sacFlies": 3,
+                  "babip": ".310",
+                  "groundOutsToAirouts": "0.80",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "58.57"
+                },
+                "team": {
+                  "id": 110,
+                  "name": "Baltimore Orioles",
+                  "link": "/api/v1/teams/110"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "abbreviation": "MLB"
+                },
+                "numTeams": 1,
+                "numLeagues": 111
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 32,
+                  "flyOuts": 12,
+                  "groundOuts": 24,
+                  "airOuts": 26,
+                  "runs": 7,
+                  "doubles": 0,
+                  "triples": 1,
+                  "homeRuns": 0,
+                  "strikeOuts": 27,
+                  "baseOnBalls": 12,
+                  "intentionalWalks": 0,
+                  "hits": 11,
+                  "hitByPitch": 1,
+                  "avg": ".125",
+                  "atBats": 88,
+                  "obp": ".238",
+                  "slg": ".148",
+                  "ops": ".386",
+                  "caughtStealing": 1,
+                  "stolenBases": 0,
+                  "stolenBasePercentage": ".000",
+                  "caughtStealingPercentage": "1.000",
+                  "groundIntoDoublePlay": 2,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 403,
+                  "plateAppearances": 101,
+                  "totalBases": 13,
+                  "rbi": 7,
+                  "leftOnBase": 36,
+                  "sacBunts": 0,
+                  "sacFlies": 0,
+                  "babip": ".180",
+                  "groundOutsToAirouts": "0.92",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "-.--"
+                },
+                "team": {
+                  "id": 136,
+                  "name": "Seattle Mariners",
+                  "link": "/api/v1/teams/136"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "abbreviation": "MLB"
+                },
+                "numTeams": 1,
+                "numLeagues": 32
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 143,
+                  "flyOuts": 82,
+                  "groundOuts": 117,
+                  "airOuts": 142,
+                  "runs": 71,
+                  "doubles": 20,
+                  "triples": 1,
+                  "homeRuns": 7,
+                  "strikeOuts": 130,
+                  "baseOnBalls": 99,
+                  "intentionalWalks": 2,
+                  "hits": 112,
+                  "hitByPitch": 7,
+                  "avg": ".225",
+                  "atBats": 498,
+                  "obp": ".359",
+                  "slg": ".311",
+                  "ops": ".670",
+                  "caughtStealing": 4,
+                  "stolenBases": 4,
+                  "stolenBasePercentage": ".500",
+                  "caughtStealingPercentage": ".500",
+                  "groundIntoDoublePlay": 9,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 2520,
+                  "plateAppearances": 607,
+                  "totalBases": 155,
+                  "rbi": 37,
+                  "leftOnBase": 182,
+                  "sacBunts": 0,
+                  "sacFlies": 3,
+                  "babip": ".288",
+                  "groundOutsToAirouts": "0.82",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "71.14"
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 2,
+                "numLeagues": 143
+              }
+            ]
+          }
+        ]
+      },
+      "/people/1/id": {
+        "found": true,
+        "value": 622554
+      },
+      "/people/1/fullName": {
+        "found": true,
+        "value": "Seranthony Domínguez"
+      },
+      "/people/1/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "1",
+          "name": "Pitcher",
+          "type": "Pitcher",
+          "abbreviation": "P"
+        }
+      },
+      "/people/1/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "pitching"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 43,
+                  "gamesStarted": 0,
+                  "flyOuts": 19,
+                  "groundOuts": 29,
+                  "airOuts": 36,
+                  "runs": 20,
+                  "doubles": 4,
+                  "triples": 0,
+                  "homeRuns": 6,
+                  "strikeOuts": 47,
+                  "baseOnBalls": 23,
+                  "intentionalWalks": 2,
+                  "hits": 28,
+                  "hitByPitch": 2,
+                  "avg": ".201",
+                  "atBats": 139,
+                  "obp": ".321",
+                  "slg": ".360",
+                  "ops": ".681",
+                  "caughtStealing": 2,
+                  "stolenBases": 7,
+                  "stolenBasePercentage": ".778",
+                  "caughtStealingPercentage": ".222",
+                  "groundIntoDoublePlay": 2,
+                  "numberOfPitches": 720,
+                  "era": "3.99",
+                  "inningsPitched": "38.1",
+                  "wins": 4,
+                  "losses": 3,
+                  "saves": 12,
+                  "saveOpportunities": 17,
+                  "holds": 4,
+                  "blownSaves": 5,
+                  "earnedRuns": 17,
+                  "whip": "1.33",
+                  "battersFaced": 165,
+                  "outs": 115,
+                  "gamesPitched": 43,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 424,
+                  "strikePercentage": ".590",
+                  "hitBatsmen": 2,
+                  "balks": 0,
+                  "wildPitches": 5,
+                  "pickoffs": 1,
+                  "totalBases": 50,
+                  "groundOutsToAirouts": "0.81",
+                  "winPercentage": ".571",
+                  "pitchesPerInning": "18.78",
+                  "gamesFinished": 21,
+                  "strikeoutWalkRatio": "2.04",
+                  "strikeoutsPer9Inn": "11.03",
+                  "walksPer9Inn": "5.40",
+                  "hitsPer9Inn": "6.57",
+                  "runsScoredPer9": "4.70",
+                  "homeRunsPer9": "1.41",
+                  "inheritedRunners": 12,
+                  "inheritedRunnersScored": 6,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 1
+                },
+                "team": {
+                  "id": 145,
+                  "name": "Chicago White Sox",
+                  "link": "/api/v1/teams/145"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "abbreviation": "MLB"
+                },
+                "numTeams": 1,
+                "numLeagues": 43
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 24,
+                  "gamesStarted": 0,
+                  "flyOuts": 12,
+                  "groundOuts": 24,
+                  "airOuts": 26,
+                  "runs": 8,
+                  "doubles": 1,
+                  "triples": 1,
+                  "homeRuns": 3,
+                  "strikeOuts": 18,
+                  "baseOnBalls": 8,
+                  "intentionalWalks": 0,
+                  "hits": 18,
+                  "hitByPitch": 1,
+                  "avg": ".209",
+                  "atBats": 86,
+                  "obp": ".284",
+                  "slg": ".349",
+                  "ops": ".633",
+                  "caughtStealing": 1,
+                  "stolenBases": 3,
+                  "stolenBasePercentage": ".750",
+                  "caughtStealingPercentage": ".250",
+                  "groundIntoDoublePlay": 2,
+                  "numberOfPitches": 392,
+                  "era": "3.04",
+                  "inningsPitched": "23.2",
+                  "wins": 1,
+                  "losses": 0,
+                  "saves": 0,
+                  "saveOpportunities": 1,
+                  "holds": 4,
+                  "blownSaves": 1,
+                  "earnedRuns": 8,
+                  "whip": "1.10",
+                  "battersFaced": 95,
+                  "outs": 71,
+                  "gamesPitched": 24,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 252,
+                  "strikePercentage": ".640",
+                  "hitBatsmen": 1,
+                  "balks": 0,
+                  "wildPitches": 1,
+                  "pickoffs": 1,
+                  "totalBases": 30,
+                  "groundOutsToAirouts": "0.92",
+                  "winPercentage": "1.000",
+                  "pitchesPerInning": "16.56",
+                  "gamesFinished": 4,
+                  "strikeoutWalkRatio": "2.25",
+                  "strikeoutsPer9Inn": "6.85",
+                  "walksPer9Inn": "3.04",
+                  "hitsPer9Inn": "6.85",
+                  "runsScoredPer9": "3.04",
+                  "homeRunsPer9": "1.14",
+                  "inheritedRunners": 12,
+                  "inheritedRunnersScored": 2,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 0
+                },
+                "team": {
+                  "id": 136,
+                  "name": "Seattle Mariners",
+                  "link": "/api/v1/teams/136"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "abbreviation": "MLB"
+                },
+                "numTeams": 1,
+                "numLeagues": 24
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 67,
+                  "gamesStarted": 0,
+                  "flyOuts": 31,
+                  "groundOuts": 53,
+                  "airOuts": 62,
+                  "runs": 28,
+                  "doubles": 5,
+                  "triples": 1,
+                  "homeRuns": 9,
+                  "strikeOuts": 65,
+                  "baseOnBalls": 31,
+                  "intentionalWalks": 2,
+                  "hits": 46,
+                  "hitByPitch": 3,
+                  "avg": ".204",
+                  "atBats": 225,
+                  "obp": ".308",
+                  "slg": ".356",
+                  "ops": ".664",
+                  "caughtStealing": 3,
+                  "stolenBases": 10,
+                  "stolenBasePercentage": ".769",
+                  "caughtStealingPercentage": ".231",
+                  "groundIntoDoublePlay": 4,
+                  "numberOfPitches": 1112,
+                  "era": "3.63",
+                  "inningsPitched": "62.0",
+                  "wins": 5,
+                  "losses": 3,
+                  "saves": 12,
+                  "saveOpportunities": 18,
+                  "holds": 8,
+                  "blownSaves": 6,
+                  "earnedRuns": 25,
+                  "whip": "1.24",
+                  "battersFaced": 260,
+                  "outs": 186,
+                  "gamesPitched": 67,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 676,
+                  "strikePercentage": ".610",
+                  "hitBatsmen": 3,
+                  "balks": 0,
+                  "wildPitches": 6,
+                  "pickoffs": 2,
+                  "totalBases": 80,
+                  "groundOutsToAirouts": "0.85",
+                  "winPercentage": ".625",
+                  "pitchesPerInning": "17.94",
+                  "gamesFinished": 25,
+                  "strikeoutWalkRatio": "2.10",
+                  "strikeoutsPer9Inn": "9.44",
+                  "walksPer9Inn": "4.50",
+                  "hitsPer9Inn": "6.68",
+                  "runsScoredPer9": "4.06",
+                  "homeRunsPer9": "1.31",
+                  "inheritedRunners": 24,
+                  "inheritedRunnersScored": 8,
+                  "catchersInterference": 0,
+                  "sacBunts": 0,
+                  "sacFlies": 1
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 2,
+                "numLeagues": 67
+              }
+            ]
+          }
+        ]
+      },
+      "/people/2/id": {
+        "found": true,
+        "value": 663728
+      },
+      "/people/2/fullName": {
+        "found": true,
+        "value": "Cal Raleigh"
+      },
+      "/people/2/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "2",
+          "name": "Catcher",
+          "type": "Catcher",
+          "abbreviation": "C"
+        }
+      },
+      "/people/2/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "hitting"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 126,
+                  "flyOuts": 91,
+                  "groundOuts": 64,
+                  "airOuts": 145,
+                  "runs": 49,
+                  "doubles": 15,
+                  "triples": 0,
+                  "homeRuns": 23,
+                  "strikeOuts": 164,
+                  "baseOnBalls": 72,
+                  "intentionalWalks": 1,
+                  "hits": 82,
+                  "hitByPitch": 3,
+                  "avg": ".182",
+                  "atBats": 451,
+                  "obp": ".296",
+                  "slg": ".368",
+                  "ops": ".664",
+                  "caughtStealing": 1,
+                  "stolenBases": 2,
+                  "stolenBasePercentage": ".667",
+                  "caughtStealingPercentage": ".333",
+                  "groundIntoDoublePlay": 5,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 2280,
+                  "plateAppearances": 530,
+                  "totalBases": 166,
+                  "rbi": 69,
+                  "leftOnBase": 223,
+                  "sacBunts": 0,
+                  "sacFlies": 4,
+                  "babip": ".220",
+                  "groundOutsToAirouts": "0.44",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "19.61"
+                },
+                "team": {
+                  "id": 136,
+                  "name": "Seattle Mariners",
+                  "link": "/api/v1/teams/136"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "abbreviation": "MLB"
+                },
+                "numTeams": 1,
+                "numLeagues": 126
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 126,
+                  "flyOuts": 91,
+                  "groundOuts": 64,
+                  "airOuts": 145,
+                  "runs": 49,
+                  "doubles": 15,
+                  "triples": 0,
+                  "homeRuns": 23,
+                  "strikeOuts": 164,
+                  "baseOnBalls": 72,
+                  "intentionalWalks": 1,
+                  "hits": 82,
+                  "hitByPitch": 3,
+                  "avg": ".182",
+                  "atBats": 451,
+                  "obp": ".296",
+                  "slg": ".368",
+                  "ops": ".664",
+                  "caughtStealing": 1,
+                  "stolenBases": 2,
+                  "stolenBasePercentage": ".667",
+                  "caughtStealingPercentage": ".333",
+                  "groundIntoDoublePlay": 5,
+                  "groundIntoTriplePlay": 0,
+                  "numberOfPitches": 2280,
+                  "plateAppearances": 530,
+                  "totalBases": 166,
+                  "rbi": 69,
+                  "leftOnBase": 223,
+                  "sacBunts": 0,
+                  "sacFlies": 4,
+                  "babip": ".220",
+                  "groundOutsToAirouts": "0.44",
+                  "catchersInterference": 0,
+                  "atBatsPerHomeRun": "19.61"
+                },
+                "team": {
+                  "id": 136,
+                  "name": "Seattle Mariners",
+                  "link": "/api/v1/teams/136"
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 1,
+                "numLeagues": 126
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Taylor Ward and Seranthony Dominguez have two MLB team splits plus sport 0 All; Cal Raleigh has one team split plus matching All."
+  ]
+}

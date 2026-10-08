@@ -1,0 +1,687 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-004-777458-schedule-dh-rescheduled-view",
+  "investigationId": "DISC-004",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:10:11.730Z",
+  "context": {
+    "subject": "Direct gamePk response containing both postponed original and rescheduled doubleheader views",
+    "gameState": "Current historical response has two date buckets for the same gamePk"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=777458&hydrate=lineups%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 239,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 10831,
+    "bodySha256": "6051f5df07dc6db3cdaedd61b81d69cd45a85007ecd2fb37ed40c97e8ca40cbc"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/date",
+      "/dates/0/games/0",
+      "/dates/1/date",
+      "/dates/1/games/0"
+    ],
+    "values": {
+      "/dates/0/date": {
+        "found": true,
+        "value": "2025-06-18"
+      },
+      "/dates/0/games/0": {
+        "found": true,
+        "value": {
+          "gamePk": 777458,
+          "gameGuid": "1199cd03-a58b-4436-bd69-b801fe4e7901",
+          "link": "/api/v1.1/game/777458/feed/live",
+          "gameType": "R",
+          "season": "2025",
+          "gameDate": "2025-06-18T23:40:00Z",
+          "officialDate": "2025-06-19",
+          "rescheduleDate": "2025-06-19T18:15:00Z",
+          "rescheduleGameDate": "2025-06-19",
+          "status": {
+            "abstractGameState": "Final",
+            "codedGameState": "D",
+            "detailedState": "Postponed",
+            "statusCode": "DR",
+            "startTimeTBD": false,
+            "reason": "Rain",
+            "abstractGameCode": "F"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "springLeague": {
+                  "id": 115,
+                  "name": "Grapefruit League",
+                  "link": "/api/v1/league/115",
+                  "abbreviation": "GL"
+                },
+                "allStarStatus": "N",
+                "id": 138,
+                "name": "St. Louis Cardinals",
+                "link": "/api/v1/teams/138",
+                "season": 2025,
+                "venue": {
+                  "id": 2889,
+                  "name": "Busch Stadium",
+                  "link": "/api/v1/venues/2889"
+                },
+                "springVenue": {
+                  "id": 2520,
+                  "link": "/api/v1/venues/2520"
+                },
+                "teamCode": "sln",
+                "fileCode": "stl",
+                "abbreviation": "STL",
+                "teamName": "Cardinals",
+                "locationName": "St. Louis",
+                "firstYearOfPlay": "1892",
+                "league": {
+                  "id": 104,
+                  "name": "National League",
+                  "link": "/api/v1/league/104"
+                },
+                "division": {
+                  "id": 205,
+                  "name": "National League Central",
+                  "link": "/api/v1/divisions/205"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "name": "Major League Baseball"
+                },
+                "shortName": "St. Louis",
+                "franchiseName": "St. Louis",
+                "clubName": "Cardinals",
+                "active": true
+              },
+              "leagueRecord": {
+                "wins": 39,
+                "losses": 35,
+                "ties": 0,
+                "pct": ".527"
+              },
+              "probablePitcher": {
+                "id": 543243,
+                "fullName": "Sonny Gray",
+                "link": "/api/v1/people/543243"
+              },
+              "splitSquad": false,
+              "seriesNumber": 24,
+              "springLeague": {
+                "id": 115,
+                "name": "Grapefruit League",
+                "link": "/api/v1/league/115",
+                "abbreviation": "GL"
+              }
+            },
+            "home": {
+              "team": {
+                "springLeague": {
+                  "id": 114,
+                  "name": "Cactus League",
+                  "link": "/api/v1/league/114",
+                  "abbreviation": "CL"
+                },
+                "allStarStatus": "N",
+                "id": 145,
+                "name": "Chicago White Sox",
+                "link": "/api/v1/teams/145",
+                "season": 2025,
+                "venue": {
+                  "id": 4,
+                  "name": "Rate Field",
+                  "link": "/api/v1/venues/4"
+                },
+                "springVenue": {
+                  "id": 3809,
+                  "link": "/api/v1/venues/3809"
+                },
+                "teamCode": "cha",
+                "fileCode": "cws",
+                "abbreviation": "CWS",
+                "teamName": "White Sox",
+                "locationName": "Chicago",
+                "firstYearOfPlay": "1901",
+                "league": {
+                  "id": 103,
+                  "name": "American League",
+                  "link": "/api/v1/league/103"
+                },
+                "division": {
+                  "id": 202,
+                  "name": "American League Central",
+                  "link": "/api/v1/divisions/202"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "name": "Major League Baseball"
+                },
+                "shortName": "Chi White Sox",
+                "franchiseName": "Chicago",
+                "clubName": "White Sox",
+                "active": true
+              },
+              "leagueRecord": {
+                "wins": 23,
+                "losses": 51,
+                "ties": 0,
+                "pct": ".311"
+              },
+              "probablePitcher": {
+                "id": 680732,
+                "fullName": "Sean Burke",
+                "link": "/api/v1/people/680732"
+              },
+              "splitSquad": false,
+              "seriesNumber": 24,
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              }
+            }
+          },
+          "venue": {
+            "id": 4,
+            "name": "Rate Field",
+            "link": "/api/v1/venues/4"
+          },
+          "content": {
+            "link": "/api/v1/game/777458/content"
+          },
+          "gameNumber": 1,
+          "publicFacing": true,
+          "doubleHeader": "N",
+          "gamedayType": "P",
+          "tiebreaker": "N",
+          "calendarEventID": "14-777458-2025-06-18",
+          "seasonDisplay": "2025",
+          "dayNight": "night",
+          "scheduledInnings": 9,
+          "reverseHomeAwayStatus": false,
+          "inningBreakLength": 120,
+          "gamesInSeries": 3,
+          "seriesGameNumber": 2,
+          "seriesDescription": "Regular Season",
+          "recordSource": "S",
+          "ifNecessary": "N",
+          "ifNecessaryDescription": "Normal Game"
+        }
+      },
+      "/dates/1/date": {
+        "found": true,
+        "value": "2025-06-19"
+      },
+      "/dates/1/games/0": {
+        "found": true,
+        "value": {
+          "gamePk": 777458,
+          "gameGuid": "1199cd03-a58b-4436-bd69-b801fe4e7901",
+          "link": "/api/v1.1/game/777458/feed/live",
+          "gameType": "R",
+          "season": "2025",
+          "gameDate": "2025-06-19T18:15:00Z",
+          "officialDate": "2025-06-19",
+          "rescheduledFrom": "2025-06-18T23:40:00Z",
+          "rescheduledFromDate": "2025-06-18",
+          "status": {
+            "abstractGameState": "Final",
+            "codedGameState": "F",
+            "detailedState": "Final",
+            "statusCode": "F",
+            "startTimeTBD": true,
+            "abstractGameCode": "F"
+          },
+          "teams": {
+            "away": {
+              "team": {
+                "springLeague": {
+                  "id": 115,
+                  "name": "Grapefruit League",
+                  "link": "/api/v1/league/115",
+                  "abbreviation": "GL"
+                },
+                "allStarStatus": "N",
+                "id": 138,
+                "name": "St. Louis Cardinals",
+                "link": "/api/v1/teams/138",
+                "season": 2025,
+                "venue": {
+                  "id": 2889,
+                  "name": "Busch Stadium",
+                  "link": "/api/v1/venues/2889"
+                },
+                "springVenue": {
+                  "id": 2520,
+                  "link": "/api/v1/venues/2520"
+                },
+                "teamCode": "sln",
+                "fileCode": "stl",
+                "abbreviation": "STL",
+                "teamName": "Cardinals",
+                "locationName": "St. Louis",
+                "firstYearOfPlay": "1892",
+                "league": {
+                  "id": 104,
+                  "name": "National League",
+                  "link": "/api/v1/league/104"
+                },
+                "division": {
+                  "id": 205,
+                  "name": "National League Central",
+                  "link": "/api/v1/divisions/205"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "name": "Major League Baseball"
+                },
+                "shortName": "St. Louis",
+                "franchiseName": "St. Louis",
+                "clubName": "Cardinals",
+                "active": true
+              },
+              "leagueRecord": {
+                "wins": 40,
+                "losses": 35,
+                "ties": 0,
+                "pct": ".533"
+              },
+              "score": 8,
+              "isWinner": true,
+              "probablePitcher": {
+                "id": 700241,
+                "fullName": "Michael McGreevy",
+                "link": "/api/v1/people/700241"
+              },
+              "splitSquad": false,
+              "seriesNumber": 24,
+              "springLeague": {
+                "id": 115,
+                "name": "Grapefruit League",
+                "link": "/api/v1/league/115",
+                "abbreviation": "GL"
+              }
+            },
+            "home": {
+              "team": {
+                "springLeague": {
+                  "id": 114,
+                  "name": "Cactus League",
+                  "link": "/api/v1/league/114",
+                  "abbreviation": "CL"
+                },
+                "allStarStatus": "N",
+                "id": 145,
+                "name": "Chicago White Sox",
+                "link": "/api/v1/teams/145",
+                "season": 2025,
+                "venue": {
+                  "id": 4,
+                  "name": "Rate Field",
+                  "link": "/api/v1/venues/4"
+                },
+                "springVenue": {
+                  "id": 3809,
+                  "link": "/api/v1/venues/3809"
+                },
+                "teamCode": "cha",
+                "fileCode": "cws",
+                "abbreviation": "CWS",
+                "teamName": "White Sox",
+                "locationName": "Chicago",
+                "firstYearOfPlay": "1901",
+                "league": {
+                  "id": 103,
+                  "name": "American League",
+                  "link": "/api/v1/league/103"
+                },
+                "division": {
+                  "id": 202,
+                  "name": "American League Central",
+                  "link": "/api/v1/divisions/202"
+                },
+                "sport": {
+                  "id": 1,
+                  "link": "/api/v1/sports/1",
+                  "name": "Major League Baseball"
+                },
+                "shortName": "Chi White Sox",
+                "franchiseName": "Chicago",
+                "clubName": "White Sox",
+                "active": true
+              },
+              "leagueRecord": {
+                "wins": 23,
+                "losses": 52,
+                "ties": 0,
+                "pct": ".307"
+              },
+              "score": 6,
+              "isWinner": false,
+              "probablePitcher": {
+                "id": 678024,
+                "fullName": "Mike Vasil",
+                "link": "/api/v1/people/678024"
+              },
+              "splitSquad": false,
+              "seriesNumber": 24,
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              }
+            }
+          },
+          "venue": {
+            "id": 4,
+            "name": "Rate Field",
+            "link": "/api/v1/venues/4"
+          },
+          "content": {
+            "link": "/api/v1/game/777458/content"
+          },
+          "isTie": false,
+          "gameNumber": 2,
+          "publicFacing": true,
+          "doubleHeader": "Y",
+          "gamedayType": "P",
+          "tiebreaker": "N",
+          "calendarEventID": "14-777458-2025-06-19",
+          "seasonDisplay": "2025",
+          "dayNight": "day",
+          "description": "Makeup of 6/18 PPD",
+          "scheduledInnings": 9,
+          "reverseHomeAwayStatus": false,
+          "inningBreakLength": 120,
+          "gamesInSeries": 3,
+          "seriesGameNumber": 3,
+          "seriesDescription": "Regular Season",
+          "recordSource": "S",
+          "ifNecessary": "N",
+          "ifNecessaryDescription": "Normal Game",
+          "lineups": {
+            "homePlayers": [
+              {
+                "id": 805367,
+                "fullName": "Chase Meidroth",
+                "link": "/api/v1/people/805367",
+                "firstName": "Chase",
+                "lastName": "Meidroth",
+                "primaryPosition": {
+                  "code": "6",
+                  "name": "Shortstop",
+                  "type": "Infielder",
+                  "abbreviation": "SS"
+                },
+                "useName": "Chase"
+              },
+              {
+                "id": 643217,
+                "fullName": "Andrew Benintendi",
+                "link": "/api/v1/people/643217",
+                "firstName": "Andrew",
+                "lastName": "Benintendi",
+                "primaryPosition": {
+                  "code": "7",
+                  "name": "Outfielder",
+                  "type": "Outfielder",
+                  "abbreviation": "LF"
+                },
+                "useName": "Andrew"
+              },
+              {
+                "id": 678246,
+                "fullName": "Miguel Vargas",
+                "link": "/api/v1/people/678246",
+                "firstName": "Miguel",
+                "lastName": "Vargas",
+                "primaryPosition": {
+                  "code": "5",
+                  "name": "Third Base",
+                  "type": "Infielder",
+                  "abbreviation": "3B"
+                },
+                "useName": "Miguel"
+              },
+              {
+                "id": 700337,
+                "fullName": "Edgar Quero",
+                "link": "/api/v1/people/700337",
+                "firstName": "Edgar",
+                "lastName": "Quero",
+                "primaryPosition": {
+                  "code": "2",
+                  "name": "Catcher",
+                  "type": "Catcher",
+                  "abbreviation": "C"
+                },
+                "useName": "Edgar"
+              },
+              {
+                "id": 672820,
+                "fullName": "Lenyn Sosa",
+                "link": "/api/v1/people/672820",
+                "firstName": "Lenyn",
+                "lastName": "Sosa",
+                "primaryPosition": {
+                  "code": "10",
+                  "name": "Designated Hitter",
+                  "type": "Hitter",
+                  "abbreviation": "DH"
+                },
+                "useName": "Lenyn"
+              },
+              {
+                "id": 676116,
+                "fullName": "Ryan Noda",
+                "link": "/api/v1/people/676116",
+                "firstName": "Ryan",
+                "lastName": "Noda",
+                "primaryPosition": {
+                  "code": "3",
+                  "name": "First Base",
+                  "type": "Infielder",
+                  "abbreviation": "1B"
+                },
+                "useName": "Ryan"
+              },
+              {
+                "id": 596103,
+                "fullName": "Austin Slater",
+                "link": "/api/v1/people/596103",
+                "firstName": "Austin",
+                "lastName": "Slater",
+                "primaryPosition": {
+                  "code": "9",
+                  "name": "Outfielder",
+                  "type": "Outfielder",
+                  "abbreviation": "RF"
+                },
+                "useName": "Austin"
+              },
+              {
+                "id": 668942,
+                "fullName": "Josh Rojas",
+                "link": "/api/v1/people/668942",
+                "firstName": "Joshua",
+                "lastName": "Rojas",
+                "primaryPosition": {
+                  "code": "4",
+                  "name": "Second Base",
+                  "type": "Infielder",
+                  "abbreviation": "2B"
+                },
+                "useName": "Josh"
+              },
+              {
+                "id": 572191,
+                "fullName": "Michael A. Taylor",
+                "link": "/api/v1/people/572191",
+                "firstName": "Michael",
+                "lastName": "Taylor",
+                "primaryPosition": {
+                  "code": "8",
+                  "name": "Outfielder",
+                  "type": "Outfielder",
+                  "abbreviation": "CF"
+                },
+                "useName": "Michael A."
+              }
+            ],
+            "awayPlayers": [
+              {
+                "id": 680977,
+                "fullName": "Brendan Donovan",
+                "link": "/api/v1/people/680977",
+                "firstName": "Brendan",
+                "lastName": "Donovan",
+                "primaryPosition": {
+                  "code": "4",
+                  "name": "Second Base",
+                  "type": "Infielder",
+                  "abbreviation": "2B"
+                },
+                "useName": "Brendan"
+              },
+              {
+                "id": 575929,
+                "fullName": "Willson Contreras",
+                "link": "/api/v1/people/575929",
+                "firstName": "Willson",
+                "lastName": "Contreras",
+                "primaryPosition": {
+                  "code": "3",
+                  "name": "First Base",
+                  "type": "Infielder",
+                  "abbreviation": "1B"
+                },
+                "useName": "Willson"
+              },
+              {
+                "id": 676475,
+                "fullName": "Alec Burleson",
+                "link": "/api/v1/people/676475",
+                "firstName": "Alec",
+                "lastName": "Burleson",
+                "primaryPosition": {
+                  "code": "9",
+                  "name": "Outfielder",
+                  "type": "Outfielder",
+                  "abbreviation": "RF"
+                },
+                "useName": "Alec"
+              },
+              {
+                "id": 571448,
+                "fullName": "Nolan Arenado",
+                "link": "/api/v1/people/571448",
+                "firstName": "Nolan",
+                "lastName": "Arenado",
+                "primaryPosition": {
+                  "code": "5",
+                  "name": "Third Base",
+                  "type": "Infielder",
+                  "abbreviation": "3B"
+                },
+                "useName": "Nolan"
+              },
+              {
+                "id": 663457,
+                "fullName": "Lars Nootbaar",
+                "link": "/api/v1/people/663457",
+                "firstName": "Lars",
+                "lastName": "Nootbaar",
+                "primaryPosition": {
+                  "code": "7",
+                  "name": "Outfielder",
+                  "type": "Outfielder",
+                  "abbreviation": "LF"
+                },
+                "useName": "Lars"
+              },
+              {
+                "id": 669357,
+                "fullName": "Nolan Gorman",
+                "link": "/api/v1/people/669357",
+                "firstName": "Nolan",
+                "lastName": "Gorman",
+                "primaryPosition": {
+                  "code": "10",
+                  "name": "Designated Hitter",
+                  "type": "Hitter",
+                  "abbreviation": "DH"
+                },
+                "useName": "Nolan"
+              },
+              {
+                "id": 686780,
+                "fullName": "Pedro Pagés",
+                "link": "/api/v1/people/686780",
+                "firstName": "Pedro",
+                "lastName": "Pagés",
+                "primaryPosition": {
+                  "code": "2",
+                  "name": "Catcher",
+                  "type": "Catcher",
+                  "abbreviation": "C"
+                },
+                "useName": "Pedro"
+              },
+              {
+                "id": 676480,
+                "fullName": "José Barrero",
+                "link": "/api/v1/people/676480",
+                "firstName": "José",
+                "lastName": "Barrero",
+                "primaryPosition": {
+                  "code": "6",
+                  "name": "Shortstop",
+                  "type": "Infielder",
+                  "abbreviation": "SS"
+                },
+                "useName": "José"
+              },
+              {
+                "id": 687363,
+                "fullName": "Victor Scott",
+                "link": "/api/v1/people/687363",
+                "firstName": "Victor",
+                "lastName": "Scott",
+                "primaryPosition": {
+                  "code": "8",
+                  "name": "Outfielder",
+                  "type": "Outfielder",
+                  "abbreviation": "CF"
+                },
+                "useName": "Victor"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "notes": [
+    "The first view is the 6/18 postponed record; the second is the 6/19 Final makeup marked doubleHeader Y and gameNumber 2. Consumers must choose the relevant date bucket, not blindly dates[0]."
+  ]
+}

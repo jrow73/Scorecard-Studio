@@ -1,0 +1,595 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scorecard.studio/schemas/v030-normalized-game.schema.json",
+  "title": "Scorecard Studio normalized game model",
+  "description": "Schema version 2 contract introduced by v0.3.0 Build 003.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "contractRevision", "context", "game", "away", "home", "standings", "meta"],
+  "properties": {
+    "schemaId": { "const": "scorecard-studio.normalized-game" },
+    "schemaVersion": { "const": 2 },
+    "contractRevision": { "type": "string", "pattern": "^0\\.3\\.0-draft\\.[1-9][0-9]*$" },
+    "context": { "$ref": "#/$defs/context" },
+    "game": { "$ref": "#/$defs/game" },
+    "away": { "$ref": "#/$defs/side" },
+    "home": { "$ref": "#/$defs/side" },
+    "standings": { "$ref": "#/$defs/standingsRoot" },
+    "meta": { "$ref": "#/$defs/meta" }
+  },
+  "$defs": {
+    "date": { "type": "string", "format": "date" },
+    "utcTimestamp": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "nullableString": { "type": ["string", "null"] },
+    "nullableInteger": { "type": ["integer", "null"] },
+    "nullableNumber": { "type": ["number", "null"] },
+    "idName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": ["integer", "null"] },
+        "name": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gamePk", "season", "sport", "gameType", "competitionSegment", "selectedDate", "officialDate", "selectedViewKey"],
+      "properties": {
+        "gamePk": { "type": "string", "minLength": 1 },
+        "season": { "type": "integer", "minimum": 1800, "maximum": 9999 },
+        "sport": { "$ref": "#/$defs/idName" },
+        "gameType": { "type": "string", "minLength": 1 },
+        "competitionSegment": {
+          "enum": ["spring", "regular", "wildCard", "divisionSeries", "leagueChampionship", "worldSeries", "other", "unknown"]
+        },
+        "selectedDate": { "$ref": "#/$defs/date" },
+        "officialDate": { "$ref": "#/$defs/date" },
+        "selectedViewKey": { "type": "string", "minLength": 1 }
+      }
+    },
+    "rawStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "abstractGameState": { "type": "string" },
+        "codedGameState": { "type": "string" },
+        "detailedState": { "type": "string" },
+        "statusCode": { "type": "string" },
+        "abstractGameCode": { "type": "string" }
+      }
+    },
+    "gameStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "raw", "startTimeTBD", "teamsTBD"],
+      "properties": {
+        "canonical": { "enum": ["scheduled", "pregame", "live", "delayed", "suspended", "postponed", "cancelled", "final", "unknown"] },
+        "raw": { "$ref": "#/$defs/rawStatus" },
+        "reason": { "$ref": "#/$defs/nullableString" },
+        "startTimeTBD": { "type": "boolean" },
+        "teamsTBD": { "type": "boolean" }
+      }
+    },
+    "gameDates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheduledStart", "originalScheduledStart", "officialDate", "rescheduledStart", "rescheduledDate", "resumeStart", "resumeDate"],
+      "properties": {
+        "scheduledStart": { "anyOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+        "originalScheduledStart": { "anyOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+        "officialDate": { "$ref": "#/$defs/date" },
+        "rescheduledStart": { "anyOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+        "rescheduledDate": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] },
+        "resumeStart": { "anyOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+        "resumeDate": { "anyOf": [{ "$ref": "#/$defs/date" }, { "type": "null" }] }
+      }
+    },
+    "venue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "location", "timeZone", "fieldInfo"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nullableInteger" },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["city", "state", "country"],
+          "properties": {
+            "city": { "$ref": "#/$defs/nullableString" },
+            "state": { "$ref": "#/$defs/nullableString" },
+            "country": { "$ref": "#/$defs/nullableString" }
+          }
+        },
+        "timeZone": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["iana"],
+          "properties": { "iana": { "$ref": "#/$defs/nullableString" } }
+        },
+        "fieldInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capacity", "turfType", "roofType", "dimensions"],
+          "properties": {
+            "capacity": { "$ref": "#/$defs/nullableInteger" },
+            "turfType": { "$ref": "#/$defs/nullableString" },
+            "roofType": { "$ref": "#/$defs/nullableString" },
+            "dimensions": {
+              "type": "object",
+              "additionalProperties": { "type": ["integer", "number", "string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "weather": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["temperature", "condition", "wind"],
+      "properties": {
+        "temperature": { "$ref": "#/$defs/nullableNumber" },
+        "condition": { "$ref": "#/$defs/nullableString" },
+        "wind": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "official": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "role"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nullableInteger" },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "role": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "umpires": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["crew"],
+      "properties": {
+        "crew": { "type": "array", "items": { "$ref": "#/$defs/official" } }
+      }
+    },
+    "game": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "dates", "dayNight", "gameNumber", "venue", "weather", "umpires"],
+      "properties": {
+        "status": { "$ref": "#/$defs/gameStatus" },
+        "dates": { "$ref": "#/$defs/gameDates" },
+        "dayNight": { "enum": ["day", "night", "unknown", null] },
+        "gameNumber": { "$ref": "#/$defs/nullableInteger" },
+        "venue": { "$ref": "#/$defs/venue" },
+        "weather": { "$ref": "#/$defs/weather" },
+        "umpires": { "$ref": "#/$defs/umpires" }
+      }
+    },
+    "rankValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw", "value"],
+      "properties": {
+        "raw": { "$ref": "#/$defs/nullableString" },
+        "value": { "$ref": "#/$defs/nullableInteger" }
+      }
+    },
+    "gamesBackValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw", "state", "games"],
+      "properties": {
+        "raw": { "$ref": "#/$defs/nullableString" },
+        "state": { "enum": ["leader", "ahead", "behind", "notApplicable", "unknown"] },
+        "games": { "$ref": "#/$defs/nullableNumber" }
+      }
+    },
+    "markerValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["raw", "state"],
+      "properties": {
+        "raw": { "$ref": "#/$defs/nullableString" },
+        "state": { "type": "string", "minLength": 1 },
+        "value": { "$ref": "#/$defs/nullableNumber" }
+      }
+    },
+    "teamRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gamesPlayed", "wins", "losses", "pct"],
+      "properties": {
+        "gamesPlayed": { "$ref": "#/$defs/nullableInteger" },
+        "wins": { "$ref": "#/$defs/nullableInteger" },
+        "losses": { "$ref": "#/$defs/nullableInteger" },
+        "pct": { "$ref": "#/$defs/nullableNumber" }
+      }
+    },
+    "lastTen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wins", "losses"],
+      "properties": {
+        "wins": { "$ref": "#/$defs/nullableInteger" },
+        "losses": { "$ref": "#/$defs/nullableInteger" }
+      }
+    },
+    "teamStandings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["divisionRank", "leagueRank", "wildCardRank", "divisionGamesBack", "leagueGamesBack", "wildCardGamesBack", "streak", "lastTen", "elimination", "clinch"],
+      "properties": {
+        "divisionRank": { "$ref": "#/$defs/rankValue" },
+        "leagueRank": { "$ref": "#/$defs/rankValue" },
+        "wildCardRank": { "$ref": "#/$defs/rankValue" },
+        "divisionGamesBack": { "$ref": "#/$defs/gamesBackValue" },
+        "leagueGamesBack": { "$ref": "#/$defs/gamesBackValue" },
+        "wildCardGamesBack": { "$ref": "#/$defs/gamesBackValue" },
+        "streak": { "$ref": "#/$defs/nullableString" },
+        "lastTen": { "$ref": "#/$defs/lastTen" },
+        "elimination": { "$ref": "#/$defs/markerValue" },
+        "clinch": { "$ref": "#/$defs/markerValue" }
+      }
+    },
+    "team": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "locationName", "shortName", "clubName", "abbreviation", "sport", "league", "division", "record", "gameNumber", "standings", "logo"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nullableInteger" },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "locationName": { "$ref": "#/$defs/nullableString" },
+        "shortName": { "$ref": "#/$defs/nullableString" },
+        "clubName": { "$ref": "#/$defs/nullableString" },
+        "abbreviation": { "$ref": "#/$defs/nullableString" },
+        "sport": { "$ref": "#/$defs/idName" },
+        "league": { "$ref": "#/$defs/idName" },
+        "division": { "$ref": "#/$defs/idName" },
+        "record": { "$ref": "#/$defs/teamRecord" },
+        "gameNumber": { "$ref": "#/$defs/nullableInteger" },
+        "standings": { "$ref": "#/$defs/teamStandings" },
+        "logo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["url", "brandScope"],
+          "properties": {
+            "url": { "type": ["string", "null"], "format": "uri" },
+            "brandScope": { "enum": ["current", "historical", "unknown", null] }
+          }
+        }
+      }
+    },
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "number", "bats", "throws", "primaryPosition"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nullableInteger" },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "firstName": { "$ref": "#/$defs/nullableString" },
+        "lastName": { "$ref": "#/$defs/nullableString" },
+        "useName": { "$ref": "#/$defs/nullableString" },
+        "useLastName": { "$ref": "#/$defs/nullableString" },
+        "boxscoreName": { "$ref": "#/$defs/nullableString" },
+        "firstLastName": { "$ref": "#/$defs/nullableString" },
+        "nameFirstLast": { "$ref": "#/$defs/nullableString" },
+        "lastFirstName": { "$ref": "#/$defs/nullableString" },
+        "initLastName": { "$ref": "#/$defs/nullableString" },
+        "lastInitName": { "$ref": "#/$defs/nullableString" },
+        "nameSuffix": { "$ref": "#/$defs/nullableString" },
+        "nameTitle": { "$ref": "#/$defs/nullableString" },
+        "pronunciation": { "$ref": "#/$defs/nullableString" },
+        "number": { "$ref": "#/$defs/nullableString" },
+        "bats": { "$ref": "#/$defs/nullableString" },
+        "throws": { "$ref": "#/$defs/nullableString" },
+        "primaryPosition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["abbreviation", "name", "type"],
+          "properties": {
+            "abbreviation": { "$ref": "#/$defs/nullableString" },
+            "name": { "$ref": "#/$defs/nullableString" },
+            "type": { "$ref": "#/$defs/nullableString" }
+          }
+        }
+      }
+    },
+    "statScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sportId", "gameTypes", "statType", "startDate", "endDate", "aggregate"],
+      "properties": {
+        "sportId": { "type": "integer" },
+        "gameTypes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "statType": { "type": "string", "minLength": 1 },
+        "startDate": { "$ref": "#/$defs/date" },
+        "endDate": { "$ref": "#/$defs/date" },
+        "aggregate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sportId", "code", "selection"],
+          "properties": {
+            "sportId": { "type": ["integer", "null"] },
+            "code": { "$ref": "#/$defs/nullableString" },
+            "selection": { "enum": ["all", "single-unambiguous", "none", "ambiguous"] }
+          }
+        }
+      }
+    },
+    "statTotals": {
+      "type": "object",
+      "additionalProperties": { "type": ["integer", "number", "string", "boolean", "null"] }
+    },
+    "scopedStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "totals"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/statScope" },
+        "totals": { "$ref": "#/$defs/statTotals" }
+      }
+    },
+    "playerStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hitting": { "$ref": "#/$defs/scopedStats" },
+        "pitching": { "$ref": "#/$defs/scopedStats" }
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["abbreviation", "name", "number", "roleLabel"],
+      "properties": {
+        "abbreviation": { "$ref": "#/$defs/nullableString" },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "number": { "type": ["integer", "string", "null"] },
+        "roleLabel": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "playerRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["player", "position", "stats"],
+      "properties": {
+        "player": { "$ref": "#/$defs/person" },
+        "position": { "$ref": "#/$defs/position" },
+        "stats": { "$ref": "#/$defs/playerStats" }
+      }
+    },
+    "lineupSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["battingOrder", "slotState", "player", "position", "stats"],
+      "properties": {
+        "battingOrder": { "type": "integer", "minimum": 1 },
+        "slotState": { "enum": ["available", "missing", "ambiguous"] },
+        "player": { "$ref": "#/$defs/person" },
+        "position": { "$ref": "#/$defs/position" },
+        "stats": { "$ref": "#/$defs/playerStats" }
+      }
+    },
+    "lineup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "slots"],
+      "properties": {
+        "state": { "enum": ["notPosted", "partial", "posted", "unavailable"] },
+        "slots": { "type": "array", "items": { "$ref": "#/$defs/lineupSlot" } }
+      }
+    },
+    "manager": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "candidates", "selected"],
+      "properties": {
+        "state": { "enum": ["available", "missing", "ambiguous", "notRequested", "failed"] },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["person", "job", "title", "jobId"],
+            "properties": {
+              "person": { "$ref": "#/$defs/person" },
+              "job": { "$ref": "#/$defs/nullableString" },
+              "title": { "$ref": "#/$defs/nullableString" },
+              "jobId": { "$ref": "#/$defs/nullableString" }
+            }
+          }
+        },
+        "selected": { "anyOf": [{ "$ref": "#/$defs/person" }, { "type": "null" }] }
+      }
+    },
+    "coach": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["person", "job", "title", "jobId", "category"],
+      "properties": {
+        "person": { "$ref": "#/$defs/person" },
+        "job": { "$ref": "#/$defs/nullableString" },
+        "title": { "$ref": "#/$defs/nullableString" },
+        "jobId": { "$ref": "#/$defs/nullableString" },
+        "category": { "enum": ["bench", "hitting", "pitching", "bullpen", "catching", "base", "other", "unknown"] }
+      }
+    },
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["team", "manager", "coaches", "lineup", "startingPitcher", "additionalStarters", "bench", "bullpen", "defense"],
+      "properties": {
+        "team": { "$ref": "#/$defs/team" },
+        "manager": { "$ref": "#/$defs/manager" },
+        "coaches": { "type": "array", "items": { "$ref": "#/$defs/coach" } },
+        "lineup": { "$ref": "#/$defs/lineup" },
+        "startingPitcher": { "anyOf": [{ "$ref": "#/$defs/playerRole" }, { "type": "null" }] },
+        "additionalStarters": { "type": "array", "items": { "$ref": "#/$defs/playerRole" } },
+        "bench": { "type": "array", "items": { "$ref": "#/$defs/playerRole" } },
+        "bullpen": { "type": "array", "items": { "$ref": "#/$defs/playerRole" } },
+        "defense": { "type": "object", "additionalProperties": { "anyOf": [{ "$ref": "#/$defs/playerRole" }, { "type": "null" }] } }
+      }
+    },
+    "standingsRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["team", "record", "rank", "gamesBack", "streak", "lastTen", "elimination", "clinch", "sourceOrder"],
+      "properties": {
+        "team": { "$ref": "#/$defs/idName" },
+        "record": { "$ref": "#/$defs/teamRecord" },
+        "rank": { "$ref": "#/$defs/rankValue" },
+        "gamesBack": { "$ref": "#/$defs/gamesBackValue" },
+        "streak": { "$ref": "#/$defs/nullableString" },
+        "lastTen": { "$ref": "#/$defs/lastTen" },
+        "elimination": { "$ref": "#/$defs/markerValue" },
+        "clinch": { "$ref": "#/$defs/markerValue" },
+        "sourceOrder": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "standingsGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "standingsType", "sport", "league", "division", "rows"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "standingsType": { "type": "string", "minLength": 1 },
+        "sport": { "$ref": "#/$defs/idName" },
+        "league": { "$ref": "#/$defs/idName" },
+        "division": { "$ref": "#/$defs/idName" },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/standingsRow" } }
+      }
+    },
+    "standingsRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["groups"],
+      "properties": { "groups": { "type": "array", "items": { "$ref": "#/$defs/standingsGroup" } } }
+    },
+    "effective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["instant", "date", "dateRange", "endOfDay", "gameState", "current", "unknown"] },
+        "instantUtc": { "$ref": "#/$defs/utcTimestamp" },
+        "date": { "$ref": "#/$defs/date" },
+        "startDate": { "$ref": "#/$defs/date" },
+        "endDate": { "$ref": "#/$defs/date" },
+        "cutoffDate": { "$ref": "#/$defs/date" },
+        "gamePk": { "type": "string" },
+        "canonicalGameState": { "type": "string" },
+        "rawGameState": { "type": "string" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "endpointFamily", "method", "parameters"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "endpointFamily": { "type": "string", "minLength": 1 },
+        "method": { "const": "GET" },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              { "type": ["string", "number", "integer", "boolean", "null"] },
+              { "type": "array", "items": { "type": ["string", "number", "integer", "boolean", "null"] } }
+            ]
+          }
+        }
+      }
+    },
+    "sourceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "adapter", "request", "scope", "requestedAtUtc", "retrievedAtUtc", "effective", "outcome"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]*$" },
+        "adapter": { "enum": ["schedule", "feed", "boxscore", "roster", "people", "coaches", "standings", "venue", "depthChart", "teamLogo"] },
+        "request": { "$ref": "#/$defs/request" },
+        "scope": { "type": "object", "additionalProperties": true },
+        "requestedAtUtc": { "anyOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+        "retrievedAtUtc": { "anyOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+        "effective": { "$ref": "#/$defs/effective" },
+        "outcome": { "enum": ["success", "partial", "failed", "notRequested"] },
+        "response": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": { "type": ["integer", "null"] },
+            "bodySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
+        "error": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "code": { "type": "string" },
+            "summary": { "type": "string" }
+          }
+        }
+      }
+    },
+    "rejectedCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceResultRef", "reason"],
+      "properties": {
+        "sourceResultRef": { "type": "string" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "target", "coverage", "state", "sourceResultRefs", "fallbackUsed", "rejectedCandidates", "transformations", "derivationInputs"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]*$" },
+        "target": { "type": "string", "pattern": "^/(?!meta(?:/|$)).+" },
+        "coverage": { "enum": ["exact", "subtree"] },
+        "state": { "enum": ["available", "unposted", "present-empty", "omitted", "not-requested", "unsupported", "not-applicable", "ambiguous", "partial", "failed", "stale"] },
+        "sourceResultRefs": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "selectedSourceResultRef": { "type": ["string", "null"] },
+        "sourcePath": { "type": ["string", "null"] },
+        "effective": { "anyOf": [{ "$ref": "#/$defs/effective" }, { "type": "null" }] },
+        "selectionReason": { "type": ["string", "null"] },
+        "fallbackUsed": { "type": "boolean" },
+        "rejectedCandidates": { "type": "array", "items": { "$ref": "#/$defs/rejectedCandidate" } },
+        "transformations": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "derivationInputs": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "createdAtUtc", "producer", "fixtureKind"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "createdAtUtc": { "$ref": "#/$defs/utcTimestamp" },
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applicationVersion"],
+          "properties": {
+            "applicationVersion": { "type": "string", "minLength": 1 },
+            "build": { "type": ["string", "null"] }
+          }
+        },
+        "fixtureKind": { "enum": ["live", "historical-current", "synthetic-contract", null] }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot", "sourceResults", "lineage"],
+      "properties": {
+        "snapshot": { "$ref": "#/$defs/snapshot" },
+        "sourceResults": { "type": "array", "items": { "$ref": "#/$defs/sourceResult" } },
+        "lineage": { "type": "array", "items": { "$ref": "#/$defs/lineage" } }
+      }
+    }
+  }
+}

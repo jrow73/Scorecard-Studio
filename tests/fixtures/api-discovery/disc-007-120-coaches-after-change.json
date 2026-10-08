@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-007-120-coaches-after-change",
+  "investigationId": "DISC-007",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:08:25.736Z",
+  "context": {
+    "subject": "Washington Nationals coaching staff after manager change",
+    "gameState": "Dated staff 2025-07-07"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/120/coaches?date=2025-07-07&season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 169,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1783,
+    "bodySha256": "79990e4b14d8f4e62b58343566a2840e9285591af067f879918a57ccc2f8216f"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 111867,
+              "fullName": "Miguel Cairo",
+              "link": "/api/v1/people/111867"
+            },
+            "jerseyNumber": "22",
+            "job": "Interim Manager",
+            "jobId": "NTRM",
+            "title": "Interim Manager"
+          },
+          {
+            "person": {
+              "id": 112491,
+              "fullName": "Darnell Coles",
+              "link": "/api/v1/people/112491"
+            },
+            "jerseyNumber": "7",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 433717,
+              "fullName": "Jim Hickey",
+              "link": "/api/v1/people/433717"
+            },
+            "jerseyNumber": "48",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 467827,
+              "fullName": "Gerardo Parra",
+              "link": "/api/v1/people/467827"
+            },
+            "jerseyNumber": "88",
+            "job": "First Base Coach",
+            "jobId": "COA1",
+            "title": "First Base Coach"
+          },
+          {
+            "person": {
+              "id": 115263,
+              "fullName": "Ricky Gutierrez",
+              "link": "/api/v1/people/115263"
+            },
+            "jerseyNumber": "12",
+            "job": "Third Base Coach",
+            "jobId": "COA3",
+            "title": "Third Base Coach"
+          },
+          {
+            "person": {
+              "id": 111072,
+              "fullName": "Henry Blanco",
+              "link": "/api/v1/people/111072"
+            },
+            "jerseyNumber": "35",
+            "job": "Catching Coach",
+            "jobId": "CATC",
+            "title": "Catching Coach"
+          },
+          {
+            "person": {
+              "id": 111191,
+              "fullName": "Ricky Bones",
+              "link": "/api/v1/people/111191"
+            },
+            "jerseyNumber": "25",
+            "job": "Bullpen Coach",
+            "jobId": "COAU",
+            "title": "Bullpen Coach"
+          },
+          {
+            "person": {
+              "id": 453400,
+              "fullName": "Chris Johnson",
+              "link": "/api/v1/people/453400"
+            },
+            "jerseyNumber": "23",
+            "job": "Assistant Hitting Coach",
+            "jobId": "COAA",
+            "title": "Assistant Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 448281,
+              "fullName": "Sean Doolittle",
+              "link": "/api/v1/people/448281"
+            },
+            "jerseyNumber": "63",
+            "job": "Pitching Strategist",
+            "jobId": "PSTG",
+            "title": "Pitching Strategist"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Miguel Cairo is Interim Manager; exact Manager entry is absent, so semantic/fuzzy manager classification is required."
+  ]
+}

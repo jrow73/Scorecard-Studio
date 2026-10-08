@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-009-160-logo-nl-all-star",
+  "investigationId": "DISC-009",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-06T01:36:10.100Z",
+  "context": {
+    "subject": "National League All-Star special-team logo control",
+    "gameState": null
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://www.mlbstatic.com/team-logos/160.svg",
+    "headers": {
+      "Accept": "image/svg+xml,*/*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 123,
+    "finalUrl": "https://www.mlbstatic.com/team-logos/160.svg",
+    "redirected": false,
+    "headers": {
+      "contentType": "image/svg+xml",
+      "cacheControl": "max-age=1209600",
+      "etag": "\"4904be61adeccccffd247dd4ed9bcc86\"",
+      "lastModified": "Mon, 04 Nov 2024 12:58:25 GMT",
+      "accessControlAllowOrigin": "*"
+    },
+    "bodyBytes": 25504,
+    "bodySha256": "428a9411d3a3836aef382ce85c00efc02ba190cbf59d5a30f1eef43a7333c9fd"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/asset"
+    ],
+    "values": {
+      "/asset": {
+        "found": true,
+        "value": {
+          "isSvg": true,
+          "viewBox": "0 0 204.198 204.281",
+          "width": null,
+          "height": null,
+          "transparentCanvasByDefault": true,
+          "hasOpacityAttributes": false,
+          "hasRasterImage": false,
+          "hasStyleElement": false,
+          "hasTitle": true
+        }
+      }
+    }
+  },
+  "notes": []
+}

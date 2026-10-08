@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-004-777458-schedule-dh-g2",
+  "investigationId": "DISC-004",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T19:06:44.312Z",
+  "context": {
+    "subject": "2025-06-19 STL at CWS doubleheader Game 2",
+    "gameState": "Final current historical Schedule response"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=777458&hydrate=lineups%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 296,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 10831,
+    "bodySha256": "6051f5df07dc6db3cdaedd61b81d69cd45a85007ecd2fb37ed40c97e8ca40cbc"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/doubleHeader",
+      "/dates/0/games/0/gameNumber",
+      "/dates/0/games/0/teams/away/team/id",
+      "/dates/0/games/0/teams/home/team/id",
+      "/dates/0/games/0/teams/away/probablePitcher",
+      "/dates/0/games/0/teams/home/probablePitcher",
+      "/dates/0/games/0/lineups"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 777458
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2025-06-19"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "D",
+          "detailedState": "Postponed",
+          "statusCode": "DR",
+          "startTimeTBD": false,
+          "reason": "Rain",
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/doubleHeader": {
+        "found": true,
+        "value": "N"
+      },
+      "/dates/0/games/0/gameNumber": {
+        "found": true,
+        "value": 1
+      },
+      "/dates/0/games/0/teams/away/team/id": {
+        "found": true,
+        "value": 138
+      },
+      "/dates/0/games/0/teams/home/team/id": {
+        "found": true,
+        "value": 145
+      },
+      "/dates/0/games/0/teams/away/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 543243,
+          "fullName": "Sonny Gray",
+          "link": "/api/v1/people/543243"
+        }
+      },
+      "/dates/0/games/0/teams/home/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 680732,
+          "fullName": "Sean Burke",
+          "link": "/api/v1/people/680732"
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": false,
+        "value": null
+      }
+    }
+  },
+  "notes": [
+    "Paired with Game 1 and the one calendar-date roster request."
+  ]
+}

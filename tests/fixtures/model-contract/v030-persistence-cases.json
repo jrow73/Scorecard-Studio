@@ -1,0 +1,115 @@
+{
+  "fixtureVersion": 1,
+  "description": "Build 004.7 persistence namespace, version, and semantic-scope collision controls.",
+  "stores": {
+    "normalizedSnapshots": "normalizedSnapshotsV2",
+    "adapterResults": "adapterResultsV1"
+  },
+  "namespaces": {
+    "normalizedSnapshots": "normalized-game",
+    "adapterResults": "adapter-result"
+  },
+  "snapshots": [
+    {
+      "id": "current",
+      "schemaVersion": 2,
+      "contractRevision": "0.3.0-draft.1",
+      "gamePk": "800047",
+      "selectedViewKey": "800047:2025-07-03:1",
+      "key": "normalized-game|schema=2|contract=0.3.0-draft.1|gamePk=800047|view=800047%3A2025-07-03%3A1"
+    },
+    {
+      "id": "schema-v1",
+      "schemaVersion": 1,
+      "contractRevision": "0.2.0",
+      "gamePk": "800047",
+      "selectedViewKey": "800047:2025-07-03:1",
+      "key": "normalized-game|schema=1|contract=0.2.0|gamePk=800047|view=800047%3A2025-07-03%3A1"
+    },
+    {
+      "id": "other-view",
+      "schemaVersion": 2,
+      "contractRevision": "0.3.0-draft.1",
+      "gamePk": "800047",
+      "selectedViewKey": "800047:2025-07-04:1",
+      "key": "normalized-game|schema=2|contract=0.3.0-draft.1|gamePk=800047|view=800047%3A2025-07-04%3A1"
+    }
+  ],
+  "adapterInputs": [
+    {
+      "id": "roster-date-a",
+      "adapter": "roster",
+      "input": {
+        "teamId": 147,
+        "date": "2025-07-03"
+      },
+      "requestKey": "roster|v1|teamId=147|date=2025-07-03|rosterType=active|hydrateProfile=person-v1",
+      "storageKey": "adapter-result|contract=0.3.0-draft.1|request=roster%7Cv1%7CteamId%3D147%7Cdate%3D2025-07-03%7CrosterType%3Dactive%7ChydrateProfile%3Dperson-v1"
+    },
+    {
+      "id": "roster-date-b",
+      "adapter": "roster",
+      "input": {
+        "teamId": 147,
+        "date": "2025-07-04"
+      },
+      "requestKey": "roster|v1|teamId=147|date=2025-07-04|rosterType=active|hydrateProfile=person-v1",
+      "storageKey": "adapter-result|contract=0.3.0-draft.1|request=roster%7Cv1%7CteamId%3D147%7Cdate%3D2025-07-04%7CrosterType%3Dactive%7ChydrateProfile%3Dperson-v1"
+    },
+    {
+      "id": "people-regular",
+      "adapter": "people",
+      "input": {
+        "personIds": [
+          1,
+          2
+        ],
+        "sportId": 1,
+        "gameTypes": [
+          "R"
+        ],
+        "statGroups": [
+          "hitting"
+        ],
+        "startDate": "2025-01-01",
+        "endDate": "2025-07-03"
+      },
+      "requestKey": "people|v1|personIds=1%2C2|sportId=1|gameTypes=R|statGroups=hitting|statType=byDateRange|startDate=2025-01-01|endDate=2025-07-03|chunkSize=100",
+      "storageKey": "adapter-result|contract=0.3.0-draft.1|request=people%7Cv1%7CpersonIds%3D1%252C2%7CsportId%3D1%7CgameTypes%3DR%7CstatGroups%3Dhitting%7CstatType%3DbyDateRange%7CstartDate%3D2025-01-01%7CendDate%3D2025-07-03%7CchunkSize%3D100"
+    },
+    {
+      "id": "people-spring",
+      "adapter": "people",
+      "input": {
+        "personIds": [
+          1,
+          2
+        ],
+        "sportId": 1,
+        "gameTypes": [
+          "S"
+        ],
+        "statGroups": [
+          "hitting"
+        ],
+        "startDate": "2025-01-01",
+        "endDate": "2025-07-03"
+      },
+      "requestKey": "people|v1|personIds=1%2C2|sportId=1|gameTypes=S|statGroups=hitting|statType=byDateRange|startDate=2025-01-01|endDate=2025-07-03|chunkSize=100",
+      "storageKey": "adapter-result|contract=0.3.0-draft.1|request=people%7Cv1%7CpersonIds%3D1%252C2%7CsportId%3D1%7CgameTypes%3DS%7CstatGroups%3Dhitting%7CstatType%3DbyDateRange%7CstartDate%3D2025-01-01%7CendDate%3D2025-07-03%7CchunkSize%3D100"
+    }
+  ],
+  "refreshPolicy": {
+    "lookupOnly": [
+      "selection",
+      "consumer-demand"
+    ],
+    "retryFailedOnly": "retry-failed-units",
+    "invalidatingExamples": [
+      "status-transition",
+      "cutoff-change",
+      "manual"
+    ],
+    "logoTtlSeconds": 1209600
+  }
+}

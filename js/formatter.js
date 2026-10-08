@@ -39,16 +39,27 @@ export function formatFieldValue(definition, resolution, model, format = {}) {
 function formatPlayerName(player, fallback, nameFormat = "full") {
   const formatKey = canonicalPlayerNameFormat(nameFormat);
   const full = text(player?.name) || text(fallback);
-  if (formatKey === "last") return text(player?.lastName);
-  if (formatKey === "first") return text(player?.firstName);
-  if (formatKey === "boxscore") return text(player?.boxscoreName);
-  if (formatKey === "use") return text(player?.useName);
+  const inferred = inferNameParts(full);
+  if (formatKey === "last") return text(player?.lastName) || text(player?.useLastName) || inferred.last || full;
+  if (formatKey === "first") return text(player?.firstName) || inferred.first || full;
+  if (formatKey === "boxscore") return text(player?.boxscoreName) || text(player?.lastName) || inferred.last || full;
+  if (formatKey === "use") return text(player?.useName) || inferred.first || full;
   if (formatKey === "first-initial-last") {
-    const first = text(player?.useName) || text(player?.firstName);
-    const last = text(player?.lastName) || text(player?.useLastName);
-    return first && last ? `${first.charAt(0)} ${last}` : text(player?.initLastName).replace(/^(\p{L})\.\s+/u, "$1 ");
+    const supplied = text(player?.initLastName).replace(/^(\p{L})\.\s+/u, "$1 ");
+    if (supplied) return supplied;
+    const first = text(player?.useName) || text(player?.firstName) || inferred.first;
+    const last = text(player?.lastName) || text(player?.useLastName) || inferred.last;
+    return first && last ? `${first.charAt(0)} ${last}` : full;
   }
   return full;
+}
+
+function inferNameParts(fullName) {
+  const parts = text(fullName).split(/\s+/).filter(Boolean);
+  if (!parts.length) return { first: "", last: "" };
+  if (parts.length === 1) return { first: parts[0], last: parts[0] };
+  const suffix = /^(?:Jr\.?|Sr\.?|II|III|IV|V)$/i.test(parts.at(-1)) ? ` ${parts.pop()}` : "";
+  return { first: parts[0], last: `${parts.at(-1)}${suffix}` };
 }
 
 function canonicalPlayerNameFormat(value) {

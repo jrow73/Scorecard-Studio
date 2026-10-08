@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-674868-people-aa",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:15:46.723Z",
+  "context": {
+    "subject": "aa sport-scoped player statistics",
+    "gameState": "historical"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=674868&hydrate=stats(group%3D%5Bhitting%2Cpitching%5D%2Ctype%3D%5BbyDateRange%5D%2CsportId%3D12%2CgameType%3D%5BR%5D%2CstartDate%3D2025-01-01%2CendDate%3D2025-09-30)",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 137,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3757,
+    "bodySha256": "2b2848a606f9a9b674368730eaba5aac49dd7f1385980498c51f466b0d829487"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people/0/id",
+      "/people/0/primaryPosition",
+      "/people/0/stats"
+    ],
+    "values": {
+      "/people/0/id": {
+        "found": true,
+        "value": 674868
+      },
+      "/people/0/primaryPosition": {
+        "found": true,
+        "value": {
+          "code": "1",
+          "name": "Pitcher",
+          "type": "Pitcher",
+          "abbreviation": "P"
+        }
+      },
+      "/people/0/stats": {
+        "found": true,
+        "value": [
+          {
+            "type": {
+              "displayName": "byDateRange"
+            },
+            "group": {
+              "displayName": "pitching"
+            },
+            "exemptions": [],
+            "splits": [
+              {
+                "stat": {
+                  "gamesPlayed": 18,
+                  "gamesStarted": 18,
+                  "flyOuts": 58,
+                  "groundOuts": 60,
+                  "airOuts": 98,
+                  "runs": 23,
+                  "doubles": 13,
+                  "triples": 1,
+                  "homeRuns": 5,
+                  "strikeOuts": 72,
+                  "baseOnBalls": 22,
+                  "intentionalWalks": 0,
+                  "hits": 60,
+                  "hitByPitch": 3,
+                  "avg": ".211",
+                  "atBats": 285,
+                  "obp": ".272",
+                  "slg": ".316",
+                  "ops": ".588",
+                  "caughtStealing": 3,
+                  "stolenBases": 2,
+                  "stolenBasePercentage": ".400",
+                  "caughtStealingPercentage": ".600",
+                  "groundIntoDoublePlay": 3,
+                  "numberOfPitches": 1222,
+                  "era": "2.31",
+                  "inningsPitched": "78.0",
+                  "wins": 6,
+                  "losses": 4,
+                  "saves": 0,
+                  "saveOpportunities": 0,
+                  "holds": 0,
+                  "blownSaves": 0,
+                  "earnedRuns": 20,
+                  "whip": "1.05",
+                  "battersFaced": 315,
+                  "outs": 234,
+                  "gamesPitched": 18,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 801,
+                  "strikePercentage": ".660",
+                  "hitBatsmen": 3,
+                  "balks": 0,
+                  "wildPitches": 3,
+                  "pickoffs": 1,
+                  "totalBases": 90,
+                  "groundOutsToAirouts": "0.61",
+                  "winPercentage": ".600",
+                  "pitchesPerInning": "15.67",
+                  "gamesFinished": 0,
+                  "strikeoutWalkRatio": "3.27",
+                  "strikeoutsPer9Inn": "8.31",
+                  "walksPer9Inn": "2.54",
+                  "hitsPer9Inn": "6.92",
+                  "runsScoredPer9": "2.65",
+                  "homeRunsPer9": "0.58",
+                  "inheritedRunners": 0,
+                  "inheritedRunnersScored": 0,
+                  "catchersInterference": 0,
+                  "sacBunts": 3,
+                  "sacFlies": 2
+                },
+                "team": {
+                  "id": 402,
+                  "name": "Akron RubberDucks",
+                  "link": "/api/v1/teams/402"
+                },
+                "sport": {
+                  "id": 12,
+                  "link": "/api/v1/sports/12",
+                  "abbreviation": "AA"
+                },
+                "numTeams": 1,
+                "numLeagues": 18
+              },
+              {
+                "stat": {
+                  "gamesPlayed": 18,
+                  "gamesStarted": 18,
+                  "flyOuts": 58,
+                  "groundOuts": 60,
+                  "airOuts": 98,
+                  "runs": 23,
+                  "doubles": 13,
+                  "triples": 1,
+                  "homeRuns": 5,
+                  "strikeOuts": 72,
+                  "baseOnBalls": 22,
+                  "intentionalWalks": 0,
+                  "hits": 60,
+                  "hitByPitch": 3,
+                  "avg": ".211",
+                  "atBats": 285,
+                  "obp": ".272",
+                  "slg": ".316",
+                  "ops": ".588",
+                  "caughtStealing": 3,
+                  "stolenBases": 2,
+                  "stolenBasePercentage": ".400",
+                  "caughtStealingPercentage": ".600",
+                  "groundIntoDoublePlay": 3,
+                  "numberOfPitches": 1222,
+                  "era": "2.31",
+                  "inningsPitched": "78.0",
+                  "wins": 6,
+                  "losses": 4,
+                  "saves": 0,
+                  "saveOpportunities": 0,
+                  "holds": 0,
+                  "blownSaves": 0,
+                  "earnedRuns": 20,
+                  "whip": "1.05",
+                  "battersFaced": 315,
+                  "outs": 234,
+                  "gamesPitched": 18,
+                  "completeGames": 0,
+                  "shutouts": 0,
+                  "strikes": 801,
+                  "strikePercentage": ".660",
+                  "hitBatsmen": 3,
+                  "balks": 0,
+                  "wildPitches": 3,
+                  "pickoffs": 1,
+                  "totalBases": 90,
+                  "groundOutsToAirouts": "0.61",
+                  "winPercentage": ".600",
+                  "pitchesPerInning": "15.67",
+                  "gamesFinished": 0,
+                  "strikeoutWalkRatio": "3.27",
+                  "strikeoutsPer9Inn": "8.31",
+                  "walksPer9Inn": "2.54",
+                  "hitsPer9Inn": "6.92",
+                  "runsScoredPer9": "2.65",
+                  "homeRunsPer9": "0.58",
+                  "inheritedRunners": 0,
+                  "inheritedRunnersScored": 0,
+                  "catchersInterference": 0,
+                  "sacBunts": 3,
+                  "sacFlies": 2
+                },
+                "team": {
+                  "id": 402,
+                  "name": "Akron RubberDucks",
+                  "link": "/api/v1/teams/402"
+                },
+                "sport": {
+                  "id": 0,
+                  "code": "All",
+                  "link": "/api/v1/sports/0"
+                },
+                "numTeams": 1,
+                "numLeagues": 18
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-249-coaches-single-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:45.235Z",
+  "context": {
+    "subject": "Single-A Carolina coaches",
+    "gameState": "Historical control"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/249/coaches?date=2025-06-01&season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 181,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1076,
+    "bodySha256": "dd697409ff5f5bf40e3d0db9d6a93b6368e376b4c9dffa3c94e06b9dc2a437e5"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster",
+      "/rosterType",
+      "/teamId"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 548171,
+              "fullName": "Nick Stanley",
+              "link": "/api/v1/people/548171"
+            },
+            "jerseyNumber": "7",
+            "job": "Manager",
+            "jobId": "MNGR",
+            "title": "Manager"
+          },
+          {
+            "person": {
+              "id": 832034,
+              "fullName": "Austin Turner",
+              "link": "/api/v1/people/832034"
+            },
+            "jerseyNumber": "14",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 702427,
+              "fullName": "Paul Moeller",
+              "link": "/api/v1/people/702427"
+            },
+            "jerseyNumber": "50",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 457785,
+              "fullName": "Blake Nation",
+              "link": "/api/v1/people/457785"
+            },
+            "jerseyNumber": "41",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 825000,
+              "fullName": "Ricky Carvajal",
+              "link": "/api/v1/people/825000"
+            },
+            "jerseyNumber": "15",
+            "job": "Development Coach ",
+            "jobId": "DEVE",
+            "title": "Associate Coach"
+          }
+        ]
+      },
+      "/rosterType": {
+        "found": true,
+        "value": "coach"
+      },
+      "/teamId": {
+        "found": true,
+        "value": 249
+      }
+    }
+  },
+  "notes": []
+}

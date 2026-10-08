@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-001-822955-schedule-a",
+  "investigationId": "DISC-001",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T12:31:19.379Z",
+  "context": {
+    "subject": "gamePk 822955 SEA at TB schedule control",
+    "gameState": "Final at current retrieval; historically recorded pregame state is separate evidence"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=822955&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 323,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7602,
+    "bodySha256": "c54b36647fb0f629e2ab107179b7e9480584335aae7ac4602d40626f50dbc010"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams/away/team/id",
+      "/dates/0/games/0/teams/home/team/id",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 822955
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2026-07-10"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams/away/team/id": {
+        "found": true,
+        "value": 136
+      },
+      "/dates/0/games/0/teams/home/team/id": {
+        "found": true,
+        "value": 139
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 12,
+          "name": "Tropicana Field",
+          "link": "/api/v1/venues/12",
+          "active": true,
+          "season": "2026"
+        }
+      }
+    }
+  },
+  "notes": [
+    "Harness validation capture; this current historical response must not be confused with the recorded 2026-07-10 pregame snapshot."
+  ]
+}

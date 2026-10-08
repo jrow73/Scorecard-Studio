@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-432-coaches-high-a",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:43.871Z",
+  "context": {
+    "subject": "High-A Rome coaches",
+    "gameState": "Historical control"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/432/coaches?date=2025-06-01&season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 171,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 904,
+    "bodySha256": "933dbd0b4599b1dbc350a4ecf86d1bbee257c0497f8772947292b80b9f01b199"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster",
+      "/rosterType",
+      "/teamId"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 444487,
+              "fullName": "Angel Flores",
+              "link": "/api/v1/people/444487"
+            },
+            "jerseyNumber": "17",
+            "job": "Manager",
+            "jobId": "MNGR",
+            "title": "Manager"
+          },
+          {
+            "person": {
+              "id": 669049,
+              "fullName": "Connor Justus",
+              "link": "/api/v1/people/669049"
+            },
+            "jerseyNumber": "15",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 119318,
+              "fullName": "Bobby Moore",
+              "link": "/api/v1/people/119318"
+            },
+            "jerseyNumber": "1",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 400141,
+              "fullName": "Horacio Ramirez",
+              "link": "/api/v1/people/400141"
+            },
+            "jerseyNumber": "40",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          }
+        ]
+      },
+      "/rosterType": {
+        "found": true,
+        "value": "coach"
+      },
+      "/teamId": {
+        "found": true,
+        "value": 432
+      }
+    }
+  },
+  "notes": []
+}

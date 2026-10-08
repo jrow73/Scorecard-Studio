@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-001-777861-feed-resumed-final",
+  "investigationId": "DISC-001",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T18:52:09.113Z",
+  "context": {
+    "subject": "2025-05-19 CLE at MIN suspended then resumed feed control",
+    "gameState": "Final at current retrieval; completed on 2025-05-21"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1.1/game/777861/feed/live",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 314,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=10, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 864236,
+    "bodySha256": "e0f8b43a2e53173ffbf7a81f5082fe7b3b02a164f50e8dc7a9919593594f20aa"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/gamePk",
+      "/gameData/status",
+      "/gameData/datetime",
+      "/liveData/boxscore/officials"
+    ],
+    "values": {
+      "/gamePk": {
+        "found": true,
+        "value": 777861
+      },
+      "/gameData/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/gameData/datetime": {
+        "found": true,
+        "value": {
+          "dateTime": "2025-05-21T17:10:00Z",
+          "originalDate": "2025-05-19",
+          "officialDate": "2025-05-19",
+          "resumeDate": "2025-05-21",
+          "resumeDateTime": "2025-05-21T17:10:00Z",
+          "resumedFromDate": "2025-05-19",
+          "resumedFromDateTime": "2025-05-19T23:40:00Z",
+          "dayNight": "day",
+          "time": "12:10",
+          "ampm": "PM"
+        }
+      },
+      "/liveData/boxscore/officials": {
+        "found": true,
+        "value": [
+          {
+            "official": {
+              "id": 427129,
+              "fullName": "Bruce Dreckman",
+              "link": "/api/v1/people/427129"
+            },
+            "officialType": "Home Plate"
+          },
+          {
+            "official": {
+              "id": 575629,
+              "fullName": "Shane Livensparger",
+              "link": "/api/v1/people/575629"
+            },
+            "officialType": "First Base"
+          },
+          {
+            "official": {
+              "id": 608158,
+              "fullName": "Nate Tomlinson",
+              "link": "/api/v1/people/608158"
+            },
+            "officialType": "Second Base"
+          },
+          {
+            "official": {
+              "id": 427533,
+              "fullName": "Mark Wegner",
+              "link": "/api/v1/people/427533"
+            },
+            "officialType": "Third Base"
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Feed datetime preserves original, resume, and resumed-from dates after completion."
+  ]
+}

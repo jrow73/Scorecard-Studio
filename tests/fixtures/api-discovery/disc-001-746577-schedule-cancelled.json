@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-001-746577-schedule-cancelled",
+  "investigationId": "DISC-001",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-05T18:56:29.215Z",
+  "context": {
+    "subject": "2024-09-29 HOU at CLE cancelled regular-season control",
+    "gameState": "Cancelled at current historical retrieval"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=746577&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 207,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3454,
+    "bodySha256": "5371a6d692cfd7290a066f818c11fde5eb22c0828ea78214a863e555b6b0c914"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/gameDate",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams/away/team/id",
+      "/dates/0/games/0/teams/home/team/id",
+      "/dates/0/games/0/teams/away/probablePitcher",
+      "/dates/0/games/0/teams/home/probablePitcher",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/doubleHeader",
+      "/dates/0/games/0/gameNumber",
+      "/dates/0/games/0/seriesDescription"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 746577
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/gameDate": {
+        "found": true,
+        "value": "2024-09-29T19:10:00Z"
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2024-09-29"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "C",
+          "detailedState": "Cancelled",
+          "statusCode": "CR",
+          "startTimeTBD": false,
+          "reason": "Rain",
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams/away/team/id": {
+        "found": true,
+        "value": 117
+      },
+      "/dates/0/games/0/teams/home/team/id": {
+        "found": true,
+        "value": 114
+      },
+      "/dates/0/games/0/teams/away/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 687473,
+          "fullName": "Ryan Gusto",
+          "link": "/api/v1/people/687473"
+        }
+      },
+      "/dates/0/games/0/teams/home/probablePitcher": {
+        "found": true,
+        "value": {
+          "id": 680704,
+          "fullName": "Nick Sandlin",
+          "link": "/api/v1/people/680704"
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": false,
+        "value": null
+      },
+      "/dates/0/games/0/doubleHeader": {
+        "found": true,
+        "value": "N"
+      },
+      "/dates/0/games/0/gameNumber": {
+        "found": true,
+        "value": 1
+      },
+      "/dates/0/games/0/seriesDescription": {
+        "found": true,
+        "value": "Regular Season"
+      }
+    }
+  },
+  "notes": [
+    "Regular-season cancellation control; distinct from the more common cancelled spring-training records."
+  ]
+}

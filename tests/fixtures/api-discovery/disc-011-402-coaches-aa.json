@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-402-coaches-aa",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:38.437Z",
+  "context": {
+    "subject": "Double-A Akron coaches",
+    "gameState": "Historical control"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/teams/402/coaches?date=2025-06-01&season=2025",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 190,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=60, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 1399,
+    "bodySha256": "170afc860543131bf4c8fcfb4932c157fb473b17d1228e5ca586e2bf598c8fe4"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/roster",
+      "/rosterType",
+      "/teamId"
+    ],
+    "values": {
+      "/roster": {
+        "found": true,
+        "value": [
+          {
+            "person": {
+              "id": 693233,
+              "fullName": "Greg DiCenzo",
+              "link": "/api/v1/people/693233"
+            },
+            "jerseyNumber": "26",
+            "job": "Manager",
+            "jobId": "MNGR",
+            "title": "Manager"
+          },
+          {
+            "person": {
+              "id": 665183,
+              "fullName": "Marc Mumper",
+              "link": "/api/v1/people/665183"
+            },
+            "jerseyNumber": "49",
+            "job": "Bench Coach",
+            "jobId": "COAB",
+            "title": "Bench Coach"
+          },
+          {
+            "person": {
+              "id": 691631,
+              "fullName": "Jordan Becker",
+              "link": "/api/v1/people/691631"
+            },
+            "jerseyNumber": "55",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 693240,
+              "fullName": "Ian Forster",
+              "link": "/api/v1/people/693240"
+            },
+            "jerseyNumber": "29",
+            "job": "Hitting Coach",
+            "jobId": "COAT",
+            "title": "Hitting Coach"
+          },
+          {
+            "person": {
+              "id": 693238,
+              "fullName": "Kevin Erminio",
+              "link": "/api/v1/people/693238"
+            },
+            "jerseyNumber": "12",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 808883,
+              "fullName": "Michael Poole",
+              "link": "/api/v1/people/808883"
+            },
+            "jerseyNumber": "54",
+            "job": "Pitching Coach",
+            "jobId": "COAP",
+            "title": "Pitching Coach"
+          },
+          {
+            "person": {
+              "id": 671085,
+              "fullName": "Seth Caddell",
+              "link": "/api/v1/people/671085"
+            },
+            "jerseyNumber": "41",
+            "job": "Development Coach ",
+            "jobId": "DEVE",
+            "title": "Development Coach"
+          }
+        ]
+      },
+      "/rosterType": {
+        "found": true,
+        "value": "coach"
+      },
+      "/teamId": {
+        "found": true,
+        "value": 402
+      }
+    }
+  },
+  "notes": []
+}

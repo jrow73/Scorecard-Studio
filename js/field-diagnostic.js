@@ -4,8 +4,8 @@
  * Version: 0.2.0
  */
 
-import { getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=020";
-import { formatFieldValue } from "./formatter.js?v=020";
+import { capabilityRequirementsForField, getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=030b0054";
+import { formatFieldValue } from "./formatter.js?v=030b0054";
 
 export const DIAGNOSTIC_STATUSES = Object.freeze({
   available: "Available",
@@ -28,28 +28,31 @@ export function summarizeDiagnosticRows(rows) {
 }
 
 export function diagnoseDefinition(model, definition) {
-  const unavailableSources = (definition.sourceRequirements || []).filter((source) => !sourceLoaded(model, source));
+  const requirements = model?.schemaVersion === 2 ? capabilityRequirementsForField(definition.id) : (definition.sourceRequirements || []);
+  const unavailableSources = model?.schemaVersion === 2 ? [] : requirements.filter((source) => !sourceLoaded(model, source));
   if (unavailableSources.length) {
     return diagnosticRow(definition, {
       liveValue: "",
       coverage: definition.cardinality === "repeated" ? "0/0" : "—",
       status: "sourceUnavailable",
+      sourceRequirements: requirements,
       reason: `Required source not loaded: ${unavailableSources.join(", ")}`
     });
   }
 
-  if (definition.cardinality === "repeated") return diagnoseRepeated(model, definition);
+  if (definition.cardinality === "repeated") return diagnoseRepeated(model, definition, requirements);
 
   const resolution = resolveField(model, definition.id);
   const liveValue = formatFieldValue(definition, resolution, model, definition.defaultFormat || {});
   let status = "available";
   if (["unsupported", "error"].includes(resolution.state)) status = "error";
+  else if (resolution.state === "failed") status = "sourceUnavailable";
   else if (!liveValue) status = "missing";
   else if (resolution.state === "partial") status = "partial";
-  return diagnosticRow(definition, { liveValue, coverage: "—", status, reason: resolution.reason || "" });
+  return diagnosticRow(definition, { liveValue, coverage: "—", status, reason: resolution.reason || availabilityReason(resolution), sourceRequirements: requirements });
 }
 
-function diagnoseRepeated(model, definition) {
+function diagnoseRepeated(model, definition, requirements) {
   const rows = getCollectionRows(model, definition.collection);
   const members = rows.map((row, index) => ({ row, slot: index + 1 })).filter(({ row }) => rowHasMember(definition.collection, row));
   if (!members.length) {
@@ -57,6 +60,7 @@ function diagnoseRepeated(model, definition) {
       liveValue: "",
       coverage: "0/0",
       status: "missing",
+      sourceRequirements: requirements,
       reason: "No applicable live rows are available for this collection."
     });
   }
@@ -69,7 +73,7 @@ function diagnoseRepeated(model, definition) {
   for (const member of members) {
     const resolution = resolveField(model, definition.id, { slot: member.slot });
     const formatted = formatFieldValue(definition, resolution, model, definition.defaultFormat || {});
-    if (["unsupported", "error"].includes(resolution.state)) errors += 1;
+    if (["unsupported", "error", "failed"].includes(resolution.state)) errors += 1;
     else if (formatted) {
       available += 1;
       if (!liveValue) liveValue = formatted;
@@ -87,8 +91,14 @@ function diagnoseRepeated(model, definition) {
     liveValue,
     coverage: `${available}/${members.length}`,
     status,
-    reason: reasons.join(" ")
+    reason: reasons.join(" "),
+    sourceRequirements: requirements
   });
+}
+
+function availabilityReason(resolution) {
+  const state = String(resolution?.availability ?? resolution?.state ?? "");
+  return state && state !== "available" ? `Availability: ${state}.` : "";
 }
 
 function diagnosticRow(definition, values) {

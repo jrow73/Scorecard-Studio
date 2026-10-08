@@ -1,0 +1,2040 @@
+{
+  "schemaId": "scorecard-studio.normalized-game",
+  "schemaVersion": 2,
+  "contractRevision": "0.3.0-draft.2",
+  "context": {
+    "gamePk": "800045",
+    "season": 2025,
+    "sport": {
+      "id": 14,
+      "name": "Single-A"
+    },
+    "gameType": "R",
+    "competitionSegment": "regular",
+    "selectedDate": "2025-07-03",
+    "officialDate": "2025-07-03",
+    "selectedViewKey": "800045:2025-07-03:1"
+  },
+  "game": {
+    "status": {
+      "canonical": "pregame",
+      "raw": {
+        "abstractGameState": "Preview",
+        "codedGameState": "P",
+        "detailedState": "Pre-Game",
+        "statusCode": "P"
+      },
+      "reason": null,
+      "startTimeTBD": false,
+      "teamsTBD": false
+    },
+    "dates": {
+      "scheduledStart": "2025-07-03T23:10:00.000Z",
+      "originalScheduledStart": "2025-07-03T23:10:00.000Z",
+      "officialDate": "2025-07-03",
+      "rescheduledStart": null,
+      "rescheduledDate": null,
+      "resumeStart": null,
+      "resumeDate": null
+    },
+    "dayNight": "night",
+    "gameNumber": 1,
+    "venue": {
+      "id": 4,
+      "name": "Contract Park",
+      "location": {
+        "city": null,
+        "state": null,
+        "country": null
+      },
+      "timeZone": {
+        "iana": null
+      },
+      "fieldInfo": {
+        "capacity": null,
+        "turfType": null,
+        "roofType": null,
+        "dimensions": {}
+      }
+    },
+    "weather": {
+      "temperature": null,
+      "condition": null,
+      "wind": null
+    },
+    "umpires": {
+      "crew": []
+    }
+  },
+  "away": {
+    "team": {
+      "id": 249,
+      "name": "Single-A Away",
+      "locationName": null,
+      "shortName": null,
+      "clubName": null,
+      "abbreviation": null,
+      "sport": {
+        "id": 14,
+        "name": "Single-A"
+      },
+      "league": {
+        "id": null,
+        "name": null
+      },
+      "division": {
+        "id": null,
+        "name": null
+      },
+      "record": {
+        "gamesPlayed": 18,
+        "wins": 10,
+        "losses": 8,
+        "pct": 0.556
+      },
+      "gameNumber": null,
+      "standings": {
+        "divisionRank": {
+          "raw": null,
+          "value": null
+        },
+        "leagueRank": {
+          "raw": null,
+          "value": null
+        },
+        "wildCardRank": {
+          "raw": null,
+          "value": null
+        },
+        "divisionGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "leagueGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "wildCardGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "streak": null,
+        "lastTen": {
+          "wins": null,
+          "losses": null
+        },
+        "elimination": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        },
+        "clinch": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        }
+      },
+      "logo": {
+        "url": null,
+        "brandScope": null
+      }
+    },
+    "manager": {
+      "state": "notRequested",
+      "candidates": [],
+      "selected": null
+    },
+    "coaches": [],
+    "lineup": {
+      "state": "partial",
+      "slots": [
+        {
+          "battingOrder": 1,
+          "slotState": "available",
+          "player": {
+            "id": 700011,
+            "name": "MiLB Away Hitter",
+            "number": "2",
+            "bats": "R",
+            "throws": "R",
+            "primaryPosition": {
+              "abbreviation": "SS",
+              "name": "Shortstop",
+              "type": "Infielder"
+            }
+          },
+          "position": {
+            "abbreviation": "SS",
+            "name": "Shortstop",
+            "number": 6,
+            "roleLabel": "schedule-primary-position"
+          },
+          "stats": {
+            "hitting": {
+              "scope": {
+                "sportId": 14,
+                "gameTypes": [
+                  "R"
+                ],
+                "statType": "byDateRange",
+                "startDate": "2025-01-01",
+                "endDate": "2025-07-03",
+                "aggregate": {
+                  "sportId": 14,
+                  "code": null,
+                  "selection": "single-unambiguous"
+                }
+              },
+              "totals": {
+                "gamesPlayed": 70,
+                "avg": 0.275,
+                "obp": 0.35,
+                "slg": 0.44,
+                "homeRuns": 11,
+                "rbi": 42
+              }
+            },
+            "pitching": {
+              "scope": {
+                "sportId": 14,
+                "gameTypes": [
+                  "R"
+                ],
+                "statType": "byDateRange",
+                "startDate": "2025-01-01",
+                "endDate": "2025-07-03",
+                "aggregate": {
+                  "sportId": 14,
+                  "code": null,
+                  "selection": "single-unambiguous"
+                }
+              },
+              "totals": {
+                "gamesPlayed": 18,
+                "gamesPitched": 18,
+                "gamesStarted": 4,
+                "wins": 8,
+                "losses": 4,
+                "era": 3.21,
+                "whip": 1.18
+              }
+            }
+          }
+        }
+      ]
+    },
+    "startingPitcher": {
+      "player": {
+        "id": 700001,
+        "name": "MiLB Away Starter",
+        "number": "1",
+        "bats": "R",
+        "throws": "R",
+        "primaryPosition": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "type": "Pitcher"
+        }
+      },
+      "position": {
+        "abbreviation": "P",
+        "name": "Pitcher",
+        "number": 1,
+        "roleLabel": "SP"
+      },
+      "stats": {
+        "hitting": {
+          "scope": {
+            "sportId": 14,
+            "gameTypes": [
+              "R"
+            ],
+            "statType": "byDateRange",
+            "startDate": "2025-01-01",
+            "endDate": "2025-07-03",
+            "aggregate": {
+              "sportId": 14,
+              "code": null,
+              "selection": "single-unambiguous"
+            }
+          },
+          "totals": {
+            "gamesPlayed": 70,
+            "avg": 0.275,
+            "obp": 0.35,
+            "slg": 0.44,
+            "homeRuns": 11,
+            "rbi": 42
+          }
+        },
+        "pitching": {
+          "scope": {
+            "sportId": 14,
+            "gameTypes": [
+              "R"
+            ],
+            "statType": "byDateRange",
+            "startDate": "2025-01-01",
+            "endDate": "2025-07-03",
+            "aggregate": {
+              "sportId": 14,
+              "code": null,
+              "selection": "single-unambiguous"
+            }
+          },
+          "totals": {
+            "gamesPlayed": 18,
+            "gamesPitched": 18,
+            "gamesStarted": 4,
+            "wins": 8,
+            "losses": 4,
+            "era": 3.21,
+            "whip": 1.18
+          }
+        }
+      }
+    },
+    "additionalStarters": [],
+    "bench": [],
+    "bullpen": [
+      {
+        "player": {
+          "id": 700021,
+          "name": "MiLB Away Reliever",
+          "number": "3",
+          "bats": "R",
+          "throws": "R",
+          "primaryPosition": {
+            "abbreviation": "P",
+            "name": "Pitcher",
+            "type": "Pitcher"
+          }
+        },
+        "position": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "number": 1,
+          "roleLabel": "P"
+        },
+        "stats": {
+          "hitting": {
+            "scope": {
+              "sportId": 14,
+              "gameTypes": [
+                "R"
+              ],
+              "statType": "byDateRange",
+              "startDate": "2025-01-01",
+              "endDate": "2025-07-03",
+              "aggregate": {
+                "sportId": 14,
+                "code": null,
+                "selection": "single-unambiguous"
+              }
+            },
+            "totals": {
+              "gamesPlayed": 70,
+              "avg": 0.275,
+              "obp": 0.35,
+              "slg": 0.44,
+              "homeRuns": 11,
+              "rbi": 42
+            }
+          },
+          "pitching": {
+            "scope": {
+              "sportId": 14,
+              "gameTypes": [
+                "R"
+              ],
+              "statType": "byDateRange",
+              "startDate": "2025-01-01",
+              "endDate": "2025-07-03",
+              "aggregate": {
+                "sportId": 14,
+                "code": null,
+                "selection": "single-unambiguous"
+              }
+            },
+            "totals": {
+              "gamesPlayed": 18,
+              "gamesPitched": 18,
+              "gamesStarted": 4,
+              "wins": 8,
+              "losses": 4,
+              "era": 3.21,
+              "whip": 1.18
+            }
+          }
+        }
+      },
+      {
+        "player": {
+          "id": 700022,
+          "name": "MiLB Rotation Pitcher",
+          "number": "4",
+          "bats": "R",
+          "throws": "R",
+          "primaryPosition": {
+            "abbreviation": "P",
+            "name": "Pitcher",
+            "type": "Pitcher"
+          }
+        },
+        "position": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "number": 1,
+          "roleLabel": "P"
+        },
+        "stats": {
+          "hitting": {
+            "scope": {
+              "sportId": 14,
+              "gameTypes": [
+                "R"
+              ],
+              "statType": "byDateRange",
+              "startDate": "2025-01-01",
+              "endDate": "2025-07-03",
+              "aggregate": {
+                "sportId": 14,
+                "code": null,
+                "selection": "single-unambiguous"
+              }
+            },
+            "totals": {
+              "gamesPlayed": 70,
+              "avg": 0.275,
+              "obp": 0.35,
+              "slg": 0.44,
+              "homeRuns": 11,
+              "rbi": 42
+            }
+          },
+          "pitching": {
+            "scope": {
+              "sportId": 14,
+              "gameTypes": [
+                "R"
+              ],
+              "statType": "byDateRange",
+              "startDate": "2025-01-01",
+              "endDate": "2025-07-03",
+              "aggregate": {
+                "sportId": 14,
+                "code": null,
+                "selection": "single-unambiguous"
+              }
+            },
+            "totals": {
+              "gamesPlayed": 18,
+              "gamesPitched": 18,
+              "gamesStarted": 4,
+              "wins": 8,
+              "losses": 4,
+              "era": 3.21,
+              "whip": 1.18
+            }
+          }
+        }
+      }
+    ],
+    "defense": {}
+  },
+  "home": {
+    "team": {
+      "id": 432,
+      "name": "Single-A Home",
+      "locationName": null,
+      "shortName": null,
+      "clubName": null,
+      "abbreviation": null,
+      "sport": {
+        "id": 14,
+        "name": "Single-A"
+      },
+      "league": {
+        "id": null,
+        "name": null
+      },
+      "division": {
+        "id": null,
+        "name": null
+      },
+      "record": {
+        "gamesPlayed": 18,
+        "wins": 9,
+        "losses": 9,
+        "pct": 0.5
+      },
+      "gameNumber": null,
+      "standings": {
+        "divisionRank": {
+          "raw": null,
+          "value": null
+        },
+        "leagueRank": {
+          "raw": null,
+          "value": null
+        },
+        "wildCardRank": {
+          "raw": null,
+          "value": null
+        },
+        "divisionGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "leagueGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "wildCardGamesBack": {
+          "raw": null,
+          "state": "unknown",
+          "games": null
+        },
+        "streak": null,
+        "lastTen": {
+          "wins": null,
+          "losses": null
+        },
+        "elimination": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        },
+        "clinch": {
+          "raw": null,
+          "state": "unknown",
+          "value": null
+        }
+      },
+      "logo": {
+        "url": null,
+        "brandScope": null
+      }
+    },
+    "manager": {
+      "state": "notRequested",
+      "candidates": [],
+      "selected": null
+    },
+    "coaches": [],
+    "lineup": {
+      "state": "partial",
+      "slots": [
+        {
+          "battingOrder": 1,
+          "slotState": "available",
+          "player": {
+            "id": 700012,
+            "name": "MiLB Home Hitter",
+            "number": "6",
+            "bats": "R",
+            "throws": "R",
+            "primaryPosition": {
+              "abbreviation": "SS",
+              "name": "Shortstop",
+              "type": "Infielder"
+            }
+          },
+          "position": {
+            "abbreviation": "SS",
+            "name": "Shortstop",
+            "number": 6,
+            "roleLabel": "schedule-primary-position"
+          },
+          "stats": {
+            "hitting": {
+              "scope": {
+                "sportId": 14,
+                "gameTypes": [
+                  "R"
+                ],
+                "statType": "byDateRange",
+                "startDate": "2025-01-01",
+                "endDate": "2025-07-03",
+                "aggregate": {
+                  "sportId": 14,
+                  "code": null,
+                  "selection": "single-unambiguous"
+                }
+              },
+              "totals": {
+                "gamesPlayed": 70,
+                "avg": 0.275,
+                "obp": 0.35,
+                "slg": 0.44,
+                "homeRuns": 11,
+                "rbi": 42
+              }
+            },
+            "pitching": {
+              "scope": {
+                "sportId": 14,
+                "gameTypes": [
+                  "R"
+                ],
+                "statType": "byDateRange",
+                "startDate": "2025-01-01",
+                "endDate": "2025-07-03",
+                "aggregate": {
+                  "sportId": 14,
+                  "code": null,
+                  "selection": "single-unambiguous"
+                }
+              },
+              "totals": {
+                "gamesPlayed": 18,
+                "gamesPitched": 18,
+                "gamesStarted": 4,
+                "wins": 8,
+                "losses": 4,
+                "era": 3.21,
+                "whip": 1.18
+              }
+            }
+          }
+        }
+      ]
+    },
+    "startingPitcher": {
+      "player": {
+        "id": 700002,
+        "name": "MiLB Home Starter",
+        "number": "5",
+        "bats": "R",
+        "throws": "R",
+        "primaryPosition": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "type": "Pitcher"
+        }
+      },
+      "position": {
+        "abbreviation": "P",
+        "name": "Pitcher",
+        "number": 1,
+        "roleLabel": "SP"
+      },
+      "stats": {
+        "hitting": {
+          "scope": {
+            "sportId": 14,
+            "gameTypes": [
+              "R"
+            ],
+            "statType": "byDateRange",
+            "startDate": "2025-01-01",
+            "endDate": "2025-07-03",
+            "aggregate": {
+              "sportId": 14,
+              "code": null,
+              "selection": "single-unambiguous"
+            }
+          },
+          "totals": {
+            "gamesPlayed": 70,
+            "avg": 0.275,
+            "obp": 0.35,
+            "slg": 0.44,
+            "homeRuns": 11,
+            "rbi": 42
+          }
+        },
+        "pitching": {
+          "scope": {
+            "sportId": 14,
+            "gameTypes": [
+              "R"
+            ],
+            "statType": "byDateRange",
+            "startDate": "2025-01-01",
+            "endDate": "2025-07-03",
+            "aggregate": {
+              "sportId": 14,
+              "code": null,
+              "selection": "single-unambiguous"
+            }
+          },
+          "totals": {
+            "gamesPlayed": 18,
+            "gamesPitched": 18,
+            "gamesStarted": 4,
+            "wins": 8,
+            "losses": 4,
+            "era": 3.21,
+            "whip": 1.18
+          }
+        }
+      }
+    },
+    "additionalStarters": [],
+    "bench": [],
+    "bullpen": [
+      {
+        "player": {
+          "id": 700023,
+          "name": "MiLB Home Reliever",
+          "number": "7",
+          "bats": "R",
+          "throws": "R",
+          "primaryPosition": {
+            "abbreviation": "P",
+            "name": "Pitcher",
+            "type": "Pitcher"
+          }
+        },
+        "position": {
+          "abbreviation": "P",
+          "name": "Pitcher",
+          "number": 1,
+          "roleLabel": "P"
+        },
+        "stats": {
+          "hitting": {
+            "scope": {
+              "sportId": 14,
+              "gameTypes": [
+                "R"
+              ],
+              "statType": "byDateRange",
+              "startDate": "2025-01-01",
+              "endDate": "2025-07-03",
+              "aggregate": {
+                "sportId": 14,
+                "code": null,
+                "selection": "single-unambiguous"
+              }
+            },
+            "totals": {
+              "gamesPlayed": 70,
+              "avg": 0.275,
+              "obp": 0.35,
+              "slg": 0.44,
+              "homeRuns": 11,
+              "rbi": 42
+            }
+          },
+          "pitching": {
+            "scope": {
+              "sportId": 14,
+              "gameTypes": [
+                "R"
+              ],
+              "statType": "byDateRange",
+              "startDate": "2025-01-01",
+              "endDate": "2025-07-03",
+              "aggregate": {
+                "sportId": 14,
+                "code": null,
+                "selection": "single-unambiguous"
+              }
+            },
+            "totals": {
+              "gamesPlayed": 18,
+              "gamesPitched": 18,
+              "gamesStarted": 4,
+              "wins": 8,
+              "losses": 4,
+              "era": 3.21,
+              "whip": 1.18
+            }
+          }
+        }
+      }
+    ],
+    "defense": {}
+  },
+  "standings": {
+    "groups": []
+  },
+  "meta": {
+    "snapshot": {
+      "id": "build-004.4-milb-depth-absence-fallback",
+      "createdAtUtc": "2026-10-07T20:01:00.000Z",
+      "producer": {
+        "applicationVersion": "0.3.0",
+        "build": "004.4"
+      },
+      "fixtureKind": "synthetic-contract"
+    },
+    "sourceResults": [
+      {
+        "id": "schedule.800045.0.0",
+        "adapter": "schedule",
+        "request": {
+          "key": "schedule|v1|gamePk=800045|sportId=14|selectedDate=2025-07-03|hydrateProfile=pregame-v1",
+          "endpointFamily": "schedule",
+          "method": "GET",
+          "parameters": {
+            "gamePk": "800045",
+            "sportId": 14,
+            "selectedDate": "2025-07-03",
+            "hydrateProfile": "pregame-v1"
+          }
+        },
+        "scope": {
+          "gamePk": "800045",
+          "selectedViewKey": "800045:2025-07-03:1"
+        },
+        "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      },
+      {
+        "id": "people.milb",
+        "adapter": "people",
+        "request": {
+          "key": "people|v1|personIds=700001%2C700002%2C700011%2C700012%2C700021%2C700022%2C700023|sportId=14|gameTypes=R|statGroups=hitting%2Cpitching|statType=byDateRange|startDate=2025-01-01|endDate=2025-07-03|chunkSize=100",
+          "endpointFamily": "people",
+          "method": "GET",
+          "parameters": {
+            "personIds": [
+              700001,
+              700002,
+              700011,
+              700012,
+              700021,
+              700022,
+              700023
+            ],
+            "sportId": 14,
+            "gameTypes": [
+              "R"
+            ],
+            "statGroups": [
+              "hitting",
+              "pitching"
+            ],
+            "statType": "byDateRange",
+            "startDate": "2025-01-01",
+            "endDate": "2025-07-03",
+            "chunkSize": 100
+          }
+        },
+        "scope": {
+          "gamePk": "800045",
+          "selectedViewKey": "800045:2025-07-03:1"
+        },
+        "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      },
+      {
+        "id": "roster.milb-away",
+        "adapter": "roster",
+        "request": {
+          "key": "roster|v1|teamId=249|date=2025-07-03|rosterType=active|hydrateProfile=person-v1",
+          "endpointFamily": "roster",
+          "method": "GET",
+          "parameters": {
+            "teamId": 249,
+            "date": "2025-07-03",
+            "rosterType": "active",
+            "hydrateProfile": "person-v1"
+          }
+        },
+        "scope": {
+          "gamePk": "800045",
+          "selectedViewKey": "800045:2025-07-03:1",
+          "side": "away",
+          "teamId": 249
+        },
+        "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+        "effective": {
+          "kind": "date",
+          "date": "2025-07-03"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      },
+      {
+        "id": "depth.milb-away",
+        "adapter": "depthChart",
+        "request": {
+          "key": "depthChart|v1|teamId=249|season=2025",
+          "endpointFamily": "depthChart",
+          "method": "GET",
+          "parameters": {
+            "teamId": 249,
+            "season": 2025
+          }
+        },
+        "scope": {
+          "gamePk": "800045",
+          "selectedViewKey": "800045:2025-07-03:1",
+          "side": "away",
+          "teamId": 249
+        },
+        "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+        "effective": {
+          "kind": "current"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      },
+      {
+        "id": "roster.milb-home",
+        "adapter": "roster",
+        "request": {
+          "key": "roster|v1|teamId=432|date=2025-07-03|rosterType=active|hydrateProfile=person-v1",
+          "endpointFamily": "roster",
+          "method": "GET",
+          "parameters": {
+            "teamId": 432,
+            "date": "2025-07-03",
+            "rosterType": "active",
+            "hydrateProfile": "person-v1"
+          }
+        },
+        "scope": {
+          "gamePk": "800045",
+          "selectedViewKey": "800045:2025-07-03:1",
+          "side": "home",
+          "teamId": 432
+        },
+        "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+        "effective": {
+          "kind": "date",
+          "date": "2025-07-03"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      },
+      {
+        "id": "depth.milb-home",
+        "adapter": "depthChart",
+        "request": {
+          "key": "depthChart|v1|teamId=432|season=2025",
+          "endpointFamily": "depthChart",
+          "method": "GET",
+          "parameters": {
+            "teamId": 432,
+            "season": 2025
+          }
+        },
+        "scope": {
+          "gamePk": "800045",
+          "selectedViewKey": "800045:2025-07-03:1",
+          "side": "home",
+          "teamId": 432
+        },
+        "requestedAtUtc": "2026-10-07T20:00:00.000Z",
+        "retrievedAtUtc": "2026-10-07T20:00:00.100Z",
+        "effective": {
+          "kind": "current"
+        },
+        "outcome": "success",
+        "response": {
+          "status": 200,
+          "bodySha256": null
+        },
+        "error": null
+      }
+    ],
+    "lineage": [
+      {
+        "id": "lineage.context",
+        "target": "/context",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-schedule-view",
+          "normalize-competition-segment"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.game",
+        "target": "/game",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "normalize-status",
+          "separate-game-dates",
+          "suppress-active-tbd-placeholder-time"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.venue-extended",
+        "target": "/game/venue/location",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.venue-time-zone",
+        "target": "/game/venue/timeZone",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.venue-field-info",
+        "target": "/game/venue/fieldInfo",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.weather",
+        "target": "/game/weather",
+        "coverage": "subtree",
+        "state": "omitted",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/dates/0/games/0/weather",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.umpires",
+        "target": "/game/umpires",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team",
+        "target": "/away/team",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/teams/away/team",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.record",
+        "target": "/away/team/record",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/teams/away/leagueRecord",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team-game-number",
+        "target": "/away/team/gameNumber",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team-standings",
+        "target": "/away/team/standings",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.team-logo",
+        "target": "/away/team/logo",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.manager",
+        "target": "/away/manager",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.coaches",
+        "target": "/away/coaches",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.lineup",
+        "target": "/away/lineup",
+        "coverage": "subtree",
+        "state": "partial",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/lineups/awayPlayers",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": "Schedule lineup order is preserved.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "preserve-source-order",
+          "assign-one-based-batting-order",
+          "mark-primary-position-projection"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.starter",
+        "target": "/away/startingPitcher",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/teams/away/probablePitcher",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "normalize-probable-pitcher"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.defense",
+        "target": "/away/defense",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.starter-stats",
+        "target": "/away/startingPitcher/stats",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.lineup-0-stats",
+        "target": "/away/lineup/slots/0/stats",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team",
+        "target": "/home/team",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/teams/home/team",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.record",
+        "target": "/home/team/record",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/teams/home/leagueRecord",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team-game-number",
+        "target": "/home/team/gameNumber",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team-standings",
+        "target": "/home/team/standings",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.team-logo",
+        "target": "/home/team/logo",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.manager",
+        "target": "/home/manager",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.coaches",
+        "target": "/home/coaches",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.lineup",
+        "target": "/home/lineup",
+        "coverage": "subtree",
+        "state": "partial",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/lineups/homePlayers",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": "Schedule lineup order is preserved.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "preserve-source-order",
+          "assign-one-based-batting-order",
+          "mark-primary-position-projection"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.starter",
+        "target": "/home/startingPitcher",
+        "coverage": "subtree",
+        "state": "available",
+        "sourceResultRefs": [
+          "schedule.800045.0.0"
+        ],
+        "selectedSourceResultRef": "schedule.800045.0.0",
+        "sourcePath": "/dates/0/games/0/teams/home/probablePitcher",
+        "effective": {
+          "kind": "gameState",
+          "gamePk": "800045",
+          "canonicalGameState": "pregame",
+          "rawGameState": "Pre-Game"
+        },
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "normalize-probable-pitcher"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.defense",
+        "target": "/home/defense",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.starter-stats",
+        "target": "/home/startingPitcher/stats",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.lineup-0-stats",
+        "target": "/home/lineup/slots/0/stats",
+        "coverage": "exact",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.standings",
+        "target": "/standings",
+        "coverage": "subtree",
+        "state": "not-requested",
+        "sourceResultRefs": [],
+        "selectedSourceResultRef": null,
+        "sourcePath": null,
+        "effective": null,
+        "selectionReason": null,
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-lineup-slots-0.stats.hitting",
+        "target": "/away/lineup/slots/0/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700011]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-lineup-slots-0.stats.pitching",
+        "target": "/away/lineup/slots/0/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700011]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-startingpitcher.stats.hitting",
+        "target": "/away/startingPitcher/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700001]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-startingpitcher.stats.pitching",
+        "target": "/away/startingPitcher/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700001]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-bullpen-0.stats.hitting",
+        "target": "/away/bullpen/0/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700021]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-bullpen-0.stats.pitching",
+        "target": "/away/bullpen/0/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700021]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-bullpen-1.stats.hitting",
+        "target": "/away/bullpen/1/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700022]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.-away-bullpen-1.stats.pitching",
+        "target": "/away/bullpen/1/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700022]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.bench",
+        "target": "/away/bench",
+        "coverage": "exact",
+        "state": "present-empty",
+        "sourceResultRefs": [
+          "roster.milb-away"
+        ],
+        "selectedSourceResultRef": "roster.milb-away",
+        "sourcePath": "/roster",
+        "effective": {
+          "kind": "date",
+          "date": "2025-07-03"
+        },
+        "selectionReason": "Dated non-pitcher roster members not present in the posted lineup.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "deduplicate-roster-person-id",
+          "exclude-lineup-members",
+          "exclude-pitchers"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.additional-starters",
+        "target": "/away/additionalStarters",
+        "coverage": "exact",
+        "state": "omitted",
+        "sourceResultRefs": [
+          "depth.milb-away"
+        ],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": {
+          "kind": "current"
+        },
+        "selectionReason": "No usable SP annotation set was available; pitcher membership remains with the bullpen fallback.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.away.bullpen",
+        "target": "/away/bullpen",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "roster.milb-away"
+        ],
+        "selectedSourceResultRef": "roster.milb-away",
+        "sourcePath": "/roster",
+        "effective": {
+          "kind": "date",
+          "date": "2025-07-03"
+        },
+        "selectionReason": "Authoritative fallback: dated roster pitchers minus selected starter.",
+        "fallbackUsed": true,
+        "rejectedCandidates": [],
+        "transformations": [
+          "deduplicate-roster-person-id",
+          "exclude-selected-starter"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.-home-lineup-slots-0.stats.hitting",
+        "target": "/home/lineup/slots/0/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700012]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.-home-lineup-slots-0.stats.pitching",
+        "target": "/home/lineup/slots/0/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700012]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.-home-startingpitcher.stats.hitting",
+        "target": "/home/startingPitcher/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700002]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.-home-startingpitcher.stats.pitching",
+        "target": "/home/startingPitcher/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700002]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.-home-bullpen-0.stats.hitting",
+        "target": "/home/bullpen/0/stats/hitting",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700023]/stats[group=hitting]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.-home-bullpen-0.stats.pitching",
+        "target": "/home/bullpen/0/stats/pitching",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "people.milb"
+        ],
+        "selectedSourceResultRef": "people.milb",
+        "sourcePath": "/people[id=700023]/stats[group=pitching]",
+        "effective": {
+          "kind": "dateRange",
+          "startDate": "2025-01-01",
+          "endDate": "2025-07-03"
+        },
+        "selectionReason": "Selected the one exact-sport aggregate split.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "select-requested-stat-type",
+          "select-unambiguous-sport-aggregate",
+          "preserve-null-without-zero-fill"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.bench",
+        "target": "/home/bench",
+        "coverage": "exact",
+        "state": "present-empty",
+        "sourceResultRefs": [
+          "roster.milb-home"
+        ],
+        "selectedSourceResultRef": "roster.milb-home",
+        "sourcePath": "/roster",
+        "effective": {
+          "kind": "date",
+          "date": "2025-07-03"
+        },
+        "selectionReason": "Dated non-pitcher roster members not present in the posted lineup.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [
+          "deduplicate-roster-person-id",
+          "exclude-lineup-members",
+          "exclude-pitchers"
+        ],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.additional-starters",
+        "target": "/home/additionalStarters",
+        "coverage": "exact",
+        "state": "omitted",
+        "sourceResultRefs": [
+          "depth.milb-home"
+        ],
+        "selectedSourceResultRef": null,
+        "sourcePath": "/roster",
+        "effective": {
+          "kind": "current"
+        },
+        "selectionReason": "No usable SP annotation set was available; pitcher membership remains with the bullpen fallback.",
+        "fallbackUsed": false,
+        "rejectedCandidates": [],
+        "transformations": [],
+        "derivationInputs": []
+      },
+      {
+        "id": "lineage.home.bullpen",
+        "target": "/home/bullpen",
+        "coverage": "exact",
+        "state": "available",
+        "sourceResultRefs": [
+          "roster.milb-home"
+        ],
+        "selectedSourceResultRef": "roster.milb-home",
+        "sourcePath": "/roster",
+        "effective": {
+          "kind": "date",
+          "date": "2025-07-03"
+        },
+        "selectionReason": "Authoritative fallback: dated roster pitchers minus selected starter.",
+        "fallbackUsed": true,
+        "rejectedCandidates": [],
+        "transformations": [
+          "deduplicate-roster-person-id",
+          "exclude-selected-starter"
+        ],
+        "derivationInputs": []
+      }
+    ]
+  }
+}

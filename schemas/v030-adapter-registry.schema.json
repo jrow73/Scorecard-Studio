@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scorecard.studio/schemas/v030-adapter-registry.schema.json",
+  "title": "Scorecard Studio adapter contract registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaId", "schemaVersion", "contractRevision", "requestKeyFormat", "availabilityStates", "adapters"],
+  "properties": {
+    "schemaId": { "const": "scorecard-studio.adapter-registry" },
+    "schemaVersion": { "const": 1 },
+    "contractRevision": { "const": "0.3.0-draft.1" },
+    "requestKeyFormat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "separator", "arrayPolicy", "encoding"],
+      "properties": {
+        "version": { "const": 1 },
+        "separator": { "const": "|" },
+        "arrayPolicy": { "const": "declared-set-arrays-deduplicate-and-sort" },
+        "encoding": { "const": "utf8-percent-encoding" }
+      }
+    },
+    "availabilityStates": {
+      "type": "array",
+      "minItems": 11,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/availabilityState" }
+    },
+    "adapters": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/adapter" }
+    }
+  },
+  "$defs": {
+    "adapterId": {
+      "enum": ["schedule", "feed", "boxscore", "roster", "people", "coaches", "standings", "venue", "depthChart", "teamLogo"]
+    },
+    "availabilityState": {
+      "enum": ["available", "unposted", "present-empty", "omitted", "not-requested", "unsupported", "not-applicable", "ambiguous", "partial", "failed", "stale"]
+    },
+    "inputField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "required", "semantic", "keyOrder"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" },
+        "type": { "enum": ["string", "integer", "boolean", "date", "utcTimestamp", "stringSet", "integerSet", "enum"] },
+        "required": { "type": "boolean" },
+        "semantic": { "type": "string", "minLength": 1 },
+        "keyOrder": { "type": "integer", "minimum": 1 },
+        "default": {},
+        "allowed": { "type": "array", "uniqueItems": true },
+        "minimum": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "capabilityMatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sportIds": { "type": "array", "uniqueItems": true, "items": { "type": "integer" } },
+        "gameTypes": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "competitionSegments": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "concepts": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "default": { "type": "boolean" }
+      }
+    },
+    "capabilityRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "match", "state", "evidenceScope", "fallback"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" },
+        "match": { "$ref": "#/$defs/capabilityMatch" },
+        "state": { "enum": ["supported", "conditional", "absent", "untested"] },
+        "evidenceScope": { "type": "string", "minLength": 1 },
+        "fallback": { "type": ["string", "null"] }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis", "refreshTriggers", "ttlSeconds", "cacheFailureAsEmpty"],
+      "properties": {
+        "basis": { "enum": ["game-state", "prior-game-finality", "date-scope", "date-range-scope", "end-of-day-cutoff", "season-scope", "current-only", "http-cache"] },
+        "refreshTriggers": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "ttlSeconds": { "type": ["integer", "null"], "minimum": 0 },
+        "cacheFailureAsEmpty": { "const": false }
+      }
+    },
+    "outputConcept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["concept", "targetHint", "authority", "identityKeys"],
+      "properties": {
+        "concept": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" },
+        "targetHint": { "type": "string", "pattern": "^/" },
+        "authority": { "enum": ["authoritative", "conditional", "optional-annotation", "optional-asset", "observation"] },
+        "identityKeys": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "partialPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "mergeSuccesses", "failedUnitAvailability", "retryFailedOnly", "emptyIsFailure"],
+      "properties": {
+        "unit": { "type": "string", "minLength": 1 },
+        "mergeSuccesses": { "type": "boolean" },
+        "failedUnitAvailability": { "$ref": "#/$defs/availabilityState" },
+        "retryFailedOnly": { "type": "boolean" },
+        "emptyIsFailure": { "type": "boolean" },
+        "chunkSizeInput": { "type": ["string", "null"] },
+        "zeroFillFailedUnits": { "const": false }
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "endpointFamily", "planning", "inputFields", "keyFields", "outputConcepts", "capabilityRules", "freshness", "partialPolicy", "errorCodes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/adapterId" },
+        "endpointFamily": { "type": "string", "minLength": 1 },
+        "planning": { "enum": ["core", "lazy", "conditional", "optional"] },
+        "inputFields": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/inputField" } },
+        "keyFields": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "outputConcepts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/outputConcept" } },
+        "capabilityRules": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/capabilityRule" } },
+        "freshness": { "$ref": "#/$defs/freshness" },
+        "partialPolicy": { "$ref": "#/$defs/partialPolicy" },
+        "errorCodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["INPUT_INVALID", "CAPABILITY_UNSUPPORTED", "REQUEST_FAILED", "HTTP_STATUS", "CONTENT_TYPE_INVALID", "PARSE_FAILED", "SOURCE_SHAPE_INVALID", "IDENTITY_JOIN_FAILED", "SELECTION_AMBIGUOUS", "MATCHING_VIEW_MISSING", "ASSET_INVALID"]
+          }
+        }
+      }
+    }
+  }
+}

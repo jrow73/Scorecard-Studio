@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-011-people-level-controls",
+  "investigationId": "DISC-011",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:11:52.035Z",
+  "context": {
+    "subject": "MiLB probable-pitcher People controls across four levels",
+    "gameState": "Historical control"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/people?personIds=668954%2C674868%2C802105%2C679977&hydrate=stats(group=%5Bhitting%2Cpitching%5D%2Ctype=%5BbyDateRange%5D%2CstartDate=2025-01-01%2CendDate=2025-05-31)",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 186,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=300, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3792,
+    "bodySha256": "503120f4670a6bf175df1c315066fe37cd159928662dd6b8bcf096479c6a3254"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/people"
+    ],
+    "values": {
+      "/people": {
+        "found": true,
+        "value": [
+          {
+            "id": 668954,
+            "fullName": "Curtis Taylor",
+            "link": "/api/v1/people/668954",
+            "firstName": "Curtis",
+            "lastName": "Taylor",
+            "primaryNumber": "94",
+            "birthDate": "1995-07-25",
+            "currentAge": 31,
+            "birthCity": "Port Coquitlam",
+            "birthStateProvince": "BC",
+            "birthCountry": "Canada",
+            "height": "6' 6\"",
+            "weight": 235,
+            "active": true,
+            "primaryPosition": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "useName": "Curtis",
+            "useLastName": "Taylor",
+            "middleName": "W.",
+            "boxscoreName": "Taylor, C",
+            "gender": "M",
+            "isPlayer": true,
+            "isVerified": false,
+            "draftYear": 2016,
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            },
+            "nameFirstLast": "Curtis Taylor",
+            "nameSlug": "curtis-taylor-668954",
+            "firstLastName": "Curtis Taylor",
+            "lastFirstName": "Taylor, Curtis",
+            "lastInitName": "Taylor, C",
+            "initLastName": "C Taylor",
+            "fullFMLName": "Curtis W. Taylor",
+            "fullLFMName": "Taylor, Curtis W.",
+            "strikeZoneTop": 3.478,
+            "strikeZoneBottom": 1.755
+          },
+          {
+            "id": 674868,
+            "fullName": "Rodney Boone",
+            "link": "/api/v1/people/674868",
+            "firstName": "Rodney",
+            "lastName": "Boone",
+            "birthDate": "2000-04-09",
+            "currentAge": 26,
+            "birthCity": "San Francisco",
+            "birthStateProvince": "CA",
+            "birthCountry": "USA",
+            "height": "6' 1\"",
+            "weight": 195,
+            "active": true,
+            "primaryPosition": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "useName": "Rodney",
+            "useLastName": "Boone",
+            "middleName": "Emerson",
+            "boxscoreName": "Boone",
+            "gender": "M",
+            "isPlayer": true,
+            "isVerified": true,
+            "draftYear": 2021,
+            "batSide": {
+              "code": "L",
+              "description": "Left"
+            },
+            "pitchHand": {
+              "code": "L",
+              "description": "Left"
+            },
+            "nameFirstLast": "Rodney Boone",
+            "nameTitle": "III",
+            "nameSuffix": "III",
+            "nameSlug": "rodney-boone-674868",
+            "firstLastName": "Rodney Boone",
+            "lastFirstName": "Boone, Rodney",
+            "lastInitName": "Boone, R",
+            "initLastName": "R Boone",
+            "fullFMLName": "Rodney Emerson Boone",
+            "fullLFMName": "Boone, Rodney Emerson",
+            "strikeZoneTop": 3.41,
+            "strikeZoneBottom": 1.57
+          },
+          {
+            "id": 802105,
+            "fullName": "Yeriel Santos",
+            "link": "/api/v1/people/802105",
+            "firstName": "Yeriel",
+            "lastName": "Santos",
+            "birthDate": "2003-11-20",
+            "currentAge": 22,
+            "birthCity": "San Francisco de Macoris",
+            "birthCountry": "Dominican Republic",
+            "height": "6' 0\"",
+            "weight": 187,
+            "active": true,
+            "primaryPosition": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "useName": "Yeriel",
+            "useLastName": "Santos",
+            "boxscoreName": "Santos",
+            "gender": "M",
+            "nameMatrilineal": "Mendez",
+            "isPlayer": true,
+            "isVerified": true,
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            },
+            "nameFirstLast": "Yeriel Santos",
+            "nameSlug": "yeriel-santos-802105",
+            "firstLastName": "Yeriel Santos",
+            "lastFirstName": "Santos, Yeriel",
+            "lastInitName": "Santos, Y",
+            "initLastName": "Y Santos",
+            "fullFMLName": "Yeriel Santos",
+            "fullLFMName": "Santos, Yeriel",
+            "strikeZoneTop": 3.21,
+            "strikeZoneBottom": 1.62
+          },
+          {
+            "id": 679977,
+            "fullName": "Noah Song",
+            "link": "/api/v1/people/679977",
+            "firstName": "Noah",
+            "lastName": "Song",
+            "birthDate": "1997-05-28",
+            "currentAge": 29,
+            "birthCity": "Pomona",
+            "birthStateProvince": "CA",
+            "birthCountry": "USA",
+            "height": "6' 4\"",
+            "weight": 200,
+            "active": true,
+            "primaryPosition": {
+              "code": "1",
+              "name": "Pitcher",
+              "type": "Pitcher",
+              "abbreviation": "P"
+            },
+            "useName": "Noah",
+            "useLastName": "Song",
+            "middleName": "Benjamin",
+            "boxscoreName": "Song",
+            "gender": "M",
+            "isPlayer": true,
+            "isVerified": true,
+            "draftYear": 2019,
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            },
+            "nameFirstLast": "Noah Song",
+            "nameSlug": "noah-song-679977",
+            "firstLastName": "Noah Song",
+            "lastFirstName": "Song, Noah",
+            "lastInitName": "Song, N",
+            "initLastName": "N Song",
+            "fullFMLName": "Noah Benjamin Song",
+            "fullLFMName": "Song, Noah Benjamin",
+            "strikeZoneTop": 3.388,
+            "strikeZoneBottom": 1.71
+          }
+        ]
+      }
+    }
+  },
+  "notes": []
+}

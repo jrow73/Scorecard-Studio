@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-009-159-logo-al-all-star",
+  "investigationId": "DISC-009",
+  "evidenceKind": "live-snapshot",
+  "capturedAtUtc": "2026-10-06T01:36:08.787Z",
+  "context": {
+    "subject": "American League All-Star special-team logo control",
+    "gameState": null
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://www.mlbstatic.com/team-logos/159.svg",
+    "headers": {
+      "Accept": "image/svg+xml,*/*"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 173,
+    "finalUrl": "https://www.mlbstatic.com/team-logos/159.svg",
+    "redirected": false,
+    "headers": {
+      "contentType": "image/svg+xml",
+      "cacheControl": "max-age=1209600",
+      "etag": "\"ee8402be6c93d22e34ff2e57d8a4b310\"",
+      "lastModified": "Wed, 29 May 2024 19:31:30 GMT",
+      "accessControlAllowOrigin": "*"
+    },
+    "bodyBytes": 11658,
+    "bodySha256": "107a245daa37b0d83a03e441dae131dcf8f729a3e145e8506894d9d91ba6ff98"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/asset"
+    ],
+    "values": {
+      "/asset": {
+        "found": true,
+        "value": {
+          "isSvg": true,
+          "viewBox": "0 0 200.375 202.344",
+          "width": null,
+          "height": null,
+          "transparentCanvasByDefault": true,
+          "hasOpacityAttributes": false,
+          "hasRasterImage": false,
+          "hasStyleElement": false,
+          "hasTitle": true
+        }
+      }
+    }
+  },
+  "notes": []
+}

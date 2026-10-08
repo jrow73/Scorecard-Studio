@@ -1,0 +1,479 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-012-813040-schedule-league-championship",
+  "investigationId": "DISC-012",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T12:14:14.484Z",
+  "context": {
+    "subject": "league-championship game 813040",
+    "gameState": "final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=813040&hydrate=lineups%2Cweather%2Cvenue%2Cteam%2CprobablePitcher",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 192,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 7676,
+    "bodySha256": "3659df2da5714a954cb4fd8880facdc8725a248855c8db3459e6512a4b399138"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/status",
+      "/dates/0/games/0/teams",
+      "/dates/0/games/0/lineups",
+      "/dates/0/games/0/venue"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 813040
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "L"
+      },
+      "/dates/0/games/0/status": {
+        "found": true,
+        "value": {
+          "abstractGameState": "Final",
+          "codedGameState": "F",
+          "detailedState": "Final",
+          "statusCode": "F",
+          "startTimeTBD": false,
+          "abstractGameCode": "F"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 136,
+              "name": "Seattle Mariners",
+              "link": "/api/v1/teams/136",
+              "season": 2025,
+              "venue": {
+                "id": 680,
+                "name": "T-Mobile Park",
+                "link": "/api/v1/venues/680"
+              },
+              "springVenue": {
+                "id": 2530,
+                "link": "/api/v1/venues/2530"
+              },
+              "teamCode": "sea",
+              "fileCode": "sea",
+              "abbreviation": "SEA",
+              "teamName": "Mariners",
+              "locationName": "Seattle",
+              "firstYearOfPlay": "1977",
+              "league": {
+                "id": 103,
+                "name": "American League",
+                "link": "/api/v1/league/103"
+              },
+              "division": {
+                "id": 200,
+                "name": "American League West",
+                "link": "/api/v1/divisions/200"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Seattle",
+              "franchiseName": "Seattle",
+              "clubName": "Mariners",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 1,
+              "losses": 0,
+              "ties": 0,
+              "pct": "1.000"
+            },
+            "score": 3,
+            "isWinner": true,
+            "probablePitcher": {
+              "id": 682243,
+              "fullName": "Bryce Miller",
+              "link": "/api/v1/people/682243"
+            },
+            "splitSquad": false,
+            "seriesNumber": 1,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          },
+          "home": {
+            "team": {
+              "springLeague": {
+                "id": 115,
+                "name": "Grapefruit League",
+                "link": "/api/v1/league/115",
+                "abbreviation": "GL"
+              },
+              "allStarStatus": "N",
+              "id": 141,
+              "name": "Toronto Blue Jays",
+              "link": "/api/v1/teams/141",
+              "season": 2025,
+              "venue": {
+                "id": 14,
+                "name": "Rogers Centre",
+                "link": "/api/v1/venues/14"
+              },
+              "springVenue": {
+                "id": 2536,
+                "link": "/api/v1/venues/2536"
+              },
+              "teamCode": "tor",
+              "fileCode": "tor",
+              "abbreviation": "TOR",
+              "teamName": "Blue Jays",
+              "locationName": "Toronto",
+              "firstYearOfPlay": "1977",
+              "league": {
+                "id": 103,
+                "name": "American League",
+                "link": "/api/v1/league/103"
+              },
+              "division": {
+                "id": 201,
+                "name": "American League East",
+                "link": "/api/v1/divisions/201"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Toronto",
+              "franchiseName": "Toronto",
+              "clubName": "Blue Jays",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 0,
+              "losses": 1,
+              "ties": 0,
+              "pct": ".000"
+            },
+            "score": 1,
+            "isWinner": false,
+            "probablePitcher": {
+              "id": 592332,
+              "fullName": "Kevin Gausman",
+              "link": "/api/v1/people/592332"
+            },
+            "splitSquad": false,
+            "seriesNumber": 1,
+            "springLeague": {
+              "id": 115,
+              "name": "Grapefruit League",
+              "link": "/api/v1/league/115",
+              "abbreviation": "GL"
+            }
+          }
+        }
+      },
+      "/dates/0/games/0/lineups": {
+        "found": true,
+        "value": {
+          "homePlayers": [
+            {
+              "id": 543807,
+              "fullName": "George Springer",
+              "link": "/api/v1/people/543807",
+              "firstName": "George",
+              "lastName": "Springer",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "George"
+            },
+            {
+              "id": 664770,
+              "fullName": "Nathan Lukes",
+              "link": "/api/v1/people/664770",
+              "firstName": "Nathan",
+              "lastName": "Lukes",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Nathan"
+            },
+            {
+              "id": 665489,
+              "fullName": "Vladimir Guerrero",
+              "link": "/api/v1/people/665489",
+              "firstName": "Vladimir",
+              "lastName": "Guerrero",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Vladimir"
+            },
+            {
+              "id": 680718,
+              "fullName": "Addison Barger",
+              "link": "/api/v1/people/680718",
+              "firstName": "Addison",
+              "lastName": "Barger",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Addison"
+            },
+            {
+              "id": 672386,
+              "fullName": "Alejandro Kirk",
+              "link": "/api/v1/people/672386",
+              "firstName": "Alejandro",
+              "lastName": "Kirk",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Alejandro"
+            },
+            {
+              "id": 662139,
+              "fullName": "Daulton Varsho",
+              "link": "/api/v1/people/662139",
+              "firstName": "Daulton",
+              "lastName": "Varsho",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Daulton"
+            },
+            {
+              "id": 676391,
+              "fullName": "Ernie Clement",
+              "link": "/api/v1/people/676391",
+              "firstName": "Ernie",
+              "lastName": "Clement",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Ernie"
+            },
+            {
+              "id": 623993,
+              "fullName": "Anthony Santander",
+              "link": "/api/v1/people/623993",
+              "firstName": "Anthony",
+              "lastName": "Santander",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Anthony"
+            },
+            {
+              "id": 665926,
+              "fullName": "Andrés Giménez",
+              "link": "/api/v1/people/665926",
+              "firstName": "Andrés",
+              "lastName": "Giménez",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "Andrés"
+            }
+          ],
+          "awayPlayers": [
+            {
+              "id": 668227,
+              "fullName": "Randy Arozarena",
+              "link": "/api/v1/people/668227",
+              "firstName": "Randy",
+              "lastName": "Arozarena",
+              "primaryPosition": {
+                "code": "7",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "LF"
+              },
+              "useName": "Randy"
+            },
+            {
+              "id": 663728,
+              "fullName": "Cal Raleigh",
+              "link": "/api/v1/people/663728",
+              "firstName": "Caleb",
+              "lastName": "Raleigh",
+              "primaryPosition": {
+                "code": "2",
+                "name": "Catcher",
+                "type": "Catcher",
+                "abbreviation": "C"
+              },
+              "useName": "Cal"
+            },
+            {
+              "id": 677594,
+              "fullName": "Julio Rodríguez",
+              "link": "/api/v1/people/677594",
+              "firstName": "Julio",
+              "lastName": "Rodríguez",
+              "primaryPosition": {
+                "code": "8",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "CF"
+              },
+              "useName": "Julio"
+            },
+            {
+              "id": 593871,
+              "fullName": "Jorge Polanco",
+              "link": "/api/v1/people/593871",
+              "firstName": "Jorge",
+              "lastName": "Polanco",
+              "primaryPosition": {
+                "code": "4",
+                "name": "Second Base",
+                "type": "Infielder",
+                "abbreviation": "2B"
+              },
+              "useName": "Jorge"
+            },
+            {
+              "id": 647304,
+              "fullName": "Josh Naylor",
+              "link": "/api/v1/people/647304",
+              "firstName": "Joshua-Douglas",
+              "lastName": "Naylor",
+              "primaryPosition": {
+                "code": "3",
+                "name": "First Base",
+                "type": "Infielder",
+                "abbreviation": "1B"
+              },
+              "useName": "Josh"
+            },
+            {
+              "id": 553993,
+              "fullName": "Eugenio Suárez",
+              "link": "/api/v1/people/553993",
+              "firstName": "Eugenio",
+              "lastName": "Suárez",
+              "primaryPosition": {
+                "code": "5",
+                "name": "Third Base",
+                "type": "Infielder",
+                "abbreviation": "3B"
+              },
+              "useName": "Eugenio"
+            },
+            {
+              "id": 686527,
+              "fullName": "Dominic Canzone",
+              "link": "/api/v1/people/686527",
+              "firstName": "Dominic",
+              "lastName": "Canzone",
+              "primaryPosition": {
+                "code": "10",
+                "name": "Designated Hitter",
+                "type": "Hitter",
+                "abbreviation": "DH"
+              },
+              "useName": "Dominic"
+            },
+            {
+              "id": 645302,
+              "fullName": "Victor Robles",
+              "link": "/api/v1/people/645302",
+              "firstName": "Victor",
+              "lastName": "Robles",
+              "primaryPosition": {
+                "code": "9",
+                "name": "Outfielder",
+                "type": "Outfielder",
+                "abbreviation": "RF"
+              },
+              "useName": "Victor"
+            },
+            {
+              "id": 641487,
+              "fullName": "J.P. Crawford",
+              "link": "/api/v1/people/641487",
+              "firstName": "John",
+              "lastName": "Crawford",
+              "primaryPosition": {
+                "code": "6",
+                "name": "Shortstop",
+                "type": "Infielder",
+                "abbreviation": "SS"
+              },
+              "useName": "J.P."
+            }
+          ]
+        }
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 14,
+          "name": "Rogers Centre",
+          "link": "/api/v1/venues/14",
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}
