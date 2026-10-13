@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-003-778718-schedule-spring",
+  "investigationId": "DISC-003",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:23:00.912Z",
+  "context": {
+    "subject": "Spring venue: CACTI Park of the Palm Beaches",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=778718&hydrate=venue%2Cteam",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 195,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3310,
+    "bodySha256": "ad3098f9c2b581e70464d8f9e67dcfae30eeb36f50b69172d953890715bbb18a"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/venue",
+      "/dates/0/games/0/teams"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 778718
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "S"
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2025-03-15"
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 5000,
+          "name": "CACTI Park of the Palm Beaches",
+          "link": "/api/v1/venues/5000",
+          "active": true,
+          "season": "2025"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "springLeague": {
+                "id": 115,
+                "name": "Grapefruit League",
+                "link": "/api/v1/league/115",
+                "abbreviation": "GL"
+              },
+              "allStarStatus": "N",
+              "id": 146,
+              "name": "Miami Marlins",
+              "link": "/api/v1/teams/146",
+              "season": 2025,
+              "venue": {
+                "id": 4169,
+                "name": "loanDepot park",
+                "link": "/api/v1/venues/4169"
+              },
+              "springVenue": {
+                "id": 2520,
+                "link": "/api/v1/venues/2520"
+              },
+              "teamCode": "mia",
+              "fileCode": "mia",
+              "abbreviation": "MIA",
+              "teamName": "Marlins",
+              "locationName": "Miami",
+              "firstYearOfPlay": "1991",
+              "league": {
+                "id": 104,
+                "name": "National League",
+                "link": "/api/v1/league/104"
+              },
+              "division": {
+                "id": 204,
+                "name": "National League East",
+                "link": "/api/v1/divisions/204"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Miami",
+              "franchiseName": "Miami",
+              "clubName": "Marlins",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 6,
+              "losses": 11,
+              "ties": 4,
+              "pct": ".353"
+            },
+            "score": 4,
+            "isWinner": false,
+            "splitSquad": false,
+            "seriesNumber": 21,
+            "springLeague": {
+              "id": 115,
+              "name": "Grapefruit League",
+              "link": "/api/v1/league/115",
+              "abbreviation": "GL"
+            }
+          },
+          "home": {
+            "team": {
+              "springLeague": {
+                "id": 115,
+                "name": "Grapefruit League",
+                "link": "/api/v1/league/115",
+                "abbreviation": "GL"
+              },
+              "allStarStatus": "N",
+              "id": 117,
+              "name": "Houston Astros",
+              "link": "/api/v1/teams/117",
+              "season": 2025,
+              "venue": {
+                "id": 2392,
+                "name": "Daikin Park",
+                "link": "/api/v1/venues/2392"
+              },
+              "springVenue": {
+                "id": 5000,
+                "link": "/api/v1/venues/5000"
+              },
+              "teamCode": "hou",
+              "fileCode": "hou",
+              "abbreviation": "HOU",
+              "teamName": "Astros",
+              "locationName": "Houston",
+              "firstYearOfPlay": "1962",
+              "league": {
+                "id": 103,
+                "name": "American League",
+                "link": "/api/v1/league/103"
+              },
+              "division": {
+                "id": 200,
+                "name": "American League West",
+                "link": "/api/v1/divisions/200"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Houston",
+              "franchiseName": "Houston",
+              "clubName": "Astros",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 12,
+              "losses": 9,
+              "ties": 1,
+              "pct": ".571"
+            },
+            "score": 6,
+            "isWinner": true,
+            "splitSquad": false,
+            "seriesNumber": 23,
+            "springLeague": {
+              "id": 115,
+              "name": "Grapefruit League",
+              "link": "/api/v1/league/115",
+              "abbreviation": "GL"
+            }
+          }
+        }
+      }
+    }
+  },
+  "notes": []
+}

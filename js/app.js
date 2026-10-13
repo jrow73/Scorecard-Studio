@@ -4,32 +4,54 @@
  * Version: 0.2.0
  */
 
-import { fetchFavoriteTeamScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails } from "./api.js?v=030b0054";
-import { canonicalFieldId, capabilityRequirementsForFields, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=030b0054";
-import { getPitcherDisplayRows } from "./v030-compatibility-resolver.js?v=030b0054";
-import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=030b0054";
-import { createV030PersistenceController } from "./v030-persistence.js?v=030b0054";
-import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=030b0054";
-import { formatFieldValue, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=030b0054";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=030b0054";
-import { buildFieldDiagnosticRows, summarizeDiagnosticRows } from "./field-diagnostic.js?v=030b0054";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=030b0054";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=030b0054";
+import { fetchFavoriteTeamScheduleBundle, fetchSportScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails, fetchTeamsForSport } from "./api.js?v=040";
+import { canonicalFieldId, capabilityRequirementsForFields, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=040";
+import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=040";
+import { createV030PersistenceController } from "./v030-persistence.js?v=040";
+import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=040";
+import { formatDualZoneInstant, formatFieldValue, normalizeTimeZoneId, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=040";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=040";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=040";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=040";
 import {
-  createV030StorageBackend, deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
-  listLayouts, saveLayout as persistRawLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=030b0054";
+  STORAGE_DATABASE_VERSION, createV030StorageBackend, deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
+  listLayouts, readBackupStorageSnapshot, saveLayout as persistRawLayout, savePdfTemplate, setSetting
+} from "./storage.js?v=040";
+import {
+  APP_PREFERENCES_SETTING_KEY, DEFAULT_APP_PREFERENCES, FAVORITE_COMPETITION_SETTING_KEY,
+  LEGACY_FAVORITE_TEAM_SETTING_KEY, competitionLevelByKey, migrateFavoriteCompetition,
+  normalizeAppPreferences, normalizeGameDayDetailLevel, resolveAppearanceTheme, writeAppearanceStartupPreference
+} from "./v040-settings.js?v=040";
+import { gameMatchesSearch, groupScheduleGames, probablePitcherMatchup, scheduleReadiness } from "./v040-home.js?v=040";
+import { buildHomeAwayFieldPairs, fieldPairCoverage, restoreStandardFieldSelection, updateMirroredFieldSelection } from "./v040-field-palette.js?v=040";
+import { GAME_DAY_SECTION_LEVELS, gameDaySeasonContext, gameDaySourceSummary, managerPresentation, pitcherGroupPresentation, researchScope, standingsPresentation, visibleGameDaySections } from "./v040-gameday.js?v=040";
+import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupLabel } from "./v040-pitcher-groups.js?v=040";
+import { BACKUP_SCOPES, createBackupExport } from "./v040-backup-export.js?v=040";
+import { BACKUP_IMPORT_LIMITS, preflightBackupImport } from "./v040-backup-import.js?v=040";
+import { RESTORE_POLICIES, commitBackupRestore, createRestoreCommitPlan } from "./v040-backup-restore.js?v=040";
+import { designerDragHasStarted, designerPointerIsTouchLike } from "./v040-designer-interaction.js?v=040";
 
-const DEFAULT_FAVORITE_TEAM = { id: 136, name: "Seattle Mariners" };
+const systemDarkMode = window.matchMedia?.("(prefers-color-scheme: dark)") || null;
+const reducedMotionMode = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
+let appHeaderResizeObserver = null;
+const venueTimeZoneCache = new Map();
 
 const state = {
-  favoriteTeam: DEFAULT_FAVORITE_TEAM,
+  favoriteTeam: null,
+  favoriteCompetition: null,
+  appPreferences: DEFAULT_APP_PREFERENCES,
+  settingsTeams: [],
+  settingsTeamsLoadedLevel: null,
+  homeScheduleMode: "level",
+  homeGameSearch: "",
+  homeSportId: 1,
   selectedDate: null,
   schedule: [],
   schedulePayload: null,
   selectedGamePk: null,
   selectedFeed: null,
   selectedSupplemental: null,
+  selectedVenueSource: null,
   pdfDocument: null,
   pdfPageNumber: 1,
   pdfRecord: null,
@@ -43,6 +65,10 @@ const state = {
   layoutDetailsSavedSnapshot: null,
   layoutFormattingSavedSnapshot: null,
   layoutSettingsDiscardTarget: null,
+  layoutSettingsView: "summary",
+  layoutSettingsClosing: false,
+  layoutFieldMirror: true,
+  layoutFieldExpanded: new Set(),
   createFieldDraft: new Set(),
   designerPdfDocument: null,
   designerPageNumber: 1,
@@ -63,6 +89,7 @@ const state = {
   designerPaletteSelection: null,
   designerPendingMode: null,
   designerBlockSortDraft: { field: "", direction: "asc" },
+  designerPitcherGroupDraft: PITCHER_GROUP_MODES.CORE,
   designerCollectionInspectorMode: null,
   designerPaletteExpanded: new Set(),
   designerDrag: null,
@@ -75,28 +102,74 @@ const state = {
   v030Persistence: null,
   includeAdditionalStarters: false,
   v030Availability: null,
-  fieldDiagnosticRows: [],
-  fieldDiagnosticLoadToken: 0,
-  gameDayLoadToken: 0
+  gameDayLoadToken: 0,
+  backupPreflight: null,
+  backupCurrentStorage: null,
+  backupCommitPlan: null,
+  backupSelectionToken: 0,
+  backupCommitInProgress: false
 };
 
 const elements = {
+  appHeader: document.querySelector(".app-header"),
   refreshButton: document.querySelector("#refresh-pregame-btn"),
   favoriteTeamForm: document.querySelector("#favorite-team-form"),
+  favoriteLevelSelect: document.querySelector("#favorite-level-select"),
   favoriteTeamSelect: document.querySelector("#favorite-team-select"),
   saveFavoriteTeamButton: document.querySelector("#save-favorite-team-btn"),
   storageStatus: document.querySelector("#storage-status"),
   storageMessage: document.querySelector("#storage-message"),
+  appearanceOptions: document.querySelector("#appearance-options"),
+  appearanceStatus: document.querySelector("#appearance-status"),
+  backupCompleteButton: document.querySelector("#backup-complete-btn"),
+  backupLayoutSelect: document.querySelector("#backup-layout-select"),
+  backupLayoutButton: document.querySelector("#backup-layout-btn"),
+  backupExportStatus: document.querySelector("#backup-export-status"),
+  backupOpenRestoreButton: document.querySelector("#backup-open-restore-btn"),
+  backupRestoreDialog: document.querySelector("#backup-restore-dialog"),
+  backupRestoreCloseButton: document.querySelector("#backup-restore-close-btn"),
+  backupRestoreProgress: document.querySelector("#backup-restore-progress"),
+  backupSelectStage: document.querySelector("#backup-select-stage"),
+  backupRestoreFileButton: document.querySelector("#backup-restore-file-btn"),
+  backupRestoreFile: document.querySelector("#backup-restore-file"),
+  backupRestoreFileName: document.querySelector("#backup-restore-file-name"),
+  backupStatus: document.querySelector("#backup-status"),
+  backupPreflight: document.querySelector("#backup-preflight"),
+  backupPreflightState: document.querySelector("#backup-preflight-state"),
+  backupPreflightDescription: document.querySelector("#backup-preflight-description"),
+  backupPreflightSummary: document.querySelector("#backup-preflight-summary"),
+  backupDiagnostics: document.querySelector("#backup-diagnostics"),
+  backupConflicts: document.querySelector("#backup-conflicts"),
+  backupClearRestoreButton: document.querySelector("#backup-clear-restore-btn"),
+  backupReviewRestoreButton: document.querySelector("#backup-review-restore-btn"),
+  backupConfirmStage: document.querySelector("#backup-confirm-stage"),
+  backupConfirmSummary: document.querySelector("#backup-confirm-summary"),
+  backupConfirmWarning: document.querySelector("#backup-confirm-warning"),
+  backupConfirmCancelButton: document.querySelector("#backup-confirm-cancel-btn"),
+  backupConfirmRestoreButton: document.querySelector("#backup-confirm-restore-btn"),
+  backupCompleteStage: document.querySelector("#backup-complete-stage"),
+  backupCompleteMessage: document.querySelector("#backup-complete-message"),
+  backupRestoreDoneButton: document.querySelector("#backup-restore-done-btn"),
   todayDate: document.querySelector("#today-date"),
+  homeScopeLabel: document.querySelector("#home-scope-label"),
   gameDateInput: document.querySelector("#game-date-input"),
   gameDateTodayButton: document.querySelector("#game-date-today-btn"),
+  homeLevelSelect: document.querySelector("#home-level-select"),
   lineupStatus: document.querySelector("#lineup-status"),
   pregameMessage: document.querySelector("#pregame-message"),
   pregameContent: document.querySelector("#pregame-content"),
+  homeGameSearch: document.querySelector("#home-game-search"),
+  homeGameCount: document.querySelector("#home-game-count"),
+  homeGameFilterEmpty: document.querySelector("#home-game-filter-empty"),
   gameChoiceList: document.querySelector("#game-choice-list"),
+  selectedGameEmpty: document.querySelector("#selected-game-empty"),
+  selectedGameDetails: document.querySelector("#selected-game-details"),
   matchupHeading: document.querySelector("#matchup-heading"),
   gameStatusText: document.querySelector("#game-status-text"),
   firstPitch: document.querySelector("#first-pitch"),
+  probablePitchers: document.querySelector("#probable-pitchers"),
+  selectedReadinessStatus: document.querySelector("#selected-readiness-status"),
+  openSelectedGameDayButton: document.querySelector("#open-selected-gameday-btn"),
   venue: document.querySelector("#venue"),
   weather: document.querySelector("#weather"),
   includeAdditionalStarters: document.querySelector("#include-additional-starters"),
@@ -112,28 +185,20 @@ const elements = {
   awayLineup: document.querySelector("#away-lineup"),
   homeLineup: document.querySelector("#home-lineup"),
   navHome: document.querySelector("#nav-home"),
+  navSettings: document.querySelector("#nav-settings"),
+  homeOpenSettingsButton: document.querySelector("#home-open-settings-btn"),
   navGameDay: document.querySelector("#nav-gameday"),
-  navFieldDiagnostic: document.querySelector("#nav-field-diagnostic"),
-  refreshFieldDiagnosticButton: document.querySelector("#refresh-field-diagnostic-btn"),
-  fieldDiagnosticSubtitle: document.querySelector("#field-diagnostic-subtitle"),
-  fieldDiagnosticMessage: document.querySelector("#field-diagnostic-message"),
-  fieldDiagnosticSources: document.querySelector("#field-diagnostic-sources"),
-  diagnosticGamePackSourcePill: document.querySelector("#diagnostic-gamepack-source-pill"),
-  diagnosticCoachesSourcePill: document.querySelector("#diagnostic-coaches-source-pill"),
-  diagnosticStandingsSourcePill: document.querySelector("#diagnostic-standings-source-pill"),
-  fieldDiagnosticContent: document.querySelector("#field-diagnostic-content"),
-  fieldDiagnosticSummary: document.querySelector("#field-diagnostic-summary"),
-  fieldDiagnosticSearch: document.querySelector("#field-diagnostic-search"),
-  fieldDiagnosticTierFilter: document.querySelector("#field-diagnostic-tier-filter"),
-  fieldDiagnosticStatusFilter: document.querySelector("#field-diagnostic-status-filter"),
-  fieldDiagnosticTableBody: document.querySelector("#field-diagnostic-table-body"),
+  gameDayEmptyState: document.querySelector("#gameday-empty-state"),
+  gameDayEmptyHomeButton: document.querySelector("#gameday-empty-home-btn"),
+  gameDaySelectedWorkspace: document.querySelector("#gameday-selected-workspace"),
   refreshGameDayButton: document.querySelector("#refresh-gameday-btn"),
-  gameDaySubtitle: document.querySelector("#gameday-subtitle"),
   gameDayMessage: document.querySelector("#gameday-message"),
   gameDayContent: document.querySelector("#gameday-content"),
-  gameDaySources: document.querySelector("#gameday-sources"),
-  coachesSourcePill: document.querySelector("#coaches-source-pill"),
-  standingsSourcePill: document.querySelector("#standings-source-pill"),
+  gameDayDetailLevel: document.querySelector("#gameday-detail-level"),
+  gameDayDetailDescription: document.querySelector("#gameday-detail-description"),
+  gameDaySeasonContext: document.querySelector("#gameday-season-context"),
+  gameDaySeasonNote: document.querySelector("#gameday-season-note"),
+  gameDayOverview: document.querySelector("#gameday-overview-facts"),
   gameDayTeamGrid: document.querySelector("#gameday-team-grid"),
   gameDayAwayLineupHeading: document.querySelector("#gameday-away-lineup-heading"),
   gameDayHomeLineupHeading: document.querySelector("#gameday-home-lineup-heading"),
@@ -147,18 +212,29 @@ const elements = {
   gameDayHomeBenchHeading: document.querySelector("#gameday-home-bench-heading"),
   gameDayAwayBench: document.querySelector("#gameday-away-bench"),
   gameDayHomeBench: document.querySelector("#gameday-home-bench"),
+  gameDayAwayStaffHeading: document.querySelector("#gameday-away-staff-heading"),
+  gameDayHomeStaffHeading: document.querySelector("#gameday-home-staff-heading"),
+  gameDayAwayStaff: document.querySelector("#gameday-away-staff"),
+  gameDayHomeStaff: document.querySelector("#gameday-home-staff"),
+  gameDayStandings: document.querySelector("#gameday-standings"),
   gameDayUmpires: document.querySelector("#gameday-umpires"),
   gameDayVenue: document.querySelector("#gameday-venue"),
+  gameDaySourceSummary: document.querySelector("#gameday-source-summary"),
   navLayouts: document.querySelector("#nav-layouts"),
   pageTitle: document.querySelector("#page-title"),
   pageEyebrow: document.querySelector("#page-eyebrow"),
   layoutStorageStatus: document.querySelector("#layout-storage-status"),
+  layoutLibraryPanel: document.querySelector("#layout-library-panel"),
+  layoutCreateWorkflow: document.querySelector("#layout-create-workflow"),
+  openCreateLayoutButton: document.querySelector("#open-create-layout-btn"),
+  closeCreateLayoutButton: document.querySelector("#close-create-layout-btn"),
   layoutNameInput: document.querySelector("#layout-name-input"),
   layoutDescriptionInput: document.querySelector("#layout-description-input"),
   layoutPdfInput: document.querySelector("#layout-pdf-input"),
   layoutPdfSummary: document.querySelector("#layout-pdf-summary"),
   createLayoutButton: document.querySelector("#create-layout-btn"),
   layoutMessage: document.querySelector("#layout-message"),
+  layoutCreateMessage: document.querySelector("#layout-create-message"),
   layoutList: document.querySelector("#layout-list"),
   layoutCount: document.querySelector("#layout-count"),
   layoutDetailCard: document.querySelector("#layout-detail-card"),
@@ -175,7 +251,6 @@ const elements = {
   pdfPageLabel: document.querySelector("#pdf-page-label"),
   pdfPrevButton: document.querySelector("#pdf-prev-btn"),
   pdfNextButton: document.querySelector("#pdf-next-btn"),
-  navDesigner: document.querySelector("#nav-designer"),
   openDesignerButton: document.querySelector("#open-designer-btn"),
   layoutFormattingButton: document.querySelector("#layout-formatting-btn"),
   designerLayoutSettingsButton: document.querySelector("#designer-layout-settings-btn"),
@@ -198,6 +273,9 @@ const elements = {
   designerTemplatePlaceButton: document.querySelector("#designer-template-place-btn"),
   designerBlockCount: document.querySelector("#designer-block-count"),
   designerLineupSide: document.querySelector("#designer-lineup-side"),
+  designerPitcherGroupWrap: document.querySelector("#designer-pitcher-group-wrap"),
+  designerPitcherGroup: document.querySelector("#designer-pitcher-group"),
+  designerPitcherGroupNote: document.querySelector("#designer-pitcher-group-note"),
   designerLineupCapacity: document.querySelector("#designer-lineup-capacity"),
   designerBlockArrangement: document.querySelector("#designer-block-arrangement"),
   designerCapacityWrap: document.querySelector("#designer-capacity-wrap"),
@@ -245,6 +323,7 @@ const elements = {
   designerIndividualTemplateNameFormat: document.querySelector("#designer-individual-template-name-format"),
   designerIndividualPlaceButton: document.querySelector("#designer-individual-place-btn"),
   designerGenerateButton: document.querySelector("#designer-generate-btn"),
+  designerGenerateHint: document.querySelector("#designer-generate-hint"),
   generateMessage: document.querySelector("#generate-message"),
   designerMessage: document.querySelector("#designer-message"),
   designerMappingCount: null,
@@ -302,6 +381,15 @@ const elements = {
   designerMultiColorPicker: document.querySelector("#designer-multi-color-picker"),
   designerMultiFormatRestore: document.querySelector("#designer-multi-format-restore"),
   layoutFormattingDialog: document.querySelector("#layout-formatting-dialog"),
+  layoutSettingsTitle: document.querySelector("#layout-formatting-dialog-title"),
+  layoutSettingsDialogDescription: document.querySelector("#layout-settings-dialog-description"),
+  layoutSettingsClose: document.querySelector("#layout-settings-close"),
+  layoutSettingsDone: document.querySelector("#layout-settings-done"),
+  layoutSettingsSummaryView: document.querySelector("#layout-settings-summary-view"),
+  layoutSettingsSummaryActions: document.querySelector("#layout-settings-summary-actions"),
+  layoutSettingsDetailsActions: document.querySelector("#layout-settings-details-actions"),
+  layoutSettingsFieldsActions: document.querySelector("#layout-settings-fields-actions"),
+  layoutSettingsFormattingActions: document.querySelector("#layout-settings-formatting-actions"),
   layoutDetailsDialog: document.querySelector("#layout-details-dialog"),
   layoutCustomFieldsDialog: document.querySelector("#layout-custom-fields-dialog"),
   layoutDefaultFormattingDialog: document.querySelector("#layout-default-formatting-dialog"),
@@ -338,6 +426,9 @@ const elements = {
   layoutSettingsDiscardMessage: document.querySelector("#layout-settings-discard-message"),
   layoutCustomFieldCount: document.querySelector("#layout-custom-field-count"),
   layoutFieldSearch: document.querySelector("#layout-field-search"),
+  layoutFieldMirror: document.querySelector("#layout-field-mirror"),
+  layoutFieldsExpandAll: document.querySelector("#layout-fields-expand-all"),
+  layoutFieldsCollapseAll: document.querySelector("#layout-fields-collapse-all"),
   layoutCustomFieldList: document.querySelector("#layout-custom-field-list"),
   layoutCreateCustomFields: document.querySelector("#layout-create-custom-fields"),
   layoutCreateFieldSearch: document.querySelector("#layout-create-field-search"),
@@ -388,6 +479,8 @@ const elements = {
 
 async function initialize() {
   const today = getLocalDateString();
+  initializeResponsiveStickyOffsets();
+  applyAppearancePreference(state.appPreferences);
   await loadAppMetadata();
   state.selectedDate = today;
   elements.gameDateInput.value = today;
@@ -397,38 +490,61 @@ async function initialize() {
   populateNameFormatSelects();
   updateDesignerTemplatePreview();
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
-  elements.refreshButton.addEventListener("click", () => loadFavoriteTeamPregame(state.selectedDate || today, { trigger: "manual" }));
+  elements.favoriteLevelSelect.addEventListener("change", () => loadSettingsTeams(elements.favoriteLevelSelect.value));
+  elements.favoriteTeamSelect.addEventListener("change", () => {
+    elements.saveFavoriteTeamButton.disabled = !elements.favoriteTeamSelect.value;
+  });
+  elements.appearanceOptions?.addEventListener("change", handleAppearancePreferenceChange);
+  elements.gameDayDetailLevel?.addEventListener("change", handleGameDayDetailLevelChange);
+  systemDarkMode?.addEventListener?.("change", handleSystemAppearanceChange);
+  elements.refreshButton.addEventListener("click", refreshHomeSchedule);
   elements.includeAdditionalStarters?.addEventListener("change", handleAdditionalStartersPreference);
   elements.gameDateInput.addEventListener("change", handleGameDateChange);
   elements.gameDateTodayButton.addEventListener("click", () => setSelectedGameDate(getLocalDateString()));
+  elements.homeLevelSelect.addEventListener("change", () => loadLevelSchedule(state.selectedDate || today, elements.homeLevelSelect.value));
+  elements.homeGameSearch?.addEventListener("input", handleHomeGameSearch);
+  elements.openSelectedGameDayButton.addEventListener("click", openGameDay);
   elements.livePdfGenerateButton?.addEventListener("click", generateLivePdf);
-  elements.livePdfLayoutSelect?.addEventListener("change", saveLivePdfLayoutPreference);
+  elements.livePdfLayoutSelect?.addEventListener("change", () => { saveLivePdfLayoutPreference(); updateLivePdfAvailability(); });
   elements.navHome.addEventListener("click", () => showView("home"));
+  elements.navSettings.addEventListener("click", openSettings);
+  elements.homeOpenSettingsButton?.addEventListener("click", openSettings);
+  elements.backupCompleteButton?.addEventListener("click", () => downloadBackup(BACKUP_SCOPES.COMPLETE));
+  elements.backupLayoutButton?.addEventListener("click", () => downloadBackup(BACKUP_SCOPES.SINGLE_LAYOUT));
+  elements.backupOpenRestoreButton?.addEventListener("click", openBackupRestoreWorkflow);
+  elements.backupRestoreFileButton?.addEventListener("click", () => elements.backupRestoreFile.click());
+  elements.backupRestoreFile?.addEventListener("change", handleBackupRestoreFile);
+  elements.backupConflicts?.addEventListener("change", updateRestoreReviewAvailability);
+  elements.backupClearRestoreButton?.addEventListener("click", clearBackupRestorePreview);
+  elements.backupReviewRestoreButton?.addEventListener("click", reviewBackupRestore);
+  elements.backupConfirmCancelButton?.addEventListener("click", () => showBackupRestoreStage("review"));
+  elements.backupConfirmRestoreButton?.addEventListener("click", confirmBackupRestore);
+  elements.backupRestoreDoneButton?.addEventListener("click", () => elements.backupRestoreDialog.close("complete"));
+  elements.backupRestoreDialog?.addEventListener("close", () => {
+    if (!state.backupCommitInProgress) resetBackupRestoreState();
+  });
+  elements.backupRestoreDialog?.addEventListener("cancel", (event) => {
+    if (state.backupCommitInProgress) event.preventDefault();
+  });
   elements.navGameDay.addEventListener("click", openGameDay);
-  elements.navFieldDiagnostic.addEventListener("click", openFieldDiagnostic);
-  elements.refreshFieldDiagnosticButton.addEventListener("click", () => loadFieldDiagnostic(true));
-  elements.fieldDiagnosticSearch.addEventListener("input", renderFieldDiagnosticTable);
-  elements.fieldDiagnosticTierFilter.addEventListener("change", renderFieldDiagnosticTable);
-  elements.fieldDiagnosticStatusFilter.addEventListener("change", renderFieldDiagnosticTable);
+  elements.gameDayEmptyHomeButton?.addEventListener("click", () => showView("home"));
   elements.refreshGameDayButton.addEventListener("click", () => loadGameDay(true));
   elements.navLayouts.addEventListener("click", () => showView("layouts"));
-  elements.navDesigner.addEventListener("click", () => {
-    if (selectedLayout()) openDesigner();
-    else { showView("layouts"); setLayoutMessage("Open a layout before using the Designer.", true); }
-  });
+  elements.openCreateLayoutButton?.addEventListener("click", showLayoutCreateWorkflow);
+  elements.closeCreateLayoutButton?.addEventListener("click", showLayoutLibrary);
   elements.layoutPdfInput.addEventListener("change", handleLayoutPdfSelection);
   elements.createLayoutButton.addEventListener("click", createLayout);
 state.createFieldDraft = new Set(standardDesignerFieldIds());
 for (const input of elements.layoutFieldModeCreate?.querySelectorAll('input[name="layout-field-mode"]') || []) input.addEventListener("change", syncCreateFieldMode);
 elements.layoutCreateFieldList?.addEventListener("change", (event) => { const input = event.target; if (!input?.matches?.("input[data-create-field-id]")) return; if (input.checked) state.createFieldDraft.add(input.value); else state.createFieldDraft.delete(input.value); });
 elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLayoutFieldPicker(elements.layoutCreateFieldSearch.value));
-  elements.saveLayoutMetadataButton.addEventListener("click", saveSelectedLayoutMetadata);
-  elements.duplicateLayoutButton.addEventListener("click", duplicateSelectedLayout);
+  elements.saveLayoutMetadataButton?.addEventListener("click", saveSelectedLayoutMetadata);
+  elements.duplicateLayoutButton?.addEventListener("click", duplicateSelectedLayout);
   elements.favoriteLayoutButton?.addEventListener("click", setSelectedLayoutFavorite);
-  elements.deleteLayoutButton.addEventListener("click", deleteSelectedLayout);
-  elements.pdfPrevButton.addEventListener("click", () => changePdfPage(-1));
-  elements.pdfNextButton.addEventListener("click", () => changePdfPage(1));
-  elements.openDesignerButton.addEventListener("click", openDesigner);
+  elements.deleteLayoutButton?.addEventListener("click", deleteSelectedLayout);
+  elements.pdfPrevButton?.addEventListener("click", () => changePdfPage(-1));
+  elements.pdfNextButton?.addEventListener("click", () => changePdfPage(1));
+  elements.openDesignerButton?.addEventListener("click", openDesigner);
   elements.layoutFormattingButton?.addEventListener("click", openLayoutFormattingDialog);
   elements.designerLayoutSettingsButton?.addEventListener("click", openLayoutFormattingDialog);
   elements.designerBackButton.addEventListener("click", () => showView("layouts"));
@@ -443,9 +559,13 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   elements.designerBlockSort?.addEventListener("change", handleDesignerBlockSortChange);
   elements.designerBlockSortAsc?.addEventListener("click", () => setDesignerBlockSortDirection("asc"));
   elements.designerBlockSortDesc?.addEventListener("click", () => setDesignerBlockSortDirection("desc"));
+  elements.designerPitcherGroup?.addEventListener("change", handleDesignerPitcherGroupChange);
   elements.designerLineupSide.addEventListener("change", () => {
-    if (state.designerPaletteSelection && state.designerPendingMode) state.designerBlockSortDraft = { field: "", direction: "asc" };
-    syncDesignerArrangementInputs(); populateDesignerColumnFieldSelect(); syncDesignerSlotContentControls(); syncDesignerBlockSortControls();
+    if (state.designerPaletteSelection && state.designerPendingMode) {
+      state.designerBlockSortDraft = { field: "", direction: "asc" };
+      state.designerPitcherGroupDraft = PITCHER_GROUP_MODES.CORE;
+    }
+    syncDesignerArrangementInputs(); populateDesignerColumnFieldSelect(); syncDesignerSlotContentControls(); syncDesignerBlockSortControls(); syncDesignerPitcherGroupControls();
   });
   elements.designerBlockArrangement.addEventListener("change", syncDesignerArrangementInputs);
   elements.designerPlaceRowsButton.addEventListener("click", beginDesignerBlockGeometryPlacement);
@@ -529,31 +649,53 @@ elements.layoutCreateFieldSearch?.addEventListener("input", () => renderCreateLa
   elements.layoutDetailsClose?.addEventListener("click", requestCloseLayoutDetails);
   elements.layoutFormattingCancel?.addEventListener("click", requestCloseLayoutDefaultFormatting);
   elements.layoutFormattingClose?.addEventListener("click", requestCloseLayoutDefaultFormatting);
-  elements.layoutDetailsDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseLayoutDetails(); });
-  elements.layoutCustomFieldsDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseCustomFieldSelector(); });
-  elements.layoutDefaultFormattingDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseLayoutDefaultFormatting(); });
+  elements.layoutSettingsClose?.addEventListener("click", requestCloseLayoutSettingsSurface);
+  elements.layoutSettingsDone?.addEventListener("click", requestCloseLayoutSettings);
+  elements.layoutFormattingDialog?.addEventListener("cancel", (event) => { event.preventDefault(); requestCloseLayoutSettingsSurface(); });
+  elements.layoutFormattingDialog?.addEventListener("close", () => {
+    state.layoutSettingsClosing = false;
+    showLayoutSettingsView("summary", { focus: false });
+  });
   elements.layoutDetailsDialog?.addEventListener("input", updateLayoutDetailsActions);
   elements.layoutDetailsDialog?.addEventListener("change", updateLayoutDetailsActions);
   elements.layoutDefaultFormattingDialog?.addEventListener("input", updateLayoutFormattingActions);
   elements.layoutDefaultFormattingDialog?.addEventListener("change", updateLayoutFormattingActions);
 elements.layoutCustomFieldList?.addEventListener("change", (event) => {
   const input = event.target; if (!input?.matches?.("input[data-field-id]")) return;
-  if (input.checked) state.layoutFieldDraft.add(input.value); else state.layoutFieldDraft.delete(input.value);
-  updateLayoutFieldPickerGroupCounts();
+  state.layoutFieldDraft = updateMirroredFieldSelection(state.layoutFieldDraft, input.value, input.checked, LAYOUT_FIELD_MIRROR_PAIRS, state.layoutFieldMirror);
+  renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || "");
   syncLayoutFieldSettingsUI();
 });
+elements.layoutCustomFieldList?.addEventListener("toggle", (event) => {
+  const details = event.target;
+  if (!details?.matches?.("details[data-group-key]")) return;
+  if (details.open) state.layoutFieldExpanded.add(details.dataset.groupKey);
+  else state.layoutFieldExpanded.delete(details.dataset.groupKey);
+}, true);
 elements.layoutCustomFieldList?.addEventListener("click", (event) => {
   const button = event.target?.closest?.("button[data-picker-action]");
   if (!button) return;
+  event.preventDefault();
+  if (button.dataset.pickerAction === "standard") {
+    const ids = String(button.dataset.fieldIds || "").split(",").filter(Boolean);
+    const standardIds = String(button.dataset.standardFieldIds || "").split(",").filter(Boolean);
+    state.layoutFieldDraft = restoreStandardFieldSelection(state.layoutFieldDraft, ids, standardIds);
+    renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || "");
+    syncLayoutFieldSettingsUI();
+    return;
+  }
   // Bulk actions intentionally apply only to fields exposed by the current search.
   // With no search active, visible IDs equal the complete card.
   const ids = String(button.dataset.visibleFieldIds || button.dataset.fieldIds || "").split(",").filter(Boolean);
-  if (button.dataset.pickerAction === "select") ids.forEach((id) => state.layoutFieldDraft.add(id));
-  else ids.forEach((id) => state.layoutFieldDraft.delete(id));
+  const checked = button.dataset.pickerAction === "select";
+  ids.forEach((id) => { state.layoutFieldDraft = updateMirroredFieldSelection(state.layoutFieldDraft, id, checked, LAYOUT_FIELD_MIRROR_PAIRS, state.layoutFieldMirror); });
   renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || "");
   syncLayoutFieldSettingsUI();
 });
 elements.layoutFieldSearch?.addEventListener("input", () => { renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch.value); syncLayoutFieldSettingsUI(); });
+  elements.layoutFieldMirror?.addEventListener("change", () => { state.layoutFieldMirror = elements.layoutFieldMirror.checked; });
+  elements.layoutFieldsExpandAll?.addEventListener("click", () => { state.layoutFieldExpanded = new Set(LAYOUT_FIELD_PICKER_GROUPS.map((group) => group.key)); renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || ""); });
+  elements.layoutFieldsCollapseAll?.addEventListener("click", () => { state.layoutFieldExpanded.clear(); renderLayoutFieldPicker(state.layoutFieldDraft, elements.layoutFieldSearch?.value || ""); });
   elements.layoutCustomFieldsOpen?.addEventListener("click", openCustomFieldSelector);
   elements.layoutCustomFieldsSave?.addEventListener("click", saveCustomFieldSelectorDraft);
   elements.layoutCustomFieldsCancel?.addEventListener("click", requestCloseCustomFieldSelector);
@@ -561,11 +703,19 @@ elements.layoutFieldSearch?.addEventListener("input", () => { renderLayoutFieldP
   elements.layoutCustomFieldsRestoreStandard?.addEventListener("click", restoreStandardCustomFieldDraft);
   elements.layoutCustomDiscardConfirm?.addEventListener("click", () => {
     const target = state.layoutSettingsDiscardTarget;
+    const closeShell = state.layoutSettingsClosing;
     state.layoutSettingsDiscardTarget = null;
     elements.layoutCustomDiscardDialog?.close();
     if (target === "details") cancelLayoutDetails();
     else if (target === "formatting") cancelLayoutDefaultFormatting();
     else cancelCustomFieldSelector();
+    state.layoutSettingsClosing = false;
+    if (closeShell) elements.layoutFormattingDialog?.close();
+  });
+  elements.layoutCustomDiscardDialog?.addEventListener("close", () => {
+    if (!state.layoutSettingsDiscardTarget) return;
+    state.layoutSettingsDiscardTarget = null;
+    state.layoutSettingsClosing = false;
   });
   elements.layoutSettingsPdfInput?.addEventListener("change", handleLayoutReplacementPdf);
   wireCommittedInspectorInput(elements.designerSelectionTemplate, applyDesignerInspectorTemplate, { multiline: true });
@@ -579,7 +729,21 @@ elements.layoutFieldSearch?.addEventListener("input", () => { renderLayoutFieldP
 
   await initializeFavoriteTeamSetting();
   await refreshLayouts();
-  await loadFavoriteTeamPregame(today);
+  await loadLevelSchedule(today, state.favoriteCompetition?.levelKey || elements.homeLevelSelect.value || "mlb");
+}
+
+function initializeResponsiveStickyOffsets() {
+  const syncHeaderHeight = () => {
+    const height = Math.ceil(elements.appHeader?.getBoundingClientRect?.().height || 68);
+    document.documentElement.style.setProperty("--app-header-height", `${height}px`);
+  };
+  syncHeaderHeight();
+  if (typeof ResizeObserver === "function" && elements.appHeader) {
+    appHeaderResizeObserver = new ResizeObserver(syncHeaderHeight);
+    appHeaderResizeObserver.observe(elements.appHeader);
+  } else {
+    window.addEventListener("resize", syncHeaderHeight, { passive: true });
+  }
 }
 
 async function loadAppMetadata() {
@@ -589,7 +753,9 @@ async function loadAppMetadata() {
     const meta = await response.json();
     const version = String(meta.version || "").trim();
     const build = String(meta.build || "").trim();
-    const full = version || (build ? `Build ${build}` : "Scorecard Studio");
+    const full = version && build && version.includes("-dev")
+      ? `${version} • Build ${build}`
+      : version || (build ? `Build ${build}` : "Scorecard Studio");
     document.querySelectorAll("[data-app-version-label]").forEach((el) => { el.textContent = full; });
     document.querySelectorAll("[data-app-build-label]").forEach((el) => { el.textContent = build ? `Build ${build}` : full; });
     document.querySelectorAll("[data-app-build-prefix]").forEach((el) => { el.textContent = build ? `Build ${build} • ${el.dataset.appBuildPrefix}` : el.dataset.appBuildPrefix; });
@@ -599,31 +765,540 @@ async function loadAppMetadata() {
   }
 }
 
-async function initializeFavoriteTeamSetting() {
+async function initializeFavoriteTeamSetting(options = {}) {
   try {
     await initializeStorage();
     state.v030Persistence = createV030PersistenceController(createV030StorageBackend());
-    const savedTeam = await getSetting("favoriteTeam", null);
-    state.includeAdditionalStarters = await getSetting("includeAdditionalStarters", false) === true;
-    if (elements.includeAdditionalStarters) elements.includeAdditionalStarters.checked = state.includeAdditionalStarters;
-    state.favoriteTeam = isValidFavoriteTeam(savedTeam) ? savedTeam : DEFAULT_FAVORITE_TEAM;
+    const savedCompetition = await getSetting(FAVORITE_COMPETITION_SETTING_KEY, null);
+    const legacyFavoriteTeam = await getSetting(LEGACY_FAVORITE_TEAM_SETTING_KEY, null);
+    const migration = migrateFavoriteCompetition(savedCompetition, legacyFavoriteTeam);
+    state.favoriteCompetition = migration.value;
+    state.favoriteTeam = migration.value ? { id: migration.value.teamId, name: migration.value.teamName } : null;
+    if (migration.migrated) await setSetting(FAVORITE_COMPETITION_SETTING_KEY, migration.value);
 
-    if (!isValidFavoriteTeam(savedTeam)) {
-      await setSetting("favoriteTeam", state.favoriteTeam);
+    const storedPreferences = await getSetting(APP_PREFERENCES_SETTING_KEY, null);
+    const preferences = normalizeAppPreferences(storedPreferences);
+    state.appPreferences = preferences;
+    applyAppearancePreference(preferences);
+    applyGameDayDetailLevel(preferences.gameDayDetailLevel);
+    if (!storedPreferences || JSON.stringify(storedPreferences) !== JSON.stringify(preferences)) {
+      await setSetting(APP_PREFERENCES_SETTING_KEY, preferences);
     }
 
-    elements.favoriteTeamSelect.value = String(state.favoriteTeam.id);
+    state.includeAdditionalStarters = await getSetting("includeAdditionalStarters", false) === true;
+    if (elements.includeAdditionalStarters) elements.includeAdditionalStarters.checked = state.includeAdditionalStarters;
+    elements.favoriteLevelSelect.value = state.favoriteCompetition?.levelKey || "mlb";
+    elements.homeLevelSelect.value = state.favoriteCompetition?.levelKey || "mlb";
     setStorageStatus("IndexedDB ready", "ready");
-    elements.storageMessage.textContent = `Saved favorite: ${state.favoriteTeam.name}`;
+    elements.storageMessage.textContent = state.favoriteCompetition
+      ? `${migration.migrated ? "Migrated v0.3 favorite" : "Saved favorite"}: ${state.favoriteCompetition.teamName} • ${competitionLevelByKey(state.favoriteCompetition.levelKey)?.label || "Saved level"}`
+      : "No favorite team is saved yet.";
     setAppStatus("Browser storage ready", "ready");
+    elements.favoriteTeamSelect.replaceChildren(new Option("Open Settings to load teams…", ""));
   } catch (error) {
     console.error("Unable to initialize browser storage:", error);
     setStorageStatus("Storage unavailable", "error");
     elements.storageMessage.textContent = errorMessage(error, "Browser storage is unavailable.");
+    elements.favoriteLevelSelect.disabled = true;
     elements.favoriteTeamSelect.disabled = true;
     elements.saveFavoriteTeamButton.disabled = true;
     setAppStatus("Browser storage unavailable", "error");
+    if (options.throwOnError) throw error;
   }
+}
+
+async function loadSettingsTeams(levelKey, options = {}) {
+  const level = competitionLevelByKey(levelKey);
+  if (!level) return;
+  elements.favoriteLevelSelect.disabled = true;
+  elements.favoriteTeamSelect.disabled = true;
+  elements.saveFavoriteTeamButton.disabled = true;
+  elements.favoriteTeamSelect.replaceChildren(new Option("Loading teams…", ""));
+  try {
+    const teams = await fetchTeamsForSport(level.sportId, new Date().getFullYear());
+    state.settingsTeams = teams;
+    state.settingsTeamsLoadedLevel = level.levelKey;
+    const savedAtThisLevel = options.preserveSavedFavorite && state.favoriteCompetition?.levelKey === level.levelKey
+      ? state.favoriteCompetition
+      : null;
+    const optionsList = [new Option(teams.length ? "Choose a team…" : "No teams returned", "")];
+    for (const team of teams) {
+      const option = new Option(team.name, String(team.id));
+      if (team.leagueId) option.dataset.leagueId = String(team.leagueId);
+      if (team.leagueName) option.dataset.leagueName = team.leagueName;
+      optionsList.push(option);
+    }
+    if (savedAtThisLevel && !teams.some((team) => team.id === savedAtThisLevel.teamId)) {
+      const retained = new Option(`${savedAtThisLevel.teamName} (saved; not in current list)`, String(savedAtThisLevel.teamId));
+      if (savedAtThisLevel.leagueId) retained.dataset.leagueId = String(savedAtThisLevel.leagueId);
+      if (savedAtThisLevel.leagueName) retained.dataset.leagueName = savedAtThisLevel.leagueName;
+      optionsList.push(retained);
+      elements.storageMessage.textContent = `Saved favorite retained: ${savedAtThisLevel.teamName}. Current-list validation is unavailable.`;
+    }
+    elements.favoriteTeamSelect.replaceChildren(...optionsList);
+    elements.favoriteTeamSelect.value = savedAtThisLevel ? String(savedAtThisLevel.teamId) : "";
+    elements.favoriteTeamSelect.disabled = teams.length === 0 && !savedAtThisLevel;
+    elements.saveFavoriteTeamButton.disabled = !elements.favoriteTeamSelect.value;
+  } catch (error) {
+    console.error("Unable to load teams for Settings:", error);
+    state.settingsTeams = [];
+    state.settingsTeamsLoadedLevel = null;
+    const savedAtThisLevel = options.preserveSavedFavorite && state.favoriteCompetition?.levelKey === level.levelKey
+      ? state.favoriteCompetition
+      : null;
+    const fallback = savedAtThisLevel
+      ? new Option(`${savedAtThisLevel.teamName} (saved)`, String(savedAtThisLevel.teamId))
+      : new Option("Teams unavailable", "");
+    elements.favoriteTeamSelect.replaceChildren(fallback);
+    elements.favoriteTeamSelect.disabled = !savedAtThisLevel;
+    elements.saveFavoriteTeamButton.disabled = !savedAtThisLevel;
+    elements.storageMessage.textContent = savedAtThisLevel
+      ? `Saved favorite retained: ${savedAtThisLevel.teamName}. The current team list could not be loaded.`
+      : errorMessage(error, "The team list could not be loaded.");
+  } finally {
+    elements.favoriteLevelSelect.disabled = false;
+  }
+}
+
+async function openSettings() {
+  showView("settings");
+  populateBackupLayoutSelect();
+  const levelKey = elements.favoriteLevelSelect.value || state.favoriteCompetition?.levelKey || "mlb";
+  if (state.settingsTeamsLoadedLevel !== levelKey) {
+    await loadSettingsTeams(levelKey, { preserveSavedFavorite: true });
+  }
+}
+
+function applyAppearancePreference(preferences = state.appPreferences) {
+  const normalized = normalizeAppPreferences(preferences);
+  const theme = resolveAppearanceTheme(normalized.appearance, systemDarkMode?.matches === true);
+  state.appPreferences = normalized;
+  writeAppearanceStartupPreference(normalized.appearance);
+  document.documentElement.dataset.appearance = normalized.appearance;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  for (const input of elements.appearanceOptions?.querySelectorAll('input[name="appearance"]') || []) {
+    input.checked = input.value === normalized.appearance;
+  }
+  if (elements.appearanceStatus) {
+    const label = theme === "dark" ? "Dark" : "Light";
+    elements.appearanceStatus.textContent = normalized.appearance === "system"
+      ? `Following system: ${label} appearance.`
+      : `Using ${label} appearance.`;
+    elements.appearanceStatus.classList.remove("error");
+  }
+}
+
+async function handleAppearancePreferenceChange(event) {
+  const input = event.target?.closest?.('input[name="appearance"]');
+  if (!input?.checked) return;
+  const previous = state.appPreferences;
+  const next = normalizeAppPreferences({ ...previous, appearance: input.value });
+  applyAppearancePreference(next);
+  if (elements.appearanceStatus) elements.appearanceStatus.textContent = "Saving appearance…";
+  try {
+    await setSetting(APP_PREFERENCES_SETTING_KEY, next);
+    applyAppearancePreference(next);
+  } catch (error) {
+    console.error("Unable to save the appearance preference:", error);
+    applyAppearancePreference(previous);
+    if (elements.appearanceStatus) {
+      elements.appearanceStatus.textContent = errorMessage(error, "The appearance preference could not be saved.");
+      elements.appearanceStatus.classList.add("error");
+    }
+  }
+}
+
+function handleSystemAppearanceChange() {
+  if (state.appPreferences.appearance === "system") applyAppearancePreference(state.appPreferences);
+}
+
+function preferredScrollBehavior() {
+  return reducedMotionMode?.matches === true ? "auto" : "smooth";
+}
+
+const GAME_DAY_DETAIL_DESCRIPTIONS = Object.freeze({
+  compact: "Fast pregame orientation with matchup, team context, starting lineups, and pitchers.",
+  standard: "Traditional pregame reference with team records, lineups, rosters, pitching, venue, weather, and officials.",
+  advanced: "Full research companion with staff depth, broader statistics, availability notes, and technical source details."
+});
+
+function applyGameDayDetailLevel(value) {
+  const level = normalizeGameDayDetailLevel(value);
+  const visible = new Set(visibleGameDaySections(level));
+  elements.gameDayContent?.setAttribute("data-detail-level", level);
+  document.querySelector('[data-view="gameday"]')?.setAttribute("data-detail-level", level);
+  for (const input of elements.gameDayDetailLevel?.querySelectorAll('input[name="gameday-detail"]') || []) input.checked = input.value === level;
+  if (elements.gameDayDetailDescription) elements.gameDayDetailDescription.textContent = GAME_DAY_DETAIL_DESCRIPTIONS[level];
+  for (const [id] of Object.entries(GAME_DAY_SECTION_LEVELS)) document.getElementById(id)?.toggleAttribute("hidden", !visible.has(id));
+  for (const link of document.querySelectorAll(".gameday-section-nav a")) {
+    const id = link.getAttribute("href")?.slice(1);
+    link.toggleAttribute("hidden", Boolean(id) && !visible.has(id));
+  }
+}
+
+async function handleGameDayDetailLevelChange(event) {
+  const input = event.target?.closest?.('input[name="gameday-detail"]');
+  if (!input?.checked) return;
+  const previous = state.appPreferences;
+  const next = normalizeAppPreferences({ ...previous, gameDayDetailLevel: input.value });
+  state.appPreferences = next;
+  applyGameDayDetailLevel(next.gameDayDetailLevel);
+  try {
+    await setSetting(APP_PREFERENCES_SETTING_KEY, next);
+  } catch (error) {
+    console.error("Unable to save the Game Day detail preference:", error);
+    state.appPreferences = previous;
+    applyGameDayDetailLevel(previous.gameDayDetailLevel);
+    elements.gameDayMessage.hidden = false;
+    elements.gameDayMessage.classList.add("error");
+    elements.gameDayMessage.textContent = "The detail-level preference could not be saved. Your previous choice was restored.";
+  }
+}
+
+async function downloadBackup(scope, options = {}) {
+  const isSingleLayout = scope === BACKUP_SCOPES.SINGLE_LAYOUT;
+  const layoutId = isSingleLayout ? options.layoutId || elements.backupLayoutSelect?.value : null;
+  const report = typeof options.report === "function" ? options.report : setBackupExportStatus;
+  if (isSingleLayout && !layoutId) return report("Choose a saved layout to back up.", "error");
+  setBackupBusy(true);
+  report("Preparing your backup…", "working");
+  try {
+    const snapshot = await readBackupStorageSnapshot();
+    const createdAtUtc = new Date().toISOString();
+    const result = await createBackupExport(snapshot, {
+      scope,
+      ...(isSingleLayout ? { layoutId } : {}),
+      source: { applicationVersion: "0.4.0", build: "004.9", storageDatabaseVersion: STORAGE_DATABASE_VERSION },
+      createdAtUtc
+    });
+    const layout = isSingleLayout ? state.layouts.find((item) => item.id === layoutId) : null;
+    const scopeName = isSingleLayout ? safeFilenamePart(layout?.name || "layout") : "complete";
+    const timestamp = createdAtUtc.replace(/[:.]/g, "-");
+    const filename = `Scorecard_Studio_${scopeName}_${timestamp}.json`;
+    downloadBlob(new Blob([result.json], { type: "application/json" }), filename);
+    const warningCount = result.diagnostics.filter((item) => item.severity === "warning").length;
+    report(`${isSingleLayout ? "Layout" : "Complete"} backup downloaded${warningCount ? ` with ${warningCount} notice${warningCount === 1 ? "" : "s"}` : ""}.`, "success");
+  } catch (error) {
+    console.error("Unable to create backup:", error);
+    report(errorMessage(error, "The backup could not be created."), "error");
+  } finally {
+    setBackupBusy(false);
+  }
+}
+
+function openBackupRestoreWorkflow() {
+  resetBackupRestoreState();
+  setBackupStatus("");
+  showBackupRestoreStage("choose");
+  elements.backupRestoreDialog.showModal();
+  window.requestAnimationFrame(() => document.querySelector("#backup-restore-dialog-title")?.focus());
+}
+
+function showBackupRestoreStage(stage) {
+  elements.backupSelectStage.hidden = stage !== "choose";
+  elements.backupPreflight.hidden = stage !== "review";
+  elements.backupConfirmStage.hidden = stage !== "confirm";
+  elements.backupCompleteStage.hidden = stage !== "complete";
+  const labels = {
+    choose: "Step 1 of 3 · Choose",
+    review: "Step 2 of 3 · Review",
+    confirm: "Step 3 of 3 · Confirm",
+    complete: "Restore Complete"
+  };
+  elements.backupRestoreProgress.textContent = labels[stage] || labels.choose;
+}
+
+async function handleBackupRestoreFile(event) {
+  const file = event.target.files?.[0] || null;
+  resetBackupRestoreState({ preserveFile: true });
+  const selectionToken = state.backupSelectionToken;
+  if (!file) return;
+  elements.backupRestoreFileName.textContent = `${file.name} • ${formatFileSize(file.size)}`;
+  elements.backupRestoreFileButton.textContent = "Choose Different File";
+  setBackupBusy(true);
+  setBackupStatus("Checking this backup without changing browser storage…", "working");
+  try {
+    if (file.size > BACKUP_IMPORT_LIMITS.maxJsonBytes) throw new Error(`Backup exceeds the ${formatFileSize(BACKUP_IMPORT_LIMITS.maxJsonBytes)} file limit.`);
+    const currentStorage = await readBackupStorageSnapshot();
+    if (selectionToken !== state.backupSelectionToken) return;
+    const fileText = await file.text();
+    if (selectionToken !== state.backupSelectionToken) return;
+    const preflight = await preflightBackupImport(fileText, currentStorage);
+    if (selectionToken !== state.backupSelectionToken) return;
+    state.backupCurrentStorage = currentStorage;
+    state.backupPreflight = preflight;
+    renderBackupPreflight(preflight);
+    showBackupRestoreStage("review");
+    setBackupStatus(preflight.valid
+      ? "Backup check passed. Review the contents and resolve any conflicts below."
+      : "This backup cannot be restored. Your current browser data was not changed.", preflight.valid ? "success" : "error");
+  } catch (error) {
+    if (selectionToken !== state.backupSelectionToken) return;
+    console.error("Unable to inspect backup:", error);
+    state.backupPreflight = null;
+    state.backupCurrentStorage = null;
+    renderBackupFailure(errorMessage(error, "The backup could not be checked."));
+    showBackupRestoreStage("review");
+    setBackupStatus(errorMessage(error, "The backup could not be checked."), "error");
+  } finally {
+    if (selectionToken === state.backupSelectionToken) {
+      setBackupBusy(false);
+      updateRestoreReviewAvailability();
+    }
+  }
+}
+
+function renderBackupPreflight(preflight) {
+  elements.backupPreflightState.textContent = preflight.valid ? "Valid" : "Invalid";
+  elements.backupPreflightState.className = `pill ${preflight.valid ? "ready" : "error"}`;
+  elements.backupPreflightSummary.replaceChildren();
+  elements.backupDiagnostics.replaceChildren();
+  elements.backupConflicts.replaceChildren();
+
+  if (preflight.valid) {
+    const plan = preflight.plan;
+    renderBackupSummary(elements.backupPreflightSummary, [
+      ["Backup", plan.backup.id],
+      ["Scope", plan.backup.scope === BACKUP_SCOPES.COMPLETE ? "Complete" : "Single layout"],
+      ["Layouts", String(plan.layouts.length)],
+      ["PDF templates", String(plan.pdfTemplates.length)],
+      ["Settings", String(plan.settings.length)],
+      ["Conflicts", String(plan.summary.layoutConflicts)]
+    ]);
+  }
+
+  for (const diagnostic of preflight.diagnostics || []) {
+    const row = document.createElement("p");
+    row.className = `backup-diagnostic ${diagnostic.severity || "warning"}`;
+    row.textContent = diagnostic.message;
+    elements.backupDiagnostics.append(row);
+  }
+
+  if (!preflight.valid) {
+    if (!preflight.diagnostics?.length) renderBackupFailure("This file is not a valid Scorecard Studio backup.");
+    return;
+  }
+
+  const conflicts = preflight.plan.layouts.filter((item) => item.requiresChoice);
+  if (!conflicts.length) {
+    const note = document.createElement("p");
+    note.className = "backup-diagnostic success";
+    note.textContent = "No conflicts found. Existing unrelated layouts and PDFs will remain in place.";
+    elements.backupConflicts.append(note);
+    elements.backupPreflightDescription.textContent = "Validation passed. Review what is included, then continue when ready.";
+  } else {
+    elements.backupPreflightDescription.textContent = `${conflicts.length} layout conflict${conflicts.length === 1 ? " needs" : "s need"} a choice before you can continue.`;
+  }
+  for (const item of conflicts) elements.backupConflicts.append(createBackupConflictRow(item));
+}
+
+function renderBackupFailure(message) {
+  elements.backupPreflightState.textContent = "Invalid";
+  elements.backupPreflightState.className = "pill error";
+  elements.backupPreflightSummary.replaceChildren();
+  elements.backupConflicts.replaceChildren();
+  elements.backupDiagnostics.replaceChildren();
+  const row = document.createElement("p");
+  row.className = "backup-diagnostic error";
+  row.textContent = message;
+  elements.backupDiagnostics.append(row);
+  elements.backupPreflightDescription.textContent = "This file cannot be restored. Your current browser data has not changed.";
+}
+
+function createBackupConflictRow(item) {
+  const row = document.createElement("label");
+  row.className = "backup-conflict-row";
+  const description = document.createElement("span");
+  const title = document.createElement("strong");
+  title.textContent = item.name;
+  const detail = document.createElement("small");
+  const sharedPdf = item.foreignPdfOwners?.length > 0;
+  detail.textContent = sharedPdf
+    ? "Its PDF is also used by another saved layout; Replace is unavailable."
+    : "A saved layout or PDF already uses this backup identity.";
+  description.append(title, detail);
+  const select = document.createElement("select");
+  select.dataset.restoreLayoutId = item.id;
+  select.setAttribute("aria-label", `Conflict action for ${item.name}`);
+  select.append(new Option("Choose an action…", ""));
+  const replace = new Option("Replace existing", RESTORE_POLICIES.REPLACE);
+  replace.disabled = sharedPdf;
+  select.append(replace, new Option("Keep both", RESTORE_POLICIES.KEEP_BOTH), new Option("Skip this layout", RESTORE_POLICIES.SKIP));
+  row.append(description, select);
+  return row;
+}
+
+function updateRestoreReviewAvailability() {
+  const valid = state.backupPreflight?.valid === true;
+  const decisionsComplete = [...(elements.backupConflicts?.querySelectorAll("select[data-restore-layout-id]") || [])]
+    .every((select) => Boolean(select.value));
+  elements.backupReviewRestoreButton.disabled = !valid || !decisionsComplete;
+}
+
+function reviewBackupRestore() {
+  if (!state.backupPreflight?.valid || !state.backupCurrentStorage) return;
+  const layoutDecisions = {};
+  for (const select of elements.backupConflicts.querySelectorAll("select[data-restore-layout-id]")) {
+    if (!select.value) return setBackupStatus("Choose an action for every conflict.", "error");
+    layoutDecisions[select.dataset.restoreLayoutId] = select.value;
+  }
+  try {
+    const plan = createRestoreCommitPlan(state.backupPreflight, { layouts: layoutDecisions }, { currentStorage: state.backupCurrentStorage });
+    state.backupCommitPlan = plan;
+    const restoreParts = [];
+    if (plan.summary.layouts) restoreParts.push(`${plan.summary.layouts} layout${plan.summary.layouts === 1 ? "" : "s"}`);
+    if (plan.summary.settings) restoreParts.push(`${plan.summary.settings} setting${plan.summary.settings === 1 ? "" : "s"}`);
+    renderBackupSummary(elements.backupConfirmSummary, [
+      ["Backup file", elements.backupRestoreFile?.files?.[0]?.name || "Selected backup"],
+      ["Will restore", restoreParts.join(" and ") || "No portable records"],
+      ["Layout decisions", `${plan.summary.replaced} replace · ${plan.summary.keptBoth} keep both · ${plan.summary.skipped} skip`]
+    ]);
+    const warnings = [...(state.backupPreflight.diagnostics || []), ...(plan.diagnostics || [])].filter((item) => item.severity === "warning");
+    elements.backupConfirmWarning.textContent = warnings.length
+      ? `${warnings.length} notice${warnings.length === 1 ? "" : "s"} will remain in effect. Unsupported or skipped values will not be written.`
+      : "Ready to restore. Unrelated saved layouts and data will remain in place.";
+    setBackupStatus("");
+    showBackupRestoreStage("confirm");
+  } catch (error) {
+    console.error("Unable to prepare restore confirmation:", error);
+    state.backupCommitPlan = null;
+    setBackupStatus(errorMessage(error, "The restore plan could not be prepared."), "error");
+  }
+}
+
+async function confirmBackupRestore() {
+  if (!state.backupCommitPlan || state.backupCommitInProgress) return;
+  const commitPlan = state.backupCommitPlan;
+  state.backupCommitInProgress = true;
+  elements.backupConfirmRestoreButton.disabled = true;
+  elements.backupConfirmCancelButton.disabled = true;
+  elements.backupConfirmRestoreButton.textContent = "Restoring…";
+  setBackupBusy(true);
+  setBackupStatus("Restoring the approved records…", "working");
+  try {
+    let result;
+    try {
+      result = await commitBackupRestore(commitPlan);
+    } catch (error) {
+      console.error("Unable to commit backup restore:", error);
+      setBackupStatus(errorMessage(error, "Restore failed; no partial restore was kept."), "error");
+      setAppStatus("Restore failed", "error");
+      return;
+    }
+
+    state.backupCommitPlan = null;
+    let refreshError = null;
+    try {
+      await refreshApplicationAfterRestore();
+    } catch (error) {
+      refreshError = error;
+      console.error("Restore committed but the interface could not refresh:", error);
+    }
+    const restoredCounts = `${result.layouts} layout${result.layouts === 1 ? "" : "s"}, ${result.pdfTemplates} PDF template${result.pdfTemplates === 1 ? "" : "s"}, and ${result.settings} setting${result.settings === 1 ? "" : "s"}`;
+    if (refreshError) {
+      elements.backupCompleteMessage.textContent = `The restore was saved (${restoredCounts}), but the screen could not refresh. Reload Scorecard Studio to see the restored data.`;
+      setBackupStatus("Restore saved; reload is required.", "error");
+      setAppStatus("Restore saved; reload needed", "error");
+    } else {
+      elements.backupCompleteMessage.textContent = `${restoredCounts} restored successfully. Settings and layouts have refreshed.`;
+      setBackupStatus("Restore completed successfully.", "success");
+      setAppStatus("Backup restored", "ready");
+    }
+    showBackupRestoreStage("complete");
+  } finally {
+    state.backupCommitInProgress = false;
+    elements.backupConfirmRestoreButton.disabled = false;
+    elements.backupConfirmCancelButton.disabled = false;
+    elements.backupConfirmRestoreButton.textContent = "Confirm & Restore";
+    setBackupBusy(false);
+  }
+}
+
+async function refreshApplicationAfterRestore() {
+  await initializeFavoriteTeamSetting({ throwOnError: true });
+  state.settingsTeamsLoadedLevel = null;
+  await loadSettingsTeams(state.favoriteCompetition?.levelKey || "mlb", { preserveSavedFavorite: true });
+  await refreshLayouts({ throwOnError: true });
+  await loadLevelSchedule(getLocalDateString(), state.favoriteCompetition?.levelKey || elements.homeLevelSelect.value || "mlb");
+}
+
+function clearBackupRestorePreview() {
+  resetBackupRestoreState();
+  setBackupStatus("");
+  showBackupRestoreStage("choose");
+}
+
+function resetBackupRestoreState(options = {}) {
+  state.backupSelectionToken += 1;
+  state.backupPreflight = null;
+  state.backupCurrentStorage = null;
+  state.backupCommitPlan = null;
+  elements.backupPreflight.hidden = true;
+  elements.backupPreflightSummary.replaceChildren();
+  elements.backupDiagnostics.replaceChildren();
+  elements.backupConflicts.replaceChildren();
+  elements.backupConfirmSummary.replaceChildren();
+  elements.backupConfirmWarning.textContent = "";
+  elements.backupCompleteMessage.textContent = "";
+  elements.backupPreflightDescription.textContent = "Review the validated contents below.";
+  elements.backupReviewRestoreButton.disabled = true;
+  if (!options.preserveFile) {
+    elements.backupRestoreFile.value = "";
+    elements.backupRestoreFileName.textContent = "No backup selected";
+    elements.backupRestoreFileButton.textContent = "Choose Backup File";
+  }
+}
+
+function populateBackupLayoutSelect() {
+  if (!elements.backupLayoutSelect) return;
+  const previous = elements.backupLayoutSelect.value;
+  elements.backupLayoutSelect.replaceChildren();
+  for (const layout of state.layouts) elements.backupLayoutSelect.append(new Option(layout.name, layout.id));
+  if (state.layouts.some((layout) => layout.id === previous)) elements.backupLayoutSelect.value = previous;
+  const available = state.layouts.length > 0;
+  elements.backupLayoutSelect.disabled = !available;
+  elements.backupLayoutButton.disabled = !available;
+  if (!available) elements.backupLayoutSelect.append(new Option("No saved layouts", ""));
+}
+
+function renderBackupSummary(container, entries) {
+  container.replaceChildren(...entries.map(([label, value]) => {
+    const row = document.createElement("div");
+    const term = document.createElement("dt");
+    const description = document.createElement("dd");
+    term.textContent = label;
+    description.textContent = value;
+    row.append(term, description);
+    return row;
+  }));
+}
+
+function setBackupStatus(message, type = "") {
+  elements.backupStatus.textContent = message;
+  elements.backupStatus.className = `backup-status${type ? ` ${type}` : ""}`;
+}
+
+function setBackupExportStatus(message, type = "") {
+  elements.backupExportStatus.textContent = message;
+  elements.backupExportStatus.className = `backup-status backup-export-status${type ? ` ${type}` : ""}`;
+  elements.backupExportStatus.setAttribute("aria-busy", String(type === "working"));
+}
+
+function setBackupBusy(busy) {
+  elements.backupStatus.setAttribute("aria-busy", String(busy));
+  elements.backupPreflight.setAttribute("aria-busy", String(busy));
+  elements.backupCompleteButton.disabled = busy;
+  elements.backupLayoutButton.disabled = busy || !state.layouts.length;
+  elements.backupLayoutSelect.disabled = busy || !state.layouts.length;
+  elements.backupOpenRestoreButton.disabled = busy;
+  elements.backupRestoreCloseButton.disabled = busy;
+  elements.backupRestoreFileButton.disabled = busy;
+  elements.backupRestoreFile.disabled = busy;
+  elements.backupClearRestoreButton.disabled = busy;
+  const decisionsComplete = [...(elements.backupConflicts?.querySelectorAll("select[data-restore-layout-id]") || [])]
+    .every((select) => Boolean(select.value));
+  elements.backupReviewRestoreButton.disabled = busy || !state.backupPreflight?.valid || !decisionsComplete;
 }
 
 async function handleAdditionalStartersPreference() {
@@ -639,11 +1314,19 @@ async function handleAdditionalStartersPreference() {
 
 async function saveFavoriteTeam() {
   const option = elements.favoriteTeamSelect.selectedOptions[0];
-  if (!option) return;
-
-  const favoriteTeam = {
-    id: Number(option.value),
-    name: option.textContent.trim()
+  const level = competitionLevelByKey(elements.favoriteLevelSelect.value);
+  if (!option?.value || !level) return;
+  const selectedTeam = state.settingsTeams.find((team) => team.id === Number(option.value));
+  const teamName = selectedTeam?.name || (state.favoriteCompetition?.teamId === Number(option.value)
+    ? state.favoriteCompetition.teamName
+    : option.textContent.replace(/\s+\((?:saved|saved; not in current list)\)$/i, "").trim());
+  const favoriteCompetition = {
+    levelKey: level.levelKey,
+    sportId: level.sportId,
+    teamId: Number(option.value),
+    teamName,
+    ...(selectedTeam?.leagueId ? { leagueId: selectedTeam.leagueId } : {}),
+    ...(selectedTeam?.leagueName ? { leagueName: selectedTeam.leagueName } : {})
   };
 
   elements.saveFavoriteTeamButton.disabled = true;
@@ -651,11 +1334,14 @@ async function saveFavoriteTeam() {
   elements.storageMessage.textContent = "Saving favorite team…";
 
   try {
-    await setSetting("favoriteTeam", favoriteTeam);
-    state.favoriteTeam = favoriteTeam;
-    elements.storageMessage.textContent = `Saved favorite: ${favoriteTeam.name}`;
+    await setSetting(FAVORITE_COMPETITION_SETTING_KEY, favoriteCompetition);
+    state.favoriteCompetition = favoriteCompetition;
+    state.favoriteTeam = { id: favoriteCompetition.teamId, name: favoriteCompetition.teamName };
+    elements.homeLevelSelect.value = favoriteCompetition.levelKey;
+    elements.storageMessage.textContent = `Saved favorite: ${favoriteCompetition.teamName} • ${level.label}`;
     setStorageStatus("IndexedDB ready", "ready");
-    await loadFavoriteTeamPregame(state.selectedDate || getLocalDateString());
+    elements.homeOpenSettingsButton.hidden = true;
+    await loadLevelSchedule(state.selectedDate || getLocalDateString(), favoriteCompetition.levelKey);
   } catch (error) {
     console.error("Unable to save favorite team:", error);
     setStorageStatus("Save failed", "error");
@@ -663,55 +1349,80 @@ async function saveFavoriteTeam() {
     setAppStatus("Browser storage error", "error");
   } finally {
     elements.saveFavoriteTeamButton.disabled = false;
-    elements.saveFavoriteTeamButton.textContent = "Save & Load Team";
+    elements.saveFavoriteTeamButton.textContent = "Save Favorite Team";
   }
 }
 
-async function loadFavoriteTeamPregame(date, options = {}) {
+async function loadLevelSchedule(date, levelKey) {
+  const level = competitionLevelByKey(levelKey);
+  if (!level) return;
   const requestedDate = date || getLocalDateString();
-  const dateChanged = state.selectedDate !== requestedDate;
+  state.homeScheduleMode = "level";
+  state.homeSportId = level.sportId;
   state.selectedDate = requestedDate;
   elements.gameDateInput.value = requestedDate;
+  elements.homeLevelSelect.value = level.levelKey;
+  elements.homeScopeLabel.textContent = `${level.label} Schedule`;
+  elements.homeOpenSettingsButton.hidden = Boolean(state.favoriteCompetition);
   updateSelectedDateUi(requestedDate);
-  if (dateChanged) {
-    state.selectedGamePk = null;
-    state.selectedFeed = null;
-    state.selectedSupplemental = null;
-    updateLivePdfAvailability();
-    setLiveGenerateMessage("");
-  }
-
-  setPregameLoading(true, `Finding ${state.favoriteTeam.name} game for ${formatDisplayDate(requestedDate)}…`);
-
+  clearSelectedScheduleGame();
+  setPregameLoading(true, `Finding ${level.label} games for ${formatDisplayDate(requestedDate)}…`);
   try {
-    const scheduleBundle = await fetchFavoriteTeamScheduleBundle(requestedDate, state.favoriteTeam.id);
-    const schedule = scheduleBundle.games;
-    state.schedule = schedule;
-    state.schedulePayload = scheduleBundle.payload;
-
-    if (schedule.length === 0) {
-      state.selectedGamePk = null;
-      state.selectedFeed = null;
-      state.selectedSupplemental = null;
-      updateLivePdfAvailability();
-      setLiveGenerateMessage("");
-      renderNoGame();
-      setAppStatus("MLB API ready", "ready");
-      return;
-    }
-
-    renderGameChoices(schedule);
-
-    const preferredGame = chooseInitialGame(schedule);
-    await selectGame(preferredGame.gamePk, { trigger: options.trigger || "selection" });
-    setAppStatus("Pregame data ready", "ready");
+    const scheduleBundle = await fetchSportScheduleBundle(requestedDate, level.sportId);
+    const preferredTeamId = state.favoriteCompetition?.levelKey === level.levelKey
+      ? state.favoriteCompetition.teamId
+      : null;
+    applyScheduleBundle(scheduleBundle, { preferredTeamId, noGameMessage: `No ${level.label} games are scheduled on ${formatDisplayDate(requestedDate)}.` });
+    setAppStatus("Schedule ready", "ready");
   } catch (error) {
-    console.error("Unable to load pregame data:", error);
+    console.error("Unable to load the selected level schedule:", error);
     renderPregameError(error);
-    setAppStatus("Pregame data unavailable", "error");
+    setAppStatus("Schedule unavailable", "error");
   } finally {
     setPregameLoading(false);
   }
+}
+
+async function refreshHomeSchedule() {
+  return loadLevelSchedule(state.selectedDate || getLocalDateString(), elements.homeLevelSelect.value);
+}
+
+function applyScheduleBundle(scheduleBundle, options = {}) {
+  state.schedule = scheduleBundle.games || [];
+  state.schedulePayload = scheduleBundle.payload || null;
+  if (!state.schedule.length) {
+    renderNoGame(options.noGameMessage);
+    return;
+  }
+  renderGameChoices(state.schedule);
+  elements.pregameMessage.hidden = true;
+  elements.pregameMessage.classList.remove("error");
+  elements.pregameContent.hidden = false;
+  const preferredGame = options.preferredTeamId
+    ? state.schedule.find((game) => Number(game.awayTeamId) === Number(options.preferredTeamId) || Number(game.homeTeamId) === Number(options.preferredTeamId))
+    : null;
+  if (preferredGame) selectGame(preferredGame.gamePk);
+  else renderUnselectedGame();
+}
+
+function clearSelectedScheduleGame() {
+  state.selectedGamePk = null;
+  state.selectedFeed = null;
+  state.selectedSupplemental = null;
+  state.selectedVenueSource = null;
+  state.normalizedPregame = null;
+  state.v030Availability = null;
+  state.homeGameSearch = "";
+  if (elements.homeGameSearch) elements.homeGameSearch.value = "";
+  renderUnselectedGame();
+  updateLivePdfAvailability();
+  setLiveGenerateMessage("");
+}
+
+function handleHomeGameSearch() {
+  state.homeGameSearch = elements.homeGameSearch?.value || "";
+  renderGameChoices(state.schedule);
+  highlightSelectedGame();
 }
 
 async function handleGameDateChange() {
@@ -722,7 +1433,7 @@ async function handleGameDateChange() {
 
 async function setSelectedGameDate(date) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) return;
-  await loadFavoriteTeamPregame(date);
+  await loadLevelSchedule(date, elements.homeLevelSelect.value);
 }
 
 function updateSelectedDateUi(date) {
@@ -730,62 +1441,26 @@ function updateSelectedDateUi(date) {
   const isToday = date === today;
   elements.todayDate.textContent = formatDisplayDate(date);
   const heading = document.querySelector("#today-heading");
-  if (heading) heading.textContent = isToday ? "Today's Game" : "Selected Game";
+  if (heading) heading.textContent = isToday ? "Today's Schedule" : "Selected Date";
   elements.gameDateTodayButton.disabled = isToday;
 }
 
-function chooseInitialGame(games) {
-  if (state.selectedGamePk) {
-    const current = games.find((game) => game.gamePk === state.selectedGamePk);
-    if (current) return current;
-  }
-  return games[0];
-}
-
-async function selectGame(gamePk, options = {}) {
-  let selected = state.schedule.find((game) => game.gamePk === String(gamePk));
+function selectGame(gamePk) {
+  const selected = state.schedule.find((game) => game.gamePk === String(gamePk));
   if (!selected) return;
-
-  selected = await refreshDoubleheaderSelectionContext(selected);
-
   state.selectedGamePk = selected.gamePk;
   state.selectedFeed = null;
   state.selectedSupplemental = null;
+  state.selectedVenueSource = null;
   state.normalizedPregame = null;
-  updateLivePdfAvailability();
-  setLiveGenerateMessage("");
+  state.v030Availability = null;
+  elements.selectedGameEmpty.hidden = true;
+  elements.selectedGameDetails.hidden = false;
+  elements.openSelectedGameDayButton.disabled = false;
   highlightSelectedGame();
-  setPregameLoading(true, `Loading pregame data for ${selected.awayTeam} at ${selected.homeTeam}…`);
-
-  try {
-    const expected = { gamePk: String(selected.gamePk), selectedViewKey: selectedViewKey(selected) };
-    if (state.v030Persistence && (options.trigger || "selection") === "selection") {
-      const cached = await state.v030Persistence.loadNormalizedSnapshot(expected, { trigger: "selection" });
-      if (cached.usable) {
-        state.normalizedPregame = cached.snapshot;
-        state.v030Availability = summarizeV030Availability(cached.snapshot);
-        renderSelectedGame(selected, cached.snapshot);
-        updateLivePdfAvailability();
-        setLiveGenerateMessage(`Ready from the schema-v2 cache. Refresh to retrieve current pregame data.`);
-        return;
-      }
-    }
-    const supplemental = await loadPregameCore(selected);
-    if (String(state.selectedGamePk) !== String(selected.gamePk)) return;
-    state.selectedSupplemental = supplemental;
-    state.normalizedPregame = buildV030Model(selected, supplemental);
-    await persistCurrentSnapshot(state.normalizedPregame);
-    renderSelectedGame(selected, state.normalizedPregame);
-    updateLivePdfAvailability();
-    setLiveGenerateMessage(`Ready to generate ${selected.awayTeam} at ${selected.homeTeam} from pregame data.`);
-  } catch (error) {
-    console.error(`Unable to load selected game ${selected.gamePk}:`, error);
-    updateLivePdfAvailability();
-    setLiveGenerateMessage("Live PDF unavailable until this game's pregame data loads successfully.", true);
-    renderPregameError(error);
-  } finally {
-    setPregameLoading(false);
-  }
+  renderSelectedGame(selected);
+  void loadSelectedGameVenueTimeZone(selected);
+  updateLivePdfAvailability();
 }
 
 async function refreshDoubleheaderSelectionContext(game) {
@@ -925,7 +1600,7 @@ function buildV030Model(game, supplemental) {
       }
     } : null
   };
-  const snapshot = normalizeV030Pregame(input, { applicationVersion: "0.3.0", build: "005.2", createdAtUtc: new Date().toISOString() });
+  const snapshot = normalizeV030Pregame(input, { applicationVersion: "0.4.0", build: "004.9", createdAtUtc: new Date().toISOString() });
   state.v030Availability = summarizeV030Availability(snapshot);
   return snapshot;
 }
@@ -946,20 +1621,36 @@ function previousDateString(dateText) {
 
 function renderGameChoices(games) {
   elements.gameChoiceList.replaceChildren();
-  const shouldShow = games.length > 1;
-  elements.gameChoiceList.hidden = !shouldShow;
-
-  if (!shouldShow) return;
-
-  for (const game of games) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "game-choice-button";
-    button.dataset.gamePk = game.gamePk;
-    button.innerHTML = `<strong>${escapeHtml(game.awayTeam)} at ${escapeHtml(game.homeTeam)}</strong><span>${escapeHtml(formatGameTime(game.gameDate))}</span>`;
-    button.addEventListener("click", () => selectGame(game.gamePk));
-    elements.gameChoiceList.append(button);
+  const groups = groupScheduleGames(games);
+  let visibleCount = 0;
+  for (const group of groups) {
+    const visibleGames = group.games.filter((game) => gameMatchesSearch(game, state.homeGameSearch, group.label));
+    if (!visibleGames.length) continue;
+    const section = document.createElement("section");
+    section.className = "home-game-group";
+    const heading = document.createElement("h4");
+    heading.textContent = group.label;
+    const list = document.createElement("div");
+    list.className = "game-choice-list";
+    for (const game of visibleGames) {
+      visibleCount += 1;
+      const readiness = scheduleReadiness(game);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "game-choice-button";
+      button.dataset.gamePk = game.gamePk;
+      button.innerHTML = `<span><strong>${escapeHtml(game.awayTeam)} at ${escapeHtml(game.homeTeam)}</strong></span><span class="game-choice-meta"><span>${escapeHtml(formatGameTime(game.gameDate))}</span><span class="mini-readiness ${escapeHtml(readiness.tone)}">${escapeHtml(readiness.label)}</span></span>`;
+      button.addEventListener("click", () => selectGame(game.gamePk));
+      list.append(button);
+    }
+    section.append(heading, list);
+    elements.gameChoiceList.append(section);
   }
+  const total = games.length;
+  const hasQuery = Boolean(state.homeGameSearch.trim());
+  elements.homeGameCount.textContent = hasQuery ? `${visibleCount} of ${total} games` : `${total} game${total === 1 ? "" : "s"}`;
+  elements.homeGameFilterEmpty.hidden = visibleCount > 0;
+  if (!visibleCount && hasQuery) elements.homeGameFilterEmpty.textContent = `No games match “${state.homeGameSearch.trim()}”.`;
 }
 
 function highlightSelectedGame() {
@@ -968,14 +1659,29 @@ function highlightSelectedGame() {
   });
 }
 
-function renderNoGame() {
+function renderNoGame(message = "No games are scheduled for the selected date.") {
   elements.pregameContent.hidden = true;
   elements.pregameMessage.hidden = false;
   elements.pregameMessage.classList.remove("error");
-  const selectedDate = state.selectedDate || getLocalDateString();
-  const when = selectedDate === getLocalDateString() ? "today" : `on ${formatDisplayDate(selectedDate)}`;
-  elements.pregameMessage.textContent = `No ${state.favoriteTeam.name} game is scheduled ${when}.`;
+  elements.pregameMessage.textContent = message;
   setLineupStatus("No game", "neutral");
+  elements.gameChoiceList.replaceChildren();
+  elements.homeGameCount.textContent = "0 games";
+  elements.homeGameFilterEmpty.hidden = true;
+}
+
+function renderFavoriteSetupRequired() {
+  state.schedule = [];
+  state.schedulePayload = null;
+  state.selectedGamePk = null;
+  elements.pregameContent.hidden = true;
+  elements.pregameMessage.hidden = false;
+  elements.pregameMessage.classList.remove("error");
+  elements.pregameMessage.textContent = "Choose a favorite competition level and team in Settings to load a startup schedule.";
+  elements.homeOpenSettingsButton.hidden = false;
+  elements.homeScopeLabel.textContent = "Game Browser";
+  setLineupStatus("Setup needed", "neutral");
+  setAppStatus("Favorite team setup needed", "ready");
 }
 
 function renderPregameError(error) {
@@ -986,54 +1692,63 @@ function renderPregameError(error) {
   setLineupStatus("Unavailable", "error");
 }
 
-function renderSelectedGame(selected, model) {
-  const awayTeam = model?.away?.team?.name ?? selected.awayTeam;
-  const homeTeam = model?.home?.team?.name ?? selected.homeTeam;
-  const venue = model?.game?.venue ?? {};
-  const weather = model?.game?.weather ?? {};
+function renderUnselectedGame() {
+  if (!elements.selectedGameEmpty || !elements.selectedGameDetails) return;
+  elements.selectedGameEmpty.hidden = false;
+  elements.selectedGameDetails.hidden = true;
+  elements.openSelectedGameDayButton.disabled = true;
+  setLineupStatus(state.schedule.length ? "Choose a game" : "Checking schedule…", "neutral");
+  updateLivePdfAvailability();
+}
 
-  const awayLineup = lineupSlots(model?.away).map(uiPlayerFromNormalizedRecord);
-  const homeLineup = lineupSlots(model?.home).map(uiPlayerFromNormalizedRecord);
-  const awayBench = (model?.away?.bench || []).map(uiPlayerFromNormalizedRecord);
-  const homeBench = (model?.home?.bench || []).map(uiPlayerFromNormalizedRecord);
-  const awayStarter = model?.away?.startingPitcher ? uiPlayerFromNormalizedRecord(model.away.startingPitcher) : null;
-  const homeStarter = model?.home?.startingPitcher ? uiPlayerFromNormalizedRecord(model.home.startingPitcher) : null;
-  const awayBullpen = pitcherDisplayRows(model, "away").map(uiPlayerFromNormalizedRecord);
-  const homeBullpen = pitcherDisplayRows(model, "home").map(uiPlayerFromNormalizedRecord);
-
-  elements.matchupHeading.textContent = `${awayTeam} at ${homeTeam}`;
-  elements.gameStatusText.textContent = selected.status || "Scheduled";
-  elements.firstPitch.textContent = formatGameTime(selected.gameDate);
-  elements.venue.textContent = venue.name || selected.venue || "Not listed";
-  elements.weather.textContent = weatherSummary({ condition: weather.condition, temp: weather.temperature, wind: weather.wind });
-
-  elements.awayPitchersHeading.textContent = awayTeam;
-  elements.homePitchersHeading.textContent = homeTeam;
-  elements.awayLineupHeading.textContent = awayTeam;
-  elements.homeLineupHeading.textContent = homeTeam;
-
-  renderPitchers(elements.awayPitchers, awayStarter, awayBullpen);
-  renderPitchers(elements.homePitchers, homeStarter, homeBullpen);
-  renderLineup(elements.awayLineup, awayLineup, awayBench);
-  renderLineup(elements.homeLineup, homeLineup, homeBench);
-
-  const status = lineupState(awayLineup.length, homeLineup.length);
-  if (status === "posted") setLineupStatus("Lineups Posted", "ready");
-  else if (status === "partial") setLineupStatus("Partial Lineups", "warning");
-  else setLineupStatus("No Lineups", "error");
+function renderSelectedGame(selected, gameTimeZone = "") {
+  const readiness = scheduleReadiness(selected);
+  const probable = probablePitcherMatchup(selected);
+  elements.matchupHeading.textContent = `${selected.awayTeam} at ${selected.homeTeam}`;
+  elements.gameStatusText.textContent = `${selected.status || "Scheduled"}${Number(selected.gameNumber || 1) > 1 ? ` • Game ${selected.gameNumber}` : ""}`;
+  elements.firstPitch.textContent = formatDualZoneInstant(selected.gameDate, gameTimeZone);
+  elements.probablePitchers.textContent = `${probable.away} vs ${probable.home}`;
+  elements.selectedReadinessStatus.textContent = readiness.label;
+  elements.selectedReadinessStatus.className = `pill ${readiness.tone}`;
+  setLineupStatus(readiness.label, readiness.tone);
+  setLiveGenerateMessage(readiness.lineupsComplete ? "" : "Lineups are not complete; a generated scorecard may contain blank lineup fields.");
 
   elements.pregameMessage.hidden = true;
   elements.pregameMessage.classList.remove("error");
   elements.pregameContent.hidden = false;
 }
 
-function lineupSlots(side) {
-  return Array.isArray(side?.lineup) ? side.lineup : Array.isArray(side?.lineup?.slots) ? side.lineup.slots : [];
+async function loadSelectedGameVenueTimeZone(game) {
+  const inlineZone = normalizeTimeZoneId(game?.venueData?.timeZone);
+  if (inlineZone) {
+    if (String(state.selectedGamePk) === String(game.gamePk)) renderSelectedGame(game, inlineZone);
+    return;
+  }
+  const venueId = Number(game?.venueData?.id);
+  const season = Number(game?.season || String(game?.officialDate || "").slice(0, 4));
+  if (!venueId || !season) return;
+  const cacheKey = `${venueId}:${season}`;
+  try {
+    let cached = venueTimeZoneCache.get(cacheKey);
+    if (!cached) {
+      const payload = await fetchVenueDetails(venueId, season);
+      const venue = Array.isArray(payload?.venues) ? payload.venues[0] : payload?.venue || payload;
+      cached = {
+        zone: normalizeTimeZoneId(venue?.timeZone),
+        source: { input: { venueId, season, hydrateProfile: "location-fieldInfo-timezone-v1" }, payload, outcome: "success" }
+      };
+      venueTimeZoneCache.set(cacheKey, cached);
+    }
+    if (String(state.selectedGamePk) !== String(game.gamePk)) return;
+    state.selectedVenueSource = cached.source;
+    renderSelectedGame(game, cached.zone);
+  } catch (error) {
+    console.warn("Unable to load the selected game's venue timezone:", error);
+  }
 }
 
-function pitcherDisplayRows(model, side) {
-  if (model?.schemaVersion === 2) return getPitcherDisplayRows(model, side, { includeAdditionalStarters: state.includeAdditionalStarters });
-  return Array.isArray(model?.[side]?.bullpen) ? model[side].bullpen : [];
+function lineupSlots(side) {
+  return Array.isArray(side?.lineup) ? side.lineup : Array.isArray(side?.lineup?.slots) ? side.lineup.slots : [];
 }
 
 function uiPlayerFromNormalizedRecord(record) {
@@ -1056,181 +1771,48 @@ async function openGameDay() {
 async function loadGameDay(forceSupplemental = false) {
   const game = currentScheduleGame();
   if (!game) {
-    elements.gameDayContent.hidden = true;
-    elements.gameDaySources.hidden = true;
-    elements.gameDayMessage.hidden = false;
-    elements.gameDayMessage.classList.remove("error");
-    elements.gameDayMessage.textContent = "No game is selected. Return Home and select a game first.";
+    elements.gameDayEmptyState.hidden = false;
+    elements.gameDaySelectedWorkspace.hidden = true;
     return;
   }
 
+  elements.gameDayEmptyState.hidden = true;
+  elements.gameDaySelectedWorkspace.hidden = false;
   const token = ++state.gameDayLoadToken;
-  const officialDate = game.officialDate || getLocalDateString();
-  elements.gameDaySubtitle.textContent = `${game.awayTeam} at ${game.homeTeam} • ${formatDisplayDate(officialDate)}`;
   elements.gameDayMessage.hidden = false;
   elements.gameDayMessage.classList.remove("error");
-  elements.gameDayMessage.textContent = "Loading schema-v2 game, staff, standings, officials, and venue data…";
+  elements.gameDayMessage.textContent = "Loading Game Day research…";
   elements.gameDayContent.hidden = false;
-  elements.gameDaySources.hidden = false;
   elements.refreshGameDayButton.disabled = true;
-  elements.coachesSourcePill.textContent = "Coaches API: loading…";
-  elements.standingsSourcePill.textContent = "Standings API: loading…";
 
   try {
     if (forceSupplemental) state.selectedSupplemental = await loadPregameCore(game);
     const model = await hydrateSelectedGameModel(getCatalogFields().map((definition) => definition.id), String(game.gamePk));
     if (token !== state.gameDayLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
-    const sourceResults = model.meta?.sourceResults || [];
-    const coachOk = sourceResults.some((source) => source.adapter === "coaches" && source.outcome === "success");
-    const standingsOk = sourceResults.some((source) => source.adapter === "standings" && source.outcome === "success");
-    elements.coachesSourcePill.textContent = coachOk ? "Coaches API: loaded" : "Coaches API: unavailable";
-    elements.coachesSourcePill.className = `pill ${coachOk ? "ready" : "error"}`;
-    elements.standingsSourcePill.textContent = standingsOk ? "Standings API: loaded" : "Standings API: unavailable";
-    elements.standingsSourcePill.className = `pill ${standingsOk ? "ready" : "error"}`;
     renderGameDay(model);
-    const failures = state.v030Availability?.sourceOutcomes?.failed || 0;
-    elements.gameDayMessage.textContent = failures
-      ? `Schema v2 loaded with ${failures} unavailable source request${failures === 1 ? "" : "s"}; available data remains usable.`
-      : "Schema-v2 pregame data loaded successfully.";
+    const failures = (model.meta?.sourceResults || []).filter((source) => source.outcome === "failed").length;
+    elements.gameDayMessage.hidden = failures === 0;
+    elements.gameDayMessage.textContent = failures ? "Some Game Day information is unavailable. Available sections remain usable." : "";
   } catch (error) {
     if (token !== state.gameDayLoadToken) return;
-    console.error("Game Day supplemental hydration failed:", error);
+    console.error("Game Day research loading failed:", error);
     elements.gameDayMessage.classList.add("error");
-    elements.gameDayMessage.textContent = `Schema-v2 hydration failed. ${errorMessage(error, "Unknown error.")}`;
+    elements.gameDayMessage.textContent = `Game Day data could not be loaded. ${errorMessage(error, "Unknown error.")}`;
   } finally {
     if (token === state.gameDayLoadToken) elements.refreshGameDayButton.disabled = false;
   }
 }
 
 
-async function openFieldDiagnostic() {
-  showView("field-diagnostic");
-  await loadFieldDiagnostic(false);
-}
-
-async function loadFieldDiagnostic(force = false) {
-  const game = currentScheduleGame();
-  if (!game) {
-    elements.fieldDiagnosticContent.hidden = true;
-    elements.fieldDiagnosticSources.hidden = true;
-    elements.fieldDiagnosticMessage.hidden = false;
-    elements.fieldDiagnosticMessage.classList.remove("error");
-    elements.fieldDiagnosticMessage.textContent = "No game is selected. Return Home and select a game first.";
-    return;
-  }
-
-  const token = ++state.fieldDiagnosticLoadToken;
-  const officialDate = game.officialDate || getLocalDateString();
-  const away = game.awayTeam || "Away";
-  const home = game.homeTeam || "Home";
-  elements.fieldDiagnosticSubtitle.textContent = `${away} at ${home} • ${formatDisplayDate(officialDate)}`;
-  elements.fieldDiagnosticMessage.hidden = false;
-  elements.fieldDiagnosticMessage.classList.remove("error");
-  elements.fieldDiagnosticMessage.textContent = "Resolving every active field against the schema-v2 snapshot and its capability sources…";
-  elements.fieldDiagnosticContent.hidden = true;
-  elements.fieldDiagnosticSources.hidden = false;
-  elements.refreshFieldDiagnosticButton.disabled = true;
-  elements.diagnosticGamePackSourcePill.textContent = "Core pregame: loaded";
-  elements.diagnosticGamePackSourcePill.className = "pill ready";
-  elements.diagnosticCoachesSourcePill.textContent = "Coaches API: loading…";
-  elements.diagnosticCoachesSourcePill.className = "pill neutral";
-  elements.diagnosticStandingsSourcePill.textContent = "Standings API: loading…";
-  elements.diagnosticStandingsSourcePill.className = "pill neutral";
-
-  try {
-    const fieldIds = getCatalogFields().map((definition) => definition.id);
-    const model = await hydrateSelectedGameModel(fieldIds, String(game.gamePk));
-    if (token !== state.fieldDiagnosticLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
-    state.fieldDiagnosticRows = buildFieldDiagnosticRows(model);
-    renderFieldDiagnosticSummary(state.fieldDiagnosticRows);
-    renderFieldDiagnosticTable();
-    renderDiagnosticSourcePills(model);
-    elements.fieldDiagnosticContent.hidden = false;
-    const summary = summarizeDiagnosticRows(state.fieldDiagnosticRows);
-    elements.fieldDiagnosticMessage.textContent = `Diagnostic complete: ${summary.available} available, ${summary.partial} partial, ${summary.missing} missing, ${summary.sourceUnavailable} source unavailable, ${summary.error} error.`;
-  } catch (error) {
-    if (token !== state.fieldDiagnosticLoadToken) return;
-    console.error("Field diagnostic failed:", error);
-    elements.fieldDiagnosticMessage.classList.add("error");
-    elements.fieldDiagnosticMessage.textContent = errorMessage(error, "Field diagnostic could not be completed.");
-  } finally {
-    if (token === state.fieldDiagnosticLoadToken) elements.refreshFieldDiagnosticButton.disabled = false;
-  }
-}
-
-function renderDiagnosticSourcePills(model) {
-  const sources = model?.meta?.sourceResults || [];
-  const sourceOk = (adapters) => sources.some((source) => adapters.includes(source.adapter) && ["success", "partial"].includes(source.outcome));
-  setDiagnosticSourcePill(elements.diagnosticGamePackSourcePill, "Core pregame", sourceOk(["schedule", "roster", "people"]));
-  setDiagnosticSourcePill(elements.diagnosticCoachesSourcePill, "Coaches API", sourceOk(["coaches"]));
-  setDiagnosticSourcePill(elements.diagnosticStandingsSourcePill, "Standings API", sourceOk(["standings"]));
-}
-
-function setDiagnosticSourcePill(element, label, loaded) {
-  element.textContent = `${label}: ${loaded ? "loaded" : "unavailable"}`;
-  element.className = `pill ${loaded ? "ready" : "error"}`;
-}
-
-function renderFieldDiagnosticSummary(rows) {
-  const summary = summarizeDiagnosticRows(rows);
-  const parts = [
-    ["Total", summary.total, "neutral"],
-    ["Available", summary.available, "ready"],
-    ["Partial", summary.partial, "warning"],
-    ["Missing", summary.missing, "neutral"],
-    ["Source unavailable", summary.sourceUnavailable, "error"],
-    ["Error", summary.error, "error"]
-  ];
-  elements.fieldDiagnosticSummary.replaceChildren(...parts.map(([label, count, tone]) => {
-    const pill = document.createElement("span");
-    pill.className = `pill ${tone}`;
-    pill.textContent = `${label}: ${count}`;
-    return pill;
-  }));
-}
-
-function renderFieldDiagnosticTable() {
-  const query = String(elements.fieldDiagnosticSearch?.value || "").trim().toLowerCase();
-  const tier = elements.fieldDiagnosticTierFilter?.value || "all";
-  const status = elements.fieldDiagnosticStatusFilter?.value || "all";
-  const rows = (state.fieldDiagnosticRows || []).filter((row) => {
-    if (tier !== "all" && row.visibilityTier !== tier) return false;
-    if (status !== "all" && row.status !== status) return false;
-    if (!query) return true;
-    return [row.label, row.id, row.category, row.description, row.liveValue, row.exampleValue].some((value) => String(value || "").toLowerCase().includes(query));
-  });
-
-  elements.fieldDiagnosticTableBody.replaceChildren();
-  for (const row of rows) {
-    const tr = document.createElement("tr");
-    tr.className = `diagnostic-row-${row.status}`;
-    const sources = row.sourceRequirements.join(" + ");
-    tr.innerHTML = `<td>${escapeHtml(row.category)}</td>
-      <td title="${escapeHtml(row.description)}"><span class="diagnostic-field-label">${escapeHtml(row.label)}</span><span class="diagnostic-field-id">${escapeHtml(row.id)}</span></td>
-      <td>${escapeHtml(capitalize(row.visibilityTier || ""))}</td>
-      <td class="diagnostic-value">${escapeHtml(row.exampleValue || "—")}</td>
-      <td class="diagnostic-value">${escapeHtml(row.liveValue || "—")}</td>
-      <td>${escapeHtml(row.coverage || "—")}</td>
-      <td>${escapeHtml(sources || "—")}</td>
-      <td><span class="diagnostic-status ${escapeHtml(row.status)}" title="${escapeHtml(row.reason || row.statusLabel)}">${escapeHtml(row.statusLabel)}</span></td>`;
-    elements.fieldDiagnosticTableBody.append(tr);
-  }
-
-  if (!rows.length) {
-    const tr = document.createElement("tr");
-    tr.innerHTML = '<td colspan="8" class="gameday-empty">No fields match the current filters.</td>';
-    elements.fieldDiagnosticTableBody.append(tr);
-  }
-}
-
-function capitalize(value) {
-  const text = String(value || "");
-  return text ? text[0].toUpperCase() + text.slice(1) : text;
-}
-
 function renderGameDay(model) {
   if (!model) return;
-  renderGameDayTeamCards(model.away, model.home);
+  applyGameDayDetailLevel(state.appPreferences.gameDayDetailLevel);
+  const season = gameDaySeasonContext(model);
+  elements.gameDaySeasonContext.textContent = season.label;
+  elements.gameDaySeasonContext.className = `pill neutral season-${season.key}`;
+  elements.gameDaySeasonNote.textContent = season.note;
+  renderGameDayOverview(model);
+  renderGameDayTeamCards(model);
 
   elements.gameDayAwayLineupHeading.textContent = model.away?.team?.name || "Away";
   elements.gameDayHomeLineupHeading.textContent = model.home?.team?.name || "Home";
@@ -1239,84 +1821,260 @@ function renderGameDay(model) {
 
   elements.gameDayAwayPitchingHeading.textContent = model.away?.team?.name || "Away";
   elements.gameDayHomePitchingHeading.textContent = model.home?.team?.name || "Home";
-  renderGameDayPitching(elements.gameDayAwayPitching, model.away?.startingPitcher, pitcherDisplayRows(model, "away"));
-  renderGameDayPitching(elements.gameDayHomePitching, model.home?.startingPitcher, pitcherDisplayRows(model, "home"));
+  renderGameDayPitching(elements.gameDayAwayPitching, pitcherGroupPresentation(model, "away"));
+  renderGameDayPitching(elements.gameDayHomePitching, pitcherGroupPresentation(model, "home"));
 
   elements.gameDayAwayBenchHeading.textContent = model.away?.team?.name || "Away";
   elements.gameDayHomeBenchHeading.textContent = model.home?.team?.name || "Home";
   renderGameDayBench(elements.gameDayAwayBench, model.away?.bench || []);
   renderGameDayBench(elements.gameDayHomeBench, model.home?.bench || []);
+  elements.gameDayAwayStaffHeading.textContent = model.away?.team?.name || "Away";
+  elements.gameDayHomeStaffHeading.textContent = model.home?.team?.name || "Home";
+  renderGameDayStaff(elements.gameDayAwayStaff, model.away);
+  renderGameDayStaff(elements.gameDayHomeStaff, model.home);
+  renderGameDayStandings(model);
   renderGameDayUmpires(model.game?.umpires);
   renderGameDayVenue(model.game);
+  renderGameDayResearch(model);
 }
 
-function renderGameDayTeamCards(away, home) {
+function renderGameDayOverview(model) {
+  const game = model.game || {};
+  const scope = researchScope(model);
+  const selectedGame = currentScheduleGame();
+  const status = game.status?.raw?.detailedState || game.status?.canonical || "—";
+  const scheduled = game.dates?.scheduledStart;
+  const values = [
+    ["Matchup", `${model.away?.team?.name || "Away"} at ${model.home?.team?.name || "Home"}`, "compact"],
+    ["Status", status, "compact"],
+    ["Date", scope.officialDate || "—", "compact"],
+    ["First Pitch", scheduled ? formatDualZoneInstant(scheduled, game.venue?.timeZone) : "TBD", "compact"]
+  ];
+  if (selectedGame?.doubleHeader && selectedGame.doubleHeader !== "N") values.push(["Double Header Game Number", game.gameNumber ?? selectedGame.gameNumber ?? "—", "compact"]);
+  if (scope.selectedDate && scope.officialDate && scope.selectedDate !== scope.officialDate) values.push(["Selected Schedule Date", scope.selectedDate, "compact"]);
+  elements.gameDayOverview.innerHTML = values.map(([label, value, minimum]) => gameDayFact(label, value, minimum)).join("");
+}
+
+function renderGameDayTeamCards(model) {
   elements.gameDayTeamGrid.replaceChildren();
-  [["away", away], ["home", home]].forEach(([side, data]) => {
+  elements.gameDayTeamGrid.classList.remove("gameday-team-grid-shared-division");
+  const presentation = standingsPresentation(model);
+  const cards = new Map();
+  [["away", model.away], ["home", model.home]].forEach(([side, data]) => {
     const card = document.createElement("section");
-    card.className = "card gameday-team-card";
+    card.className = `gameday-team-card gameday-team-${side}`;
     const team = data?.team || {};
     const record = team.record || {};
     const standings = team.standings || {};
-    card.innerHTML = `<p class="section-label">${side === "away" ? "Away" : "Home"}</p><h3>${escapeHtml(team.name || "Team")}</h3>
-      <div class="gameday-stat-grid">
-        ${gameDayStat("Record", record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—")}
-        ${gameDayStat("PCT", record.pct != null ? formatRate(record.pct, 3) : "—")}
-        ${gameDayStat("Division", team.division?.name || "—")}
-        ${gameDayStat("Manager", data?.manager?.selected?.name || data?.manager?.name || "Not loaded")}
-        ${gameDayStat("Division Rank", typedRank(standings.divisionRank))}
-        ${gameDayStat("Games Back", typedGamesBack(standings.divisionGamesBack))}
-        ${gameDayStat("Streak", standings.streak || "—")}
-        ${gameDayStat("Last 10", standings.lastTen?.wins != null ? `${standings.lastTen.wins}-${standings.lastTen.losses}` : standings.last10?.display || "—")}
+    const numericTeamId = Number(team.id);
+    const logoUrl = team.logo?.url || (Number.isFinite(numericTeamId) ? `https://www.mlbstatic.com/team-logos/${numericTeamId}.svg` : "");
+    const logo = logoUrl ? `<img class="gameday-team-logo" src="${escapeHtml(logoUrl)}" alt="" loading="lazy">` : "";
+    const wildCardGamesBack = exposedGamesBack(standings.wildCardGamesBack);
+    card.innerHTML = `<div class="gameday-team-heading"><span>${side === "away" ? "Away" : "Home"}</span><h3>${escapeHtml(team.name || "Team")}</h3>${logo}</div>
+      <div class="gameday-fact-list gameday-team-facts" data-gameday-team-summary>
+        ${gameDayFact("Record", record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—", "compact")}
+        ${gameDayFact("PCT", record.pct != null ? formatRate(record.pct, 3) : "—", "compact")}
+        ${gameDayFact("Games Played", record.gamesPlayed ?? "—", "compact")}
+        ${gameDayFact("Division Rank", typedRank(standings.divisionRank), "compact")}
+        ${gameDayFact("Games Back", typedGamesBack(standings.divisionGamesBack), "compact")}
+      </div>
+      <div class="gameday-fact-list gameday-team-facts" data-gameday-team-advanced>
+        ${gameDayFact("League Rank", typedRank(standings.leagueRank), "compact")}
+        ${gameDayFact("Wild Card Rank", typedRank(standings.wildCardRank), "compact")}
+        ${wildCardGamesBack == null ? "" : gameDayFact("Wild Card Games Back", wildCardGamesBack, "compact")}
       </div>`;
-    elements.gameDayTeamGrid.append(card);
+    card.querySelector(".gameday-team-logo")?.addEventListener("error", (event) => { event.currentTarget.hidden = true; });
+    cards.set(side, card);
   });
+
+  const shared = presentation.relevant.find((item) => item.matchingSideKeys?.includes("away") && item.matchingSideKeys?.includes("home"));
+  elements.gameDayTeamGrid.append(cards.get("away"));
+  if (shared) {
+    elements.gameDayTeamGrid.classList.add("gameday-team-grid-shared-division");
+    const sharedStandings = document.createElement("div");
+    sharedStandings.className = "gameday-team-shared-standings";
+    sharedStandings.dataset.gamedayTeamAdvanced = "";
+    sharedStandings.append(createStandingsGroup(shared, presentation.selectedTeamIds));
+    elements.gameDayTeamGrid.append(sharedStandings);
+  }
+  elements.gameDayTeamGrid.append(cards.get("home"));
+
+  if (!shared) {
+    for (const side of ["away", "home"]) {
+      const standingsHost = document.createElement("div");
+      standingsHost.className = "gameday-team-embedded-standings";
+      standingsHost.dataset.gamedayTeamAdvanced = "";
+      const matching = presentation.relevant.filter((item) => item.matchingSideKeys?.includes(side));
+      if (!matching.length) standingsHost.append(emptyRow("Division standings are not available for this team."));
+      for (const item of matching) standingsHost.append(createStandingsGroup(item, presentation.selectedTeamIds));
+      cards.get(side).append(standingsHost);
+    }
+  }
 }
 
-function gameDayStat(label, value) {
-  return `<div class="gameday-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
+function exposedGamesBack(value) {
+  if (value && typeof value === "object") {
+    if (value.state === "notApplicable" && value.raw == null && value.games == null) return null;
+    return typedGamesBack(value);
+  }
+  return value === null || value === undefined || value === "" ? null : typedGamesBack(value);
+}
+
+function gameDayFact(label, value, minimum = "standard") {
+  return `<div class="gameday-fact" data-gameday-min-level="${minimum}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
+}
+
+function gameDayStat(label, value, minimum = "standard") {
+  return `<div class="gameday-stat" data-gameday-min-level="${minimum}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
 }
 
 function renderGameDayLineup(tbody, slots) {
   tbody.replaceChildren();
   const players = slots.filter((slot) => slot?.player?.name);
   if (!players.length) {
-    const tr = document.createElement("tr"); tr.innerHTML = '<td colspan="10" class="gameday-empty">Lineup not posted.</td>'; tbody.append(tr); return;
+    const tr = document.createElement("tr"); tr.innerHTML = '<td colspan="13" class="gameday-empty">Lineup not posted.</td>'; tbody.append(tr); return;
   }
   slots.forEach((slot, index) => {
     if (!slot?.player?.name) return;
     const stats = slot.stats?.hitting?.totals || slot.stats || {};
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${slot.battingOrder || index + 1}</td><td><strong>${escapeHtml(slot.player.name)}</strong><span class="gameday-number">${slot.player.number ? `#${escapeHtml(slot.player.number)}` : ""}</span></td><td>${escapeHtml(slot.position?.abbreviation || "—")}</td><td>${escapeHtml(slot.player.bats || "—")}</td><td>${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td>`;
+    tr.innerHTML = `<td>${slot.battingOrder || index + 1}</td><td><strong>${escapeHtml(slot.player.name)}</strong><span class="gameday-number">${slot.player.number ? `#${escapeHtml(slot.player.number)}` : ""}</span></td><td>${escapeHtml(slot.position?.abbreviation || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(slot.player.bats || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPlayed ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.plateAppearances ?? "—"))}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.rbi ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.stolenBases ?? "—"))}</td>`;
     tbody.append(tr);
   });
 }
 
-function renderGameDayPitching(container, starter, bullpen) {
+function renderGameDayPitching(container, groups) {
   container.replaceChildren();
-  if (starter?.player?.name) container.append(gameDayPitcherRow(starter, "SP"));
-  bullpen.filter((player) => player?.player?.name).forEach((player) => container.append(gameDayPitcherRow(player, "RP")));
-  if (!starter?.player?.name && !bullpen.length) container.append(emptyRow("Pitchers not listed."));
+  container.append(gameDayGroupHeading("Selected Starter"));
+  container.append(gameDayPitcherTable(groups.selectedStarter?.player?.name ? [groups.selectedStarter] : [], "Selected starter not listed."));
+
+  if (groups.classified) {
+    container.append(gameDayGroupHeading("Additional Starting Pitchers", "standard"));
+    const additional = groups.additionalStarters.filter((player) => player?.player?.name);
+    container.append(withGameDayMinimum(gameDayPitcherTable(additional, "No additional starter annotations were returned for active roster pitchers."), "standard"));
+  }
+
+  container.append(gameDayGroupHeading(groups.bullpenLabel, "standard"));
+  const bullpen = groups.bullpen.filter((player) => player?.player?.name);
+  container.append(withGameDayMinimum(gameDayPitcherTable(bullpen, "No other active pitchers are listed."), "standard"));
+  if (!groups.classified) {
+    const note = document.createElement("p");
+    note.className = "gameday-classification-note fallback";
+    note.dataset.gamedayMinLevel = "standard";
+    note.textContent = groups.bullpenNote;
+    container.append(note);
+  }
 }
 
-function gameDayPitcherRow(item, role) {
-  const stats = item?.stats?.pitching?.totals || item?.stats || {};
-  const row = document.createElement("div"); row.className = "gameday-person-row";
-  const record = stats.wins != null && stats.losses != null ? `${stats.wins}-${stats.losses}` : "—";
-  row.innerHTML = `<div><strong>${escapeHtml(role)} ${escapeHtml(item?.player?.name || "Player")}</strong><span>${item?.player?.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item?.player?.throws || "—")}HP</span></div><div class="gameday-person-stats"><span>${escapeHtml(record)} W-L</span><span>${escapeHtml(formatRate(stats.era, 2) || "—")} ERA</span><span>${escapeHtml(formatRate(stats.whip, 2) || "—")} WHIP</span><span>${escapeHtml(String(stats.strikeOuts ?? stats.strikeouts ?? "—"))} K</span></div>`;
-  return row;
+function withGameDayMinimum(element, minimum) {
+  element.dataset.gamedayMinLevel = minimum;
+  return element;
+}
+
+function gameDayGroupHeading(label, minimum = "compact") {
+  const heading = document.createElement("h5");
+  heading.className = "gameday-group-heading";
+  heading.dataset.gamedayMinLevel = minimum;
+  heading.textContent = label;
+  return heading;
+}
+
+function gameDayPitcherTable(players, emptyMessage) {
+  const wrap = document.createElement("div");
+  wrap.className = "gameday-table-wrap";
+  const table = document.createElement("table");
+  table.className = "gameday-table gameday-player-table gameday-pitcher-table";
+  table.innerHTML = '<thead><tr><th>T</th><th>Player</th><th>#</th><th data-gameday-min-level="advanced">G</th><th>W-L</th><th data-gameday-min-level="standard">GS</th><th data-gameday-min-level="advanced">IP</th><th>ERA</th><th data-gameday-min-level="standard">WHIP</th><th data-gameday-min-level="standard">K</th><th data-gameday-min-level="advanced">BB</th><th data-gameday-min-level="advanced">SV</th><th data-gameday-min-level="advanced">HLD</th></tr></thead>';
+  const body = document.createElement("tbody");
+  if (!players.length) body.innerHTML = `<tr><td colspan="13" class="gameday-empty">${escapeHtml(emptyMessage)}</td></tr>`;
+  players.forEach((item) => {
+    const stats = item?.stats?.pitching?.totals || item?.stats || {};
+    const record = stats.wins != null && stats.losses != null ? `${stats.wins}-${stats.losses}` : "—";
+    const tr = document.createElement("tr");
+    const throwingHand = item?.player?.throws ? `${item.player.throws}HP` : "—";
+    tr.innerHTML = `<td>${escapeHtml(throwingHand)}</td><td><strong>${escapeHtml(item?.player?.name || "Player")}</strong></td><td>${item?.player?.number ? `#${escapeHtml(item.player.number)}` : "—"}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPitched ?? stats.gamesPlayed ?? "—"))}</td><td>${escapeHtml(record)}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.gamesStarted ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.inningsPitched ?? "—"))}</td><td>${escapeHtml(formatRate(stats.era, 2) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.whip, 2) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.strikeOuts ?? stats.strikeouts ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.baseOnBalls ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.saves ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.holds ?? "—"))}</td>`;
+    body.append(tr);
+  });
+  table.append(body); wrap.append(table); return wrap;
 }
 
 function renderGameDayBench(container, players) {
   container.replaceChildren();
   const known = players.filter((item) => item?.player?.name);
-  if (!known.length) { container.append(emptyRow("Bench not listed.")); return; }
+  const wrap = document.createElement("div"); wrap.className = "gameday-table-wrap";
+  const table = document.createElement("table"); table.className = "gameday-table gameday-player-table gameday-batter-table gameday-bench-table";
+  table.innerHTML = '<thead><tr><th>#</th><th>Player</th><th>Pos</th><th>B</th><th data-gameday-min-level="advanced">GP</th><th data-gameday-min-level="advanced">PA</th><th>AVG</th><th data-gameday-min-level="advanced">OBP</th><th data-gameday-min-level="advanced">SLG</th><th>OPS</th><th>HR</th><th>RBI</th><th data-gameday-min-level="advanced">SB</th></tr></thead>';
+  const body = document.createElement("tbody");
+  if (!known.length) body.innerHTML = '<tr><td colspan="13" class="gameday-empty">Bench not listed.</td></tr>';
   known.forEach((item) => {
     const stats = item.stats?.hitting?.totals || item.stats || {};
-    const row = document.createElement("div"); row.className = "gameday-person-row";
-    row.innerHTML = `<div><strong>${escapeHtml(item.player.name)}</strong><span>${item.player.number ? `#${escapeHtml(item.player.number)} • ` : ""}${escapeHtml(item.position?.abbreviation || item.player.primaryPosition?.abbreviation || "—")} • Bats ${escapeHtml(item.player.bats || "—")}</span></div><div class="gameday-person-stats"><span>${escapeHtml(formatRate(stats.avg, 3) || "—")} AVG</span><span>${escapeHtml(formatRate(stats.ops, 3) || "—")} OPS</span><span>${escapeHtml(String(stats.homeRuns ?? "—"))} HR</span></div>`;
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${item.player.number ? `#${escapeHtml(item.player.number)}` : "—"}</td><td><strong>${escapeHtml(item.player.name)}</strong></td><td>${escapeHtml(item.position?.abbreviation || item.player.primaryPosition?.abbreviation || "—")}</td><td>${escapeHtml(item.player.bats || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPlayed ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.plateAppearances ?? "—"))}</td><td>${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.stolenBases ?? "—"))}</td>`;
+    body.append(row);
+  });
+  table.append(body); wrap.append(table); container.append(wrap);
+}
+
+function renderGameDayStaff(container, side) {
+  container.replaceChildren();
+  const manager = managerPresentation(side?.manager);
+  container.append(gameDayGroupHeading(manager.title));
+  if (!manager.people.length) container.append(emptyRow("Manager not available from the dated staff response."));
+  manager.people.forEach((person) => {
+    const row = document.createElement("div");
+    row.className = "gameday-person-row simple";
+    row.innerHTML = `<strong>${escapeHtml(person.role || "Manager")}</strong><span>${person.number ? `#${escapeHtml(person.number)} • ` : ""}${escapeHtml(person.name)}</span>`;
     container.append(row);
   });
+  container.append(gameDayGroupHeading("Coaching Staff"));
+  const coaches = Array.isArray(side?.coaches) ? side.coaches : [];
+  if (!coaches.length) container.append(emptyRow("Coaching staff not returned."));
+  coaches.forEach((coach) => {
+    const row = document.createElement("div");
+    row.className = "gameday-person-row simple";
+    row.innerHTML = `<strong>${escapeHtml(coach.title || coach.job || coach.category || "Coach")}</strong><span>${coach.person?.number ? `#${escapeHtml(coach.person.number)} • ` : ""}${escapeHtml(coach.person?.name || "Coach")}</span>`;
+    container.append(row);
+  });
+}
+
+function renderGameDayStandings(model) {
+  const presentation = standingsPresentation(model);
+  elements.gameDayStandings.replaceChildren();
+  if (!presentation.other.length) elements.gameDayStandings.append(emptyRow("No additional standings groups were returned for this level."));
+  renderStandingsGroups(elements.gameDayStandings, presentation.other, presentation.selectedTeamIds);
+}
+
+function renderStandingsGroups(container, items, selectedTeamIds) {
+  for (const item of items) container.append(createStandingsGroup(item, selectedTeamIds));
+}
+
+function createStandingsGroup(item, selectedTeamIds) {
+  const group = item.group;
+  const section = document.createElement("section");
+  section.className = "gameday-standings-group";
+  if (item.matchingSideKeys?.includes("away") && item.matchingSideKeys?.includes("home")) section.classList.add("gameday-standings-shared");
+  else if (item.matchingSideKeys?.includes("away")) section.classList.add("gameday-standings-away");
+  else if (item.matchingSideKeys?.includes("home")) section.classList.add("gameday-standings-home");
+  section.innerHTML = `<h4>${escapeHtml(item.title)}</h4>`;
+  const wrap = document.createElement("div");
+  wrap.className = "gameday-table-wrap";
+  const table = document.createElement("table");
+  table.className = "gameday-table gameday-standings-table";
+  table.innerHTML = "<thead><tr><th>Rank</th><th>Team</th><th>W-L</th><th>PCT</th><th>GB</th><th>Streak</th><th>Last 10</th></tr></thead>";
+  const body = document.createElement("tbody");
+  for (const item of group.rows || []) {
+    const row = document.createElement("tr");
+    if (selectedTeamIds.has(Number(item.team?.id))) row.className = "gameday-selected-team-row";
+    const record = item.record || {};
+    row.innerHTML = `<td>${escapeHtml(String(typedRank(item.rank)))}</td><td><strong>${escapeHtml(item.team?.name || "Team")}</strong></td><td>${record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—"}</td><td>${escapeHtml(formatRate(record.pct, 3) || "—")}</td><td>${escapeHtml(String(typedGamesBack(item.gamesBack)))}</td><td>${escapeHtml(item.streak || "—")}</td><td>${item.lastTen?.wins != null ? `${item.lastTen.wins}-${item.lastTen.losses}` : "—"}</td>`;
+    body.append(row);
+  }
+  table.append(body); wrap.append(table); section.append(wrap); return section;
+}
+
+function renderGameDayResearch(model) {
+  const sources = gameDaySourceSummary(model);
+  elements.gameDaySourceSummary.innerHTML = `<h4>Source Freshness</h4><div class="gameday-source-list">${sources.map((source) => `<div><span>${escapeHtml(source.adapter)}</span><strong class="source-outcome-${escapeHtml(source.outcome)}">${escapeHtml(source.outcome)}</strong><small>${escapeHtml(source.effective)}</small></div>`).join("") || '<p class="subtle">No source metadata available.</p>'}</div>`;
 }
 
 function renderGameDayUmpires(umpires) {
@@ -1328,7 +2086,7 @@ function renderGameDayUmpires(umpires) {
   const knownRows = rows.filter(([, item]) => item?.name);
   if (!knownRows.length) { elements.gameDayUmpires.append(emptyRow("Umpire crew not listed yet.")); return; }
   knownRows.forEach(([role, item]) => {
-    const row = document.createElement("div"); row.className = "gameday-person-row simple";
+    const row = document.createElement("div"); row.className = "gameday-fact";
     row.innerHTML = `<strong>${escapeHtml(role)}</strong><span>${escapeHtml(item.name)}</span>`;
     elements.gameDayUmpires.append(row);
   });
@@ -1337,11 +2095,14 @@ function renderGameDayUmpires(umpires) {
 function renderGameDayVenue(game) {
   const venue = game?.venue || {}; const weather = game?.weather || {};
   const weatherParts = [weather.condition, weather.temperature != null ? `${weather.temperature}°` : "", weather.wind].filter(Boolean);
+  const dimensions = venue.fieldInfo?.dimensions || {};
   const values = [
     ["Venue", venue.name || "—"], ["Capacity", (venue.fieldInfo?.capacity ?? venue.capacity) != null ? Number(venue.fieldInfo?.capacity ?? venue.capacity).toLocaleString() : "—"], ["Surface", venue.fieldInfo?.turfType || venue.turfType || "—"], ["Roof", venue.fieldInfo?.roofType || venue.roofType || "—"],
-    ["Weather", weatherParts.join(" • ") || "—"], ["Location", [venue.location?.city ?? venue.city, venue.location?.state ?? venue.state].filter(Boolean).join(", ") || "—"]
+    ["Weather", weatherParts.join(" • ") || "—"], ["Location", [venue.location?.city ?? venue.city, venue.location?.state ?? venue.state, venue.location?.country ?? venue.country].filter(Boolean).join(", ") || "—"],
+    ["Time Zone", venue.timeZone?.iana || venue.timeZone?.id || "—"],
+    ["Field Dimensions", Object.entries(dimensions).map(([key, value]) => `${key.replace(/([A-Z])/g, " $1")}: ${value}`).join(" • ") || "—"]
   ];
-  elements.gameDayVenue.innerHTML = `<div class="gameday-stat-grid">${values.map(([a,b]) => gameDayStat(a,b)).join("")}</div>`;
+  elements.gameDayVenue.innerHTML = values.map(([label, value]) => gameDayFact(label, value, "compact")).join("");
 }
 
 function typedRank(value) {
@@ -1564,20 +2325,8 @@ function weatherSummary(weather) {
 function formatFirstPitch(datetime, venue, fallback) {
   const value = datetime?.dateTime || fallback || "";
   if (!value) return "Not listed";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Not listed";
-
-  const venueZone = venue?.timeZone?.id || venue?.timeZone?.tz || "";
-  const userText = formatTimeOnly(date);
-  if (!venueZone) return userText;
-
-  try {
-    const ballparkText = formatTimeOnly(date, venueZone);
-    return ballparkText === userText ? ballparkText : `${ballparkText} Ballpark • ${userText} Local`;
-  } catch (error) {
-    console.warn("Could not format venue timezone:", error);
-    return userText;
-  }
+  const formatted = formatDualZoneInstant(value, venue?.timeZone);
+  return formatted || "Not listed";
 }
 
 function formatTimeOnly(date, timeZone) {
@@ -1594,24 +2343,26 @@ function formatGameTime(value) {
 
 function setPregameLoading(isLoading, message = "Loading pregame data…") {
   elements.refreshButton.disabled = isLoading;
-  elements.refreshButton.textContent = isLoading ? "Loading…" : "Refresh Pregame Data";
+  elements.refreshButton.textContent = isLoading ? "Loading…" : "Refresh Schedule";
   if (isLoading) {
+    elements.pregameContent.hidden = true;
     elements.pregameMessage.hidden = false;
     elements.pregameMessage.classList.remove("error");
     elements.pregameMessage.textContent = message;
-    setAppStatus("Contacting MLB Stats API…", "loading");
+    setAppStatus("Contacting Stats API…", "loading");
   }
 }
 
 function setStorageStatus(text, state) {
   elements.storageStatus.textContent = text;
-  elements.storageStatus.className = `pill ${state === "ready" ? "ready" : state === "error" ? "error" : "neutral"}`;
+  elements.storageStatus.className = "sr-only";
+  elements.storageStatus.dataset.state = state;
 }
 
 function setLineupStatus(text, state) {
   elements.lineupStatus.textContent = text;
-  const className = state === "ready" ? "ready" : state === "warning" ? "warning" : state === "error" ? "error" : "neutral";
-  elements.lineupStatus.className = `pill ${className}`;
+  elements.lineupStatus.className = "sr-only";
+  elements.lineupStatus.dataset.state = state;
 }
 
 function setAppStatus(text, state) {
@@ -1619,10 +2370,6 @@ function setAppStatus(text, state) {
   elements.appStatusDot.classList.remove("loading", "error");
   if (state === "loading") elements.appStatusDot.classList.add("loading");
   if (state === "error") elements.appStatusDot.classList.add("error");
-}
-
-function isValidFavoriteTeam(value) {
-  return Boolean(value && Number.isInteger(Number(value.id)) && typeof value.name === "string" && value.name.trim());
 }
 
 function getLocalDateString() {
@@ -1651,18 +2398,29 @@ function showView(view) {
     node.hidden = node.dataset.view !== view;
   });
   elements.navHome.classList.toggle("active", view === "home");
+  elements.navSettings.classList.toggle("active", view === "settings");
   elements.navGameDay.classList.toggle("active", view === "gameday");
-  elements.navFieldDiagnostic.classList.toggle("active", view === "field-diagnostic");
   elements.navLayouts.classList.toggle("active", view === "layouts");
-  elements.navDesigner.classList.toggle("active", view === "designer");
   elements.navHome.toggleAttribute("aria-current", view === "home");
+  elements.navSettings.toggleAttribute("aria-current", view === "settings");
   elements.navGameDay.toggleAttribute("aria-current", view === "gameday");
-  elements.navFieldDiagnostic.toggleAttribute("aria-current", view === "field-diagnostic");
   elements.navLayouts.toggleAttribute("aria-current", view === "layouts");
-  elements.navDesigner.toggleAttribute("aria-current", view === "designer");
-  elements.pageTitle.textContent = view === "home" ? "Home" : view === "gameday" ? "Game Day" : view === "field-diagnostic" ? "Field Diagnostic" : view === "layouts" ? "Layouts" : "Layout Designer";
-  elements.pageEyebrow.textContent = view === "home" ? "Scorecard Studio • Pregame" : view === "gameday" ? "Scorecard Studio • Game Reference" : view === "field-diagnostic" ? "Scorecard Studio • Developer Diagnostic" : view === "layouts" ? "Scorecard Studio • Layout Management" : "Scorecard Studio • Field Mapping";
+  elements.pageTitle.textContent = view === "home" ? "Home" : view === "settings" ? "Settings" : view === "gameday" ? "Game Day" : view === "layouts" ? "Layouts" : "Layout Designer";
+  elements.pageEyebrow.textContent = view === "home" ? "Scorecard Studio • Pregame" : view === "settings" ? "Scorecard Studio • Application Preferences" : view === "gameday" ? "Scorecard Studio • Research Companion" : view === "layouts" ? "Scorecard Studio • Layout Management" : "Scorecard Studio • Field Mapping";
   elements.refreshButton.hidden = view !== "home";
+}
+
+function showLayoutCreateWorkflow() {
+  elements.layoutLibraryPanel.hidden = true;
+  elements.layoutCreateWorkflow.hidden = false;
+  setLayoutCreateMessage("Nothing is saved until you choose Create Layout.");
+  elements.layoutNameInput.focus();
+}
+
+function showLayoutLibrary() {
+  elements.layoutCreateWorkflow.hidden = true;
+  elements.layoutLibraryPanel.hidden = false;
+  elements.openCreateLayoutButton?.focus();
 }
 
 function handleLayoutPdfSelection(event) {
@@ -1675,11 +2433,12 @@ async function createLayout() {
   const name = elements.layoutNameInput.value.trim();
   const description = elements.layoutDescriptionInput.value.trim();
   const file = state.pendingLayoutPdf;
-  if (!name) return setLayoutMessage("Enter a layout name.", true);
-  if (!file) return setLayoutMessage("Choose a PDF template.", true);
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return setLayoutMessage("Please choose a PDF file.", true);
+  if (!name) return setLayoutCreateMessage("Enter a layout name.", true);
+  if (!file) return setLayoutCreateMessage("Choose a PDF template.", true);
+  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return setLayoutCreateMessage("Please choose a PDF file.", true);
 
-  setLayoutBusy(true, "Reading PDF…");
+  setLayoutCreateMessage("Reading PDF…");
+  setLayoutBusy(true);
   try {
     const pdf = await loadPdfDocument(file);
     const id = createId();
@@ -1715,30 +2474,38 @@ async function createLayout() {
     if (elements.layoutCreateFieldSearch) elements.layoutCreateFieldSearch.value = "";
     if (elements.layoutCreateCustomFields) elements.layoutCreateCustomFields.hidden = true;
     await refreshLayouts();
-    await openLayout(id);
+    state.selectedLayoutId = id;
+    renderLayoutList();
+    showLayoutLibrary();
     setLayoutMessage(`Created ${layout.name}.`);
   } catch (error) {
     console.error("Unable to create layout:", error);
-    setLayoutMessage(errorMessage(error, "The layout could not be created."), true);
+    setLayoutCreateMessage(errorMessage(error, "The layout could not be created."), true);
   } finally {
     setLayoutBusy(false);
   }
 }
 
-async function refreshLayouts() {
+async function refreshLayouts(options = {}) {
   try {
     state.layouts = (await listLayouts()).map((layout) => loadCompatibleLayout(layout).layout);
+    if (state.selectedLayoutId && !state.layouts.some((layout) => layout.id === state.selectedLayoutId)) state.selectedLayoutId = null;
     const savedFavoriteLayoutId = await getSetting("favoriteLayoutId", "");
     state.favoriteLayoutId = state.layouts.some((layout) => layout.id === savedFavoriteLayoutId) ? savedFavoriteLayoutId : null;
     renderLayoutList();
     await populateLivePdfLayoutSelect();
-    elements.layoutStorageStatus.textContent = "IndexedDB Ready";
-    elements.layoutStorageStatus.className = "pill ready";
+    populateBackupLayoutSelect();
+    elements.layoutStorageStatus.textContent = "Layouts ready.";
+    elements.layoutStorageStatus.className = "sr-only";
+    if (elements.layoutMessage?.textContent === "Loading saved layouts…") {
+      setLayoutMessage(state.layouts.length ? "Choose a layout action to continue." : "Create your first saved layout.");
+    }
   } catch (error) {
     console.error("Unable to load layouts:", error);
-    elements.layoutStorageStatus.textContent = "Layout Error";
-    elements.layoutStorageStatus.className = "pill error";
+    elements.layoutStorageStatus.textContent = "Layouts could not be loaded.";
+    elements.layoutStorageStatus.className = "sr-only";
     setLayoutMessage(errorMessage(error, "Layouts could not be loaded."), true);
+    if (options.throwOnError) throw error;
   }
 }
 
@@ -1780,7 +2547,7 @@ async function populateLivePdfLayoutSelect() {
   }
   elements.livePdfLayoutSelect.value = preferred;
   elements.livePdfLayoutSelect.disabled = false;
-  elements.livePdfGenerateButton.disabled = !state.normalizedPregame;
+  updateLivePdfAvailability();
 }
 
 async function saveLivePdfLayoutPreference() {
@@ -1798,7 +2565,20 @@ function setLiveGenerateMessage(message, isError = false) {
 
 function updateLivePdfAvailability() {
   if (!elements.livePdfGenerateButton) return;
-  elements.livePdfGenerateButton.disabled = !state.normalizedPregame || !state.layouts.length;
+  const layout = state.layouts.find((item) => item.id === elements.livePdfLayoutSelect?.value) || null;
+  const emptyLayout = Boolean(layout) && !layoutHasRenderableMappings(layout);
+  elements.livePdfGenerateButton.disabled = !currentScheduleGame() || !layout || emptyLayout;
+  elements.livePdfGenerateButton.title = emptyLayout ? "Open this layout in the Designer and map at least one field first." : "";
+  if (emptyLayout) setLiveGenerateMessage("This layout is empty. Open it in the Designer and map at least one field before generating a scorecard.", true);
+  else if (elements.livePdfMessage?.textContent?.startsWith("This layout is empty.")) setLiveGenerateMessage("");
+}
+
+function layoutHasRenderableMappings(layout) {
+  return Boolean(
+    (layout?.mappings || []).length
+    || (layout?.individualMappings || []).length
+    || (layout?.repeatedBlocks || []).some((block) => (block?.columns || []).length)
+  );
 }
 
 function renderLayoutList() {
@@ -1815,23 +2595,88 @@ function renderLayoutList() {
   state.layouts.forEach((layout) => {
     const card = document.createElement("article");
     card.className = `layout-list-item${layout.id === state.selectedLayoutId ? " selected" : ""}`;
+    card.dataset.layoutId = layout.id;
     const copy = document.createElement("div");
     copy.className = "layout-list-copy";
+    const identity = document.createElement("div");
+    identity.className = "layout-list-identity";
     const title = document.createElement("strong");
     title.textContent = layout.name;
+    identity.append(title);
+    if (layout.id === state.favoriteLayoutId) {
+      const favorite = document.createElement("span");
+      favorite.className = "layout-favorite-label";
+      favorite.textContent = "★ Favorite";
+      identity.append(favorite);
+    }
     const desc = document.createElement("span");
     desc.textContent = layout.description || layout.pdfFileName || "PDF layout";
     const meta = document.createElement("small");
-    const favoriteSuffix = layout.id === state.favoriteLayoutId ? " • ★ Favorite" : "";
-    meta.textContent = `${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"} • Schema ${layout.schemaVersion}${favoriteSuffix}`;
-    copy.append(title, desc, meta);
-    const open = document.createElement("button");
-    open.type = "button";
-    open.className = "secondary-button";
-    open.textContent = "Open";
-    open.addEventListener("click", () => openLayout(layout.id));
-    card.append(copy, open);
+    meta.textContent = `${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"} • ${layout.pdfFileName || "Scorecard PDF"}`;
+    copy.append(identity, desc, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "layout-list-actions";
+    const designer = document.createElement("button");
+    designer.type = "button";
+    designer.className = "primary-button compact-button";
+    designer.textContent = "Open Designer";
+    designer.addEventListener("click", () => openLayoutDesignerFromLibrary(layout.id));
+    const settings = document.createElement("button");
+    settings.type = "button";
+    settings.className = "secondary-button compact-button";
+    settings.textContent = "Settings";
+    settings.addEventListener("click", () => openLayoutSettingsFromLibrary(layout.id));
+
+    const menu = document.createElement("details");
+    menu.className = "layout-card-menu";
+    const summary = document.createElement("summary");
+    summary.className = "secondary-button compact-button";
+    summary.textContent = "More";
+    summary.setAttribute("aria-label", `More actions for ${layout.name}`);
+    const menuItems = document.createElement("div");
+    menuItems.className = "layout-card-menu-items";
+    const menuActions = [
+      ["Duplicate", () => runLayoutAction(layout.id, duplicateSelectedLayout)],
+      ["Export Backup", () => exportLayoutFromLibrary(layout.id)],
+      [layout.id === state.favoriteLayoutId ? "Favorite Layout" : "Set as Favorite", () => runLayoutAction(layout.id, setSelectedLayoutFavorite), layout.id === state.favoriteLayoutId],
+      ["Delete Layout", () => runLayoutAction(layout.id, deleteSelectedLayout), false, "danger-menu-action"]
+    ];
+    for (const [label, handler, disabled = false, className = ""] of menuActions) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.disabled = disabled;
+      if (className) button.className = className;
+      button.addEventListener("click", handler);
+      menuItems.append(button);
+    }
+    menu.append(summary, menuItems);
+    actions.append(designer, settings, menu);
+    card.append(copy, actions);
     elements.layoutList.append(card);
+  });
+}
+
+async function runLayoutAction(id, action) {
+  await openLayout(id);
+  await action();
+}
+
+async function openLayoutDesignerFromLibrary(id) {
+  await openLayout(id);
+  await openDesigner();
+}
+
+async function openLayoutSettingsFromLibrary(id) {
+  await openLayout(id);
+  openLayoutFormattingDialog();
+}
+
+async function exportLayoutFromLibrary(id) {
+  await downloadBackup(BACKUP_SCOPES.SINGLE_LAYOUT, {
+    layoutId: id,
+    report: (message, type) => setLayoutMessage(message, type === "error")
   });
 }
 
@@ -1882,25 +2727,7 @@ async function openLayout(id) {
   state.selectedLayoutId = id;
   renderLayoutList();
   updateFavoriteLayoutButton();
-  elements.layoutDetailCard.hidden = false;
-  elements.selectedLayoutHeading.textContent = layout.name;
-  elements.selectedLayoutMeta.textContent = `${layout.pdfFileName} • ${layout.pageCount} page${layout.pageCount === 1 ? "" : "s"}`;
-  elements.editLayoutName.value = layout.name;
-  elements.editLayoutDescription.value = layout.description || "";
-  try {
-    const record = await getPdfTemplate(layout.pdfTemplateId);
-    if (!record?.blob) throw new Error("This layout's PDF template is missing.");
-    setLayoutBusy(true, "Opening layout PDF…");
-    const pdf = await loadPdfDocument(record.blob);
-    await showPdfDocument(pdf, record, 1);
-  } catch (error) {
-    console.error("Unable to open layout PDF:", error);
-    state.pdfDocument = null;
-    elements.pdfViewer.hidden = true;
-    setLayoutMessage(errorMessage(error, "The layout PDF could not be opened."), true);
-  } finally {
-    setLayoutBusy(false);
-  }
+  return layout;
 }
 
 async function saveSelectedLayoutMetadata() {
@@ -1959,8 +2786,8 @@ async function deleteSelectedLayout() {
     state.selectedLayoutId = null;
     state.pdfDocument = null;
     state.pdfRecord = null;
-    elements.pdfViewer.hidden = true;
-    elements.layoutDetailCard.hidden = true;
+    if (elements.pdfViewer) elements.pdfViewer.hidden = true;
+    if (elements.layoutDetailCard) elements.layoutDetailCard.hidden = true;
     await refreshLayouts();
     setLayoutMessage(`Deleted ${layout.name}.`);
   } catch (error) {
@@ -2000,6 +2827,7 @@ async function openDesigner() {
     renderDesignerPalette();
     renderDesignerSelectionInspector();
     resetDesignerHistory(layout);
+    updateDesignerGenerateAvailability();
     setDesignerMessage("Select data from the palette, place it on the scorecard, then click any placed object to fine-tune it.");
   } catch (error) {
     console.error("Unable to open Designer:", error);
@@ -2296,11 +3124,12 @@ async function createDesignerRepeatedBlock() {
     pageIndex: null,
     geometry: null,
     columns: [],
+    ...(!isRecord && isBullpenCollection(collection) ? { pitcherGroup: normalizePitcherGroup(elements.designerPitcherGroup?.value || state.designerPitcherGroupDraft) } : {}),
     ...(!isRecord && state.designerBlockSortDraft?.field ? { sort: { field: state.designerBlockSortDraft.field, direction: state.designerBlockSortDraft.direction === "desc" ? "desc" : "asc" } } : {})
   };
   layout.repeatedBlocks = Array.isArray(layout.repeatedBlocks) ? layout.repeatedBlocks : [];
   layout.repeatedBlocks.push(block);
-  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, isRecord ? 7 : 4);
+  layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, !isRecord && isBullpenCollection(collection) ? 8 : (isRecord ? 7 : 4));
   layout.updatedAt = new Date().toISOString();
   try {
     await saveLayout(layout);
@@ -2309,6 +3138,7 @@ async function createDesignerRepeatedBlock() {
     renderDesignerBlockList();
     state.designerPaletteSelection = null;
     state.designerBlockSortDraft = { field: "", direction: "asc" };
+    state.designerPitcherGroupDraft = PITCHER_GROUP_MODES.CORE;
     selectDesignerObject({ kind: "block", blockId: block.id });
     beginDesignerBlockGeometryPlacement({ discardBlockOnCancel: true });
     setDesignerMessage(`Created ${blockLabel(block)}. Follow the placement instructions above the scorecard.`);
@@ -3075,6 +3905,7 @@ function individualCollectionLabel(collection) {
 }
 
 function renderDesignerMappingList() {
+  updateDesignerGenerateAvailability();
   if (!elements.designerMappingCount || !elements.designerMappingList) return;
   const layout = selectedLayout();
   const mappings = layout?.mappings || [];
@@ -3107,6 +3938,16 @@ function renderDesignerMappingList() {
   });
 }
 
+function updateDesignerGenerateAvailability() {
+  const layout = selectedLayout();
+  const ready = Boolean(layout) && layoutHasRenderableMappings(layout);
+  if (elements.designerGenerateButton) {
+    elements.designerGenerateButton.disabled = !ready;
+    elements.designerGenerateButton.title = ready ? "" : "Map at least one field before generating a test PDF.";
+  }
+  if (elements.designerGenerateHint) elements.designerGenerateHint.textContent = ready ? "" : "Map at least one field to enable PDF generation.";
+}
+
 function renderDesignerBlockList() {
   const layout = selectedLayout();
   const blocks = layout?.repeatedBlocks || [];
@@ -3123,7 +3964,7 @@ function renderDesignerBlockList() {
     const card = document.createElement("div");
     card.className = "designer-block-card";
     const strong = document.createElement("strong");
-    strong.textContent = isRecordBlock(block) ? `${blockLabel(block)} • Record Layout` : `${blockLabel(block)} • ${blockArrangementLabel(block)}`;
+    strong.textContent = isRecordBlock(block) ? `${blockLabel(block)} • Record Layout` : `${blockDisplayLabel(block)} • ${blockArrangementLabel(block)}`;
     const meta = document.createElement("span");
     if (block.geometry && Number.isInteger(block.pageIndex)) {
       if (isSlotGridGeometry(block)) {
@@ -3166,7 +4007,7 @@ async function showDesignerMapping(mapping) {
       setDesignerMessage(`${mapping.content?.type === "template" ? "Text template" : `Mapped field “${designerFieldLabel(mapping.field)}”`} could not be located on the rendered page.`, true);
       return;
     }
-    marker.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    marker.scrollIntoView({ behavior: preferredScrollBehavior(), block: "center", inline: "center" });
     marker.classList.remove("show-target");
     void marker.offsetWidth;
     marker.classList.add("show-target");
@@ -3231,7 +4072,7 @@ async function deleteSelectedDesignerBlock() {
   const layout = selectedLayout();
   const block = selectedDesignerBlock();
   if (!layout || !block) return setDesignerMessage("Select a repeated block first.", true);
-  if (!window.confirm(`Delete the ${blockLabel(block)} and all of its items?`)) return;
+  if (!window.confirm(`Delete the ${blockDisplayLabel(block)} and all of its items?`)) return;
   layout.repeatedBlocks = (layout.repeatedBlocks || []).filter((item) => item.id !== block.id);
   layout.updatedAt = new Date().toISOString();
   try {
@@ -3269,7 +4110,7 @@ function populateDesignerBlockSelect(preferredId = null) {
   blocks.forEach((block, index) => {
     const option = document.createElement("option");
     option.value = block.id;
-    option.textContent = isRecordBlock(block) ? `${blockLabel(block)} ${index + 1} • Record Layout` : `${blockLabel(block)} ${index + 1} • ${blockArrangementLabel(block)}`;
+    option.textContent = isRecordBlock(block) ? `${blockLabel(block)} ${index + 1} • Record Layout` : `${blockDisplayLabel(block)} ${index + 1} • ${blockArrangementLabel(block)}`;
     elements.designerBlockSelect.append(option);
   });
   if (blocks.some((block) => block.id === prior)) elements.designerBlockSelect.value = prior;
@@ -3374,7 +4215,15 @@ function updateDesignerSlotTemplatePreview() {
   if (!elements.designerColumnTemplatePreview) return;
   const block = state.designerPaletteSelection && state.designerPendingMode ? null : selectedDesignerBlock();
   const context = blockContext(block) || String(elements.designerLineupSide?.value || "");
-  const preview = resolveSlotContent({ type: "template", template: elements.designerColumnTemplate?.value || "" }, DESIGNER_SAMPLE_MODEL, context, { slot: 1 });
+  const pitcherGroup = isBullpenCollection(context)
+    ? normalizePitcherGroup(block?.pitcherGroup ?? state.designerPitcherGroupDraft)
+    : null;
+  const preview = resolveSlotContent(
+    { type: "template", template: elements.designerColumnTemplate?.value || "" },
+    DESIGNER_SAMPLE_MODEL,
+    context,
+    { slot: 1, ...(pitcherGroup ? { pitcherGroup } : {}) }
+  );
   elements.designerColumnTemplatePreview.textContent = preview || "Enter text or insert a field.";
 }
 
@@ -3411,8 +4260,46 @@ function syncDesignerBlockControls() {
     elements.designerPlaceRowsButton.textContent = block.geometry ? "Change Placement" : "Set Placement";
   } else elements.designerPlaceRowsButton.textContent = "Set Placement";
   syncDesignerArrangementInputs();
+  syncDesignerPitcherGroupControls(block);
   populateDesignerColumnFieldSelect();
   syncDesignerBlockSortControls(block);
+}
+
+function syncDesignerPitcherGroupControls(block = selectedDesignerBlock()) {
+  if (!elements.designerPitcherGroupWrap || !elements.designerPitcherGroup) return;
+  const creating = Boolean(state.designerPaletteSelection && state.designerPendingMode === "repeated") || !block;
+  const collection = creating ? String(elements.designerLineupSide?.value || "") : String(block?.collection || "");
+  const supported = isBullpenCollection(collection) && (creating || Boolean(block));
+  elements.designerPitcherGroupWrap.hidden = !supported;
+  if (!supported) return;
+  const stored = creating ? state.designerPitcherGroupDraft : block?.pitcherGroup;
+  elements.designerPitcherGroup.value = normalizePitcherGroup(stored);
+  if (elements.designerPitcherGroupNote) {
+    elements.designerPitcherGroupNote.textContent = !creating && !block?.pitcherGroup
+      ? "Legacy block: missing choice is Combined Pitchers. Choose another group to update this block."
+      : "Stored on this repeated layout only.";
+  }
+}
+
+function handleDesignerPitcherGroupChange() {
+  const mode = normalizePitcherGroup(elements.designerPitcherGroup?.value);
+  const selectedBlock = selectedDesignerBlock();
+  const creating = Boolean(state.designerPaletteSelection && state.designerPendingMode === "repeated") || !selectedBlock;
+  if (creating) {
+    state.designerPitcherGroupDraft = mode;
+    updateDesignerSlotTemplatePreview();
+    return;
+  }
+  const block = selectedBlock;
+  if (!block || !isBullpenCollection(block.collection) || (normalizePitcherGroup(block.pitcherGroup) === mode && block.pitcherGroup === mode)) return;
+  recordDesignerHistory();
+  block.pitcherGroup = mode;
+  const layout = selectedLayout();
+  if (layout) layout.schemaVersion = Math.max(Number(layout.schemaVersion) || 1, 8);
+  populateDesignerBlockSelect(block.id);
+  markDesignerObjectChanged();
+  syncDesignerPitcherGroupControls(block);
+  setDesignerMessage(`${blockLabel(block)} now uses ${pitcherGroupLabel(mode)}.`);
 }
 
 function sortableRepeatedDefinitions(collection) {
@@ -3508,6 +4395,7 @@ function syncDesignerArrangementInputs() {
   elements.designerGridDimensions.hidden = isRecord || !isGrid;
   if (elements.designerBlockToolTitle) elements.designerBlockToolTitle.textContent = isRecord ? "Record Layout" : "Repeated Layout";
   if (elements.designerCreateBlockButton) elements.designerCreateBlockButton.textContent = isRecord ? "Place Record Layout" : "Set Placement";
+  syncDesignerPitcherGroupControls();
 }
 
 function selectedDesignerBlock() {
@@ -3532,6 +4420,12 @@ function blockLabel(block) {
     "game.umpires.crew": "Umpire crew"
   };
   return labels[blockContext(block)] || String(blockContext(block) || "Layout block");
+}
+
+function blockDisplayLabel(block) {
+  return isBullpenCollection(block?.collection)
+    ? `${blockLabel(block)} • ${pitcherGroupLabel(block?.pitcherGroup)}`
+    : blockLabel(block);
 }
 
 function isRecordContext(context) {
@@ -3663,10 +4557,10 @@ function repeatedRowYPercent(block, rowIndex, pageHeightPoints) {
   return clamp(Number(block.geometry.firstYPercent) + ((Number(block.geometry.rowSpacingPoints) || 0) * rowIndex / pageHeightPoints), 0, 1);
 }
 
-function repeatedSortValue(model, fieldId, slot) {
+function repeatedSortValue(model, fieldId, slot, pitcherGroup = null) {
   const definition = getFieldDefinition(fieldId);
   if (!definition) return null;
-  const resolution = resolveField(model, fieldId, { slot });
+  const resolution = resolveField(model, fieldId, { slot, ...(pitcherGroup ? { pitcherGroup } : {}) });
   if (resolution.state !== "available") return null;
   if (/[.]player[.]name$/.test(definition.id)) {
     const player = resolution.formatSource || {};
@@ -3683,14 +4577,15 @@ function repeatedSortValue(model, fieldId, slot) {
 }
 
 function repeatedSourceSlots(model, block) {
-  const rows = getCollectionRows(model, block?.collection);
+  const pitcherGroup = isBullpenCollection(block?.collection) ? normalizePitcherGroup(block?.pitcherGroup) : null;
+  const rows = getCollectionRows(model, block?.collection, pitcherGroup ? { pitcherGroup } : {});
   const slots = rows.map((_row, index) => index + 1);
   const fieldId = String(block?.sort?.field || "");
   if (!fieldId || !sortableRepeatedDefinitions(block?.collection).some((definition) => definition.id === fieldId)) return slots;
   const direction = block?.sort?.direction === "desc" ? -1 : 1;
   return slots.slice().sort((left, right) => {
-    const a = repeatedSortValue(model, fieldId, left);
-    const b = repeatedSortValue(model, fieldId, right);
+    const a = repeatedSortValue(model, fieldId, left, pitcherGroup);
+    const b = repeatedSortValue(model, fieldId, right, pitcherGroup);
     if (!a && !b) return left - right;
     if (!a) return 1;
     if (!b) return -1;
@@ -3704,7 +4599,10 @@ function repeatedSourceSlots(model, block) {
 function repeatedSourceSelector(model, block, displaySlot) {
   if (isRecordBlock(block)) return null;
   const sourceSlots = repeatedSourceSlots(model, block);
-  return { slot: sourceSlots[displaySlot - 1] || displaySlot };
+  return {
+    slot: sourceSlots[displaySlot - 1] || displaySlot,
+    ...(isBullpenCollection(block?.collection) ? { pitcherGroup: normalizePitcherGroup(block?.pitcherGroup) } : {})
+  };
 }
 
 function setDesignerPlacement(placement) {
@@ -4500,7 +5398,8 @@ function configureControlsForPaletteItem(item) {
     if (Array.from(elements.designerLineupSide.options).some((o)=>o.value===item.id)) elements.designerLineupSide.value=item.id;
     if (Array.from(elements.designerIndividualCollection.options).some((o)=>o.value===item.id)) elements.designerIndividualCollection.value=item.id;
     state.designerBlockSortDraft = { field: "", direction: "asc" };
-    populateDesignerColumnFieldSelect(); syncDesignerIndividualControls(); syncDesignerBlockSortControls(null);
+    state.designerPitcherGroupDraft = PITCHER_GROUP_MODES.CORE;
+    populateDesignerColumnFieldSelect(); syncDesignerIndividualControls(); syncDesignerBlockSortControls(null); syncDesignerPitcherGroupControls(null);
   } else if (item.kind === "custom") {
     populateDesignerTemplateFieldSelect();
   }
@@ -4576,7 +5475,7 @@ function scrollSelectedDesignerObjectIntoView() {
   window.requestAnimationFrame(() => {
     const target = elements.designerOverlay?.querySelector(".selected-object");
     if (!target) return;
-    target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    target.scrollIntoView({ behavior: preferredScrollBehavior(), block: "center", inline: "center" });
   });
 }
 
@@ -5598,26 +6497,20 @@ function layoutSettingsSelectedIds(layout = selectedLayout()) {
 function fieldPickerLabel(definition) { return definition.label.replace(/^(Away|Home) /, ""); }
 
 const LAYOUT_FIELD_PICKER_GROUPS = [
-  { key: "game", label: "Game", categories: ["Game", "Game / Weather"] },
-  { key: "venue", label: "Game / Venue", categories: ["Game / Venue"] },
-  { key: "away-team", label: "Away / Team", categories: ["Away / Team"] },
-  { key: "home-team", label: "Home / Team", categories: ["Home / Team"] },
-  { key: "away-record", label: "Away / Record", categories: ["Away / Record"] },
-  { key: "home-record", label: "Home / Record", categories: ["Home / Record"] },
-  { key: "away-standings", label: "Away / Standings", categories: ["Away / Standings"] },
-  { key: "home-standings", label: "Home / Standings", categories: ["Home / Standings"] },
-  { key: "away-personnel", label: "Away / Personnel", categories: ["Away / Personnel"] },
-  { key: "home-personnel", label: "Home / Personnel", categories: ["Home / Personnel"] },
-  { key: "away-starting-pitcher", label: "Away / Starting Pitcher", categories: ["Away / Starting Pitcher"] },
-  { key: "home-starting-pitcher", label: "Home / Starting Pitcher", categories: ["Home / Starting Pitcher"] },
-  { key: "away-lineup", label: "Away / Starting Lineup", categories: ["Away / Starting Lineup"] },
-  { key: "home-lineup", label: "Home / Starting Lineup", categories: ["Home / Starting Lineup"] },
-  { key: "away-bench", label: "Away / Bench", categories: ["Away / Bench"] },
-  { key: "home-bench", label: "Home / Bench", categories: ["Home / Bench"] },
-  { key: "away-bullpen", label: "Away / Bullpen", categories: ["Away / Bullpen"] },
-  { key: "home-bullpen", label: "Home / Bullpen", categories: ["Home / Bullpen"] },
-  { key: "umpires", label: "Game / Umpires", categories: ["Game / Umpires"], fullWidth: true }
+  { key: "game-day", label: "Game Day Information", categories: ["Game", "Game / Weather", "Game / Umpires"] },
+  { key: "venue", label: "Venue Information", categories: ["Game / Venue"] },
+  { key: "team", label: "Team Information", categories: ["Away / Team", "Home / Team"], paired: true, fullWidth: true },
+  { key: "records", label: "Team Records", categories: ["Away / Record", "Home / Record"], paired: true, fullWidth: true },
+  { key: "standings", label: "Team Standings", categories: ["Away / Standings", "Home / Standings"], paired: true, fullWidth: true },
+  { key: "personnel", label: "Team Personnel", categories: ["Away / Personnel", "Home / Personnel"], paired: true, fullWidth: true },
+  { key: "starting-pitchers", label: "Starting Pitchers", categories: ["Away / Starting Pitcher", "Home / Starting Pitcher"], paired: true, fullWidth: true },
+  { key: "starting-lineup", label: "Starting Lineup", categories: ["Away / Starting Lineup", "Home / Starting Lineup"], paired: true, fullWidth: true },
+  { key: "bench", label: "Bench", categories: ["Away / Bench", "Home / Bench"], paired: true, fullWidth: true },
+  { key: "bullpen", label: "Bullpen", categories: ["Away / Bullpen", "Home / Bullpen"], paired: true, fullWidth: true }
 ];
+
+const LAYOUT_FIELD_MIRROR_PAIRS = buildHomeAwayFieldPairs(customPickerFieldDefinitions());
+const LAYOUT_FIELD_PAIR_COVERAGE = fieldPairCoverage(customPickerFieldDefinitions(), LAYOUT_FIELD_MIRROR_PAIRS);
 
 function customPickerFieldDefinitions() {
   return getCatalogFields().filter((definition) => !isLegacyUmpireScalarField(definition));
@@ -5636,12 +6529,45 @@ function updateLayoutFieldPickerGroupCounts() {
     if (count) count.textContent = `${selectedCount} of ${ids.length} selected`;
     const selectAll = section.querySelector('[data-picker-action="select"]');
     const deselectAll = section.querySelector('[data-picker-action="deselect"]');
+    const restoreStandard = section.querySelector('[data-picker-action="standard"]');
     const visibleIds = String(selectAll?.dataset.visibleFieldIds || "").split(",").filter(Boolean);
     const actionableIds = visibleIds.length ? visibleIds : ids;
     const visibleSelectedCount = actionableIds.filter((id) => state.layoutFieldDraft.has(id)).length;
     if (selectAll) selectAll.disabled = actionableIds.length > 0 && visibleSelectedCount === actionableIds.length;
     if (deselectAll) deselectAll.disabled = visibleSelectedCount === 0;
+    if (restoreStandard) {
+      const standardIds = new Set(String(restoreStandard.dataset.standardFieldIds || "").split(",").filter(Boolean));
+      restoreStandard.disabled = ids.every((id) => state.layoutFieldDraft.has(id) === standardIds.has(id));
+    }
   }
+}
+
+function createLayoutFieldPickerItem(definition, selected) {
+  const label = document.createElement("label"); label.className = "layout-field-picker-item";
+  const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = definition.id; checkbox.dataset.fieldId = definition.id; checkbox.checked = selected.has(definition.id);
+  const copy = document.createElement("span"); const itemTitle = document.createElement("strong"); itemTitle.textContent = fieldPickerLabel(definition);
+  const meta = document.createElement("small"); meta.textContent = definition.exampleValue ? `Example: ${definition.exampleValue}` : definition.description || "";
+  copy.append(itemTitle, meta); label.append(checkbox, copy);
+  return label;
+}
+
+function createLayoutFieldPickerItems(group, definitions, selected) {
+  const items = document.createElement("div");
+  if (!group.paired) {
+    items.className = "layout-field-picker-items";
+    definitions.forEach((definition) => items.append(createLayoutFieldPickerItem(definition, selected)));
+    return items;
+  }
+
+  items.className = "layout-field-picker-side-grid";
+  for (const side of ["away", "home"]) {
+    const column = document.createElement("div"); column.className = `layout-field-picker-side-column ${side}`;
+    const heading = document.createElement("h6"); heading.textContent = side === "away" ? "Away" : "Home"; column.append(heading);
+    definitions.filter((definition) => definition.id.startsWith(`${side}.`))
+      .forEach((definition) => column.append(createLayoutFieldPickerItem(definition, selected)));
+    items.append(column);
+  }
+  return items;
 }
 
 function renderLayoutFieldPicker(selected = state.layoutFieldDraft, query = "") {
@@ -5655,32 +6581,30 @@ function renderLayoutFieldPicker(selected = state.layoutFieldDraft, query = "") 
       return !q || haystack.includes(q);
     });
     if (!definitions.length) continue;
-    const section = document.createElement("section");
+    const section = document.createElement("details");
     section.className = `layout-field-picker-group${group.fullWidth ? " full-width" : ""}`;
     section.dataset.groupKey = group.key;
     section.dataset.fieldIds = allDefinitions.map((definition) => definition.id).join(",");
+    section.open = Boolean(q) || state.layoutFieldExpanded.has(group.key);
 
-    const heading = document.createElement("div"); heading.className = "layout-field-picker-heading";
+    const heading = document.createElement("summary"); heading.className = "layout-field-picker-heading";
     const headingCopy = document.createElement("div");
     const title = document.createElement("h5"); title.textContent = group.label;
     const count = document.createElement("small"); count.dataset.pickerCount = "";
     headingCopy.append(title, count);
     const actions = document.createElement("div"); actions.className = "layout-field-picker-actions";
+    const restoreStandard = document.createElement("button"); restoreStandard.type = "button"; restoreStandard.className = "link-button standard-fields-button"; restoreStandard.textContent = "Standard Fields"; restoreStandard.dataset.pickerAction = "standard";
     const selectAll = document.createElement("button"); selectAll.type = "button"; selectAll.className = "link-button"; selectAll.textContent = "Select All"; selectAll.dataset.pickerAction = "select";
     const deselectAll = document.createElement("button"); deselectAll.type = "button"; deselectAll.className = "link-button"; deselectAll.textContent = "Deselect All"; deselectAll.dataset.pickerAction = "deselect";
     const fieldIds = allDefinitions.map((definition) => definition.id).join(",");
+    const standardFieldIds = allDefinitions.filter((definition) => definition.visibilityTier === "standard").map((definition) => definition.id).join(",");
     const visibleFieldIds = definitions.map((definition) => definition.id).join(",");
+    restoreStandard.dataset.fieldIds = fieldIds; restoreStandard.dataset.standardFieldIds = standardFieldIds;
     selectAll.dataset.fieldIds = fieldIds; deselectAll.dataset.fieldIds = fieldIds;
     selectAll.dataset.visibleFieldIds = visibleFieldIds; deselectAll.dataset.visibleFieldIds = visibleFieldIds;
-    actions.append(selectAll, deselectAll); heading.append(headingCopy, actions); section.append(heading);
-
-    for (const definition of definitions) {
-      const label = document.createElement("label"); label.className = "layout-field-picker-item";
-      const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.value = definition.id; checkbox.dataset.fieldId = definition.id; checkbox.checked = selected.has(definition.id);
-      const copy = document.createElement("span"); const itemTitle = document.createElement("strong"); itemTitle.textContent = fieldPickerLabel(definition);
-      const meta = document.createElement("small"); meta.textContent = definition.exampleValue ? `Example: ${definition.exampleValue}` : definition.description || "";
-      copy.append(itemTitle, meta); label.append(checkbox, copy); section.append(label);
-    }
+    actions.append(restoreStandard, selectAll, deselectAll);
+    heading.append(headingCopy, actions); section.append(heading);
+    section.append(createLayoutFieldPickerItems(group, definitions, selected));
     elements.layoutCustomFieldList.append(section);
   }
   updateLayoutFieldPickerGroupCounts();
@@ -5694,6 +6618,7 @@ function syncLayoutFieldSettingsUI() {
   const totalCount = customPickerFieldDefinitions().length;
   if (elements.layoutFieldSummaryDetail) elements.layoutFieldSummaryDetail.textContent = `${selected.size} of ${totalCount} selected`;
   if (elements.layoutCustomFieldCount) elements.layoutCustomFieldCount.textContent = `${state.layoutFieldDraft.size} of ${totalCount} selected`;
+  if (elements.layoutFieldMirror) elements.layoutFieldMirror.checked = state.layoutFieldMirror;
   if (elements.layoutCustomFieldsSave) elements.layoutCustomFieldsSave.disabled = !customFieldSelectorIsDirty();
   if (elements.layoutCustomFieldsRestoreStandard) elements.layoutCustomFieldsRestoreStandard.disabled = fieldSelectionIsStandard(state.layoutFieldDraft);
 }
@@ -5715,9 +6640,11 @@ function openCustomFieldSelector() {
   const selected = layoutSettingsSelectedIds(layout);
   state.layoutFieldDraftSaved = new Set(selected);
   state.layoutFieldDraft = new Set(selected);
+  state.layoutFieldMirror = true;
+  state.layoutFieldExpanded.clear();
   if (elements.layoutFieldSearch) elements.layoutFieldSearch.value = "";
   renderLayoutFieldPicker(state.layoutFieldDraft); syncLayoutFieldSettingsUI();
-  elements.layoutCustomFieldsDialog?.showModal();
+  showLayoutSettingsView("fields");
 }
 async function saveCustomFieldSelectorDraft() {
   const layout = selectedLayout(); if (!layout) return;
@@ -5732,7 +6659,7 @@ async function saveCustomFieldSelectorDraft() {
   const current = selectedLayout() || layout;
   populateLayoutFieldSettings(current);
   refreshLayoutSettingsSummaries(current);
-  elements.layoutCustomFieldsDialog?.close();
+  showLayoutSettingsView("summary");
   populateDesignerFieldSelect(); populateDesignerTemplateFieldSelect(); populateDesignerColumnFieldSelect(); populateDesignerIndividualFieldSelect();
   renderDesignerPalette(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
   setDesignerMessage("Field palette settings saved.");
@@ -5760,8 +6687,8 @@ function cancelCustomFieldSelector() {
   state.layoutSettingsDiscardTarget = null;
   state.layoutFieldDraft = new Set(state.layoutFieldDraftSaved);
   if (elements.layoutFieldSearch) elements.layoutFieldSearch.value = "";
-  elements.layoutCustomFieldsDialog?.close();
   syncLayoutFieldSettingsUI();
+  showLayoutSettingsView("summary");
 }
 
 function createLayoutFormattingRow(group, value) {
@@ -5821,11 +6748,81 @@ function refreshLayoutSettingsSummaries(layout = selectedLayout()) {
   if (elements.layoutFormattingSummary) elements.layoutFormattingSummary.textContent = usingAppDefaults ? "Currently using app defaults" : "Currently using custom formatting";
 }
 
+const LAYOUT_SETTINGS_VIEWS = Object.freeze({
+  summary: {
+    title: "Layout Settings",
+    description: "Review this layout, then choose what to change."
+  },
+  details: {
+    title: "Layout Details",
+    description: "Change the layout name, description, or scorecard PDF."
+  },
+  fields: {
+    title: "Field Palette",
+    description: "Choose the fields available while designing this layout."
+  },
+  formatting: {
+    title: "Default Formatting Options",
+    description: "Set the starting appearance for newly placed scorecard items."
+  }
+});
+
+function showLayoutSettingsView(view = "summary", options = {}) {
+  const next = LAYOUT_SETTINGS_VIEWS[view] ? view : "summary";
+  state.layoutSettingsView = next;
+  const visibility = [
+    [elements.layoutSettingsSummaryView, next === "summary"],
+    [elements.layoutDetailsDialog, next === "details"],
+    [elements.layoutCustomFieldsDialog, next === "fields"],
+    [elements.layoutDefaultFormattingDialog, next === "formatting"],
+    [elements.layoutSettingsSummaryActions, next === "summary"],
+    [elements.layoutSettingsDetailsActions, next === "details"],
+    [elements.layoutSettingsFieldsActions, next === "fields"],
+    [elements.layoutSettingsFormattingActions, next === "formatting"]
+  ];
+  visibility.forEach(([element, visible]) => { if (element) element.hidden = !visible; });
+  if (elements.layoutSettingsTitle) elements.layoutSettingsTitle.textContent = LAYOUT_SETTINGS_VIEWS[next].title;
+  if (elements.layoutSettingsDialogDescription) elements.layoutSettingsDialogDescription.textContent = LAYOUT_SETTINGS_VIEWS[next].description;
+  if (options.focus !== false) window.requestAnimationFrame(() => elements.layoutSettingsTitle?.focus());
+}
+
+function closeLayoutSettingsShell() {
+  state.layoutSettingsClosing = false;
+  state.layoutSettingsDiscardTarget = null;
+  elements.layoutFormattingDialog?.close();
+}
+
+function requestCloseLayoutSettingsEditor() {
+  state.layoutSettingsClosing = false;
+  if (state.layoutSettingsView === "details") return requestCloseLayoutDetails();
+  if (state.layoutSettingsView === "fields") return requestCloseCustomFieldSelector();
+  if (state.layoutSettingsView === "formatting") return requestCloseLayoutDefaultFormatting();
+  showLayoutSettingsView("summary");
+}
+
+function requestCloseLayoutSettingsSurface() {
+  if (state.layoutSettingsView === "summary") return requestCloseLayoutSettings();
+  return requestCloseLayoutSettingsEditor();
+}
+
+function requestCloseLayoutSettings() {
+  if (state.layoutSettingsView === "summary") return closeLayoutSettingsShell();
+  state.layoutSettingsClosing = true;
+  if (state.layoutSettingsView === "details" && layoutDetailsIsDirty()) return requestCloseLayoutDetails();
+  if (state.layoutSettingsView === "fields" && customFieldSelectorIsDirty()) return requestCloseCustomFieldSelector();
+  if (state.layoutSettingsView === "formatting" && layoutFormattingIsDirty()) return requestCloseLayoutDefaultFormatting();
+  requestCloseLayoutSettingsEditor();
+  closeLayoutSettingsShell();
+}
+
 function openLayoutFormattingDialog() {
   const layout = selectedLayout();
   if (!layout) return setLayoutMessage("Open a layout before changing Layout Settings.", true);
   refreshLayoutSettingsSummaries(layout);
+  state.layoutSettingsClosing = false;
+  showLayoutSettingsView("summary", { focus: false });
   elements.layoutFormattingDialog?.showModal();
+  window.requestAnimationFrame(() => elements.layoutSettingsTitle?.focus());
 }
 
 function layoutDetailsSnapshot() {
@@ -5849,7 +6846,7 @@ function openLayoutDetailsDialog() {
   if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
   state.layoutDetailsSavedSnapshot = layoutDetailsSnapshot();
   updateLayoutDetailsActions();
-  elements.layoutDetailsDialog?.showModal();
+  showLayoutSettingsView("details");
 }
 function requestCloseLayoutDetails() {
   if (!layoutDetailsIsDirty()) return cancelLayoutDetails();
@@ -5860,7 +6857,7 @@ function cancelLayoutDetails() {
   state.layoutReplacementPdf = null;
   state.layoutDetailsSavedSnapshot = null;
   if (elements.layoutSettingsPdfInput) elements.layoutSettingsPdfInput.value = "";
-  elements.layoutDetailsDialog?.close();
+  showLayoutSettingsView("summary");
 }
 
 async function saveLayoutDetails() {
@@ -5877,7 +6874,7 @@ async function saveLayoutDetails() {
   state.selectedLayoutId = layout.id;
   const current = selectedLayout() || layout;
   refreshLayoutSettingsSummaries(current);
-  elements.layoutDetailsDialog?.close();
+  showLayoutSettingsView("summary");
   if (elements.designerLayoutMeta) elements.designerLayoutMeta.textContent = `${current.name} • ${current.pdfFileName} • ${current.pageCount} page${current.pageCount === 1 ? "" : "s"}`;
   if (replacementPdf && state.designerPdfDocument) { const record = await getPdfTemplate(current.pdfTemplateId); state.designerPdfDocument = await loadPdfDocument(record.blob); await renderDesignerPage(); }
   state.layoutReplacementPdf = null;
@@ -5900,7 +6897,7 @@ function openLayoutDefaultFormattingDialog() {
   renderLayoutFormattingEditor(layoutFormattingDefaults(layout), layoutConditionalFormatting(layout));
   state.layoutFormattingSavedSnapshot = layoutFormattingSnapshot();
   updateLayoutFormattingActions();
-  elements.layoutDefaultFormattingDialog?.showModal();
+  showLayoutSettingsView("formatting");
 }
 function requestCloseLayoutDefaultFormatting() {
   if (!layoutFormattingIsDirty()) return cancelLayoutDefaultFormatting();
@@ -5909,7 +6906,7 @@ function requestCloseLayoutDefaultFormatting() {
 function cancelLayoutDefaultFormatting() {
   state.layoutSettingsDiscardTarget = null;
   state.layoutFormattingSavedSnapshot = null;
-  elements.layoutDefaultFormattingDialog?.close();
+  showLayoutSettingsView("summary");
 }
 
 async function handleLayoutReplacementPdf() {
@@ -5962,7 +6959,7 @@ async function saveLayoutFormattingDefaults() {
   const current = selectedLayout() || layout;
   refreshLayoutSettingsSummaries(current);
   state.layoutFormattingSavedSnapshot = null;
-  elements.layoutDefaultFormattingDialog?.close();
+  showLayoutSettingsView("summary");
   renderDesignerPalette(); renderDesignerOverlay(); renderDesignerSelectionInspector(); renderDesignerMappingList(); renderDesignerBlockList(); renderDesignerIndividualList();
   setDesignerMessage("Default formatting saved.");
 }
@@ -6426,7 +7423,26 @@ function wireDesignerMarker(marker, selection) {
     if (event.ctrlKey || event.metaKey) toggleDesignerMultiSelection(selection);
     else if (!isDesignerSelectionSelected(selection)) selectDesignerObject(selection);
   });
-  marker.addEventListener("pointerdown", (event) => beginDesignerDrag(event, selection));
+  marker.addEventListener("pointerdown", (event) => {
+    const touchLike = designerPointerIsTouchLike(
+      event.pointerType,
+      event.sourceCapabilities?.firesTouchEvents,
+      event.width,
+      event.height
+    );
+    if (!touchLike) beginDesignerDrag(event, selection);
+  });
+  if (isDesignerSelectionSelected(selection)) {
+    const handle = document.createElement("span");
+    handle.className = "designer-touch-drag-handle";
+    handle.setAttribute("aria-hidden", "true");
+    handle.title = "Drag to move";
+    handle.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+      beginDesignerDrag(event, selection);
+    });
+    marker.append(handle);
+  }
 }
 
 function setDesignerSelectionPosition(selection, x, y) {
@@ -6471,13 +7487,37 @@ function beginDesignerDrag(event, selection) {
     return { selection: { ...entry }, startX: anchor.x, startY: anchor.y, canX: anchor.canX, canY: anchor.canY };
   }).filter((entry) => entry.canX || entry.canY);
   if (!entries.length) return;
-  state.designerDrag = { entries, startClientX: event.clientX, startClientY: event.clientY };
+  const captureTarget = event.currentTarget;
+  state.designerDrag = {
+    entries,
+    startClientX: event.clientX,
+    startClientY: event.clientY,
+    pointerId: event.pointerId,
+    pointerType: event.pointerType || "mouse",
+    captureTarget,
+    active: false,
+    changed: false,
+    startUpdatedAt: selectedLayout()?.updatedAt
+  };
+  try { captureTarget?.setPointerCapture?.(event.pointerId); } catch { /* Pointer capture is optional. */ }
   document.addEventListener("pointermove", handleDesignerDragMove);
-  document.addEventListener("pointerup", endDesignerDrag, { once: true });
+  document.addEventListener("pointerup", endDesignerDrag);
+  document.addEventListener("pointercancel", cancelDesignerDrag);
 }
 
 function handleDesignerDragMove(event) {
   const drag = state.designerDrag; if (!drag) return;
+  if (event.pointerId !== drag.pointerId) return;
+  if (!drag.active) {
+    drag.active = designerDragHasStarted(
+      drag.startClientX,
+      drag.startClientY,
+      event.clientX,
+      event.clientY,
+      drag.pointerType
+    );
+    if (!drag.active) return;
+  }
   const scale = Math.max(state.designerRenderScale, .0001);
   const dx = (event.clientX - drag.startClientX) / scale, dy = (event.clientY - drag.startClientY) / scale;
   for (const entry of drag.entries) {
@@ -6489,14 +7529,34 @@ function handleDesignerDragMove(event) {
       if (y != null) elements.designerSelectionY.value = y.toFixed(1);
     }
   }
+  drag.changed = true;
   markDesignerObjectChanged();
 }
 
-function endDesignerDrag() {
+function finishDesignerDrag(event, { save = true } = {}) {
+  const drag = state.designerDrag; if (!drag) return;
+  if (event?.pointerId != null && event.pointerId !== drag.pointerId) return;
   document.removeEventListener("pointermove", handleDesignerDragMove);
+  document.removeEventListener("pointerup", endDesignerDrag);
+  document.removeEventListener("pointercancel", cancelDesignerDrag);
+  try { drag.captureTarget?.releasePointerCapture?.(drag.pointerId); } catch { /* Capture may already be released. */ }
   state.designerDrag = null;
-  scheduleDesignerSave();
+  if (!save && drag.changed) {
+    window.clearTimeout(state.designerSaveTimer);
+    for (const entry of drag.entries) setDesignerSelectionPosition(entry.selection, entry.startX, entry.startY);
+    const layout = selectedLayout();
+    if (layout && drag.startUpdatedAt !== undefined) layout.updatedAt = drag.startUpdatedAt;
+    renderDesignerOverlay();
+    renderDesignerMappingList();
+    renderDesignerBlockList();
+    renderDesignerIndividualList();
+    renderDesignerPalette();
+  }
+  if (save && drag.changed) scheduleDesignerSave();
 }
+
+function endDesignerDrag(event) { finishDesignerDrag(event); }
+function cancelDesignerDrag(event) { finishDesignerDrag(event, { save: false }); }
 
 function handleDesignerKeyboard(event) {
   const designer = document.querySelector('[data-view="designer"]');
@@ -6642,6 +7702,7 @@ function debounce(fn, delay) {
 async function generateTestPdf() {
   const layout = selectedLayout();
   if (!layout) return setGenerateMessage("Open a layout before generating a PDF.", true);
+  if (!layoutHasRenderableMappings(layout)) return setGenerateMessage("This layout is empty. Map at least one field before generating a test PDF.", true);
   elements.designerGenerateButton.disabled = true;
   setGenerateMessage("Generating test PDF with representative data…");
 
@@ -6662,8 +7723,9 @@ async function generateLivePdf() {
   const game = currentScheduleGame();
   const layoutId = elements.livePdfLayoutSelect?.value || "";
   const layout = state.layouts.find((item) => item.id === layoutId) || null;
-  if (!game || !state.normalizedPregame) return setLiveGenerateMessage("Select and load a game before generating a live PDF.", true);
+  if (!game) return setLiveGenerateMessage("Select a game before generating a scorecard.", true);
   if (!layout) return setLiveGenerateMessage("Choose a saved layout before generating a live PDF.", true);
+  if (!layoutHasRenderableMappings(layout)) return setLiveGenerateMessage("This layout is empty. Open it in the Designer and map at least one field before generating a scorecard.", true);
   if (!globalThis.PDFLib) return setLiveGenerateMessage("pdf-lib did not load. Check the browser network connection.", true);
 
   elements.livePdfGenerateButton.disabled = true;
@@ -6733,7 +7795,10 @@ async function buildPopulatedPdf(layout, model) {
     if (!(block.columns || []).length) { emptyBlocks.push(blockLabel(block)); continue; }
     const page = pages[block.pageIndex];
     if (!page) { skipped.push(`${block.collection} block page`); continue; }
-    if (!isRecordBlock(block) && collectionHasOverflow(model, block.collection, block.capacity)) overflowBlocks.push(blockLabel(block));
+    const pitcherGroupOptions = isBullpenCollection(block.collection)
+      ? { pitcherGroup: normalizePitcherGroup(block.pitcherGroup) }
+      : {};
+    if (!isRecordBlock(block) && collectionHasOverflow(model, block.collection, block.capacity, pitcherGroupOptions)) overflowBlocks.push(blockDisplayLabel(block));
     const { width, height } = page.getSize();
     for (let slotIndex = 0; slotIndex < block.capacity; slotIndex += 1) {
       const slot = isSlotGridGeometry(block)
@@ -6871,6 +7936,7 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
     people: state.selectedSupplemental.people,
     standings: state.selectedSupplemental.standings || []
   };
+  if (!supplemental.venue && state.selectedVenueSource) supplemental.venue = state.selectedVenueSource;
 
   if (requirements.has("staff") && !supplemental.coaches) {
     const coachResults = await Promise.allSettled([
@@ -6893,7 +7959,8 @@ async function hydrateSelectedGameModel(fieldIds, expectedGameKey) {
   }
   if (feed) supplemental.feed = { input: { gamePk: String(game.gamePk), profile: "officials-venue-v1" }, payload: feed, outcome: "success" };
 
-  if (requirements.has("extendedVenue") && !supplemental.venue && game.venueData?.id) {
+  const needsGameLocalTime = fieldIds.some((fieldId) => canonicalFieldId(fieldId) === "game.startTime");
+  if ((requirements.has("extendedVenue") || needsGameLocalTime) && !supplemental.venue && game.venueData?.id) {
     const venueResult = await Promise.allSettled([fetchVenueDetails(game.venueData.id, season)]);
     supplemental.venue = sourceConfig({ venueId: Number(game.venueData.id), season, hydrateProfile: "location-fieldInfo-timezone-v1" }, venueResult[0]);
   }
@@ -6949,6 +8016,7 @@ function downloadBlob(blob, filename) {
 function setGenerateMessage(message, isError = false) {
   elements.generateMessage.textContent = message;
   elements.generateMessage.classList.toggle("error", isError);
+  if (isError) elements.generateMessage.scrollIntoView?.({ block: "nearest", behavior: preferredScrollBehavior() });
 }
 
 function selectedLayout() {
@@ -7000,16 +8068,16 @@ async function changePdfPage(delta) {
 }
 
 function updatePdfNavButtons() {
-  elements.pdfPrevButton.disabled = !state.pdfDocument || state.pdfPageNumber <= 1;
-  elements.pdfNextButton.disabled = !state.pdfDocument || state.pdfPageNumber >= state.pdfDocument.numPages;
+  if (elements.pdfPrevButton) elements.pdfPrevButton.disabled = !state.pdfDocument || state.pdfPageNumber <= 1;
+  if (elements.pdfNextButton) elements.pdfNextButton.disabled = !state.pdfDocument || state.pdfPageNumber >= state.pdfDocument.numPages;
 }
 
 function setLayoutBusy(isBusy, message = "") {
-  elements.createLayoutButton.disabled = isBusy;
-  elements.layoutPdfInput.disabled = isBusy;
-  elements.saveLayoutMetadataButton.disabled = isBusy;
-  elements.duplicateLayoutButton.disabled = isBusy;
-  elements.deleteLayoutButton.disabled = isBusy;
+  if (elements.createLayoutButton) elements.createLayoutButton.disabled = isBusy;
+  if (elements.layoutPdfInput) elements.layoutPdfInput.disabled = isBusy;
+  if (elements.saveLayoutMetadataButton) elements.saveLayoutMetadataButton.disabled = isBusy;
+  if (elements.duplicateLayoutButton) elements.duplicateLayoutButton.disabled = isBusy;
+  if (elements.deleteLayoutButton) elements.deleteLayoutButton.disabled = isBusy;
   if (isBusy && message) setLayoutMessage(message);
   updatePdfNavButtons();
 }
@@ -7017,6 +8085,12 @@ function setLayoutBusy(isBusy, message = "") {
 function setLayoutMessage(message, isError = false) {
   elements.layoutMessage.textContent = message;
   elements.layoutMessage.classList.toggle("error", isError);
+}
+
+function setLayoutCreateMessage(message, isError = false) {
+  if (!elements.layoutCreateMessage) return;
+  elements.layoutCreateMessage.textContent = message;
+  elements.layoutCreateMessage.classList.toggle("error", isError);
 }
 
 function createId() {

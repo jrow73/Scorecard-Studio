@@ -5,8 +5,9 @@
  * app bootstrap; consumers explicitly pass a normalized snapshot and selector.
  */
 
-import { findEffectiveLineage, resolveJsonPointer } from "./v030-contract.js?v=030b0054";
-import { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS } from "./v030-compatibility-definitions.js?v=030b0054";
+import { findEffectiveLineage, resolveJsonPointer } from "./v030-contract.js?v=040";
+import { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS } from "./v030-compatibility-definitions.js?v=040";
+import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupRows } from "./v040-pitcher-groups.js?v=040";
 
 export { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS };
 
@@ -128,18 +129,22 @@ export function getPitcherDisplayRows(snapshot, side, options = {}) {
   return uniquePeople([...bullpen, ...(Array.isArray(snapshot?.[side]?.additionalStarters) ? snapshot[side].additionalStarters : [])]);
 }
 
-function rowsForDefinition(snapshot, definition) {
+function rowsForDefinition(snapshot, definition, options = {}) {
   const projection = definition.v2.projection;
-  if (projection?.startsWith("legacy-bullpen")) return getLegacyBullpenRows(snapshot, definition.fieldId.startsWith("away.") ? "away" : "home");
+  if (projection?.startsWith("legacy-bullpen")) {
+    const collection = `${definition.fieldId.startsWith("away.") ? "away" : "home"}.bullpen`;
+    return pitcherGroupRows(snapshot, collection, options.pitcherGroup) ?? getLegacyBullpenRows(snapshot, collection.split(".")[0]);
+  }
   const collection = definition.v2.collection;
   const value = collection ? readPath(snapshot, collection) : { found: false, value: null };
   return Array.isArray(value.value) ? value.value : [];
 }
 
-export function getCompatibilityCollectionRows(snapshot, fieldOrCollection) {
+export function getCompatibilityCollectionRows(snapshot, fieldOrCollection, options = {}) {
   const definition = getCompatibilityDefinition(fieldOrCollection)
     ?? COMPATIBILITY_FIELDS.find((entry) => entry.v1.collection === fieldOrCollection && entry.v1.cardinality === "repeated");
-  return definition ? rowsForDefinition(snapshot, definition) : [];
+  if (isBullpenCollection(fieldOrCollection)) return pitcherGroupRows(snapshot, fieldOrCollection, options.pitcherGroup) ?? [];
+  return definition ? rowsForDefinition(snapshot, definition, options) : [];
 }
 
 function canonicalRoleKey(value) {
@@ -199,11 +204,19 @@ function resolveAtomicPath(snapshot, definition, requestedFieldId) {
 function resolveRepeated(snapshot, definition, requestedFieldId, selector) {
   const isLegacyBullpen = definition.v2.projection?.startsWith("legacy-bullpen");
   const side = definition.fieldId.startsWith("away.") ? "away" : "home";
-  const legacyEntries = isLegacyBullpen ? legacyBullpenEntries(snapshot, side) : null;
-  const rows = legacyEntries ? legacyEntries.map((entry) => entry.row) : rowsForDefinition(snapshot, definition);
+  const customPitcherRows = isLegacyBullpen && selector && Object.hasOwn(selector, "pitcherGroup")
+    ? pitcherGroupRows(snapshot, `${side}.bullpen`, selector.pitcherGroup)
+    : null;
+  const legacyEntries = isLegacyBullpen && customPitcherRows == null ? legacyBullpenEntries(snapshot, side) : null;
+  const rows = customPitcherRows ?? (legacyEntries ? legacyEntries.map((entry) => entry.row) : rowsForDefinition(snapshot, definition));
   const selected = selectRow(rows, definition, selector);
   if (!selected.row) {
-    const collectionPath = definition.v2.collection ?? `${definition.fieldId.startsWith("away.") ? "away" : "home"}.bullpen`;
+    const selectedPitcherGroup = isLegacyBullpen && selector && Object.hasOwn(selector, "pitcherGroup")
+      ? normalizePitcherGroup(selector.pitcherGroup)
+      : null;
+    const collectionPath = selectedPitcherGroup === PITCHER_GROUP_MODES.ADDITIONAL
+      ? `${side}.additionalStarters`
+      : definition.v2.collection ?? `${side}.bullpen`;
     const lineage = lineageAt(snapshot, pointer(collectionPath));
     return result(definition, requestedFieldId, null, selected.reason.startsWith("Repeated field requires") ? "unsupported" : (lineage?.state ?? "omitted"), {
       availability: lineage?.state ?? "omitted", lineage, reason: selected.reason, rowIndex: selected.index
@@ -216,7 +229,19 @@ function resolveRepeated(snapshot, definition, requestedFieldId, selector) {
   else if (projection === "legacy-bullpen-record-v1" || projection === "wins-losses-record-v1") value = winLoss(selected.row?.stats?.[projection === "legacy-bullpen-record-v1" ? "pitching" : "hitting"]?.totals);
   else value = readPath(selected.row, definition.v2.rowPath).value;
 
-  const legacyEntry = legacyEntries?.[selected.index] ?? null;
+  let legacyEntry = legacyEntries?.[selected.index] ?? null;
+  if (isLegacyBullpen && customPitcherRows) {
+    const mode = normalizePitcherGroup(selector.pitcherGroup);
+    const candidateCollections = mode === PITCHER_GROUP_MODES.ADDITIONAL
+      ? ["additionalStarters"]
+      : mode === PITCHER_GROUP_MODES.CORE ? ["bullpen"] : ["bullpen", "additionalStarters"];
+    const selectedId = selected.row?.player?.id;
+    for (const sourceCollection of candidateCollections) {
+      const sourceRows = Array.isArray(snapshot?.[side]?.[sourceCollection]) ? snapshot[side][sourceCollection] : [];
+      const sourceIndex = sourceRows.findIndex((row) => row === selected.row || (selectedId != null && row?.player?.id === selectedId));
+      if (sourceIndex >= 0) { legacyEntry = { row: selected.row, sourceCollection, sourceIndex }; break; }
+    }
+  }
   const target = collectionTarget(definition, selected.index, definition.v2.rowPath, legacyEntry);
   const state = stateFor(snapshot, target, true, value);
   return result(definition, requestedFieldId, value, availableValue(value) ? "available" : state.state, {

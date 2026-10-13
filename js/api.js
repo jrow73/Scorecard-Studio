@@ -35,6 +35,52 @@ export async function fetchFavoriteTeamScheduleBundle(date, teamId, sportId = 1)
   }
 }
 
+export async function fetchSportScheduleBundle(date, sportId) {
+  const numericSportId = Number(sportId);
+  if (!Number.isInteger(numericSportId) || numericSportId <= 0) throw new Error("A valid competition level is required.");
+  try {
+    const params = new URLSearchParams({
+      sportId: String(numericSportId),
+      date,
+      hydrate: "lineups,venue,team,probablePitcher"
+    });
+    const response = await fetch(`${STATS_API_V1}/schedule?${params.toString()}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store"
+    });
+    if (!response.ok) throw new Error(`Stats API returned HTTP ${response.status}.`);
+    const payload = await response.json();
+    return { games: normalizeSchedule(payload, numericSportId), payload };
+  } catch (error) {
+    console.error("Unable to load the level schedule:", error);
+    throw new Error(error instanceof Error ? error.message : "Unable to load the selected level's schedule.");
+  }
+}
+
+export async function fetchTeamsForSport(sportId, season = new Date().getFullYear()) {
+  const numericSportId = Number(sportId);
+  if (!Number.isInteger(numericSportId) || numericSportId <= 0) throw new Error("A valid competition level is required.");
+  const params = new URLSearchParams({
+    sportId: String(numericSportId),
+    season: String(season),
+    activeStatus: "Y",
+    hydrate: "league"
+  });
+  const payload = await fetchJson(`${STATS_API_V1}/teams?${params.toString()}`, "teams API");
+  const teams = Array.isArray(payload?.teams) ? payload.teams : [];
+  return teams
+    .map((team) => ({
+      id: Number(team?.id),
+      name: String(team?.name || "").trim(),
+      sportId: Number(team?.sport?.id ?? numericSportId) || numericSportId,
+      leagueId: Number(team?.league?.id) || null,
+      leagueName: String(team?.league?.name || "").trim() || null
+    }))
+    .filter((team) => Number.isInteger(team.id) && team.id > 0 && team.name)
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 export async function fetchGameFeed(gamePk) {
   return fetchJson(`${GAME_FEED}/${encodeURIComponent(String(gamePk))}/feed/live`, "game feed");
 }
@@ -130,6 +176,8 @@ function normalizeSchedule(data, requestedSportId = 1) {
     homeTeamId: game.teams?.home?.team?.id ?? null,
     awayLeagueId: game.teams?.away?.team?.league?.id ?? null,
     homeLeagueId: game.teams?.home?.team?.league?.id ?? null,
+    awayLeagueName: game.teams?.away?.team?.league?.name ?? null,
+    homeLeagueName: game.teams?.home?.team?.league?.name ?? null,
     awayTeamData: game.teams?.away?.team ?? null,
     homeTeamData: game.teams?.home?.team ?? null,
     awayIsWinner: game.teams?.away?.isWinner === true,

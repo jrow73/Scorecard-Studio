@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-003-778494-feed-sutter-2025",
+  "investigationId": "DISC-003",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:25:15.699Z",
+  "context": {
+    "subject": "Athletics 2025 feed venue: Sutter Health Park",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1.1/game/778494/feed/live",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 313,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=10, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 754415,
+    "bodySha256": "1b69d0d821a65e9911da7a051b0bfbfb7511c6d168043b260440726f0f41f4e5"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/gameData/game/pk",
+      "/gameData/game/type",
+      "/gameData/datetime",
+      "/gameData/venue"
+    ],
+    "values": {
+      "/gameData/game/pk": {
+        "found": true,
+        "value": 778494
+      },
+      "/gameData/game/type": {
+        "found": true,
+        "value": "R"
+      },
+      "/gameData/datetime": {
+        "found": true,
+        "value": {
+          "dateTime": "2025-04-02T02:05:00Z",
+          "originalDate": "2025-04-01",
+          "officialDate": "2025-04-01",
+          "dayNight": "night",
+          "time": "7:05",
+          "ampm": "PM"
+        }
+      },
+      "/gameData/venue": {
+        "found": true,
+        "value": {
+          "id": 2529,
+          "name": "Sutter Health Park",
+          "link": "/api/v1/venues/2529",
+          "location": {
+            "address1": "400 Ballpark Drive",
+            "city": "Sacramento",
+            "state": "California",
+            "stateAbbrev": "CA",
+            "postalCode": "95691",
+            "defaultCoordinates": {
+              "latitude": 38.57994,
+              "longitude": -121.51246
+            },
+            "azimuthAngle": 46,
+            "elevation": 24,
+            "country": "USA",
+            "phone": "916-371-HITS"
+          },
+          "timeZone": {
+            "tz": "PDT",
+            "id": "America/Los_Angeles",
+            "offset": -7,
+            "offsetAtGameTime": -7
+          },
+          "fieldInfo": {
+            "capacity": 13416,
+            "turfType": "Grass",
+            "roofType": "Open",
+            "leftLine": 330,
+            "leftCenter": 380,
+            "center": 403,
+            "rightCenter": 380,
+            "rightLine": 325
+          },
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

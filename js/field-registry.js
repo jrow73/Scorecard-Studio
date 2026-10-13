@@ -9,7 +9,7 @@ import {
   getCompatibilityCollectionRows,
   getCompatibilityDefinition,
   resolveCompatibilityField
-} from "./v030-compatibility-resolver.js?v=030b0054";
+} from "./v030-compatibility-resolver.js?v=040";
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
 
@@ -221,15 +221,15 @@ export function capabilityRequirementsForField(fieldId) {
   return [...(getCompatibilityDefinition(fieldId)?.v2.capabilityRequirements ?? [])];
 }
 
-export function getCollectionRows(model, collection) {
-  if (model?.schemaVersion === 2) return getCompatibilityCollectionRows(model, collection);
+export function getCollectionRows(model, collection, options = {}) {
+  if (model?.schemaVersion === 2) return getCompatibilityCollectionRows(model, collection, options);
   if (!supportedCollections.has(collection)) return [];
   const value = readPath(model, collection);
   return Array.isArray(value) ? value : [];
 }
 
-export function collectionHasOverflow(model, collection, capacity) {
-  const rows = getCollectionRows(model, collection);
+export function collectionHasOverflow(model, collection, capacity, options = {}) {
+  const rows = getCollectionRows(model, collection, options);
   return rows.slice(Math.max(0, Number(capacity) || 0)).some((row) => rowHasMember(row));
 }
 

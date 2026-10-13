@@ -1,6 +1,6 @@
 # Project: Scorecard Studio
 
-> **Current status (Oct 3, 2026):** v0.2.0 is release-ready. Designer development completed through Build 032.5; Release Prep and all four RC corrections passed manual acceptance. The final release cut promotes the app to v0.2.0, adds the MIT license, and reconciles release documentation. Older roadmap and “future capability” statements below are retained as historical implementation context.
+> **Current status (Oct 12, 2026):** v0.4.0 is release-ready after accepted Builds 001–004.9. The release preserves existing layouts and PDF templates while adding the expanded Game Day research view, portable backup/restore, appearance preferences, compact responsive workflows, touch safeguards, and correct user/game-local time presentation. Cloud synchronization remains future work. Older roadmap and “future capability” statements below are retained as historical implementation context.
 
 
 ## Overview
@@ -625,7 +625,7 @@ and formatting controls are expected to require multiple iterations.
 Build 009 has been accepted after Local and Online testing and layout-generation verification. The full traditional v0.2.0 registry contract is in
 [docs/FIELD_REGISTRY.md](docs/FIELD_REGISTRY.md). The bounded implementation and
 acceptance requirements are in
-[docs/BUILD_009_IMPLEMENTATION.md](docs/BUILD_009_IMPLEMENTATION.md).
+[docs/v0.2/builds/BUILD_009_IMPLEMENTATION.md](docs/v0.2/builds/BUILD_009_IMPLEMENTATION.md).
 
 - Define the full family architecture now; implement the documented 29-field
   scalar slice in Build 009, plus normalization for existing Game Day coverage.
@@ -941,7 +941,7 @@ project package supplied after the field-registry planning pass. The existing
 Build 008 application source, current IndexedDB layout/storage shape, registry
 contract, implementation specification, inventory, and Game Pack matrix were
 available for inspection. Static/module checks and targeted fixture tests are
-documented in `docs/BUILD_009_TEST_REPORT.md`; Local and Online browser
+documented in `docs/v0.2/builds/BUILD_009_TEST_REPORT.md`; Local and Online browser
 acceptance and final PDF placement testing were completed successfully.
 ## Build 011.1 — Designer PDF-only zoom
 - Added as a pre-Build-012 usability/testing increment after Build 011 acceptance.

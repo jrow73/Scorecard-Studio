@@ -4,8 +4,8 @@
  * Version: 0.2.0
  */
 
-import { capabilityRequirementsForField, getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=030b0054";
-import { formatFieldValue } from "./formatter.js?v=030b0054";
+import { capabilityRequirementsForField, getCatalogFields, getCollectionRows, resolveField } from "./field-registry.js?v=040";
+import { formatFieldValue } from "./formatter.js?v=040";
 
 export const DIAGNOSTIC_STATUSES = Object.freeze({
   available: "Available",

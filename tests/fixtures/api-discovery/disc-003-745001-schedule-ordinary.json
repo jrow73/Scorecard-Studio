@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-003-745001-schedule-ordinary",
+  "investigationId": "DISC-003",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:23:11.786Z",
+  "context": {
+    "subject": "Ordinary MLB venue: Globe Life Field",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=745001&hydrate=venue%2Cteam",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 207,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3309,
+    "bodySha256": "07d730d2fc6677e895eb53eb1f3596c9fd660b6a38d42e5902173ec06c763371"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/venue",
+      "/dates/0/games/0/teams"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 745001
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2024-06-08"
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 5325,
+          "name": "Globe Life Field",
+          "link": "/api/v1/venues/5325",
+          "active": true,
+          "season": "2024"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 137,
+              "name": "San Francisco Giants",
+              "link": "/api/v1/teams/137",
+              "season": 2024,
+              "venue": {
+                "id": 2395,
+                "name": "Oracle Park",
+                "link": "/api/v1/venues/2395"
+              },
+              "springVenue": {
+                "id": 2532,
+                "link": "/api/v1/venues/2532"
+              },
+              "teamCode": "sfn",
+              "fileCode": "sf",
+              "abbreviation": "SF",
+              "teamName": "Giants",
+              "locationName": "San Francisco",
+              "firstYearOfPlay": "1883",
+              "league": {
+                "id": 104,
+                "name": "National League",
+                "link": "/api/v1/league/104"
+              },
+              "division": {
+                "id": 203,
+                "name": "National League West",
+                "link": "/api/v1/divisions/203"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "San Francisco",
+              "franchiseName": "San Francisco",
+              "clubName": "Giants",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 32,
+              "losses": 33,
+              "ties": 0,
+              "pct": ".492"
+            },
+            "score": 3,
+            "isWinner": true,
+            "splitSquad": false,
+            "seriesNumber": 21,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          },
+          "home": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 140,
+              "name": "Texas Rangers",
+              "link": "/api/v1/teams/140",
+              "season": 2024,
+              "venue": {
+                "id": 5325,
+                "name": "Globe Life Field",
+                "link": "/api/v1/venues/5325"
+              },
+              "springVenue": {
+                "id": 2603,
+                "link": "/api/v1/venues/2603"
+              },
+              "teamCode": "tex",
+              "fileCode": "tex",
+              "abbreviation": "TEX",
+              "teamName": "Rangers",
+              "locationName": "Arlington",
+              "firstYearOfPlay": "1961",
+              "league": {
+                "id": 103,
+                "name": "American League",
+                "link": "/api/v1/league/103"
+              },
+              "division": {
+                "id": 200,
+                "name": "American League West",
+                "link": "/api/v1/divisions/200"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Texas",
+              "franchiseName": "Texas",
+              "clubName": "Rangers",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 30,
+              "losses": 34,
+              "ties": 0,
+              "pct": ".469"
+            },
+            "score": 1,
+            "isWinner": false,
+            "splitSquad": false,
+            "seriesNumber": 21,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          }
+        }
+      }
+    }
+  },
+  "notes": []
+}

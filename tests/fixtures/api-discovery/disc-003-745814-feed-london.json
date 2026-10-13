@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-003-745814-feed-london",
+  "investigationId": "DISC-003",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:23:06.484Z",
+  "context": {
+    "subject": "International feed venue: London Stadium",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1.1/game/745814/feed/live",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 332,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=10, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 775255,
+    "bodySha256": "c24deaa79469e1f5b2aac41aeaaf8d297e26dac5938e1276dc859106d854e3dc"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/gameData/game/pk",
+      "/gameData/game/type",
+      "/gameData/datetime",
+      "/gameData/venue"
+    ],
+    "values": {
+      "/gameData/game/pk": {
+        "found": true,
+        "value": 745814
+      },
+      "/gameData/game/type": {
+        "found": true,
+        "value": "R"
+      },
+      "/gameData/datetime": {
+        "found": true,
+        "value": {
+          "dateTime": "2024-06-08T17:10:00Z",
+          "originalDate": "2024-06-08",
+          "officialDate": "2024-06-08",
+          "dayNight": "night",
+          "time": "6:10",
+          "ampm": "PM"
+        }
+      },
+      "/gameData/venue": {
+        "found": true,
+        "value": {
+          "id": 5381,
+          "name": "London Stadium",
+          "link": "/api/v1/venues/5381",
+          "location": {
+            "address1": "Queen Elizabeth Olympic Park",
+            "city": "London",
+            "postalCode": "E20 2ST",
+            "defaultCoordinates": {
+              "latitude": 51.50853,
+              "longitude": -0.12574
+            },
+            "country": "United Kingdom",
+            "phone": "44 0208 522 6001"
+          },
+          "timeZone": {
+            "tz": "BST",
+            "id": "Europe/London",
+            "offset": 1,
+            "offsetAtGameTime": 1
+          },
+          "fieldInfo": {
+            "capacity": 55000,
+            "turfType": "Artificial Turf",
+            "roofType": "Open",
+            "leftLine": 330,
+            "center": 392,
+            "rightLine": 330
+          },
+          "active": true,
+          "season": "2024"
+        }
+      }
+    }
+  },
+  "notes": []
+}

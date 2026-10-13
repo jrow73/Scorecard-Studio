@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-003-2541-venue-2025",
+  "investigationId": "DISC-003",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:27:24.448Z",
+  "context": {
+    "subject": "Narrow venue endpoint: Durham Bulls Athletic Park 2025",
+    "gameState": "Venue metadata"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/venues/2541?season=2025&hydrate=location%2CfieldInfo%2Ctimezone",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 187,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=600, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 736,
+    "bodySha256": "bff297ce45a22f996166a92c292b46b60efd1b6622c7824203d1bb74957b97c6"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/venues/0"
+    ],
+    "values": {
+      "/venues/0": {
+        "found": true,
+        "value": {
+          "id": 2541,
+          "name": "Durham Bulls Athletic Park",
+          "link": "/api/v1/venues/2541",
+          "location": {
+            "address1": "409 Blackwell Street",
+            "city": "Durham",
+            "state": "North Carolina",
+            "stateAbbrev": "NC",
+            "postalCode": "27701",
+            "defaultCoordinates": {
+              "latitude": 35.99158,
+              "longitude": -78.90401
+            },
+            "country": "USA"
+          },
+          "timeZone": {
+            "tz": "EDT",
+            "id": "America/New_York",
+            "offset": -4,
+            "offsetAtGameTime": -4
+          },
+          "fieldInfo": {
+            "capacity": 10000,
+            "turfType": "Grass",
+            "roofType": "Open",
+            "leftLine": 305,
+            "leftCenter": 375,
+            "center": 400,
+            "rightCenter": 375,
+            "rightLine": 325
+          },
+          "active": true,
+          "season": "2025"
+        }
+      }
+    }
+  },
+  "notes": []
+}

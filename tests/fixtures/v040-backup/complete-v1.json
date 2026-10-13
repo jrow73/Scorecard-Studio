@@ -1,0 +1,72 @@
+{
+  "format": "scorecard-studio-backup",
+  "formatVersion": 1,
+  "backupId": "fixture-complete-v1",
+  "createdAtUtc": "2026-10-09T12:00:00.000Z",
+  "source": {
+    "applicationVersion": "0.4.0-dev",
+    "build": "002.1",
+    "storageDatabaseVersion": 4
+  },
+  "scope": "complete",
+  "settings": [
+    {
+      "key": "appPreferencesV1",
+      "value": {
+        "schemaVersion": 1,
+        "appearance": "system"
+      },
+      "updatedAt": "2026-10-09T11:00:00.000Z"
+    },
+    {
+      "key": "favoriteLayoutId",
+      "value": "layout-fixture-1",
+      "updatedAt": "2026-10-09T11:05:00.000Z"
+    },
+    {
+      "key": "futureDisplayDensity",
+      "value": {
+        "schemaVersion": 1,
+        "density": "compact"
+      },
+      "updatedAt": "2026-10-09T11:10:00.000Z"
+    }
+  ],
+  "layouts": [
+    {
+      "id": "layout-fixture-1",
+      "schemaVersion": 8,
+      "name": "Portable Fixture",
+      "description": "Contract-only fixture",
+      "pdfTemplateId": "pdf-fixture-1",
+      "pdfFileName": "fixture.pdf",
+      "pageCount": 1,
+      "mappings": [],
+      "repeatedBlocks": [
+        {
+          "id": "bullpen-fixture",
+          "collection": "away.bullpen",
+          "pitcherGroup": "core",
+          "capacity": 11,
+          "columns": []
+        }
+      ],
+      "createdAt": "2026-10-09T10:00:00.000Z",
+      "updatedAt": "2026-10-09T10:30:00.000Z"
+    }
+  ],
+  "pdfTemplates": [
+    {
+      "key": "pdf-fixture-1",
+      "name": "fixture.pdf",
+      "type": "application/pdf",
+      "size": 9,
+      "updatedAt": "2026-10-09T10:00:00.000Z",
+      "data": {
+        "encoding": "base64",
+        "value": "JVBERi0xLjQK",
+        "sha256": "E5C62DF5DAB5C87B6A015EF3D43597074D1EEC433B15F51AEC63B8582D0E4AB4"
+      }
+    }
+  ]
+}

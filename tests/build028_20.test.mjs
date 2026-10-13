@@ -2,8 +2,8 @@ import fs from 'node:fs';
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const meta = JSON.parse(fs.readFileSync(new URL('../app-meta.json', import.meta.url), 'utf8'));
-const closure = fs.readFileSync(new URL('../docs/Build_028.20_Implementation.md', import.meta.url), 'utf8');
-const roadmap = fs.readFileSync(new URL('../docs/DESIGNER_COMPLETION_INVENTORY.md', import.meta.url), 'utf8');
+const closure = fs.readFileSync(new URL('../docs/v0.2/builds/Build_028.20_Implementation.md', import.meta.url), 'utf8');
+const roadmap = fs.readFileSync(new URL('../docs/v0.2/DESIGNER_COMPLETION_INVENTORY.md', import.meta.url), 'utf8');
 
 if (meta.build !== '028.20') throw new Error('app-meta build is not 028.20');
 if (!html.includes('id="designer-back-btn" type="button">Close Layout Designer</button>')) throw new Error('Close Layout Designer text missing');

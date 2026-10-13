@@ -193,7 +193,7 @@ function sideTeam({ name, locationName, shortName, clubName, abbreviation, wins,
   };
 }
 
-export const DESIGNER_SAMPLE_MODEL = Object.freeze({
+export const LEGACY_DESIGNER_SAMPLE_MODEL = Object.freeze({
   schemaVersion: 1,
   game: {
     date: "2026-07-18",
@@ -250,3 +250,261 @@ export const DESIGNER_SAMPLE_MODEL = Object.freeze({
     bullpen: sampleBullpen(["Silas Crowe", "Bennett Okafor", "Marco D'Angelo", "Hugo Serrano", "Levi March", "Tobias Grant", "César Holloway", "Micah Boone", "Felix Laurent", "Orion Vega", "Malcolm Cross", "Rui Nakamura", "Gideon Wells", "Tomás Everhart"], ["R", "R", "L", "R", "L", "R", "R", "L", "R", "R", "L", "R", "R", "L"])
   })
 });
+
+const SAMPLE_SCOPE = Object.freeze({
+  sportId: 1,
+  gameTypes: ["R"],
+  statType: "byDateRange",
+  startDate: "2026-01-01",
+  endDate: "2026-07-17",
+  aggregate: { sportId: 1, code: "mlb", selection: "single-unambiguous" }
+});
+
+function v2Position(value, roleLabel = null) {
+  const abbreviation = value?.abbreviation ?? null;
+  return {
+    abbreviation,
+    name: value?.name ?? null,
+    number: value?.number ?? null,
+    roleLabel
+  };
+}
+
+function positionType(value) {
+  if (!value?.abbreviation) return null;
+  if (["P", "SP", "RP"].includes(value.abbreviation)) return "Pitcher";
+  if (value.abbreviation === "C") return "Catcher";
+  if (["LF", "CF", "RF", "OF"].includes(value.abbreviation)) return "Outfielder";
+  if (value.abbreviation === "DH") return "Hitter";
+  return "Infielder";
+}
+
+function v2Person(player, idOffset = 0) {
+  const primary = player?.primaryPosition || {};
+  return {
+    id: player?.id == null ? null : Number(player.id) + idOffset,
+    name: player?.name ?? null,
+    firstName: player?.firstName ?? null,
+    lastName: player?.lastName ?? null,
+    useName: player?.useName ?? null,
+    useLastName: player?.useLastName ?? null,
+    boxscoreName: player?.boxscoreName ?? null,
+    firstLastName: player?.firstLastName ?? player?.name ?? null,
+    nameFirstLast: player?.nameFirstLast ?? player?.name ?? null,
+    lastFirstName: player?.lastFirstName ?? (player?.lastName && player?.firstName ? `${player.lastName}, ${player.firstName}` : player?.name ?? null),
+    initLastName: player?.initLastName ?? null,
+    lastInitName: player?.lastInitName ?? (player?.lastName && player?.firstName ? `${player.lastName}, ${player.firstName[0]}` : null),
+    nameSuffix: player?.nameSuffix ?? null,
+    nameTitle: player?.nameTitle ?? null,
+    pronunciation: player?.pronunciation ?? null,
+    number: player?.number ?? null,
+    bats: player?.bats ?? null,
+    throws: player?.throws ?? null,
+    primaryPosition: {
+      abbreviation: primary.abbreviation ?? null,
+      name: primary.name ?? null,
+      type: positionType(primary)
+    }
+  };
+}
+
+function scopedStats(totals) {
+  return { scope: { ...SAMPLE_SCOPE, gameTypes: [...SAMPLE_SCOPE.gameTypes], aggregate: { ...SAMPLE_SCOPE.aggregate } }, totals: { ...totals } };
+}
+
+function v2Role(role, idOffset, group, roleLabel = null) {
+  return {
+    player: v2Person(role.player, idOffset),
+    position: v2Position(role.position, roleLabel),
+    stats: group === "hitting" ? { hitting: scopedStats(role.stats) } : { pitching: scopedStats(role.stats) }
+  };
+}
+
+function typedRank(value) {
+  const number = Number(value);
+  return { raw: value == null ? null : String(value), value: Number.isInteger(number) ? number : null };
+}
+
+function typedGamesBack(value) {
+  const raw = value == null ? null : String(value);
+  if (raw === "-") return { raw, state: "leader", games: null };
+  const games = Number(raw);
+  return { raw, state: Number.isFinite(games) ? "behind" : "unknown", games: Number.isFinite(games) ? games : null };
+}
+
+function typedStandings(value) {
+  return {
+    divisionRank: typedRank(value.divisionRank),
+    leagueRank: typedRank(value.leagueRank),
+    wildCardRank: typedRank(value.wildCardRank),
+    divisionGamesBack: typedGamesBack(value.divisionGamesBack),
+    leagueGamesBack: typedGamesBack(value.divisionGamesBack),
+    wildCardGamesBack: typedGamesBack(value.wildCardRank === 0 ? "-" : "2.5"),
+    streak: value.streak,
+    lastTen: { wins: value.last10.wins, losses: value.last10.losses },
+    elimination: { raw: "-", state: "notEliminated", value: null },
+    clinch: { raw: null, state: "none", value: null }
+  };
+}
+
+function staffPerson(name, number, id) {
+  const [firstName, ...rest] = name.split(" ");
+  return v2Person({ id, name, firstName, lastName: rest.join(" "), useName: firstName, useLastName: rest.join(" "), number, primaryPosition: {} });
+}
+
+function v2Side(legacy, side) {
+  const idOffset = side === "away" ? 100000 : 200000;
+  const teamId = side === "away" ? 901 : 902;
+  const divisionId = side === "away" ? 9901 : 9902;
+  const manager = staffPerson(legacy.manager.name, legacy.manager.number, idOffset + 9001);
+  const bullpenRoles = legacy.bullpen.map((row) => v2Role(row, idOffset, "pitching", "P"));
+  const classified = side === "away";
+  const additionalStarters = classified ? bullpenRoles.slice(0, 3).map((row) => ({ ...row, position: { ...row.position, roleLabel: "SP" } })) : [];
+  const bullpen = classified ? bullpenRoles.slice(3) : bullpenRoles;
+  const lineup = legacy.lineup.map((row) => ({ ...v2Role(row, idOffset, "hitting", "schedule-primary-position"), battingOrder: row.battingOrder, slotState: "available" }));
+  const coaches = [
+    ["Avery Bench", "12", "Bench Coach", "COAB", "bench"],
+    ["Jordan Swing", "31", "Hitting Coach", "COAH", "hitting"],
+    ["Morgan Pitch", "45", "Pitching Coach", "COAP", "pitching"],
+    ["Riley Catch", "88", "Bullpen Coach", "COAC", "bullpen"]
+  ].map(([name, number, title, jobId, category], index) => ({ person: staffPerson(name, number, idOffset + 9100 + index), job: title, title, jobId, category }));
+  const defense = Object.fromEntries(lineup.filter((row) => row.position.abbreviation !== "DH").map((row) => [row.position.abbreviation, row]));
+  return {
+    team: {
+      id: teamId,
+      name: legacy.team.name,
+      locationName: legacy.team.locationName,
+      shortName: legacy.team.shortName,
+      clubName: legacy.team.clubName,
+      abbreviation: legacy.team.abbreviation,
+      sport: { id: 1, name: "Major League Baseball" },
+      league: { id: 990, name: legacy.team.league.name },
+      division: { id: divisionId, name: legacy.team.division.name },
+      record: { ...legacy.team.record },
+      gameNumber: legacy.team.gameNumber,
+      standings: typedStandings(legacy.team.standings),
+      logo: { url: null, brandScope: null }
+    },
+    manager: { state: "available", candidates: [{ person: manager, job: "Manager", title: "Manager", jobId: "MNGR" }], selected: manager },
+    coaches,
+    lineup: { state: "posted", slots: lineup },
+    startingPitcher: v2Role({ ...legacy.startingPitcher, player: { ...legacy.startingPitcher.player, id: 8001 } }, idOffset, "pitching", "SP"),
+    additionalStarters,
+    bench: legacy.bench.map((row) => v2Role(row, idOffset, "hitting", null)),
+    bullpen,
+    defense
+  };
+}
+
+function sourceResult(id, adapter, effective, outcome = "success") {
+  return {
+    id,
+    adapter,
+    request: { key: `${adapter}|v040-representative`, endpointFamily: adapter, method: "GET", parameters: { fixture: "v040-designer" } },
+    scope: { gamePk: "990001", selectedViewKey: "990001:2026-07-18:1" },
+    requestedAtUtc: "2026-07-18T12:00:00Z",
+    retrievedAtUtc: "2026-07-18T12:00:01Z",
+    effective,
+    outcome,
+    response: { status: outcome === "failed" ? 503 : 200, bodySha256: null },
+    error: outcome === "failed" ? { code: "REPRESENTATIVE_UNAVAILABLE", summary: "Intentional fallback scenario." } : null
+  };
+}
+
+function lineage(id, target, sourceRef, state = "available", extras = {}) {
+  return {
+    id,
+    target,
+    coverage: extras.coverage || "subtree",
+    state,
+    sourceResultRefs: sourceRef ? [sourceRef] : [],
+    selectedSourceResultRef: state === "available" || state === "partial" || state === "present-empty" ? sourceRef : null,
+    sourcePath: extras.sourcePath || null,
+    effective: extras.effective || null,
+    selectionReason: extras.reason || null,
+    fallbackUsed: extras.fallbackUsed === true,
+    rejectedCandidates: [],
+    transformations: extras.transformations || [],
+    derivationInputs: []
+  };
+}
+
+function standingsGroup(side, sourceOrder) {
+  const standings = side.team.standings;
+  return {
+    key: `regularSeason:1:${side.team.league.id}:${side.team.division.id}`,
+    standingsType: "regularSeason",
+    sport: { ...side.team.sport },
+    league: { ...side.team.league },
+    division: { ...side.team.division },
+    rows: [{
+      team: { id: side.team.id, name: side.team.name },
+      record: { ...side.team.record },
+      rank: { ...standings.divisionRank },
+      gamesBack: { ...standings.divisionGamesBack },
+      streak: standings.streak,
+      lastTen: { ...standings.lastTen },
+      elimination: { ...standings.elimination },
+      clinch: { ...standings.clinch },
+      sourceOrder
+    }]
+  };
+}
+
+function createV2DesignerSample(legacy) {
+  const away = v2Side(legacy.away, "away");
+  const home = v2Side(legacy.home, "home");
+  const sources = [
+    sourceResult("sample.schedule", "schedule", { kind: "gameState", gamePk: "990001", canonicalGameState: "pregame", rawGameState: "Preview" }),
+    sourceResult("sample.people", "people", { kind: "dateRange", startDate: "2026-01-01", endDate: "2026-07-17" }),
+    sourceResult("sample.roster.away", "roster", { kind: "date", date: "2026-07-18" }),
+    sourceResult("sample.roster.home", "roster", { kind: "date", date: "2026-07-18" }),
+    sourceResult("sample.coaches", "coaches", { kind: "date", date: "2026-07-18" }),
+    sourceResult("sample.standings", "standings", { kind: "endOfDay", cutoffDate: "2026-07-17" }),
+    sourceResult("sample.feed", "feed", { kind: "gameState", gamePk: "990001", canonicalGameState: "pregame", rawGameState: "Preview" }),
+    sourceResult("sample.depth.away", "depthChart", { kind: "current" }),
+    sourceResult("sample.depth.home", "depthChart", { kind: "current" }, "failed")
+  ];
+  const game = legacy.game;
+  return {
+    schemaId: "scorecard-studio.normalized-game",
+    schemaVersion: 2,
+    contractRevision: "0.3.0-draft.2",
+    context: {
+      gamePk: "990001", season: 2026, sport: { id: 1, name: "Major League Baseball" }, gameType: "R",
+      competitionSegment: "regular", selectedDate: game.date, officialDate: game.date, selectedViewKey: "990001:2026-07-18:1"
+    },
+    game: {
+      status: { canonical: "pregame", raw: { abstractGameState: "Preview", codedGameState: "P", detailedState: "Pre-Game", statusCode: "P" }, reason: null, startTimeTBD: false, teamsTBD: false },
+      dates: { scheduledStart: game.startTime, originalScheduledStart: game.startTime, officialDate: game.date, rescheduledStart: null, rescheduledDate: null, resumeStart: null, resumeDate: null },
+      dayNight: "night", gameNumber: game.number,
+      venue: { id: 990, name: game.venue.name, location: { city: game.venue.city, state: game.venue.state, country: game.venue.country }, timeZone: { iana: game.venue.timeZone }, fieldInfo: { capacity: game.venue.capacity, turfType: game.venue.turfType, roofType: game.venue.roofType, dimensions: { leftLine: 332, center: 404, rightLine: 326 } } },
+      weather: { ...game.weather },
+      umpires: { crew: game.umpires.crew.map((official) => ({ ...official })) }
+    },
+    away,
+    home,
+    standings: { groups: [standingsGroup(away, 0), standingsGroup(home, 1)] },
+    meta: {
+      snapshot: { id: "v040-designer-representative", createdAtUtc: "2026-07-18T12:00:02Z", producer: { applicationVersion: "0.4.0-dev", build: "001.6" }, fixtureKind: "synthetic-contract" },
+      sourceResults: sources,
+      lineage: [
+        lineage("sample.game", "/game", "sample.schedule"),
+        lineage("sample.officials", "/game/umpires", "sample.feed"),
+        lineage("sample.away", "/away", "sample.schedule"),
+        lineage("sample.home", "/home", "sample.schedule"),
+        lineage("sample.away.stats", "/away/lineup", "sample.people"),
+        lineage("sample.home.stats", "/home/lineup", "sample.people"),
+        lineage("sample.away.additional", "/away/additionalStarters", "sample.depth.away", "available", { coverage: "exact", reason: "SP annotations intersected with the dated active roster." }),
+        lineage("sample.away.bullpen", "/away/bullpen", "sample.roster.away", "available", { coverage: "exact", reason: "Dated roster pitchers minus selected and SP-annotated starters." }),
+        lineage("sample.home.additional", "/home/additionalStarters", "sample.depth.home", "omitted", { coverage: "exact", reason: "No usable SP annotation set was available." }),
+        lineage("sample.home.bullpen", "/home/bullpen", "sample.roster.home", "available", { coverage: "exact", reason: "Authoritative dated roster-minus-starter fallback.", fallbackUsed: true }),
+        lineage("sample.staff.away", "/away/manager", "sample.coaches"),
+        lineage("sample.staff.home", "/home/manager", "sample.coaches"),
+        lineage("sample.standings.root", "/standings", "sample.standings")
+      ]
+    }
+  };
+}
+
+export const DESIGNER_SAMPLE_MODEL = Object.freeze(createV2DesignerSample(LEGACY_DESIGNER_SAMPLE_MODEL));

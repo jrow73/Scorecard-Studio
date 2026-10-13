@@ -11,8 +11,8 @@ import {
   createLineageRecord,
   createSourceResult,
   findEffectiveLineage
-} from "./v030-contract.js?v=030b0054";
-import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=030b0054";
+} from "./v030-contract.js?v=040";
+import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=040";
 
 const clone = (value) => structuredClone(value);
 const own = (value, key) => Object.prototype.hasOwnProperty.call(Object(value), key);
@@ -140,13 +140,26 @@ function normalizedStandings(row) {
   };
 }
 
+function normalizedStandingsDivision(record) {
+  const division = idName(record?.division);
+  if (division.name || division.id == null) return division;
+  const matchingNames = new Set(
+    (Array.isArray(record?.teamRecords) ? record.teamRecords : [])
+      .flatMap((row) => Array.isArray(row?.records?.divisionRecords) ? row.records.divisionRecords : Array.isArray(row?.divisionRecords) ? row.divisionRecords : [])
+      .filter((entry) => Number(entry?.division?.id) === Number(division.id))
+      .map((entry) => stringOrNull(entry?.division?.name))
+      .filter(Boolean)
+  );
+  return matchingNames.size === 1 ? { id: division.id, name: [...matchingNames][0] } : division;
+}
+
 function normalizeStandingsGroup(record, standingsType, sourceOrder) {
   return {
     key: `${standingsType}:${record?.sport?.id ?? "none"}:${record?.league?.id ?? "none"}:${record?.division?.id ?? "none"}`,
     standingsType,
     sport: idName(record?.sport),
     league: idName(record?.league),
-    division: idName(record?.division),
+    division: normalizedStandingsDivision(record),
     rows: (Array.isArray(record?.teamRecords) ? record.teamRecords : []).map((row, rowIndex) => ({
       team: idName(row?.team),
       record: teamRecord(row),

@@ -10,8 +10,8 @@ import {
   createLineageRecord,
   createNormalizedSnapshot,
   createSourceResult
-} from "./v030-contract.js?v=030b0054";
-import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=030b0054";
+} from "./v030-contract.js?v=040";
+import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=040";
 
 const own = (value, key) => Object.prototype.hasOwnProperty.call(Object(value), key);
 

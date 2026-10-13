@@ -6,6 +6,7 @@
 
 const DB_NAME = "scorecard-studio";
 const DB_VERSION = 4;
+export const STORAGE_DATABASE_VERSION = DB_VERSION;
 const SETTINGS_STORE = "settings";
 const PDF_STORE = "pdfTemplates";
 const LAYOUT_STORE = "layouts";
@@ -107,6 +108,100 @@ export async function listLayouts() {
   } catch (error) {
     console.error("Unable to list layouts:", error);
     throw new Error("Could not list saved layouts.");
+  }
+}
+
+export async function readBackupStorageSnapshot() {
+  let firstError = null;
+  try {
+    const database = await openDatabase();
+    return await readAtomicBackupSnapshot(database);
+  } catch (error) { firstError = error; }
+
+  try {
+    const database = await reopenDatabase();
+    return await readAtomicBackupSnapshot(database);
+  } catch (retryError) {
+    console.error("Unable to read backup storage snapshot:", { firstError, retryError });
+    throw new Error("Could not read a consistent backup snapshot from browser storage.");
+  }
+}
+
+function readAtomicBackupSnapshot(database) {
+  return new Promise((resolve, reject) => {
+    const storeNames = [SETTINGS_STORE, LAYOUT_STORE, PDF_STORE];
+    const values = { settings: [], layouts: [], pdfTemplates: [] };
+    let transaction;
+    try {
+      transaction = database.transaction(storeNames, "readonly");
+      for (const [storeName, destination] of [
+        [SETTINGS_STORE, "settings"],
+        [LAYOUT_STORE, "layouts"],
+        [PDF_STORE, "pdfTemplates"]
+      ]) {
+        const request = transaction.objectStore(storeName).getAll();
+        request.onsuccess = () => { values[destination] = request.result || []; };
+        request.onerror = () => reject(request.error ?? new Error(`Backup read failed for '${storeName}'.`));
+      }
+    } catch (error) {
+      reject(error);
+      return;
+    }
+    transaction.oncomplete = () => resolve(finalizeBackupSnapshot(values));
+    transaction.onerror = () => reject(transaction.error ?? new Error("Backup storage snapshot failed."));
+    transaction.onabort = () => reject(transaction.error ?? new Error("Backup storage snapshot was aborted."));
+  });
+}
+
+function finalizeBackupSnapshot(values) {
+  return Object.freeze({
+    settings: Object.freeze([...(values.settings || [])].sort((left, right) => String(left?.key).localeCompare(String(right?.key)))),
+    layouts: Object.freeze([...(values.layouts || [])].sort((left, right) => String(left?.id).localeCompare(String(right?.id)))),
+    pdfTemplates: Object.freeze([...(values.pdfTemplates || [])].sort((left, right) => String(left?.key).localeCompare(String(right?.key))))
+  });
+}
+
+async function reopenDatabase() {
+  try {
+    const database = await databasePromise;
+    database?.close();
+  } catch {}
+  databasePromise = null;
+  return openDatabase();
+}
+
+export async function commitBackupRestoreOperations(operations) {
+  const settings = Array.isArray(operations?.settings) ? operations.settings : [];
+  const layouts = Array.isArray(operations?.layouts) ? operations.layouts : [];
+  const pdfTemplates = Array.isArray(operations?.pdfTemplates) ? operations.pdfTemplates : [];
+  try {
+    const database = await openDatabase();
+    return await new Promise((resolve, reject) => {
+      let transaction;
+      try {
+        transaction = database.transaction([SETTINGS_STORE, LAYOUT_STORE, PDF_STORE], "readwrite");
+        const settingsStore = transaction.objectStore(SETTINGS_STORE);
+        const layoutsStore = transaction.objectStore(LAYOUT_STORE);
+        const pdfStore = transaction.objectStore(PDF_STORE);
+        settings.forEach((record) => settingsStore.put(record));
+        layouts.forEach((record) => layoutsStore.put(record));
+        pdfTemplates.forEach((record) => pdfStore.put(record));
+      } catch (error) {
+        try { transaction?.abort(); } catch {}
+        reject(error);
+        return;
+      }
+      transaction.oncomplete = () => resolve(Object.freeze({
+        settings: settings.length,
+        layouts: layouts.length,
+        pdfTemplates: pdfTemplates.length
+      }));
+      transaction.onerror = () => reject(transaction.error ?? new Error("Backup restore transaction failed."));
+      transaction.onabort = () => reject(transaction.error ?? new Error("Backup restore transaction was aborted."));
+    });
+  } catch (error) {
+    console.error("Unable to commit backup restore:", error);
+    throw new Error("Backup restore could not be committed; no partial restore was kept.");
   }
 }
 

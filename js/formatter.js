@@ -130,7 +130,29 @@ function formatInstant(value, timeZone) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
   const options = { hour: "numeric", minute: "2-digit" };
-  if (timeZone) options.timeZone = timeZone;
+  const zone = normalizeTimeZoneId(timeZone);
+  if (zone) options.timeZone = zone;
   try { return new Intl.DateTimeFormat(undefined, options).format(date); }
   catch { return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date); }
+}
+
+export function normalizeTimeZoneId(value) {
+  if (typeof value === "string") return value.trim();
+  if (!value || typeof value !== "object") return "";
+  return String(value.iana || value.id || value.tz || "").trim();
+}
+
+export function formatDualZoneInstant(value, gameTimeZone) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value || "");
+  const options = { hour: "numeric", minute: "2-digit", timeZoneName: "short" };
+  const userText = new Intl.DateTimeFormat(undefined, options).format(date);
+  const zone = normalizeTimeZoneId(gameTimeZone);
+  if (!zone) return userText;
+  try {
+    const gameText = new Intl.DateTimeFormat(undefined, { ...options, timeZone: zone }).format(date);
+    return gameText === userText ? userText : `${userText} (you) • ${gameText} (game)`;
+  } catch {
+    return userText;
+  }
 }

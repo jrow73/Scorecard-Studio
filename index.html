@@ -12,288 +12,338 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
   <title>Scorecard Studio</title>
-  <link rel="stylesheet" href="./css/styles.css?v=030b0054" />
+  <script>
+    (() => {
+      const key = "scorecardStudio.appearance";
+      const allowed = new Set(["system", "light", "dark"]);
+      let appearance = "system";
+      try {
+        const mirrored = localStorage.getItem(key);
+        if (allowed.has(mirrored)) appearance = mirrored;
+      } catch {}
+      const systemDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches === true;
+      const theme = appearance === "system" ? (systemDark ? "dark" : "light") : appearance;
+      document.documentElement.dataset.appearance = appearance;
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
+  <link rel="stylesheet" href="./css/styles.css?v=040" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="app-shell">
-    <aside class="sidebar">
+    <header class="app-header">
       <div class="brand-block">
         <div class="brand-mark" aria-hidden="true">SS</div>
         <div>
           <h1>Scorecard Studio</h1>
-          <p data-app-version-label>Loading version…</p>
+          <p class="app-version-label" data-app-version-label>Loading version…</p>
         </div>
       </div>
 
       <nav class="nav-list" aria-label="Main navigation">
-        <button class="nav-item active" id="nav-home" type="button" aria-current="page"><span>⌂</span> Home</button>
-        <button class="nav-item" id="nav-gameday" type="button"><span>⚾</span> Game Day</button>
-        <button class="nav-item" id="nav-field-diagnostic" type="button"><span>⌕</span> Field Diagnostic <small>Dev</small></button>
-        <button class="nav-item" id="nav-layouts" type="button"><span>▣</span> Layouts</button>
-        <button class="nav-item" id="nav-designer" type="button"><span>✎</span> Layout Designer</button>
-        <button class="nav-item" type="button" disabled><span>⎙</span> Generate <small>Later</small></button>
-        <button class="nav-item" type="button" disabled><span>⚙</span> Settings <small>Later</small></button>
+        <button class="nav-item active" id="nav-home" type="button" aria-current="page"><span class="nav-icon" aria-hidden="true">⌂</span><span class="nav-label">Home</span></button>
+        <button class="nav-item" id="nav-gameday" type="button"><span class="nav-icon" aria-hidden="true">⚾</span><span class="nav-label">Game Day</span></button>
+        <button class="nav-item" id="nav-layouts" type="button"><span class="nav-icon" aria-hidden="true">▣</span><span class="nav-label">Layouts</span></button>
+        <button class="nav-item" id="nav-settings" type="button"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-label">Settings</span></button>
       </nav>
 
-      <div class="sidebar-footer">
+      <div class="app-header-status" aria-label="Application status">
         <div class="status-dot" id="app-status-dot"></div>
         <span id="app-status-text">Starting browser app…</span>
       </div>
-    </aside>
+    </header>
 
-    <main class="main-panel">
+    <main class="main-panel" id="main-content" tabindex="-1">
       <header class="topbar">
         <div>
           <p class="eyebrow" id="page-eyebrow">Scorecard Studio • Pregame</p>
           <h2 id="page-title">Home</h2>
         </div>
         <div class="topbar-actions">
-          <button class="secondary-button" id="refresh-pregame-btn" type="button">Refresh Pregame Data</button>
+          <button class="secondary-button" id="refresh-pregame-btn" type="button">Refresh Schedule</button>
         </div>
       </header>
 
-      <section class="hero-card card" data-view="home">
-        <div class="hero-copy">
-          <p class="section-label" data-app-build-label>Loading build…</p>
-          <h3>Pregame fields, normalized for every layout</h3>
-          <p>
-            Scorecard Studio now has a persistent layout library. Each layout owns its PDF template and basic metadata while pregame data remains browser-only.
-          </p>
-        </div>
-        <div class="foundation-status" aria-label="Scorecard Studio browser foundation">
-          <div><strong>Hosting</strong><span>GitHub Pages</span></div>
-          <div><strong>Storage</strong><span>IndexedDB</span></div>
-          <div><strong>Pregame Data</strong><span>MLB Stats API</span></div>
-          <div><strong>PDF Rendering</strong><span>PDF.js</span></div>
-        </div>
-      </section>
-
-      <section class="card favorite-card" data-view="home" aria-labelledby="favorite-heading">
-        <div class="card-header-row compact-header">
-          <div>
-            <p class="section-label">Browser Preference</p>
-            <h3 id="favorite-heading">Favorite Team</h3>
-          </div>
-          <div class="pill neutral" id="storage-status">Checking storage…</div>
-        </div>
-
-        <form class="favorite-form" id="favorite-team-form">
-          <label for="favorite-team-select">Favorite MLB team</label>
-          <div class="favorite-row">
-            <select id="favorite-team-select" name="favoriteTeam">
-              <option value="108">Los Angeles Angels</option>
-              <option value="109">Arizona Diamondbacks</option>
-              <option value="110">Baltimore Orioles</option>
-              <option value="111">Boston Red Sox</option>
-              <option value="112">Chicago Cubs</option>
-              <option value="113">Cincinnati Reds</option>
-              <option value="114">Cleveland Guardians</option>
-              <option value="115">Colorado Rockies</option>
-              <option value="116">Detroit Tigers</option>
-              <option value="117">Houston Astros</option>
-              <option value="118">Kansas City Royals</option>
-              <option value="119">Los Angeles Dodgers</option>
-              <option value="120">Washington Nationals</option>
-              <option value="121">New York Mets</option>
-              <option value="133">Athletics</option>
-              <option value="134">Pittsburgh Pirates</option>
-              <option value="135">San Diego Padres</option>
-              <option value="136" selected>Seattle Mariners</option>
-              <option value="137">San Francisco Giants</option>
-              <option value="138">St. Louis Cardinals</option>
-              <option value="139">Tampa Bay Rays</option>
-              <option value="140">Texas Rangers</option>
-              <option value="141">Toronto Blue Jays</option>
-              <option value="142">Minnesota Twins</option>
-              <option value="143">Philadelphia Phillies</option>
-              <option value="144">Atlanta Braves</option>
-              <option value="145">Chicago White Sox</option>
-              <option value="146">Miami Marlins</option>
-              <option value="147">New York Yankees</option>
-              <option value="158">Milwaukee Brewers</option>
-            </select>
-            <button class="primary-button" id="save-favorite-team-btn" type="button">Save & Load Team</button>
-          </div>
-          <p class="storage-message" id="storage-message" role="status" aria-live="polite"></p>
-        </form>
-      </section>
-
-
-      <section class="card today-card" data-view="home" aria-labelledby="today-heading">
+      <section class="home-workspace" data-view="home" aria-labelledby="today-heading">
+      <section class="card home-schedule-card">
         <div class="card-header-row">
           <div>
-            <p class="section-label">Favorite Team</p>
-            <h3 id="today-heading">Today's Game</h3>
+            <p class="section-label" id="home-scope-label">Game Browser</p>
+            <h3 id="today-heading">Today's Schedule</h3>
             <p class="subtle" id="today-date">Loading date…</p>
+            <span class="sr-only" id="lineup-status" role="status" aria-live="polite">Checking schedule…</span>
           </div>
-          <div class="today-card-actions">
-            <div class="game-date-control">
-              <label for="game-date-input">Game date</label>
-              <div class="game-date-row">
-                <input id="game-date-input" type="date" />
-                <button class="secondary-button compact-button" id="game-date-today-btn" type="button">Today</button>
-              </div>
+        </div>
+
+        <div class="home-browser-controls" aria-label="Game browser">
+          <label for="game-date-input">Date
+            <div class="game-date-row">
+              <input id="game-date-input" type="date" />
+              <button class="secondary-button compact-button" id="game-date-today-btn" type="button">Today</button>
             </div>
-            <div class="pill neutral" id="lineup-status">Checking lineups…</div>
-          </div>
+          </label>
+          <label for="home-level-select">Level
+            <select id="home-level-select">
+              <option value="mlb">MLB</option>
+              <option value="triple-a">Triple-A</option>
+              <option value="double-a">Double-A</option>
+              <option value="high-a">High-A</option>
+              <option value="single-a">Single-A</option>
+            </select>
+          </label>
+          <label for="home-game-search">Find a game
+            <input id="home-game-search" type="search" autocomplete="off" placeholder="Search teams or league" />
+          </label>
         </div>
 
         <div class="message-panel" id="pregame-message" role="status" aria-live="polite">
-          Loading today's favorite-team game…
+          Loading today's schedule…
         </div>
+        <button class="secondary-button home-settings-link" id="home-open-settings-btn" type="button" hidden>Choose a Favorite Team in Settings</button>
 
         <div id="pregame-content" hidden>
-          <div class="game-choice-list" id="game-choice-list" hidden></div>
+          <section class="home-game-results" aria-label="Schedule results">
+            <div class="home-results-summary"><span id="home-game-count" aria-live="polite"></span></div>
+            <div class="home-game-groups" id="game-choice-list"></div>
+            <p class="home-game-filter-empty" id="home-game-filter-empty" role="status" hidden>No games match this search.</p>
+          </section>
+        </div>
+      </section>
 
+      <section class="card selected-game-card" aria-labelledby="matchup-heading">
+        <div class="selected-game-empty" id="selected-game-empty">
+          <p class="section-label">Selected Game</p>
+          <h3>Choose a game</h3>
+          <p>Select a matchup from the schedule to open Game Day or generate a scorecard.</p>
+        </div>
+        <div id="selected-game-details" hidden>
           <div class="selected-game-heading">
             <div>
+              <p class="section-label">Selected Game</p>
               <h3 id="matchup-heading">Away Team at Home Team</h3>
               <p id="game-status-text"></p>
             </div>
-            <div class="live-pdf-actions" aria-label="Live PDF generation">
+            <div class="pill neutral" id="selected-readiness-status">Waiting</div>
+          </div>
+          <div class="home-matchup-facts">
+            <div><span>First Pitch</span><strong id="first-pitch">Time TBD</strong></div>
+            <div><span>Probable Starters</span><strong id="probable-pitchers">TBD vs TBD</strong></div>
+          </div>
+          <div class="home-selected-actions">
+            <button class="secondary-button" id="open-selected-gameday-btn" type="button">Open Game Day</button>
+            <div class="live-pdf-actions" aria-label="Scorecard generation">
               <label for="live-pdf-layout-select">Layout
                 <select id="live-pdf-layout-select"></select>
               </label>
-              <button class="primary-button" id="live-pdf-generate-btn" type="button">Generate Live PDF</button>
+              <button class="primary-button" id="live-pdf-generate-btn" type="button">Generate Scorecard</button>
             </div>
           </div>
           <div id="live-pdf-message" class="designer-live-status live-pdf-message" role="status" aria-live="polite"></div>
-
-          <div class="pregame-kpis">
-            <div class="kpi"><span class="label">First Pitch</span><span class="value" id="first-pitch">Not listed</span></div>
-            <div class="kpi"><span class="label">Venue</span><span class="value" id="venue">Not listed</span></div>
-            <div class="kpi"><span class="label">Weather</span><span class="value" id="weather">Not listed</span></div>
-          </div>
-
-          <details class="detail-panel">
-            <summary>Pitchers</summary>
-            <label class="pitcher-display-option"><input id="include-additional-starters" type="checkbox" /><span><strong>Include additional starters</strong><small>Add pitchers labeled SP by the depth chart to the displayed bullpen list.</small></span></label>
-            <div class="team-detail-grid">
-              <div>
-                <h4 id="away-pitchers-heading">Away Team</h4>
-                <div id="away-pitchers"></div>
-              </div>
-              <div>
-                <h4 id="home-pitchers-heading">Home Team</h4>
-                <div id="home-pitchers"></div>
-              </div>
-            </div>
-          </details>
-
-          <details class="detail-panel">
-            <summary>Lineups</summary>
-            <div class="team-detail-grid">
-              <div>
-                <h4 id="away-lineup-heading">Away Team</h4>
-                <div id="away-lineup"></div>
-              </div>
-              <div>
-                <h4 id="home-lineup-heading">Home Team</h4>
-                <div id="home-lineup"></div>
-              </div>
-            </div>
-          </details>
         </div>
+      </section>
+      </section>
+
+      <section class="settings-view" data-view="settings" hidden aria-labelledby="settings-heading">
+        <h3 class="sr-only" id="settings-heading">Settings</h3>
+        <span class="sr-only" id="storage-status" role="status" aria-live="polite">Checking storage…</span>
+
+        <div class="settings-preference-grid">
+          <section class="card settings-card" aria-labelledby="favorite-heading">
+          <p class="section-label">Startup Schedule</p>
+          <h3 id="favorite-heading">Favorite Team</h3>
+          <p class="subtle">Choose the competition level first, then select a team. Home will use this competition when loading today's schedule.</p>
+          <form class="favorite-form settings-favorite-form" id="favorite-team-form">
+            <label for="favorite-level-select">Level
+              <select id="favorite-level-select" name="favoriteLevel">
+                <option value="mlb">MLB</option>
+                <option value="triple-a">Triple-A</option>
+                <option value="double-a">Double-A</option>
+                <option value="high-a">High-A</option>
+                <option value="single-a">Single-A</option>
+              </select>
+            </label>
+            <label for="favorite-team-select">Team
+              <select id="favorite-team-select" name="favoriteTeam" disabled>
+                <option value="">Loading teams…</option>
+              </select>
+            </label>
+            <div class="settings-actions">
+              <button class="primary-button" id="save-favorite-team-btn" type="button" disabled>Save Favorite Team</button>
+            </div>
+            <p class="storage-message" id="storage-message" role="status" aria-live="polite"></p>
+          </form>
+          </section>
+
+          <section class="card settings-card" aria-labelledby="appearance-heading">
+          <p class="section-label">Display Preference</p>
+          <h3 id="appearance-heading">Appearance</h3>
+          <p class="subtle">Choose how Scorecard Studio looks. System follows this device and updates if its color preference changes.</p>
+          <fieldset class="appearance-options" id="appearance-options">
+            <legend class="sr-only">Application appearance</legend>
+            <label class="appearance-option">
+              <input type="radio" name="appearance" value="system" checked />
+              <span><strong>System</strong><small>Follow this device</small></span>
+            </label>
+            <label class="appearance-option">
+              <input type="radio" name="appearance" value="light" />
+              <span><strong>Light</strong><small>Always use light</small></span>
+            </label>
+            <label class="appearance-option">
+              <input type="radio" name="appearance" value="dark" />
+              <span><strong>Dark</strong><small>Always use dark</small></span>
+            </label>
+          </fieldset>
+          <p class="appearance-status" id="appearance-status" role="status" aria-live="polite"></p>
+          </section>
+        </div>
+
+        <section class="card settings-card backup-settings-card" aria-labelledby="backup-heading">
+          <p class="section-label">Portable App Data</p>
+          <h3 id="backup-heading">Backup &amp; Restore</h3>
+          <p class="subtle backup-intro">Download a portable copy of your settings and layouts, or safely check and restore a backup from another browser. Game data and temporary caches are not included.</p>
+
+          <div class="backup-workflow-grid">
+            <section class="backup-workflow-panel" aria-labelledby="backup-export-heading">
+              <div class="backup-panel-heading">
+                <span class="backup-step" aria-hidden="true">1</span>
+                <div><p class="section-label">Save a Copy</p><h4 id="backup-export-heading">Create a Backup</h4></div>
+              </div>
+              <div class="backup-choice backup-choice-primary">
+                <div><strong>Complete backup</strong><small>All portable settings, saved layouts, and their PDF templates.</small></div>
+                <button class="primary-button" id="backup-complete-btn" type="button">Download Complete Backup</button>
+              </div>
+              <div class="backup-choice">
+                <div><strong>One layout</strong><small>The selected layout and its PDF template; no app settings.</small></div>
+                <div class="backup-single-layout-row">
+                  <label for="backup-layout-select">Saved layout
+                    <select id="backup-layout-select"></select>
+                  </label>
+                  <button class="secondary-button" id="backup-layout-btn" type="button">Download Layout</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="backup-workflow-panel" aria-labelledby="backup-restore-heading">
+              <div class="backup-panel-heading">
+                <span class="backup-step" aria-hidden="true">2</span>
+                <div><p class="section-label">Bring Data In</p><h4 id="backup-restore-heading">Restore a Backup</h4></div>
+              </div>
+              <p class="subtle">Use one guided window to choose, check, review, and restore a Scorecard Studio backup. Nothing is written until the final confirmation.</p>
+              <button class="secondary-button backup-open-restore-button" id="backup-open-restore-btn" type="button">Import Backup…</button>
+              <ol class="backup-restore-steps" aria-label="Restore steps">
+                <li><strong>Choose</strong><span>Select a Scorecard Studio JSON backup.</span></li>
+                <li><strong>Review</strong><span>See what is included and resolve conflicts only if needed.</span></li>
+                <li><strong>Confirm</strong><span>Nothing is written until you approve the final summary.</span></li>
+              </ol>
+            </section>
+          </div>
+          <div class="backup-status backup-export-status" id="backup-export-status" role="status" aria-live="polite" aria-atomic="true"></div>
+        </section>
       </section>
 
       <section class="gameday-view" data-view="gameday" hidden aria-labelledby="gameday-heading">
-        <section class="card gameday-header-card">
-          <div class="card-header-row">
-            <div>
-              <p class="section-label" data-app-build-prefix="Pregame Reference">Pregame Reference</p>
-              <h3 id="gameday-heading">Game Day</h3>
-              <p class="subtle" id="gameday-subtitle">Select a game on Home, then open Game Day.</p>
-            </div>
-            <button class="secondary-button" id="refresh-gameday-btn" type="button">Refresh Game Day</button>
-          </div>
-          <div class="message-panel" id="gameday-message" role="status" aria-live="polite">Game Day uses the game currently selected on Home.</div>
-          <div class="source-pills" id="gameday-sources" hidden>
-            <span class="pill ready">Core Pregame</span>
-            <span class="pill neutral" id="coaches-source-pill">Coaches API: not requested</span>
-            <span class="pill neutral" id="standings-source-pill">Standings API: not requested</span>
-          </div>
+        <h2 id="gameday-heading" class="sr-only">Game Day</h2>
+        <section class="card gameday-empty-state" id="gameday-empty-state">
+          <h3>Select a game</h3>
+          <p>Choose a game on Home, then return here for the complete pregame research view.</p>
+          <button class="primary-button" id="gameday-empty-home-btn" type="button">Go to Home</button>
         </section>
 
-        <div id="gameday-content" hidden>
-          <section class="gameday-team-grid" id="gameday-team-grid"></section>
+        <div id="gameday-selected-workspace" hidden>
+          <div class="gameday-toolbar">
+            <fieldset class="gameday-detail-switch" id="gameday-detail-level">
+              <legend>Detail level</legend>
+              <label><input type="radio" name="gameday-detail" value="compact" /><span>Compact</span></label>
+              <label><input type="radio" name="gameday-detail" value="standard" checked /><span>Standard</span></label>
+              <label><input type="radio" name="gameday-detail" value="advanced" /><span>Advanced</span></label>
+            </fieldset>
+            <span class="pill neutral" id="gameday-season-context">Season unavailable</span>
+            <button class="secondary-button compact-button" id="refresh-gameday-btn" type="button">Refresh</button>
+          </div>
+          <p class="sr-only" id="gameday-detail-description">Traditional pregame reference.</p>
+          <p class="subtle gameday-season-note" id="gameday-season-note"></p>
+          <div class="message-panel" id="gameday-message" role="status" aria-live="polite" hidden></div>
 
-          <section class="card gameday-section-card">
-            <div class="card-header-row compact-header"><div><p class="section-label">Posted starters</p><h3>Starting Lineups</h3></div></div>
-            <div class="gameday-lineup-grid">
-              <div><h4 id="gameday-away-lineup-heading">Away</h4><div class="gameday-table-wrap"><table class="gameday-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th><th>B</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th></tr></thead><tbody id="gameday-away-lineup"></tbody></table></div></div>
-              <div><h4 id="gameday-home-lineup-heading">Home</h4><div class="gameday-table-wrap"><table class="gameday-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th><th>B</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>HR</th><th>RBI</th></tr></thead><tbody id="gameday-home-lineup"></tbody></table></div></div>
+          <nav class="gameday-section-nav" aria-label="Game Day sections">
+            <a href="#gameday-overview">Game</a><a href="#gameday-teams">Teams</a><a href="#gameday-lineups">Lineups</a><a href="#gameday-benches">Bench</a><a href="#gameday-pitchers">Pitching Staff</a><a href="#gameday-staff-section">Staff</a><a href="#gameday-standings-section">Other Standings</a><a href="#gameday-research">Technical Details</a>
+          </nav>
+
+          <div id="gameday-content">
+          <section class="gameday-section-card" id="gameday-overview" data-gameday-min-level="compact">
+            <div class="gameday-top-grid">
+              <div><h3>Game</h3><div class="gameday-fact-list" id="gameday-overview-facts"></div></div>
+              <div><h3>Venue & Weather</h3><div class="gameday-fact-list" id="gameday-venue"></div></div>
+              <div><h3>Officials</h3><div class="gameday-fact-list" id="gameday-umpires"></div></div>
             </div>
           </section>
 
-          <section class="gameday-two-column">
-            <section class="card gameday-section-card"><p class="section-label">Arms</p><h3>Pitching Staff</h3><div class="gameday-lineup-grid"><div><h4 id="gameday-away-pitching-heading">Away</h4><div id="gameday-away-pitching"></div></div><div><h4 id="gameday-home-pitching-heading">Home</h4><div id="gameday-home-pitching"></div></div></div></section>
-            <section class="card gameday-section-card"><p class="section-label">Available hitters</p><h3>Bench</h3><div class="gameday-lineup-grid"><div><h4 id="gameday-away-bench-heading">Away</h4><div id="gameday-away-bench"></div></div><div><h4 id="gameday-home-bench-heading">Home</h4><div id="gameday-home-bench"></div></div></div></section>
+          <section id="gameday-teams" data-gameday-min-level="compact" aria-label="Teams and records">
+            <div class="gameday-team-grid" id="gameday-team-grid"></div>
           </section>
 
-          <section class="gameday-two-column">
-            <section class="card gameday-section-card"><p class="section-label">Crew</p><h3>Umpires</h3><div id="gameday-umpires"></div></section>
-            <section class="card gameday-section-card"><p class="section-label">Ballpark</p><h3>Venue & Weather</h3><div id="gameday-venue"></div></section>
+          <section class="gameday-section-card" id="gameday-lineups" data-gameday-min-level="compact">
+            <h3>Starting Lineups</h3>
+            <div class="gameday-lineup-grid">
+              <div><h4 id="gameday-away-lineup-heading">Away</h4><div class="gameday-table-wrap"><table class="gameday-table gameday-player-table gameday-batter-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th><th data-gameday-min-level="standard">B</th><th data-gameday-min-level="advanced">GP</th><th data-gameday-min-level="advanced">PA</th><th data-gameday-min-level="standard">AVG</th><th data-gameday-min-level="advanced">OBP</th><th data-gameday-min-level="advanced">SLG</th><th data-gameday-min-level="standard">OPS</th><th data-gameday-min-level="standard">HR</th><th data-gameday-min-level="standard">RBI</th><th data-gameday-min-level="advanced">SB</th></tr></thead><tbody id="gameday-away-lineup"></tbody></table></div></div>
+              <div><h4 id="gameday-home-lineup-heading">Home</h4><div class="gameday-table-wrap"><table class="gameday-table gameday-player-table gameday-batter-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th><th data-gameday-min-level="standard">B</th><th data-gameday-min-level="advanced">GP</th><th data-gameday-min-level="advanced">PA</th><th data-gameday-min-level="standard">AVG</th><th data-gameday-min-level="advanced">OBP</th><th data-gameday-min-level="advanced">SLG</th><th data-gameday-min-level="standard">OPS</th><th data-gameday-min-level="standard">HR</th><th data-gameday-min-level="standard">RBI</th><th data-gameday-min-level="advanced">SB</th></tr></thead><tbody id="gameday-home-lineup"></tbody></table></div></div>
+            </div>
           </section>
+
+          <section class="gameday-section-card" id="gameday-benches" data-gameday-min-level="standard">
+            <h3>Bench</h3>
+            <div class="gameday-lineup-grid"><div><h4 id="gameday-away-bench-heading">Away</h4><div id="gameday-away-bench"></div></div><div><h4 id="gameday-home-bench-heading">Home</h4><div id="gameday-home-bench"></div></div></div>
+          </section>
+
+          <section class="gameday-section-card" id="gameday-pitchers" data-gameday-min-level="compact">
+            <h3>Pitching Staff</h3>
+            <div class="gameday-lineup-grid"><div><h4 id="gameday-away-pitching-heading">Away</h4><div id="gameday-away-pitching"></div></div><div><h4 id="gameday-home-pitching-heading">Home</h4><div id="gameday-home-pitching"></div></div></div>
+          </section>
+
+          <section class="gameday-section-card" id="gameday-staff-section" data-gameday-min-level="advanced">
+            <h3>Managers & Coaching Staff</h3>
+            <div class="gameday-lineup-grid"><div><h4 id="gameday-away-staff-heading">Away</h4><div id="gameday-away-staff"></div></div><div><h4 id="gameday-home-staff-heading">Home</h4><div id="gameday-home-staff"></div></div></div>
+          </section>
+
+          <section class="gameday-section-card" id="gameday-standings-section" data-gameday-min-level="advanced">
+            <h3>Other Standings</h3><div id="gameday-standings"></div>
+          </section>
+
+          <section class="gameday-section-card" id="gameday-research" data-gameday-min-level="advanced">
+            <details class="gameday-technical-details"><summary>Technical source details</summary><div id="gameday-source-summary"></div></details>
+          </section>
+          </div>
         </div>
       </section>
 
-      <section class="field-diagnostic-view" data-view="field-diagnostic" hidden aria-labelledby="field-diagnostic-heading">
-        <section class="card">
-          <div class="card-header-row">
-            <div>
-              <p class="section-label" data-app-build-prefix="Live Coverage">Live Coverage</p>
-              <h3 id="field-diagnostic-heading">Field Coverage Diagnostic</h3>
-              <p class="subtle" id="field-diagnostic-subtitle">Select a real game on Home, then open this diagnostic.</p>
-            </div>
-            <button class="secondary-button" id="refresh-field-diagnostic-btn" type="button">Refresh Diagnostic</button>
-          </div>
-          <div class="message-panel" id="field-diagnostic-message" role="status" aria-live="polite">The diagnostic resolves every active catalog field against the currently selected game.</div>
-          <div class="source-pills" id="field-diagnostic-sources" hidden>
-            <span class="pill neutral" id="diagnostic-gamepack-source-pill">Core pregame: not loaded</span>
-            <span class="pill neutral" id="diagnostic-coaches-source-pill">Coaches API: not requested</span>
-            <span class="pill neutral" id="diagnostic-standings-source-pill">Standings API: not requested</span>
-          </div>
-        </section>
-
-        <section class="card" id="field-diagnostic-content" hidden>
-          <div class="diagnostic-summary" id="field-diagnostic-summary"></div>
-          <div class="diagnostic-toolbar">
-            <input id="field-diagnostic-search" type="search" placeholder="Search field, category, or ID…" aria-label="Search diagnostic fields" />
-            <select id="field-diagnostic-tier-filter" aria-label="Filter by field tier">
-              <option value="all">All tiers</option>
-              <option value="standard">Standard</option>
-              <option value="custom">Custom</option>
-            </select>
-            <select id="field-diagnostic-status-filter" aria-label="Filter by diagnostic status">
-              <option value="all">All statuses</option>
-              <option value="available">Available</option>
-              <option value="partial">Partial</option>
-              <option value="missing">Missing</option>
-              <option value="sourceUnavailable">Source unavailable</option>
-              <option value="error">Error</option>
-            </select>
-          </div>
-          <div class="diagnostic-legend subtle">Repeated fields show coverage as <strong>resolved members / applicable members</strong>. Hover or tap-hold a field name or status for details.</div>
-          <div class="diagnostic-table-wrap">
-            <table class="diagnostic-table">
-              <thead><tr><th>Category</th><th>Field</th><th>Tier</th><th>Example</th><th>Live value</th><th>Coverage</th><th>Source</th><th>Status</th></tr></thead>
-              <tbody id="field-diagnostic-table-body"></tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
       <section class="layouts-view" data-view="layouts" hidden aria-labelledby="layouts-heading">
-        <section class="card layout-create-card">
+        <section class="card layout-library-card" id="layout-library-panel">
           <div class="card-header-row">
             <div>
-              <p class="section-label" data-app-build-label>Loading build…</p>
+              <p class="section-label">PDF Template Workspace</p>
               <h3 id="layouts-heading">Layout Library</h3>
-              <p class="subtle">Create and manage PDF-backed layouts. Open a layout in the Designer to place the first test fields.</p>
+              <p class="subtle">Open a scorecard in the Designer or manage it directly from its library card.</p>
             </div>
-            <div class="pill neutral" id="layout-storage-status">Loading layouts…</div>
+            <div class="layout-library-header-actions">
+              <span class="pill neutral" id="layout-count">0 layouts</span>
+              <button class="primary-button" id="open-create-layout-btn" type="button">Create Layout</button>
+            </div>
           </div>
+          <div class="layout-list" id="layout-list"></div>
+          <div class="message-panel layout-library-message" id="layout-message" role="status" aria-live="polite">Loading saved layouts…</div>
+          <span class="sr-only" id="layout-storage-status" role="status" aria-live="polite">Loading layouts…</span>
+        </section>
 
+        <section class="card layout-create-workflow" id="layout-create-workflow" hidden aria-labelledby="layout-create-heading">
+          <div class="card-header-row">
+            <div>
+              <p class="section-label">New PDF Template</p>
+              <h3 id="layout-create-heading">Create a Layout</h3>
+              <p class="subtle">Name the layout, choose its starting field palette, and attach the scorecard PDF.</p>
+            </div>
+            <button class="secondary-button" id="close-create-layout-btn" type="button">Back to Library</button>
+          </div>
           <div class="layout-form-grid">
             <label>Layout name
               <input id="layout-name-input" type="text" maxlength="80" placeholder="Custom 11x17 B&W" />
@@ -319,57 +369,7 @@
             <span class="pdf-file-summary" id="layout-pdf-summary">No PDF selected.</span>
             <button class="primary-button" id="create-layout-btn" type="button">Create Layout</button>
           </div>
-          <div class="message-panel" id="layout-message" role="status" aria-live="polite">Create your first saved layout.</div>
-        </section>
-
-        <section class="card">
-          <div class="card-header-row compact-header">
-            <div>
-              <p class="section-label">Saved in this browser</p>
-              <h3>Layouts</h3>
-            </div>
-            <span class="pill neutral" id="layout-count">0 layouts</span>
-          </div>
-          <div class="layout-list" id="layout-list"></div>
-        </section>
-
-        <section class="card layout-detail-card" id="layout-detail-card" hidden>
-          <div class="card-header-row">
-            <div>
-              <p class="section-label">Selected Layout</p>
-              <h3 id="selected-layout-heading">Layout</h3>
-              <p class="subtle" id="selected-layout-meta"></p>
-            </div>
-            <div class="pill ready">Ready</div>
-          </div>
-
-          <div class="layout-form-grid">
-            <label>Layout name
-              <input id="edit-layout-name" type="text" maxlength="80" />
-            </label>
-            <label>Description
-              <input id="edit-layout-description" type="text" maxlength="240" />
-            </label>
-          </div>
-          <div class="layout-detail-actions">
-            <button class="primary-button" id="open-designer-btn" type="button">Open Designer</button>
-            <button class="secondary-button" id="layout-formatting-btn" type="button">Layout Settings</button>
-            <button class="secondary-button" id="save-layout-metadata-btn" type="button">Save Changes</button>
-            <button class="secondary-button" id="duplicate-layout-btn" type="button">Duplicate</button>
-            <button class="secondary-button" id="favorite-layout-btn" type="button">Set as Favorite</button>
-            <button class="danger-button" id="delete-layout-btn" type="button">Delete Layout</button>
-          </div>
-
-          <div class="pdf-viewer" id="pdf-viewer" hidden>
-            <div class="pdf-toolbar">
-              <button class="secondary-button" id="pdf-prev-btn" type="button">Previous</button>
-              <strong id="pdf-page-label">Page 1 of 1</strong>
-              <button class="secondary-button" id="pdf-next-btn" type="button">Next</button>
-            </div>
-            <div class="pdf-canvas-wrap">
-              <canvas id="pdf-canvas" aria-label="Rendered layout PDF page"></canvas>
-            </div>
-          </div>
+          <div class="message-panel" id="layout-create-message" role="status" aria-live="polite">Nothing is saved until you choose Create Layout.</div>
         </section>
       </section>
 
@@ -381,6 +381,7 @@
               <p class="subtle" id="designer-layout-meta">Open a saved layout to begin mapping.</p>
             </div>
             <div class="designer-header-actions">
+              <span class="designer-generate-hint" id="designer-generate-hint" role="status"></span>
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
               <button class="secondary-button" id="designer-back-btn" type="button">Close Layout Designer</button>
             </div>
@@ -622,6 +623,14 @@
                     <option value="home.startingPitcher">Home starting pitcher</option>
                   </select>
                 </label>
+                <label id="designer-pitcher-group-wrap" for="designer-pitcher-group" hidden>Pitcher group
+                  <select id="designer-pitcher-group">
+                    <option value="core">Core Bullpen</option>
+                    <option value="combined">Combined Pitchers</option>
+                    <option value="additional">Additional Starting Pitchers</option>
+                  </select>
+                  <small id="designer-pitcher-group-note" class="subtle">Stored on this repeated layout only.</small>
+                </label>
                 <label for="designer-block-arrangement">Arrangement
                   <select id="designer-block-arrangement">
                     <option value="vertical">Vertical list</option>
@@ -752,12 +761,14 @@
   </div>
 
 
-  <dialog id="layout-formatting-dialog" class="formatting-dialog layout-settings-dialog">
-    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-parent-card">
-      <div class="layout-settings-parent-header">
-        <div><p class="section-label">Layout Settings</p><h3>Layout Settings</h3><p class="subtle">Review the current layout settings, then open a section to make changes.</p></div>
+  <dialog id="layout-formatting-dialog" class="formatting-dialog layout-settings-dialog" aria-labelledby="layout-formatting-dialog-title">
+    <form class="formatting-dialog-card layout-settings-card layout-settings-shell">
+      <div class="layout-settings-shell-header">
+        <div class="layout-settings-shell-heading"><p class="section-label">Layout Settings</p><h3 id="layout-formatting-dialog-title" tabindex="-1">Layout Settings</h3><p class="subtle" id="layout-settings-dialog-description">Review this layout, then choose what to change.</p></div>
+        <button class="icon-button layout-settings-shell-close" id="layout-settings-close" type="button" aria-label="Close Layout Settings" title="Close">×</button>
       </div>
-      <div class="layout-settings-parent-body">
+      <div class="layout-settings-shell-body">
+        <section id="layout-settings-summary-view" class="layout-settings-summary-view">
         <section class="layout-settings-summary-card">
           <div class="layout-settings-summary-copy">
             <h4>Layout Details</h4>
@@ -768,7 +779,7 @@
               <div><dt>Scorecard PDF</dt><dd id="layout-details-summary-pdf"></dd></div>
             </dl>
           </div>
-          <button class="secondary-button compact-button layout-settings-open-button" id="layout-details-open" type="button">Open</button>
+          <button class="secondary-button compact-button layout-settings-open-button" id="layout-details-open" type="button">Edit Details</button>
         </section>
         <section class="layout-settings-summary-card">
           <div class="layout-settings-summary-copy">
@@ -776,7 +787,7 @@
             <p class="subtle">Choose which standard and custom fields are available in the Designer palette.</p>
             <div class="layout-settings-summary-line"><span id="layout-field-summary-detail"></span></div>
           </div>
-          <button class="secondary-button compact-button layout-settings-open-button" id="layout-custom-fields-open" type="button">Open</button>
+          <button class="secondary-button compact-button layout-settings-open-button" id="layout-custom-fields-open" type="button">Choose Fields</button>
         </section>
         <section class="layout-settings-summary-card">
           <div class="layout-settings-summary-copy">
@@ -784,80 +795,113 @@
             <p class="subtle">Set the default formatting used when new items are placed on the scorecard.</p>
             <div class="layout-settings-summary-line" id="layout-formatting-summary"></div>
           </div>
-          <button class="secondary-button compact-button layout-settings-open-button" id="layout-formatting-open" type="button">Open</button>
+          <button class="secondary-button compact-button layout-settings-open-button" id="layout-formatting-open" type="button">Edit Formatting</button>
         </section>
-      </div>
-      <div class="formatting-dialog-actions layout-settings-parent-footer"><span class="dialog-spacer"></span><button class="primary-button" value="close">Close</button></div>
-    </form>
-  </dialog>
+        </section>
 
-  <dialog id="layout-details-dialog" class="formatting-dialog layout-settings-child-dialog">
-    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-child-card">
-      <div class="layout-settings-child-header">
-        <div><p class="section-label">Layout Settings</p><h3>Layout Details</h3><p class="subtle">Update the layout name, description, or replace the underlying scorecard PDF.</p></div>
-        <button class="icon-button layout-settings-child-close" id="layout-details-close" type="button" aria-label="Cancel and close Layout Details" title="Cancel">×</button>
-      </div>
-      <div class="layout-settings-child-body">
+        <section id="layout-details-dialog" class="layout-settings-internal-view" hidden>
         <div class="layout-details-grid">
           <label>Layout Name<input id="layout-settings-name" type="text" /></label>
           <label class="layout-details-description">Description<textarea id="layout-settings-description" rows="3"></textarea></label>
         </div>
         <div class="layout-pdf-replace-row"><div><strong>Scorecard PDF</strong><small id="layout-settings-pdf-summary"></small></div><label class="secondary-button compact-button">Replace PDF<input id="layout-settings-pdf-input" type="file" accept="application/pdf,.pdf" hidden /></label></div>
         <p class="subtle" id="layout-settings-pdf-message"></p>
-      </div>
-      <div class="formatting-dialog-actions layout-settings-child-footer"><span class="dialog-spacer"></span><button class="secondary-button" id="layout-details-cancel" type="button">Cancel</button><button class="primary-button" id="layout-details-save" type="button" disabled>Save</button></div>
-    </form>
-  </dialog>
+        </section>
 
-  <dialog id="layout-custom-fields-dialog" class="formatting-dialog layout-settings-child-dialog">
-    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-child-card layout-custom-fields-child-card">
-      <div class="layout-settings-child-header">
-        <div><p class="section-label">Layout Settings</p><h3>Select Custom Fields</h3><p class="subtle">Choose the fields that should be available in this layout's Designer palette.</p></div>
-        <div class="layout-custom-fields-header-actions"><button class="icon-button layout-settings-child-close" id="layout-custom-fields-close" type="button" aria-label="Cancel and close custom field selector" title="Cancel">×</button></div>
-      </div>
-      <div class="layout-settings-child-body">
-        <label class="layout-custom-search">Find a field<input id="layout-field-search" type="search" placeholder="Search fields, categories, or examples…" /></label>
+        <section id="layout-custom-fields-dialog" class="layout-settings-internal-view layout-custom-fields-view" hidden>
+        <div class="layout-field-picker-toolbar">
+          <label class="layout-custom-search">Find a field<input id="layout-field-search" type="search" placeholder="Search fields, categories, or examples…" /></label>
+          <label class="layout-field-mirror-toggle"><input id="layout-field-mirror" type="checkbox" checked />Mirror Home and Away selections</label>
+          <div class="layout-field-disclosure-actions"><button class="secondary-button compact-button" id="layout-fields-expand-all" type="button">Expand All</button><button class="secondary-button compact-button" id="layout-fields-collapse-all" type="button">Collapse All</button></div>
+        </div>
         <div class="layout-custom-field-list" id="layout-custom-field-list"></div>
-      </div>
-      <div class="formatting-dialog-actions layout-settings-child-footer"><div class="layout-custom-fields-footer-left"><span class="layout-custom-field-count" id="layout-custom-field-count"></span><button class="secondary-button" id="layout-custom-fields-restore-standard" type="button">Restore Standard Fields</button></div><span class="dialog-spacer"></span><button class="secondary-button" id="layout-custom-fields-cancel" type="button">Cancel</button><button class="primary-button" id="layout-custom-fields-save" type="button" disabled>Save</button></div>
-    </form>
-  </dialog>
+        </section>
 
-  <dialog id="layout-default-formatting-dialog" class="formatting-dialog layout-settings-child-dialog">
-    <form method="dialog" class="formatting-dialog-card layout-settings-card layout-settings-child-card">
-      <div class="layout-settings-child-header">
-        <div><p class="section-label">Layout Settings</p><h3>Default Formatting Options</h3><p class="subtle">Customize the formatting applied when new items are placed. Individual items can still be formatted after placement.</p></div>
-        <button class="icon-button layout-settings-child-close" id="layout-formatting-close" type="button" aria-label="Cancel and close formatting options" title="Cancel">×</button>
-      </div>
-      <div class="layout-settings-child-body">
+        <section id="layout-default-formatting-dialog" class="layout-settings-internal-view" hidden>
         <div id="layout-formatting-grid" class="layout-formatting-grid"></div>
+        </section>
       </div>
-      <div class="formatting-dialog-actions layout-settings-child-footer"><button class="secondary-button" id="layout-formatting-reset-btn" type="button">Restore App Defaults</button><span class="dialog-spacer"></span><button class="secondary-button" id="layout-formatting-cancel" type="button">Cancel</button><button class="primary-button" id="layout-formatting-save-btn" type="button" disabled>Save</button></div>
+      <div class="formatting-dialog-actions layout-settings-shell-footer">
+        <div id="layout-settings-summary-actions"><span class="dialog-spacer"></span><button class="primary-button" id="layout-settings-done" type="button">Close</button></div>
+        <div id="layout-settings-details-actions" hidden><span class="dialog-spacer"></span><button class="secondary-button" id="layout-details-cancel" type="button">Back to Layout Settings</button><button class="primary-button" id="layout-details-save" type="button" disabled>Save</button></div>
+        <div id="layout-settings-fields-actions" hidden><div class="layout-custom-fields-footer-left"><span class="layout-custom-field-count" id="layout-custom-field-count"></span><button class="secondary-button" id="layout-custom-fields-restore-standard" type="button">Restore Standard Fields</button></div><span class="dialog-spacer"></span><button class="secondary-button" id="layout-custom-fields-cancel" type="button">Back to Layout Settings</button><button class="primary-button" id="layout-custom-fields-save" type="button" disabled>Save</button></div>
+        <div id="layout-settings-formatting-actions" hidden><button class="secondary-button" id="layout-formatting-reset-btn" type="button">Restore App Defaults</button><span class="dialog-spacer"></span><button class="secondary-button" id="layout-formatting-cancel" type="button">Back to Layout Settings</button><button class="primary-button" id="layout-formatting-save-btn" type="button" disabled>Save</button></div>
+      </div>
     </form>
   </dialog>
 
-  <dialog id="layout-pdf-error-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog">
+  <dialog id="layout-pdf-error-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog" aria-labelledby="layout-pdf-error-dialog-title">
     <form method="dialog" class="formatting-dialog-card compact-message-card">
       <p class="section-label">Layout Settings</p>
-      <h3>PDF Cannot Be Replaced</h3>
+      <h3 id="layout-pdf-error-dialog-title">PDF Cannot Be Replaced</h3>
       <p id="layout-pdf-error-message"></p>
       <p class="subtle">To preserve existing field placements, a replacement PDF must have the same number of pages as the current scorecard.</p>
       <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="primary-button" value="ok">OK</button></div>
     </form>
   </dialog>
 
-  <dialog id="layout-custom-discard-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog">
+  <dialog id="layout-custom-discard-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog" aria-labelledby="layout-custom-discard-dialog-title">
     <form method="dialog" class="formatting-dialog-card compact-message-card">
       <p class="section-label">Layout Settings</p>
-      <h3>Discard Unsaved Changes?</h3>
+      <h3 id="layout-custom-discard-dialog-title">Discard Unsaved Changes?</h3>
       <p id="layout-settings-discard-message">Closing now will discard your unsaved changes.</p>
       <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="secondary-button" value="cancel">Cancel</button><button class="danger-button" id="layout-custom-discard-confirm" type="button">Discard Changes</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="backup-restore-dialog" class="formatting-dialog backup-restore-dialog dark-message-dialog" aria-labelledby="backup-restore-dialog-title">
+    <form method="dialog" class="formatting-dialog-card backup-restore-dialog-card">
+      <div class="backup-dialog-header">
+        <div><p class="section-label" id="backup-restore-progress">Step 1 of 3 · Choose</p><h3 id="backup-restore-dialog-title" tabindex="-1">Restore a Backup</h3></div>
+        <button class="icon-button" id="backup-restore-close-btn" value="cancel" aria-label="Close restore workflow" title="Close">×</button>
+      </div>
+
+      <section class="backup-restore-stage" id="backup-select-stage" aria-labelledby="backup-select-heading">
+        <h4 id="backup-select-heading">Choose a Backup File</h4>
+        <p class="subtle">Selecting a file is safe. Scorecard Studio checks it completely before offering any restore action.</p>
+        <div class="backup-file-choice">
+          <button class="primary-button backup-file-button" id="backup-restore-file-btn" type="button">Choose Backup File</button>
+          <input id="backup-restore-file" type="file" accept="application/json,.json" hidden />
+          <span class="backup-file-name" id="backup-restore-file-name">No backup selected</span>
+        </div>
+      </section>
+
+      <section class="backup-restore-stage backup-preflight" id="backup-preflight" hidden aria-labelledby="backup-preflight-heading">
+        <div class="backup-preflight-heading-row">
+          <div><h4 id="backup-preflight-heading">Backup Check</h4><p class="subtle" id="backup-preflight-description">Review the validated contents below.</p></div>
+          <span class="pill neutral" id="backup-preflight-state">Not checked</span>
+        </div>
+        <dl class="backup-summary-list" id="backup-preflight-summary"></dl>
+        <div class="backup-diagnostics" id="backup-diagnostics"></div>
+        <div class="backup-conflicts" id="backup-conflicts"></div>
+        <div class="backup-preflight-actions">
+          <button class="secondary-button" id="backup-clear-restore-btn" type="button">Choose Another File</button>
+          <button class="primary-button" id="backup-review-restore-btn" type="button" disabled>Continue</button>
+        </div>
+      </section>
+
+      <section class="backup-restore-stage" id="backup-confirm-stage" hidden aria-labelledby="backup-confirm-dialog-title">
+        <h4 id="backup-confirm-dialog-title">Restore This Backup?</h4>
+        <p id="backup-confirm-description">The approved records are saved together. If any write fails, the current browser data remains unchanged.</p>
+        <dl class="backup-summary-list backup-final-summary" id="backup-confirm-summary"></dl>
+        <div class="backup-confirm-warning" id="backup-confirm-warning"></div>
+        <div class="formatting-dialog-actions"><button class="secondary-button" id="backup-confirm-cancel-btn" type="button">Back to Review</button><span class="dialog-spacer"></span><button class="danger-button" id="backup-confirm-restore-btn" type="button">Confirm &amp; Restore</button></div>
+      </section>
+
+      <section class="backup-restore-stage backup-complete-stage" id="backup-complete-stage" hidden aria-labelledby="backup-complete-heading">
+        <span class="backup-complete-icon" aria-hidden="true">✓</span>
+        <h4 id="backup-complete-heading">Restore Complete</h4>
+        <p id="backup-complete-message"></p>
+        <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="primary-button" id="backup-restore-done-btn" type="button">Done</button></div>
+      </section>
+
+      <div class="backup-status" id="backup-status" role="status" aria-live="polite" aria-atomic="true"></div>
     </form>
   </dialog>
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=030b0054"></script>
+  <script type="module" src="./js/app.js?v=040"></script>
 </body>
 </html>

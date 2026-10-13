@@ -60,6 +60,15 @@ test("standings tokens preserve raw values and do not coerce a leader dash to ze
   assert.equal(snapshot.standings.groups[0].rows[1].sourceOrder, 1);
 });
 
+test("MiLB standings recover a missing group name from authoritative division records", () => {
+  const testCase = structuredClone(byId.get("variable-officials-feed-venue"));
+  const record = testCase.sources.standings.payload.records[0];
+  record.division = { id: 209 };
+  for (const row of record.teamRecords) row.records = { ...(row.records || {}), divisionRecords: [{ division: { id: 209, name: "Texas League" } }] };
+  const snapshot = normalize(testCase);
+  assert.deepEqual(snapshot.standings.groups[0].division, { id: 209, name: "Texas League" });
+});
+
 test("Game 2 keeps prior-day standings while selecting Game 1 records and player totals", () => {
   const snapshot = normalize(byId.get("game2-production-mixed-cutoff"));
   assert.deepEqual(snapshot.away.team.record, { gamesPlayed: 36, wins: 20, losses: 16, pct: 0.556 });

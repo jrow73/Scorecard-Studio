@@ -27,12 +27,12 @@ test("saved layouts load non-destructively and explicit saves use compatibility 
   assert.match(app, /persistRawLayout\(prepareCompatibleLayoutForExplicitSave\(layout\)\.layout\)/);
 });
 
-test("additional starters are user controlled, persisted, and off by default", () => {
+test("legacy additional-starter preference remains compatible but is retired from Home", () => {
   const app = read("js/app.js");
   const html = read("index.html");
   assert.match(app, /includeAdditionalStarters: false/);
   assert.match(app, /setSetting\("includeAdditionalStarters"/);
-  assert.match(html, /id="include-additional-starters"/);
+  assert.doesNotMatch(html, /id="include-additional-starters"/);
 });
 
 test("PDF and layout consumers still resolve through the compatibility field registry", () => {
@@ -44,9 +44,9 @@ test("PDF and layout consumers still resolve through the compatibility field reg
   assert.match(registry, /resolveCompatibilityField/);
 });
 
-test("the cutover advertises the final browser cache key and v0.3.0 identity", () => {
+test("the v0.3 cutover remains active under the v0.4 development identity", () => {
   const html = read("index.html");
   const meta = JSON.parse(read("app-meta.json"));
-  assert.match(html, /v=030b0054/);
-  assert.deepEqual(meta, { version: "0.3.0", build: "005.2" });
+  assert.match(html, /v=040/);
+  assert.deepEqual(meta, { version: "0.4.0", build: "004.9" });
 });

@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "captureId": "disc-003-778494-schedule-sutter-2025",
+  "investigationId": "DISC-003",
+  "evidenceKind": "historical-current",
+  "capturedAtUtc": "2026-10-06T01:25:12.895Z",
+  "context": {
+    "subject": "Athletics 2025 home venue: Sutter Health Park",
+    "gameState": "Final"
+  },
+  "request": {
+    "method": "GET",
+    "url": "https://statsapi.mlb.com/api/v1/schedule?gamePk=778494&hydrate=venue%2Cteam",
+    "headers": {
+      "Accept": "application/json"
+    }
+  },
+  "response": {
+    "status": 200,
+    "ok": true,
+    "durationMs": 215,
+    "headers": {
+      "contentType": "application/json;charset=UTF-8",
+      "cacheControl": "max-age=20, public, stale-while-revalidate=30, stale-if-error=86400",
+      "etag": null,
+      "lastModified": null
+    },
+    "bodyBytes": 3292,
+    "bodySha256": "c920d02231e312c9c1b6472f9538672ecf0bc66b6117bfc4e3620984b3f9d6ba"
+  },
+  "selection": {
+    "jsonPointers": [
+      "/dates/0/games/0/gamePk",
+      "/dates/0/games/0/gameType",
+      "/dates/0/games/0/officialDate",
+      "/dates/0/games/0/venue",
+      "/dates/0/games/0/teams"
+    ],
+    "values": {
+      "/dates/0/games/0/gamePk": {
+        "found": true,
+        "value": 778494
+      },
+      "/dates/0/games/0/gameType": {
+        "found": true,
+        "value": "R"
+      },
+      "/dates/0/games/0/officialDate": {
+        "found": true,
+        "value": "2025-04-01"
+      },
+      "/dates/0/games/0/venue": {
+        "found": true,
+        "value": {
+          "id": 2529,
+          "name": "Sutter Health Park",
+          "link": "/api/v1/venues/2529",
+          "active": true,
+          "season": "2025"
+        }
+      },
+      "/dates/0/games/0/teams": {
+        "found": true,
+        "value": {
+          "away": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 112,
+              "name": "Chicago Cubs",
+              "link": "/api/v1/teams/112",
+              "season": 2025,
+              "venue": {
+                "id": 17,
+                "name": "Wrigley Field",
+                "link": "/api/v1/venues/17"
+              },
+              "springVenue": {
+                "id": 4629,
+                "link": "/api/v1/venues/4629"
+              },
+              "teamCode": "chn",
+              "fileCode": "chc",
+              "abbreviation": "CHC",
+              "teamName": "Cubs",
+              "locationName": "Chicago",
+              "firstYearOfPlay": "1874",
+              "league": {
+                "id": 104,
+                "name": "National League",
+                "link": "/api/v1/league/104"
+              },
+              "division": {
+                "id": 205,
+                "name": "National League Central",
+                "link": "/api/v1/divisions/205"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Chi Cubs",
+              "franchiseName": "Chicago",
+              "clubName": "Cubs",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 4,
+              "losses": 4,
+              "ties": 0,
+              "pct": ".500"
+            },
+            "score": 7,
+            "isWinner": true,
+            "splitSquad": false,
+            "seriesNumber": 3,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          },
+          "home": {
+            "team": {
+              "springLeague": {
+                "id": 114,
+                "name": "Cactus League",
+                "link": "/api/v1/league/114",
+                "abbreviation": "CL"
+              },
+              "allStarStatus": "N",
+              "id": 133,
+              "name": "Athletics",
+              "link": "/api/v1/teams/133",
+              "season": 2025,
+              "venue": {
+                "id": 2529,
+                "name": "Sutter Health Park",
+                "link": "/api/v1/venues/2529"
+              },
+              "springVenue": {
+                "id": 2507,
+                "link": "/api/v1/venues/2507"
+              },
+              "teamCode": "ath",
+              "fileCode": "ath",
+              "abbreviation": "ATH",
+              "teamName": "Athletics",
+              "locationName": "Sacramento",
+              "firstYearOfPlay": "1901",
+              "league": {
+                "id": 103,
+                "name": "American League",
+                "link": "/api/v1/league/103"
+              },
+              "division": {
+                "id": 200,
+                "name": "American League West",
+                "link": "/api/v1/divisions/200"
+              },
+              "sport": {
+                "id": 1,
+                "link": "/api/v1/sports/1",
+                "name": "Major League Baseball"
+              },
+              "shortName": "Athletics",
+              "franchiseName": "Athletics",
+              "clubName": "Athletics",
+              "active": true
+            },
+            "leagueRecord": {
+              "wins": 2,
+              "losses": 4,
+              "ties": 0,
+              "pct": ".333"
+            },
+            "score": 4,
+            "isWinner": false,
+            "splitSquad": false,
+            "seriesNumber": 2,
+            "springLeague": {
+              "id": 114,
+              "name": "Cactus League",
+              "link": "/api/v1/league/114",
+              "abbreviation": "CL"
+            }
+          }
+        }
+      }
+    }
+  },
+  "notes": []
+}
