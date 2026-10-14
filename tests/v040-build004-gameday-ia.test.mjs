@@ -34,18 +34,21 @@ test("the detail choice is part of the generic app preference record", () => {
   });
 });
 
-test("Build 004.6 presents user detail controls and keeps source outcomes in a technical disclosure", async () => {
+test("Build 005.1 presents user detail controls without developer-facing helper or source UI", async () => {
   const [html, app, css] = await Promise.all([
     readFile(path.join(root, "index.html"), "utf8"),
     readFile(path.join(root, "js", "app.js"), "utf8"),
     readFile(path.join(root, "css", "styles.css"), "utf8")
   ]);
   for (const level of ["compact", "standard", "advanced"]) assert.match(html, new RegExp(`name="gameday-detail" value="${level}"`));
-  assert.match(html, /<details class="gameday-technical-details">/);
+  assert.doesNotMatch(html, /gameday-technical-details|gameday-source-summary|gameday-research/);
+  assert.doesNotMatch(html, /gameday-season-note|gameday-player-stat-scope-status/);
+  assert.doesNotMatch(html, />Technical Details<|Technical source details/);
   assert.doesNotMatch(html, /Coaches API|Standings API|Core Pregame/);
   assert.doesNotMatch(app, /Schema-v2 pregame data loaded successfully|Coaches API: loaded|Standings API: loaded/);
   assert.match(app, /setSetting\(APP_PREFERENCES_SETTING_KEY, next\)/);
-  assert.match(app, /gameDaySeasonContext\(model\)/);
+  assert.match(app, /competitionContextForModel\(model\)/);
+  assert.doesNotMatch(app, /renderGameDayResearch|gameDaySeasonNote|gameDayPlayerStatScopeStatus/);
   assert.match(css, /data-detail-level="compact"/);
 });
 
@@ -76,6 +79,20 @@ test("Build 004.6a separates relevant standings, names unnamed MLB groups, and r
   assert.doesNotMatch(html, /Role-aware active arms|Posted batting order|Snapshot Context|Research Context/);
   assert.doesNotMatch(app, /"P\?"|Returned Standings Group|SP role annotations are unavailable; no pitchers are inferred/);
   assert.match(app, /layoutHasRenderableMappings/);
+});
+
+test("Build 002.2a keeps Wild Card overlay records out of visible standings tables", () => {
+  const result = standingsPresentation({
+    away: { team: { id: 1, name: "Away" } },
+    home: { team: { id: 2, name: "Home" } },
+    standings: { groups: [
+      { key: "regularSeason:1:103:200", standingsType: "regularSeason", rows: [{ team: { id: 1 } }, { team: { id: 3 } }] },
+      { key: "wildCardWithLeaders:1:103:200", standingsType: "wildCardWithLeaders", rows: [{ team: { id: 3 } }] },
+      { key: "wildCardWithLeaders:1:104:203", rows: [{ team: { id: 4 } }] }
+    ] }
+  });
+  assert.equal(result.relevant.length, 1);
+  assert.equal(result.other.length, 0);
 });
 
 test("Build 004.6b keeps wide Game Day layouts dense and protects the team gutter", async () => {
@@ -141,7 +158,7 @@ test("Build 004.6d packs Advanced stats and aligns standings with each team", as
   assert.match(app, /gameday-standings-home/);
   assert.match(app, /gameday-standings-shared/);
   assert.match(styles, /\[data-detail-level="advanced"\]\s*\.gameday-player-table\s*\{[^}]*width:\s*auto;[^}]*min-width:\s*0/s);
-  assert.match(styles, /#gameday-standings\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
+  assert.match(styles, /\.gameday-standings-columns\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
   assert.match(styles, /@media \(max-width:\s*1280px\)[\s\S]*\[data-detail-level="advanced"\] #gameday-lineups/s);
 });
 

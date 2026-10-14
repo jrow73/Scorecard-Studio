@@ -44,6 +44,17 @@ test("present-empty officials remain distinct from omitted or failed", () => {
   assert.equal(snapshot.meta.lineage.find((entry) => entry.target === "/game/umpires/crew" && entry.coverage === "exact").state, "present-empty");
 });
 
+test("Feed weather fills a sparse Schedule weather projection", () => {
+  const testCase = structuredClone(byId.get("variable-officials-feed-venue"));
+  testCase.baseSnapshot.game.weather = { temperature: null, condition: null, wind: null };
+  testCase.sources.feed.payload.gameData.weather = { temp: "72", condition: "Dome", wind: "0 mph, None" };
+  const snapshot = normalize(testCase);
+  assert.deepEqual(snapshot.game.weather, { temperature: 72, condition: "Dome", wind: "0 mph, None" });
+  const weather = snapshot.meta.lineage.find((entry) => entry.target === "/game/weather" && entry.coverage === "subtree");
+  assert.equal(weather.selectedSourceResultRef, "feed.officials-venue");
+  assert.equal(weather.sourcePath, "/gameData/weather");
+});
+
 test("spring standings retain explicit competition scope and source groups", () => {
   const snapshot = normalize(byId.get("spring-scoped-standings"));
   assert.equal(snapshot.context.gameType, "S");
@@ -58,6 +69,43 @@ test("standings tokens preserve raw values and do not coerce a leader dash to ze
   assert.deepEqual(snapshot.away.team.standings.wildCardGamesBack, { raw: "-", state: "leader", games: null });
   assert.equal(snapshot.standings.groups[0].rows[0].sourceOrder, 0);
   assert.equal(snapshot.standings.groups[0].rows[1].sourceOrder, 1);
+});
+
+test("standings preserve team performance and home-away records for Advanced cards", () => {
+  const testCase = structuredClone(byId.get("variable-officials-feed-venue"));
+  const row = testCase.sources.standings.payload.records[0].teamRecords[0];
+  row.runsScored = 177;
+  row.runsAllowed = 151;
+  row.runDifferential = 26;
+  row.records.splitRecords.push(
+    { type: "home", wins: 12, losses: 6 },
+    { type: "away", wins: 7, losses: 10 }
+  );
+  const snapshot = normalize(testCase);
+  assert.equal(snapshot.away.team.standings.runsScored, 177);
+  assert.equal(snapshot.away.team.standings.runsAllowed, 151);
+  assert.equal(snapshot.away.team.standings.runDifferential, 26);
+  assert.deepEqual(snapshot.away.team.standings.homeRecord, { wins: 12, losses: 6, display: "12-6" });
+  assert.deepEqual(snapshot.away.team.standings.awayRecord, { wins: 7, losses: 10, display: "7-10" });
+});
+
+test("Wild Card groups use the API's Wild Card elimination number", () => {
+  const testCase = structuredClone(byId.get("variable-officials-feed-venue"));
+  const wildCardSource = structuredClone(testCase.sources.standings);
+  wildCardSource.input.standingsType = "wildCard";
+  wildCardSource.execution.sourceResultId = "standings.wild-card";
+  wildCardSource.payload.records[0].standingsType = "wildCard";
+  wildCardSource.payload.records[0].division = { id: null, name: null };
+  wildCardSource.payload.records[0].teamRecords[0].eliminationNumber = "E";
+  wildCardSource.payload.records[0].teamRecords[0].wildCardEliminationNumber = "-";
+  wildCardSource.payload.records[0].teamRecords[1].eliminationNumber = "E";
+  wildCardSource.payload.records[0].teamRecords[1].wildCardEliminationNumber = "2";
+  testCase.sources.standings = [testCase.sources.standings, wildCardSource];
+
+  const snapshot = normalize(testCase);
+  const wildCardRows = snapshot.standings.groups.find((group) => group.standingsType === "wildCard").rows;
+  assert.deepEqual(wildCardRows[0].elimination, { raw: "-", state: "notEliminated", value: null });
+  assert.deepEqual(wildCardRows[1].elimination, { raw: "2", state: "remaining", value: 2 });
 });
 
 test("MiLB standings recover a missing group name from authoritative division records", () => {

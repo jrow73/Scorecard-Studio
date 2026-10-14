@@ -4,10 +4,10 @@
  * three deterministic schema-v2 normalization stages.
  */
 
-import { assertValidNormalizedSnapshot } from "./v030-contract.js?v=040";
-import { normalizeScheduleSnapshot } from "./v030-schedule-normalizer.js?v=040";
-import { normalizeRosterPeopleStaffSnapshot } from "./v030-roster-people-normalizer.js?v=040";
-import { normalizeContextOverlaySnapshot } from "./v030-context-overlay-normalizer.js?v=040";
+import { assertValidNormalizedSnapshot } from "./v030-contract.js?v=050b0052";
+import { normalizeScheduleSnapshot } from "./v030-schedule-normalizer.js?v=050b0052";
+import { normalizeRosterPeopleStaffSnapshot } from "./v030-roster-people-normalizer.js?v=050b0052";
+import { normalizeContextOverlaySnapshot } from "./v030-context-overlay-normalizer.js?v=050b0052";
 
 export const V030_RUNTIME_MODE = "schema-v2";
 

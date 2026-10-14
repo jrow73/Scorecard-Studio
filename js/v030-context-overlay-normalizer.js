@@ -11,8 +11,8 @@ import {
   createLineageRecord,
   createSourceResult,
   findEffectiveLineage
-} from "./v030-contract.js?v=040";
-import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=040";
+} from "./v030-contract.js?v=050b0052";
+import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=050b0052";
 
 const clone = (value) => structuredClone(value);
 const own = (value, key) => Object.prototype.hasOwnProperty.call(Object(value), key);
@@ -113,6 +113,14 @@ function lastTen(row) {
   return { wins: integerOrNull(split?.wins), losses: integerOrNull(split?.losses) };
 }
 
+function splitRecord(row, type) {
+  const split = (Array.isArray(row?.records?.splitRecords) ? row.records.splitRecords : [])
+    .find((entry) => String(entry?.type || "").toLowerCase() === String(type).toLowerCase());
+  const wins = integerOrNull(split?.wins);
+  const losses = integerOrNull(split?.losses);
+  return wins == null || losses == null ? null : { wins, losses, display: `${wins}-${losses}` };
+}
+
 function teamRecord(row) {
   const record = row?.leagueRecord ?? row?.record ?? {};
   const wins = integerOrNull(record.wins);
@@ -126,7 +134,7 @@ function teamRecord(row) {
 }
 
 function normalizedStandings(row) {
-  return {
+  const result = {
     divisionRank: rank(row?.divisionRank),
     leagueRank: rank(row?.leagueRank),
     wildCardRank: rank(row?.wildCardRank),
@@ -138,6 +146,15 @@ function normalizedStandings(row) {
     elimination: elimination(row?.eliminationNumber),
     clinch: clinch(row?.clinchIndicator)
   };
+  const performance = {
+    runsScored: integerOrNull(row?.runsScored),
+    runsAllowed: integerOrNull(row?.runsAllowed),
+    runDifferential: integerOrNull(row?.runDifferential),
+    homeRecord: splitRecord(row, "home"),
+    awayRecord: splitRecord(row, "away")
+  };
+  for (const [key, value] of Object.entries(performance)) if (value != null) result[key] = value;
+  return result;
 }
 
 function normalizedStandingsDivision(record) {
@@ -154,6 +171,7 @@ function normalizedStandingsDivision(record) {
 }
 
 function normalizeStandingsGroup(record, standingsType, sourceOrder) {
+  const isWildCard = standingsType === "wildCard";
   return {
     key: `${standingsType}:${record?.sport?.id ?? "none"}:${record?.league?.id ?? "none"}:${record?.division?.id ?? "none"}`,
     standingsType,
@@ -163,11 +181,11 @@ function normalizeStandingsGroup(record, standingsType, sourceOrder) {
     rows: (Array.isArray(record?.teamRecords) ? record.teamRecords : []).map((row, rowIndex) => ({
       team: idName(row?.team),
       record: teamRecord(row),
-      rank: rank(row?.divisionRank ?? row?.leagueRank ?? row?.wildCardRank),
-      gamesBack: gamesBack(row?.divisionGamesBack ?? row?.gamesBack ?? row?.leagueGamesBack ?? row?.wildCardGamesBack),
+      rank: rank(isWildCard ? row?.wildCardRank : (row?.divisionRank ?? row?.leagueRank ?? row?.wildCardRank)),
+      gamesBack: gamesBack(isWildCard ? row?.wildCardGamesBack : (row?.divisionGamesBack ?? row?.gamesBack ?? row?.leagueGamesBack ?? row?.wildCardGamesBack)),
       streak: stringOrNull(row?.streak?.streakCode ?? row?.streak?.code),
       lastTen: lastTen(row),
-      elimination: elimination(row?.eliminationNumber),
+      elimination: elimination(isWildCard ? row?.wildCardEliminationNumber : row?.eliminationNumber),
       clinch: clinch(row?.clinchIndicator),
       sourceOrder: sourceOrder + rowIndex
     }))
@@ -176,9 +194,25 @@ function normalizeStandingsGroup(record, standingsType, sourceOrder) {
 
 function selectTeamStanding(candidates, side) {
   if (!candidates.length) return { state: "omitted", row: null };
-  const divisionMatches = candidates.filter((entry) => side.team.division.id != null && Number(entry.record?.division?.id) === Number(side.team.division.id));
-  const eligible = divisionMatches.length ? divisionMatches : candidates;
-  return eligible.length === 1 ? { state: "available", row: eligible[0].row } : { state: "ambiguous", row: null };
+  const overlayTypes = new Set(["wildCard", "divisionLeaders", "wildCardWithLeaders"]);
+  const baseCandidates = candidates.filter((entry) => !overlayTypes.has(entry.record?.standingsType));
+  const divisionMatches = baseCandidates.filter((entry) => side.team.division.id != null && Number(entry.record?.division?.id) === Number(side.team.division.id));
+  const eligible = divisionMatches.length ? divisionMatches : baseCandidates;
+  if (eligible.length !== 1) return { state: "ambiguous", row: null, selectedCandidates: [] };
+  const base = eligible[0];
+  const overlays = candidates.filter((entry) => overlayTypes.has(entry.record?.standingsType));
+  if (overlays.length !== 1) return { state: "available", row: base.row, selectedCandidates: [base] };
+  const overlay = overlays[0];
+  return {
+    state: "available",
+    row: {
+      ...base.row,
+      leagueRank: overlay.row?.leagueRank ?? base.row?.leagueRank,
+      wildCardRank: overlay.row?.wildCardRank ?? base.row?.wildCardRank,
+      wildCardGamesBack: overlay.row?.wildCardGamesBack ?? base.row?.wildCardGamesBack
+    },
+    selectedCandidates: [base, overlay]
+  };
 }
 
 function applyStandings(snapshot, configs) {
@@ -225,12 +259,13 @@ function applyStandings(snapshot, configs) {
       side.team.standings = normalizedStandings(selected.row);
       side.team.gameNumber = side.team.record.gamesPlayed == null ? null : side.team.record.gamesPlayed + Math.max(1, snapshot.game.gameNumber ?? 1);
     }
-    const selectedCandidate = candidates.find((entry) => entry.row === selected.row);
+    const selectedCandidate = selected.selectedCandidates?.[0] ?? candidates.find((entry) => entry.row === selected.row);
+    const mergedSources = selected.selectedCandidates?.map((entry) => entry.source) ?? [];
     replaceLineage(snapshot, lineage({
       id: `${sideName}.standings`, target: `/${sideName}/team/standings`, state: selected.state, sources: [...new Set(candidates.map((entry) => entry.source))], selected: selectedCandidate?.source ?? null,
       sourcePath: selected.row ? "/records/*/teamRecords/*" : null, effective: selectedCandidate?.source?.effective ?? null,
-      reason: selected.state === "ambiguous" ? "Multiple equally scoped returned groups contain this team." : "Selected the returned team row in the explicit standings scope.",
-      transformations: ["match-team-id", "prefer-team-division-group", "type-rank-games-back-and-marker-tokens"]
+      reason: selected.state === "ambiguous" ? "Multiple equally scoped returned groups contain this team." : mergedSources.length > 1 ? "Selected the division row and overlaid the separately scoped Wild Card position." : "Selected the returned team row in the explicit standings scope.",
+      transformations: ["match-team-id", "prefer-team-division-group", ...(mergedSources.length > 1 ? ["overlay-wild-card-fields"] : []), "type-rank-games-back-and-marker-tokens"]
     }));
     replaceLineage(snapshot, lineage({
       id: `${sideName}.pregame-record`, target: `/${sideName}/team/record`, state: selected.state, sources: [...new Set(candidates.map((entry) => entry.source))], selected: selectedCandidate?.source ?? null,
@@ -266,6 +301,18 @@ function normalizedVenueDetail(raw = {}) {
   };
 }
 
+function normalizedWeather(raw = {}) {
+  return {
+    temperature: numberOrNull(raw.temp ?? raw.temperature),
+    condition: stringOrNull(raw.condition),
+    wind: stringOrNull(raw.wind)
+  };
+}
+
+function hasWeather(raw) {
+  return Object.values(normalizedWeather(raw ?? {})).some((value) => value != null);
+}
+
 function hasVenueDetail(raw) {
   const value = normalizedVenueDetail(raw ?? {});
   return Object.values(value.location).some((entry) => entry != null) || value.timeZone.iana != null || value.fieldInfo.capacity != null
@@ -293,6 +340,14 @@ function applyFeedAndVenue(snapshot, feedConfig, venueConfig) {
       id: "officials.crew", target: "/game/umpires/crew", state: officialState, sources: [feedSource], selected: ["available", "present-empty"].includes(officialState) ? feedSource : null,
       sourcePath: "/liveData/boxscore/officials", reason: "Preserve every returned official and source role in source order.", transformations: officials.length ? ["preserve-source-order", "preserve-variable-crew-cardinality"] : []
     }));
+    const feedWeather = feedConfig.payload?.gameData?.weather;
+    if (!hasWeather(snapshot.game.weather) && outcome === "success" && hasWeather(feedWeather)) {
+      snapshot.game.weather = normalizedWeather(feedWeather);
+      replaceLineage(snapshot, lineage({
+        id: "weather", target: "/game/weather", coverage: "subtree", state: "available", sources: [feedSource], selected: feedSource,
+        sourcePath: "/gameData/weather", reason: "Feed weather fills a sparse Schedule response for the selected game.", transformations: ["normalize-weather", "fallback-from-sparse-schedule"]
+      }));
+    }
     feedDetail = (feedConfig.outcome ?? "success") === "success" ? feedVenue(feedConfig.payload) : null;
   }
 

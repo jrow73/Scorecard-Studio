@@ -4,8 +4,8 @@
  * Version: 0.2.0
  */
 
-import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js?v=040";
-import { formatFieldValue } from "./formatter.js?v=040";
+import { canonicalFieldId, getFieldDefinition, getSupportedFields, resolveField } from "./field-registry.js?v=050b0052";
+import { formatFieldValue } from "./formatter.js?v=050b0052";
 
 export function fieldsForRecordContext(context, options = {}) {
   const value = String(context || "");

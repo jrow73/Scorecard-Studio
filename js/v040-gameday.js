@@ -14,8 +14,7 @@ export const GAME_DAY_SECTION_LEVELS = Object.freeze({
   "gameday-pitchers": "compact",
   "gameday-benches": "standard",
   "gameday-standings-section": "advanced",
-  "gameday-staff-section": "advanced",
-  "gameday-research": "advanced"
+  "gameday-staff-section": "advanced"
 });
 
 const DETAIL_RANK = Object.freeze({ compact: 0, standard: 1, advanced: 2 });
@@ -77,25 +76,50 @@ const MLB_DIVISION_NAMES = Object.freeze({
   205: "National League Central"
 });
 
+// These scopes supplement a team's primary division/half standings row. They
+// are intentionally not standalone tables: the API can return one-row leader
+// records for every unrelated division, which would otherwise leak into the
+// visible Other Standings section.
+const DATA_ONLY_STANDINGS_TYPES = new Set(["divisionLeaders", "wildCardWithLeaders"]);
+
 export function standingsPresentation(model) {
-  const groups = Array.isArray(model?.standings?.groups) ? model.standings.groups : [];
+  const groups = (Array.isArray(model?.standings?.groups) ? model.standings.groups : [])
+    .filter((group) => !DATA_ONLY_STANDINGS_TYPES.has(String(group?.standingsType || parseStandingsKey(group?.key).standingsType)));
   const sideEntries = [{ key: "away", data: model?.away }, { key: "home", data: model?.home }].filter((entry) => entry.data);
   const sides = sideEntries.map((entry) => entry.data);
   const selectedTeamIds = new Set(sides.map((side) => Number(side?.team?.id)).filter(Number.isFinite));
   const relevant = [];
   const other = [];
   for (const group of groups) {
+    const standingsType = String(group?.standingsType || parseStandingsKey(group?.key).standingsType);
+    const isWildCard = standingsType === "wildCard";
     const rowIds = new Set((group?.rows || []).map((row) => Number(row?.team?.id)).filter(Number.isFinite));
     const matchingEntries = sideEntries.filter((entry) => rowIds.has(Number(entry.data?.team?.id)));
     const matchingSides = matchingEntries.map((entry) => entry.data);
-    const item = Object.freeze({ group, matchingSides: Object.freeze(matchingSides), matchingSideKeys: Object.freeze(matchingEntries.map((entry) => entry.key)), title: standingsGroupTitle(group, matchingSides) });
-    (matchingSides.length ? relevant : other).push(item);
+    const leagueSideKey = standingsLeagueSideKey(group, sideEntries);
+    const item = Object.freeze({ group, matchingSides: Object.freeze(matchingSides), matchingSideKeys: Object.freeze(matchingEntries.map((entry) => entry.key)), leagueSideKey, title: standingsGroupTitle(group, matchingSides) });
+    (matchingSides.length && !isWildCard ? relevant : other).push(item);
   }
   return Object.freeze({
     relevant: Object.freeze(dedupeStandings(relevant).sort(compareRelevantStandings)),
-    other: Object.freeze(dedupeStandings(other)),
+    other: Object.freeze(dedupeStandings(other).sort(compareOtherStandings)),
     selectedTeamIds
   });
+}
+
+function standingsLeagueSideKey(group, sideEntries) {
+  const parsed = parseStandingsKey(group?.key);
+  const leagueId = Number(group?.league?.id ?? parsed.leagueId);
+  if (!Number.isFinite(leagueId)) return null;
+  const matchingKeys = sideEntries
+    .filter((entry) => Number(entry.data?.team?.league?.id) === leagueId)
+    .map((entry) => entry.key);
+  return matchingKeys.length === 1 ? matchingKeys[0] : matchingKeys.length > 1 ? "shared" : null;
+}
+
+function compareOtherStandings(left, right) {
+  const order = (item) => item.leagueSideKey === "away" ? 0 : item.leagueSideKey === "home" ? 1 : 2;
+  return order(left) - order(right);
 }
 
 function compareRelevantStandings(left, right) {
@@ -105,10 +129,12 @@ function compareRelevantStandings(left, right) {
 
 export function standingsGroupTitle(group, matchingSides = []) {
   const parsed = parseStandingsKey(group?.key);
+  const standingsType = String(group?.standingsType || parsed.standingsType || "");
   const matchingLeague = matchingSides.find((side) => side?.team?.league?.name)?.team?.league?.name;
   const matchingDivision = matchingSides.find((side) => side?.team?.division?.name)?.team?.division?.name;
   const leagueName = group?.league?.name || matchingLeague || null;
   const divisionName = group?.division?.name || matchingDivision || MLB_DIVISION_NAMES[Number(group?.division?.id ?? parsed.divisionId)] || null;
+  if (standingsType === "wildCard") return `${leagueName || "League"} Wild Card`;
   if (leagueName && divisionName && !divisionName.toLowerCase().includes(leagueName.toLowerCase())) return `${leagueName} — ${divisionName}`;
   if (divisionName) return divisionName;
   if (leagueName) return leagueName;
@@ -121,7 +147,11 @@ export function standingsGroupTitle(group, matchingSides = []) {
 
 function parseStandingsKey(key) {
   const parts = String(key || "").split(":");
-  return { leagueId: parts.length > 2 && parts[2] !== "none" ? parts[2] : null, divisionId: parts.length > 3 && parts[3] !== "none" ? parts[3] : null };
+  return {
+    standingsType: parts[0] || null,
+    leagueId: parts.length > 2 && parts[2] !== "none" ? parts[2] : null,
+    divisionId: parts.length > 3 && parts[3] !== "none" ? parts[3] : null
+  };
 }
 
 function dedupeStandings(items) {

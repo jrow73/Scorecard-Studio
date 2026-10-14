@@ -42,7 +42,7 @@ export async function fetchSportScheduleBundle(date, sportId) {
     const params = new URLSearchParams({
       sportId: String(numericSportId),
       date,
-      hydrate: "lineups,venue,team,probablePitcher"
+      hydrate: "lineups,weather,venue,team,probablePitcher"
     });
     const response = await fetch(`${STATS_API_V1}/schedule?${params.toString()}`, {
       method: "GET",
@@ -133,6 +133,16 @@ export async function fetchLeagueStandings(leagueId, date, season, options = {})
   return fetchJson(`${STATS_API_V1}/standings?${params.toString()}`, "standings API");
 }
 
+export async function fetchTeamSeasonSchedule(teamId, season, sportId, gameTypes = ["R"]) {
+  const params = new URLSearchParams({
+    teamId: String(teamId),
+    season: String(season),
+    sportId: String(sportId),
+    gameTypes: gameTypes.join(",")
+  });
+  return fetchJson(`${STATS_API_V1}/schedule?${params.toString()}`, "team season schedule API");
+}
+
 export async function fetchTeamDepthChart(teamId) {
   return fetchJson(`${STATS_API_V1}/teams/${encodeURIComponent(String(teamId))}/roster/depthChart`, "depth chart API");
 }
@@ -165,6 +175,9 @@ function normalizeSchedule(data, requestedSportId = 1) {
     sportId: Number(game.sport?.id ?? requestedSportId ?? 1) || 1,
     gameType: game.gameType ?? null,
     gameNumber: Number(game.gameNumber) || 1,
+    seriesDescription: game.seriesDescription ?? null,
+    seriesGameNumber: Number(game.seriesGameNumber) || null,
+    gamesInSeries: Number(game.gamesInSeries) || null,
     doubleHeader: game.doubleHeader ?? "N",
     dayNight: game.dayNight ?? null,
     startTimeTBD: Boolean(game.status?.startTimeTBD),

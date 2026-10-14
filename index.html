@@ -28,7 +28,7 @@
       document.documentElement.style.colorScheme = theme;
     })();
   </script>
-  <link rel="stylesheet" href="./css/styles.css?v=040" />
+  <link rel="stylesheet" href="./css/styles.css?v=050b0052" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -263,13 +263,18 @@
             <button class="secondary-button compact-button" id="refresh-gameday-btn" type="button">Refresh</button>
           </div>
           <p class="sr-only" id="gameday-detail-description">Traditional pregame reference.</p>
-          <p class="subtle gameday-season-note" id="gameday-season-note"></p>
           <div class="message-panel" id="gameday-message" role="status" aria-live="polite" hidden></div>
 
           <nav class="gameday-section-nav" aria-label="Game Day sections">
-            <a href="#gameday-overview">Game</a><a href="#gameday-teams">Teams</a><a href="#gameday-lineups">Lineups</a><a href="#gameday-benches">Bench</a><a href="#gameday-pitchers">Pitching Staff</a><a href="#gameday-staff-section">Staff</a><a href="#gameday-standings-section">Other Standings</a><a href="#gameday-research">Technical Details</a>
+            <a href="#gameday-overview">Game</a><a href="#gameday-teams">Teams</a><a href="#gameday-lineups">Lineups</a><a href="#gameday-benches">Bench</a><a href="#gameday-pitchers">Pitching Staff</a><a href="#gameday-staff-section">Staff</a><a href="#gameday-standings-section">Other Standings</a>
+            <fieldset class="gameday-player-stat-scope-switch" id="gameday-player-stat-scope" hidden>
+              <legend>Team and player statistics context</legend>
+              <label><input type="radio" name="gameday-player-stat-scope" value="regularSeason" /><span>Regular Season</span></label>
+              <label><input type="radio" name="gameday-player-stat-scope" value="postseason" /><span>Postseason</span></label>
+              <label><input type="radio" name="gameday-player-stat-scope" value="firstHalf" /><span>First Half</span></label>
+              <label><input type="radio" name="gameday-player-stat-scope" value="secondHalf" /><span>Second Half</span></label>
+            </fieldset>
           </nav>
-
           <div id="gameday-content">
           <section class="gameday-section-card" id="gameday-overview" data-gameday-min-level="compact">
             <div class="gameday-top-grid">
@@ -310,9 +315,6 @@
             <h3>Other Standings</h3><div id="gameday-standings"></div>
           </section>
 
-          <section class="gameday-section-card" id="gameday-research" data-gameday-min-level="advanced">
-            <details class="gameday-technical-details"><summary>Technical source details</summary><div id="gameday-source-summary"></div></details>
-          </section>
           </div>
         </div>
       </section>
@@ -902,6 +904,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=040"></script>
+  <script type="module" src="./js/app.js?v=050b0052"></script>
 </body>
 </html>

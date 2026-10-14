@@ -162,6 +162,16 @@
         "dates": { "$ref": "#/$defs/gameDates" },
         "dayNight": { "enum": ["day", "night", "unknown", null] },
         "gameNumber": { "$ref": "#/$defs/nullableInteger" },
+        "series": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["description", "gameNumber", "gamesInSeries"],
+          "properties": {
+            "description": { "$ref": "#/$defs/nullableString" },
+            "gameNumber": { "$ref": "#/$defs/nullableInteger" },
+            "gamesInSeries": { "$ref": "#/$defs/nullableInteger" }
+          }
+        },
         "venue": { "$ref": "#/$defs/venue" },
         "weather": { "$ref": "#/$defs/weather" },
         "umpires": { "$ref": "#/$defs/umpires" }
@@ -216,6 +226,16 @@
         "losses": { "$ref": "#/$defs/nullableInteger" }
       }
     },
+    "winLossRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wins", "losses", "display"],
+      "properties": {
+        "wins": { "$ref": "#/$defs/nullableInteger" },
+        "losses": { "$ref": "#/$defs/nullableInteger" },
+        "display": { "$ref": "#/$defs/nullableString" }
+      }
+    },
     "teamStandings": {
       "type": "object",
       "additionalProperties": false,
@@ -229,6 +249,11 @@
         "wildCardGamesBack": { "$ref": "#/$defs/gamesBackValue" },
         "streak": { "$ref": "#/$defs/nullableString" },
         "lastTen": { "$ref": "#/$defs/lastTen" },
+        "runsScored": { "$ref": "#/$defs/nullableInteger" },
+        "runsAllowed": { "$ref": "#/$defs/nullableInteger" },
+        "runDifferential": { "$ref": "#/$defs/nullableInteger" },
+        "homeRecord": { "$ref": "#/$defs/winLossRecord" },
+        "awayRecord": { "$ref": "#/$defs/winLossRecord" },
         "elimination": { "$ref": "#/$defs/markerValue" },
         "clinch": { "$ref": "#/$defs/markerValue" }
       }

@@ -10,8 +10,8 @@ import {
   assertValidNormalizedSnapshot,
   createLineageRecord,
   createSourceResult
-} from "./v030-contract.js?v=040";
-import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=040";
+} from "./v030-contract.js?v=050b0052";
+import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=050b0052";
 
 const own = (value, key) => Object.prototype.hasOwnProperty.call(Object(value), key);
 const clone = (value) => structuredClone(value);
@@ -92,7 +92,7 @@ function normalizeTotals(group, stat) {
   return result;
 }
 
-function selectScopedStats(rawPerson, groupName, input) {
+export function selectScopedStats(rawPerson, groupName, input) {
   const groups = (Array.isArray(rawPerson?.stats) ? rawPerson.stats : []).filter((entry) =>
     String(entry?.group?.displayName ?? "").toLowerCase() === groupName
     && String(entry?.type?.displayName ?? "").toLowerCase() === String(input.statType).toLowerCase());
@@ -100,11 +100,12 @@ function selectScopedStats(rawPerson, groupName, input) {
   const splits = groups.flatMap((group) => Array.isArray(group.splits) ? group.splits : []);
   const exact = splits.filter((split) => Number(split?.sport?.id) === input.sportId);
   const all = splits.filter((split) => Number(split?.sport?.id) === 0 || String(split?.sport?.code ?? "").toLowerCase() === "all");
-  const candidates = exact.length ? exact : all;
-  if (candidates.length !== 1) {
-    return { state: candidates.length ? "ambiguous" : "omitted", value: null, reason: candidates.length ? "Multiple equally scoped aggregate splits were returned." : "No requested-sport or all-sport aggregate split was returned." };
+  const selected = exact.length === 1 ? exact[0] : all.length === 1 ? all[0] : null;
+  if (!selected) {
+    const candidateCount = exact.length || all.length;
+    return { state: candidateCount ? "ambiguous" : "omitted", value: null, reason: candidateCount ? "Multiple equally scoped aggregate splits were returned without one explicit all-scope aggregate." : "No requested-sport or all-sport aggregate split was returned." };
   }
-  const selected = candidates[0];
+  const selectedExact = exact.length === 1;
   return {
     state: "available",
     value: {
@@ -117,12 +118,12 @@ function selectScopedStats(rawPerson, groupName, input) {
         aggregate: {
           sportId: integerOrNull(selected?.sport?.id),
           code: stringOrNull(selected?.sport?.code),
-          selection: exact.length ? "single-unambiguous" : "all"
+          selection: selectedExact ? "single-unambiguous" : "all"
         }
       },
       totals: normalizeTotals(groupName, selected.stat ?? {})
     },
-    reason: exact.length ? "Selected the one exact-sport aggregate split." : "Selected the one explicit all-sport aggregate split."
+    reason: selectedExact ? "Selected the one exact-sport aggregate split." : "Selected the one explicit all-scope aggregate across the requested competition segments."
   };
 }
 

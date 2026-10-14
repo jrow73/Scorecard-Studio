@@ -10,8 +10,8 @@ import {
   createLineageRecord,
   createNormalizedSnapshot,
   createSourceResult
-} from "./v030-contract.js?v=040";
-import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=040";
+} from "./v030-contract.js?v=050b0052";
+import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=050b0052";
 
 const own = (value, key) => Object.prototype.hasOwnProperty.call(Object(value), key);
 
@@ -107,6 +107,41 @@ function normalizeRecord(side) {
     losses: numberOrNull(record?.losses),
     pct: numberOrNull(record?.pct)
   };
+}
+
+function recordGames(record) {
+  const values = [record?.wins, record?.losses, record?.ties ?? 0].map(numberOrNull);
+  return values.some((value) => value === null) ? null : values.reduce((sum, value) => sum + value, 0);
+}
+
+function recordAfterRemovingCurrentResult(record, result) {
+  const next = { ...record };
+  if (result === "win") next.wins = Math.max(0, Number(next.wins) - 1);
+  if (result === "loss") next.losses = Math.max(0, Number(next.losses) - 1);
+  next.gamesPlayed = [next.wins, next.losses].every(Number.isFinite) ? next.wins + next.losses : null;
+  next.pct = next.gamesPlayed > 0 ? next.wins / next.gamesPlayed : 0;
+  return next;
+}
+
+function applyPregameSeriesRecordCutoff(game, canonicalStatus, away, home) {
+  const seriesGameNumber = integerOrNull(game?.seriesGameNumber);
+  if (canonicalStatus !== "final" || !seriesGameNumber || seriesGameNumber < 1) return false;
+
+  const awayGames = recordGames(game?.teams?.away?.leagueRecord);
+  const homeGames = recordGames(game?.teams?.home?.leagueRecord);
+  const awayWon = game?.teams?.away?.isWinner === true;
+  const homeWon = game?.teams?.home?.isWinner === true;
+
+  // Some Schedule feeds return the record entering a completed game, while
+  // others return the record after it. Only roll back when both source totals
+  // prove that the selected game is already included.
+  if (awayGames !== seriesGameNumber || homeGames !== seriesGameNumber || awayWon === homeWon) return false;
+
+  away.value.team.record = recordAfterRemovingCurrentResult(away.value.team.record, awayWon ? "win" : "loss");
+  home.value.team.record = recordAfterRemovingCurrentResult(home.value.team.record, homeWon ? "win" : "loss");
+  away.recordRolledBack = true;
+  home.recordRolledBack = true;
+  return true;
 }
 
 function normalizeTeam(side, fallbackSport) {
@@ -289,7 +324,13 @@ function lineageRecord({ id, target, state, sourceResult, sourcePath = null, cov
 function sideLineage(sideName, normalized, sourceResult, sourceBase) {
   const records = [
     lineageRecord({ id: `${sideName}.team`, target: `/${sideName}/team`, state: "available", sourceResult, sourcePath: `${sourceBase}/teams/${sideName}/team` }),
-    lineageRecord({ id: `${sideName}.record`, target: `/${sideName}/team/record`, coverage: "exact", state: normalized.sourceSide.leagueRecord ? "available" : "omitted", sourceResult, sourcePath: `${sourceBase}/teams/${sideName}/leagueRecord`, selected: Boolean(normalized.sourceSide.leagueRecord) }),
+    lineageRecord({
+      id: `${sideName}.record`, target: `/${sideName}/team/record`, coverage: "exact",
+      state: normalized.sourceSide.leagueRecord ? "available" : "omitted", sourceResult,
+      sourcePath: `${sourceBase}/teams/${sideName}/leagueRecord`, selected: Boolean(normalized.sourceSide.leagueRecord),
+      reason: normalized.recordRolledBack ? "Completed-game Schedule record included the selected result; restore the pregame series cutoff." : null,
+      transformations: normalized.recordRolledBack ? ["remove-selected-final-game-result"] : []
+    }),
     lineageRecord({ id: `${sideName}.team-game-number`, target: `/${sideName}/team/gameNumber`, coverage: "exact", state: "not-requested", sourceResult: null, selected: false }),
     lineageRecord({ id: `${sideName}.team-standings`, target: `/${sideName}/team/standings`, coverage: "subtree", state: "not-requested", sourceResult: null, selected: false }),
     lineageRecord({ id: `${sideName}.team-logo`, target: `/${sideName}/team/logo`, coverage: "subtree", state: "not-requested", sourceResult: null, selected: false }),
@@ -330,6 +371,7 @@ export function normalizeScheduleSnapshot(payload, suppliedSelection, execution)
 
   const away = sideSkeleton(game, "away", sport);
   const home = sideSkeleton(game, "home", sport);
+  applyPregameSeriesRecordCutoff(game, canonicalStatus, away, home);
   const teamsTBD = statusSource.teamsTBD === true || game.teams?.away?.team?.placeholder === true || game.teams?.home?.team?.placeholder === true;
   const requestKey = buildSemanticRequestKey("schedule", selected.selection);
   const sourceBase = `/dates/${selected.dateIndex}/games/${selected.gameIndex}`;
@@ -346,6 +388,11 @@ export function normalizeScheduleSnapshot(payload, suppliedSelection, execution)
     error: null
   });
 
+  const normalizedSeries = {
+    description: stringOrNull(game.seriesDescription),
+    gameNumber: integerOrNull(game.seriesGameNumber),
+    gamesInSeries: integerOrNull(game.gamesInSeries)
+  };
   const normalizedGame = {
     status: {
       canonical: canonicalStatus,
@@ -361,6 +408,7 @@ export function normalizeScheduleSnapshot(payload, suppliedSelection, execution)
     weather: normalizeWeather(game.weather),
     umpires: { crew: [] }
   };
+  if (Object.values(normalizedSeries).some((value) => value !== null)) normalizedGame.series = normalizedSeries;
 
   const lineage = [
     lineageRecord({ id: "context", target: "/context", state: "available", sourceResult, sourcePath: sourceBase, transformations: ["select-schedule-view", "normalize-competition-segment"] }),

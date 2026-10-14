@@ -4,37 +4,49 @@
  * Version: 0.2.0
  */
 
-import { fetchFavoriteTeamScheduleBundle, fetchSportScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails, fetchTeamsForSport } from "./api.js?v=040";
-import { canonicalFieldId, capabilityRequirementsForFields, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=040";
-import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=040";
-import { createV030PersistenceController } from "./v030-persistence.js?v=040";
-import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=040";
-import { formatDualZoneInstant, formatFieldValue, normalizeTimeZoneId, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=040";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=040";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=040";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=040";
+import { fetchFavoriteTeamScheduleBundle, fetchSportScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails, fetchTeamsForSport, fetchTeamSeasonSchedule } from "./api.js?v=050b0052";
+import { canonicalFieldId, capabilityRequirementsForFields, collectionHasOverflow, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=050b0052";
+import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=050b0052";
+import { createV030PersistenceController } from "./v030-persistence.js?v=050b0052";
+import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=050b0052";
+import { formatDualZoneInstant, formatFieldValue, normalizeTimeZoneId, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=050b0052";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=050b0052";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=050b0052";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=050b0052";
 import {
   STORAGE_DATABASE_VERSION, createV030StorageBackend, deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, readBackupStorageSnapshot, saveLayout as persistRawLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=040";
+} from "./storage.js?v=050b0052";
 import {
   APP_PREFERENCES_SETTING_KEY, DEFAULT_APP_PREFERENCES, FAVORITE_COMPETITION_SETTING_KEY,
   LEGACY_FAVORITE_TEAM_SETTING_KEY, competitionLevelByKey, migrateFavoriteCompetition,
   normalizeAppPreferences, normalizeGameDayDetailLevel, resolveAppearanceTheme, writeAppearanceStartupPreference
-} from "./v040-settings.js?v=040";
-import { gameMatchesSearch, groupScheduleGames, probablePitcherMatchup, scheduleReadiness } from "./v040-home.js?v=040";
-import { buildHomeAwayFieldPairs, fieldPairCoverage, restoreStandardFieldSelection, updateMirroredFieldSelection } from "./v040-field-palette.js?v=040";
-import { GAME_DAY_SECTION_LEVELS, gameDaySeasonContext, gameDaySourceSummary, managerPresentation, pitcherGroupPresentation, researchScope, standingsPresentation, visibleGameDaySections } from "./v040-gameday.js?v=040";
-import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupLabel } from "./v040-pitcher-groups.js?v=040";
-import { BACKUP_SCOPES, createBackupExport } from "./v040-backup-export.js?v=040";
-import { BACKUP_IMPORT_LIMITS, preflightBackupImport } from "./v040-backup-import.js?v=040";
-import { RESTORE_POLICIES, commitBackupRestore, createRestoreCommitPlan } from "./v040-backup-restore.js?v=040";
-import { designerDragHasStarted, designerPointerIsTouchLike } from "./v040-designer-interaction.js?v=040";
+} from "./v040-settings.js?v=050b0052";
+import { gameMatchesSearch, groupScheduleGames, probablePitcherMatchup, scheduleReadiness } from "./v040-home.js?v=050b0052";
+import { buildHomeAwayFieldPairs, fieldPairCoverage, restoreStandardFieldSelection, updateMirroredFieldSelection } from "./v040-field-palette.js?v=050b0052";
+import { GAME_DAY_SECTION_LEVELS, managerPresentation, pitcherGroupPresentation, researchScope, standingsPresentation, visibleGameDaySections } from "./v040-gameday.js?v=050b0052";
+import { advancedTeamPresentation, classifyCompetitionPhase, competitionContextForModel, postseasonSeriesPresentation, selectActiveSplitStandingsConfig, standardTeamPresentation } from "./v050-competition-context.js?v=050b0052";
+import { normalizePlayerStatScopeSelection, playerStatScopeToggleVisible } from "./v050-player-stat-scope.js?v=050b0052";
+import { playerIdentityPresentation } from "./v050-player-identity.js?v=050b0052";
+import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupLabel } from "./v040-pitcher-groups.js?v=050b0052";
+import { BACKUP_SCOPES, createBackupExport } from "./v040-backup-export.js?v=050b0052";
+import { BACKUP_IMPORT_LIMITS, preflightBackupImport } from "./v040-backup-import.js?v=050b0052";
+import { RESTORE_POLICIES, commitBackupRestore, createRestoreCommitPlan } from "./v040-backup-restore.js?v=050b0052";
+import { designerDragHasStarted, designerPointerIsTouchLike } from "./v040-designer-interaction.js?v=050b0052";
 
 const systemDarkMode = window.matchMedia?.("(prefers-color-scheme: dark)") || null;
 const reducedMotionMode = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
 let appHeaderResizeObserver = null;
 const venueTimeZoneCache = new Map();
+const splitSeasonBoundaryCache = new Map();
+const regularSeasonEndDateCache = new Map();
+let playerIdentityPopover = null;
+let activePlayerIdentityTrigger = null;
+let playerIdentityPointerTrigger = null;
+let playerIdentityFocusTrigger = null;
+let playerIdentityPinned = false;
+let playerIdentityTouchStart = null;
+let suppressPlayerIdentityClick = false;
 
 const state = {
   favoriteTeam: null,
@@ -103,6 +115,7 @@ const state = {
   includeAdditionalStarters: false,
   v030Availability: null,
   gameDayLoadToken: 0,
+  gameDayPlayerStatScope: null,
   backupPreflight: null,
   backupCurrentStorage: null,
   backupCommitPlan: null,
@@ -196,8 +209,8 @@ const elements = {
   gameDayContent: document.querySelector("#gameday-content"),
   gameDayDetailLevel: document.querySelector("#gameday-detail-level"),
   gameDayDetailDescription: document.querySelector("#gameday-detail-description"),
+  gameDayPlayerStatScope: document.querySelector("#gameday-player-stat-scope"),
   gameDaySeasonContext: document.querySelector("#gameday-season-context"),
-  gameDaySeasonNote: document.querySelector("#gameday-season-note"),
   gameDayOverview: document.querySelector("#gameday-overview-facts"),
   gameDayTeamGrid: document.querySelector("#gameday-team-grid"),
   gameDayAwayLineupHeading: document.querySelector("#gameday-away-lineup-heading"),
@@ -219,7 +232,6 @@ const elements = {
   gameDayStandings: document.querySelector("#gameday-standings"),
   gameDayUmpires: document.querySelector("#gameday-umpires"),
   gameDayVenue: document.querySelector("#gameday-venue"),
-  gameDaySourceSummary: document.querySelector("#gameday-source-summary"),
   navLayouts: document.querySelector("#nav-layouts"),
   pageTitle: document.querySelector("#page-title"),
   pageEyebrow: document.querySelector("#page-eyebrow"),
@@ -489,6 +501,7 @@ async function initialize() {
   populateDesignerTemplateFieldSelect();
   populateNameFormatSelects();
   updateDesignerTemplatePreview();
+  wirePlayerIdentityPopovers();
   elements.saveFavoriteTeamButton.addEventListener("click", saveFavoriteTeam);
   elements.favoriteLevelSelect.addEventListener("change", () => loadSettingsTeams(elements.favoriteLevelSelect.value));
   elements.favoriteTeamSelect.addEventListener("change", () => {
@@ -496,6 +509,7 @@ async function initialize() {
   });
   elements.appearanceOptions?.addEventListener("change", handleAppearancePreferenceChange);
   elements.gameDayDetailLevel?.addEventListener("change", handleGameDayDetailLevelChange);
+  elements.gameDayPlayerStatScope?.addEventListener("change", handleGameDayPlayerStatScopeChange);
   systemDarkMode?.addEventListener?.("change", handleSystemAppearanceChange);
   elements.refreshButton.addEventListener("click", refreshHomeSchedule);
   elements.includeAdditionalStarters?.addEventListener("change", handleAdditionalStartersPreference);
@@ -956,6 +970,52 @@ async function handleGameDayDetailLevelChange(event) {
   }
 }
 
+function gameDayModelForPlayerStatScope(game, baseModel, context = competitionContextForModel(baseModel)) {
+  const selectedScope = normalizePlayerStatScopeSelection(context, state.gameDayPlayerStatScope);
+  state.gameDayPlayerStatScope = selectedScope;
+  if (!playerStatScopeToggleVisible(context)) return baseModel;
+  const cached = state.selectedSupplemental?.gameDayPeopleScopes?.[selectedScope];
+  if (!cached) return baseModel;
+  return buildV030Model(game, {
+    ...state.selectedSupplemental,
+    people: cached.people,
+    peopleInput: cached.peopleInput,
+    standings: state.selectedSupplemental?.gameDayStandingScopes?.[selectedScope] ?? state.selectedSupplemental.standings
+  }, { updateAvailability: false });
+}
+
+function applyGameDayPlayerStatScope(context, model) {
+  const visible = playerStatScopeToggleVisible(context);
+  elements.gameDayPlayerStatScope?.toggleAttribute("hidden", !visible);
+  if (!visible) return;
+  const selected = normalizePlayerStatScopeSelection(context, state.gameDayPlayerStatScope);
+  state.gameDayPlayerStatScope = selected;
+  const available = new Set((context.playerStatScopes || []).map((scope) => scope.key));
+  for (const input of elements.gameDayPlayerStatScope?.querySelectorAll('input[name="gameday-player-stat-scope"]') || []) {
+    input.closest("label")?.toggleAttribute("hidden", !available.has(input.value));
+    input.checked = input.value === selected;
+  }
+}
+
+function handleGameDayPlayerStatScopeChange(event) {
+  const input = event.target?.closest?.('input[name="gameday-player-stat-scope"]');
+  if (!input?.checked) return;
+  const game = currentScheduleGame();
+  if (!game || !state.selectedSupplemental) return;
+  const context = state.selectedSupplemental.competitionContext
+    || classifyCompetitionPhase({ sportId: game.sportId, gameType: game.gameType, officialDate: game.officialDate });
+  state.gameDayPlayerStatScope = normalizePlayerStatScopeSelection(context, input.value);
+  const model = gameDayModelForPlayerStatScope(game, state.normalizedPregame, context);
+  renderGameDay(model);
+  updateGameDaySourceMessage(model);
+}
+
+function updateGameDaySourceMessage(model) {
+  const failures = (model?.meta?.sourceResults || []).filter((source) => source.outcome === "failed").length;
+  elements.gameDayMessage.hidden = failures === 0;
+  elements.gameDayMessage.textContent = failures ? "Some Game Day information is unavailable. Available sections remain usable." : "";
+}
+
 async function downloadBackup(scope, options = {}) {
   const isSingleLayout = scope === BACKUP_SCOPES.SINGLE_LAYOUT;
   const layoutId = isSingleLayout ? options.layoutId || elements.backupLayoutSelect?.value : null;
@@ -969,7 +1029,7 @@ async function downloadBackup(scope, options = {}) {
     const result = await createBackupExport(snapshot, {
       scope,
       ...(isSingleLayout ? { layoutId } : {}),
-      source: { applicationVersion: "0.4.0", build: "004.9", storageDatabaseVersion: STORAGE_DATABASE_VERSION },
+      source: { applicationVersion: "0.5.0", build: "005.2", storageDatabaseVersion: STORAGE_DATABASE_VERSION },
       createdAtUtc
     });
     const layout = isSingleLayout ? state.layouts.find((item) => item.id === layoutId) : null;
@@ -1409,6 +1469,7 @@ function clearSelectedScheduleGame() {
   state.selectedGamePk = null;
   state.selectedFeed = null;
   state.selectedSupplemental = null;
+  state.gameDayPlayerStatScope = null;
   state.selectedVenueSource = null;
   state.normalizedPregame = null;
   state.v030Availability = null;
@@ -1451,6 +1512,7 @@ function selectGame(gamePk) {
   state.selectedGamePk = selected.gamePk;
   state.selectedFeed = null;
   state.selectedSupplemental = null;
+  state.gameDayPlayerStatScope = null;
   state.selectedVenueSource = null;
   state.normalizedPregame = null;
   state.v030Availability = null;
@@ -1482,15 +1544,57 @@ async function refreshDoubleheaderSelectionContext(game) {
   }
 }
 
+function playerStatRequestInput(personIds, game, seasonStart, cutoffDate, gameTypes) {
+  return {
+    personIds,
+    sportId: Number(game.sportId || 1),
+    gameTypes: [...gameTypes],
+    statGroups: ["hitting", "pitching"],
+    statType: "byDateRange",
+    startDate: seasonStart,
+    endDate: cutoffDate,
+    chunkSize: 100
+  };
+}
+
+function failedPeopleResult(personIds, reason) {
+  return { people: [], units: [{ outcome: "failed", personIds, payload: null, error: sourceError(reason) }] };
+}
+
+async function fetchGameDayPlayerStatScopes(context, personIds, game, seasonStart, cutoffDate, scopeRanges = {}) {
+  if (!playerStatScopeToggleVisible(context)) return {};
+  const requests = context.playerStatScopes.map((scope) => ({
+    scope,
+    input: playerStatRequestInput(
+      personIds,
+      game,
+      scopeRanges[scope.key]?.startDate || seasonStart,
+      scopeRanges[scope.key]?.endDate || cutoffDate,
+      scope.gameTypes
+    )
+  }));
+  const results = await Promise.allSettled(requests.map(({ input }) => fetchPeoplePregameStats(
+    input.personIds,
+    input.startDate,
+    input.endDate,
+    { sportId: input.sportId, gameTypes: input.gameTypes, statGroups: input.statGroups, chunkSize: input.chunkSize }
+  )));
+  return Object.fromEntries(requests.map(({ scope, input }, index) => [scope.key, {
+    peopleInput: input,
+    people: results[index].status === "fulfilled" ? results[index].value : failedPeopleResult(personIds, results[index].reason)
+  }]));
+}
+
 async function loadPregameCore(game) {
   const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
   const season = Number(game.season || officialDate.slice(0, 4));
   const cutoffDate = previousDateString(officialDate);
   const seasonStart = `${season}-01-01`;
 
-  const [awayRoster, homeRoster] = await Promise.all([
+  const [awayRoster, homeRoster, standingsBundle] = await Promise.all([
     fetchTeamRoster(game.awayTeamId, officialDate),
-    fetchTeamRoster(game.homeTeamId, officialDate)
+    fetchTeamRoster(game.homeTeamId, officialDate),
+    fetchPregameStandings(game, cutoffDate, season)
   ]);
 
   const personIds = [...new Set([
@@ -1504,9 +1608,19 @@ async function loadPregameCore(game) {
 
   const earlierSameDayGame = findEarlierSameDayCompletedGame(game);
   const gameTypes = [String(game.gameType || "R")];
-  const [peopleResult, standingsResult, earlierBoxscoreResult, awayDepthResult, homeDepthResult] = await Promise.allSettled([
-    fetchPeoplePregameStats(personIds, seasonStart, cutoffDate, { sportId: Number(game.sportId || 1), gameTypes, statGroups: ["hitting", "pitching"] }),
-    fetchPregameStandings(game, cutoffDate, season),
+  const peopleInput = playerStatRequestInput(personIds, game, seasonStart, cutoffDate, gameTypes);
+  let competitionContext = classifyCompetitionPhase({
+    sportId: game.sportId,
+    gameType: game.gameType,
+    officialDate,
+    splitSeasonType: standingsBundle.splitSeasonType
+  });
+  if (standingsBundle.splitSeasonType === "secondHalf" && !standingsBundle.scopeRanges.secondHalf) {
+    competitionContext = Object.freeze({ ...competitionContext, playerStatScopes: Object.freeze([]), defaultPlayerStatScope: null });
+  }
+  const [peopleResult, gameDayPeopleScopesResult, earlierBoxscoreResult, awayDepthResult, homeDepthResult] = await Promise.allSettled([
+    fetchPeoplePregameStats(personIds, seasonStart, cutoffDate, { sportId: peopleInput.sportId, gameTypes, statGroups: peopleInput.statGroups, chunkSize: peopleInput.chunkSize }),
+    fetchGameDayPlayerStatScopes(competitionContext, personIds, game, seasonStart, cutoffDate, standingsBundle.scopeRanges),
     earlierSameDayGame ? fetchGameBoxscore(earlierSameDayGame.gamePk) : Promise.resolve(null),
     fetchTeamDepthChart(game.awayTeamId),
     fetchTeamDepthChart(game.homeTeamId)
@@ -1514,9 +1628,12 @@ async function loadPregameCore(game) {
 
   return {
     rosters: { away: awayRoster, home: homeRoster },
-    people: peopleResult.status === "fulfilled" ? peopleResult.value : { people: [], units: [{ outcome: "failed", personIds, payload: null, error: sourceError(peopleResult.reason) }] },
-    peopleInput: { personIds, sportId: Number(game.sportId || 1), gameTypes, statGroups: ["hitting", "pitching"], statType: "byDateRange", startDate: seasonStart, endDate: cutoffDate, chunkSize: 100 },
-    standings: standingsResult.status === "fulfilled" ? standingsResult.value : [],
+    people: peopleResult.status === "fulfilled" ? peopleResult.value : failedPeopleResult(personIds, peopleResult.reason),
+    peopleInput,
+    gameDayPeopleScopes: gameDayPeopleScopesResult.status === "fulfilled" ? gameDayPeopleScopesResult.value : {},
+    standings: standingsBundle.active,
+    gameDayStandingScopes: standingsBundle.byScope,
+    competitionContext,
     depthChart: {
       away: sourceConfig({ teamId: Number(game.awayTeamId), season }, awayDepthResult),
       home: sourceConfig({ teamId: Number(game.homeTeamId), season }, homeDepthResult)
@@ -1549,11 +1666,104 @@ function isCompletedScheduleGame(game) {
 }
 
 async function fetchPregameStandings(game, cutoffDate, season) {
-  const leagueIds = [...new Set([game.awayLeagueId, game.homeLeagueId].filter(Boolean))];
-  if (!leagueIds.length) return [];
-  const standingsType = game.gameType === "S" ? "springTraining" : ["F", "D", "L", "W"].includes(game.gameType) ? "postseason" : "regularSeason";
-  const result = await Promise.allSettled([fetchLeagueStandings(leagueIds.join(","), cutoffDate, season, { sportId: Number(game.sportId || 1), standingsType })]);
-  return result.map((entry) => sourceConfig({ sportId: Number(game.sportId || 1), leagueIds: leagueIds.map(Number), standingsType, season, cutoffDate }, entry));
+  const sportId = Number(game.sportId || 1);
+  const leagueIds = [...new Set([game.awayLeagueId, game.homeLeagueId].map(Number).filter(Number.isFinite))];
+  if (leagueIds.length < 1) {
+    try {
+      const teams = await fetchTeamsForSport(sportId, season);
+      const selectedIds = new Set([Number(game.awayTeamId), Number(game.homeTeamId)]);
+      for (const team of teams) if (selectedIds.has(Number(team.id)) && Number.isFinite(Number(team.leagueId))) leagueIds.push(Number(team.leagueId));
+    } catch (error) {
+      console.warn("Unable to recover league IDs for standings.", error);
+    }
+  }
+  const uniqueLeagueIds = [...new Set(leagueIds)];
+  if (!uniqueLeagueIds.length) return { active: [], byScope: {}, scopeRanges: {}, splitSeasonType: null };
+  const context = classifyCompetitionPhase({ sportId, gameType: game.gameType, officialDate: game.officialDate });
+  const fetchTypes = async (types, standingsCutoffDate = cutoffDate) => {
+    const results = await Promise.allSettled(types.map((standingsType) => fetchLeagueStandings(uniqueLeagueIds.join(","), standingsCutoffDate, season, { sportId, standingsType })));
+    return results.map((entry, index) => sourceConfig({ sportId, leagueIds: uniqueLeagueIds, standingsType: types[index], season, cutoffDate: standingsCutoffDate }, entry));
+  };
+
+  if (context.key === "milb-regular-unknown-half") {
+    const splitConfigs = await fetchTypes(["firstHalf", "secondHalf"]);
+    const active = selectActiveSplitStandingsConfig(splitConfigs);
+    if (!active) return { active: await fetchTypes(["regularSeason"]), byScope: {}, scopeRanges: {}, splitSeasonType: null };
+    const splitSeasonType = active.input.standingsType;
+    const byScope = Object.fromEntries(splitConfigs.map((config) => [config.input.standingsType, [config]]));
+    const scopeRanges = {};
+    if (splitSeasonType === "secondHalf") {
+      const boundary = await findSecondHalfStartDate(uniqueLeagueIds, sportId, season, cutoffDate);
+      if (boundary) {
+        scopeRanges.firstHalf = { startDate: `${season}-01-01`, endDate: previousDateString(boundary) };
+        scopeRanges.secondHalf = { startDate: boundary, endDate: cutoffDate };
+      }
+    }
+    return { active: [active], byScope, scopeRanges, splitSeasonType };
+  }
+  if (context.family === "postseason") {
+    const regularSeasonEndDate = await findRegularSeasonEndDate(game, season, cutoffDate);
+    const regular = regularSeasonEndDate ? await fetchTypes(["regularSeason"], regularSeasonEndDate) : [];
+    return { active: [], byScope: { regularSeason: regular, postseason: [] }, scopeRanges: {}, splitSeasonType: null };
+  }
+  if (context.advancedMode === "mlb-wild-card") return { active: await fetchTypes(["regularSeason", "wildCardWithLeaders"]), byScope: {}, scopeRanges: {}, splitSeasonType: null };
+  return { active: context.standingsType ? await fetchTypes([context.standingsType]) : [], byScope: {}, scopeRanges: {}, splitSeasonType: null };
+}
+
+async function findRegularSeasonEndDate(game, season, beforeDate) {
+  const sportId = Number(game?.sportId || 1);
+  const teamIds = [...new Set([game?.awayTeamId, game?.homeTeamId].map(Number).filter((id) => Number.isInteger(id) && id > 0))].sort((a, b) => a - b);
+  const cacheKey = `${season}:${sportId}:${teamIds.join(",")}`;
+  if (regularSeasonEndDateCache.has(cacheKey)) return regularSeasonEndDateCache.get(cacheKey);
+  const lookup = (async () => {
+    const results = await Promise.allSettled(teamIds.map((teamId) => fetchTeamSeasonSchedule(teamId, season, sportId, ["R"])));
+    const dates = results.flatMap((result) => result.status === "fulfilled"
+      ? (result.value?.dates || []).flatMap((entry) => (entry?.games || []).map((candidate) => String(candidate?.officialDate || entry?.date || "")))
+      : []);
+    return dates
+      .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date) && date < beforeDate)
+      .sort()
+      .at(-1) || null;
+  })().catch((error) => {
+    console.warn("Unable to establish the final regular-season standings date.", error);
+    return null;
+  });
+  regularSeasonEndDateCache.set(cacheKey, lookup);
+  return lookup;
+}
+
+function standingsPayloadHasGames(payload) {
+  return (payload?.records || []).some((record) => (record?.teamRecords || []).some((row) => Number(row?.gamesPlayed) > 0));
+}
+
+async function findSecondHalfStartDate(leagueIds, sportId, season, cutoffDate) {
+  const cacheKey = `${season}:${sportId}:${[...leagueIds].sort((a, b) => Number(a) - Number(b)).join(",")}`;
+  if (splitSeasonBoundaryCache.has(cacheKey)) return splitSeasonBoundaryCache.get(cacheKey);
+  const lookup = (async () => {
+  let low = Date.parse(`${season}-01-01T00:00:00Z`);
+  let high = Date.parse(`${cutoffDate}T00:00:00Z`);
+  if (!Number.isFinite(low) || !Number.isFinite(high) || high < low) return null;
+  const hasGamesAt = async (time) => {
+    const date = new Date(time).toISOString().slice(0, 10);
+    const payload = await fetchLeagueStandings(leagueIds.join(","), date, season, { sportId, standingsType: "secondHalf" });
+    return standingsPayloadHasGames(payload);
+  };
+  try {
+    if (!(await hasGamesAt(high))) return null;
+    while (low < high) {
+      const days = Math.floor((high - low) / 86400000);
+      const middle = low + Math.floor(days / 2) * 86400000;
+      if (await hasGamesAt(middle)) high = middle;
+      else low = middle + 86400000;
+    }
+    return new Date(low).toISOString().slice(0, 10);
+  } catch (error) {
+    console.warn("Unable to establish the MiLB second-half boundary.", error);
+    return null;
+  }
+  })();
+  splitSeasonBoundaryCache.set(cacheKey, lookup);
+  return lookup;
 }
 
 function sourceError(reason) {
@@ -1570,7 +1780,7 @@ function selectedViewKey(game) {
   return `${game.gamePk}:${game.officialDate}:${Number(game.gameNumber || 1)}`;
 }
 
-function buildV030Model(game, supplemental) {
+function buildV030Model(game, supplemental, { updateAvailability = true } = {}) {
   if (!state.schedulePayload) throw new Error("The selected schedule response is unavailable.");
   const officialDate = game.officialDate || state.selectedDate || getLocalDateString();
   const season = Number(game.season || officialDate.slice(0, 4));
@@ -1600,8 +1810,8 @@ function buildV030Model(game, supplemental) {
       }
     } : null
   };
-  const snapshot = normalizeV030Pregame(input, { applicationVersion: "0.4.0", build: "004.9", createdAtUtc: new Date().toISOString() });
-  state.v030Availability = summarizeV030Availability(snapshot);
+  const snapshot = normalizeV030Pregame(input, { applicationVersion: "0.5.0", build: "005.2", createdAtUtc: new Date().toISOString() });
+  if (updateAvailability) state.v030Availability = summarizeV030Availability(snapshot);
   return snapshot;
 }
 
@@ -1787,12 +1997,11 @@ async function loadGameDay(forceSupplemental = false) {
 
   try {
     if (forceSupplemental) state.selectedSupplemental = await loadPregameCore(game);
-    const model = await hydrateSelectedGameModel(getCatalogFields().map((definition) => definition.id), String(game.gamePk));
+    const baseModel = await hydrateSelectedGameModel(getCatalogFields().map((definition) => definition.id), String(game.gamePk));
     if (token !== state.gameDayLoadToken || String(state.selectedGamePk) !== String(game.gamePk)) return;
+    const model = gameDayModelForPlayerStatScope(game, baseModel);
     renderGameDay(model);
-    const failures = (model.meta?.sourceResults || []).filter((source) => source.outcome === "failed").length;
-    elements.gameDayMessage.hidden = failures === 0;
-    elements.gameDayMessage.textContent = failures ? "Some Game Day information is unavailable. Available sections remain usable." : "";
+    updateGameDaySourceMessage(model);
   } catch (error) {
     if (token !== state.gameDayLoadToken) return;
     console.error("Game Day research loading failed:", error);
@@ -1806,11 +2015,12 @@ async function loadGameDay(forceSupplemental = false) {
 
 function renderGameDay(model) {
   if (!model) return;
+  closePlayerIdentityPopover();
   applyGameDayDetailLevel(state.appPreferences.gameDayDetailLevel);
-  const season = gameDaySeasonContext(model);
+  const season = state.selectedSupplemental?.competitionContext || competitionContextForModel(model);
+  applyGameDayPlayerStatScope(season, model);
   elements.gameDaySeasonContext.textContent = season.label;
   elements.gameDaySeasonContext.className = `pill neutral season-${season.key}`;
-  elements.gameDaySeasonNote.textContent = season.note;
   renderGameDayOverview(model);
   renderGameDayTeamCards(model);
 
@@ -1835,7 +2045,6 @@ function renderGameDay(model) {
   renderGameDayStandings(model);
   renderGameDayUmpires(model.game?.umpires);
   renderGameDayVenue(model.game);
-  renderGameDayResearch(model);
 }
 
 function renderGameDayOverview(model) {
@@ -1857,8 +2066,14 @@ function renderGameDayOverview(model) {
 
 function renderGameDayTeamCards(model) {
   elements.gameDayTeamGrid.replaceChildren();
-  elements.gameDayTeamGrid.classList.remove("gameday-team-grid-shared-division");
+  elements.gameDayTeamGrid.classList.remove("gameday-team-grid-shared-division", "gameday-team-grid-series");
   const presentation = standingsPresentation(model);
+  const context = state.selectedSupplemental?.competitionContext || competitionContextForModel(model);
+  const selectedScope = normalizePlayerStatScopeSelection(context, state.gameDayPlayerStatScope);
+  const presentationContext = selectedScope === "firstHalf" || selectedScope === "secondHalf"
+    ? { ...context, key: selectedScope === "firstHalf" ? "milb-first-half" : "milb-second-half", label: selectedScope === "firstHalf" ? "First Half" : "Second Half", standingsType: selectedScope, advancedMode: "milb-half" }
+    : context;
+  const teamStandings = presentation.relevant.filter((item) => item.group?.standingsType === advancedTeamPresentation({}, presentationContext, null, selectedScope).standingsType);
   const cards = new Map();
   [["away", model.away], ["home", model.home]].forEach(([side, data]) => {
     const card = document.createElement("section");
@@ -1869,27 +2084,37 @@ function renderGameDayTeamCards(model) {
     const numericTeamId = Number(team.id);
     const logoUrl = team.logo?.url || (Number.isFinite(numericTeamId) ? `https://www.mlbstatic.com/team-logos/${numericTeamId}.svg` : "");
     const logo = logoUrl ? `<img class="gameday-team-logo" src="${escapeHtml(logoUrl)}" alt="" loading="lazy">` : "";
-    const wildCardGamesBack = exposedGamesBack(standings.wildCardGamesBack);
+    const alternateTeamScope = (context.family === "postseason" && selectedScope === "regularSeason")
+      || selectedScope === "firstHalf" || selectedScope === "secondHalf";
+    const hasScopedStanding = presentation.relevant.some((item) => item.matchingSideKeys?.includes(side));
+    const presentationTeam = alternateTeamScope && !hasScopedStanding ? { ...team, record: {}, standings: {} } : team;
+    const standard = standardTeamPresentation(presentationTeam, presentationContext, selectedScope);
+    const advanced = advancedTeamPresentation(presentationTeam, presentationContext, side, selectedScope);
+    const standardFacts = standard.facts.map((fact) => gameDayFact(fact.label, formatAdvancedTeamFact(fact), "compact", fact.emphasized)).join("");
+    const advancedFacts = advanced.facts.map((fact) => gameDayFact(fact.label, formatAdvancedTeamFact(fact), "compact", fact.emphasized)).join("");
     card.innerHTML = `<div class="gameday-team-heading"><span>${side === "away" ? "Away" : "Home"}</span><h3>${escapeHtml(team.name || "Team")}</h3>${logo}</div>
       <div class="gameday-fact-list gameday-team-facts" data-gameday-team-summary>
-        ${gameDayFact("Record", record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—", "compact")}
-        ${gameDayFact("PCT", record.pct != null ? formatRate(record.pct, 3) : "—", "compact")}
-        ${gameDayFact("Games Played", record.gamesPlayed ?? "—", "compact")}
-        ${gameDayFact("Division Rank", typedRank(standings.divisionRank), "compact")}
-        ${gameDayFact("Games Back", typedGamesBack(standings.divisionGamesBack), "compact")}
+        ${standardFacts || `<p class="subtle gameday-team-context-empty">${escapeHtml(standard.note)}</p>`}
       </div>
       <div class="gameday-fact-list gameday-team-facts" data-gameday-team-advanced>
-        ${gameDayFact("League Rank", typedRank(standings.leagueRank), "compact")}
-        ${gameDayFact("Wild Card Rank", typedRank(standings.wildCardRank), "compact")}
-        ${wildCardGamesBack == null ? "" : gameDayFact("Wild Card Games Back", wildCardGamesBack, "compact")}
+        ${advancedFacts || `<p class="subtle gameday-team-context-empty">${escapeHtml(advanced.note)}</p>`}
       </div>`;
     card.querySelector(".gameday-team-logo")?.addEventListener("error", (event) => { event.currentTarget.hidden = true; });
     cards.set(side, card);
   });
 
-  const shared = presentation.relevant.find((item) => item.matchingSideKeys?.includes("away") && item.matchingSideKeys?.includes("home"));
+  const series = postseasonSeriesPresentation(context.family === "postseason" ? (state.normalizedPregame || model) : model);
+  const shared = teamStandings.find((item) => item.matchingSideKeys?.includes("away") && item.matchingSideKeys?.includes("home"));
   elements.gameDayTeamGrid.append(cards.get("away"));
-  if (shared) {
+  if (series) {
+    elements.gameDayTeamGrid.classList.add("gameday-team-grid-series");
+    const seriesCard = document.createElement("section");
+    seriesCard.className = "gameday-series-context";
+    seriesCard.innerHTML = `<span>Series Context</span><h3>${escapeHtml(series.title)}</h3>
+      <p class="gameday-series-meta">${[series.gameLabel, series.formatLabel].filter(Boolean).map(escapeHtml).join(", ")}</p>
+      ${series.status ? `<strong>${escapeHtml(series.status)}</strong>` : '<p class="subtle">Series standing is not available.</p>'}`;
+    elements.gameDayTeamGrid.append(seriesCard);
+  } else if (shared) {
     elements.gameDayTeamGrid.classList.add("gameday-team-grid-shared-division");
     const sharedStandings = document.createElement("div");
     sharedStandings.className = "gameday-team-shared-standings";
@@ -1899,17 +2124,26 @@ function renderGameDayTeamCards(model) {
   }
   elements.gameDayTeamGrid.append(cards.get("home"));
 
-  if (!shared) {
+  if (!series && !shared) {
     for (const side of ["away", "home"]) {
       const standingsHost = document.createElement("div");
       standingsHost.className = "gameday-team-embedded-standings";
       standingsHost.dataset.gamedayTeamAdvanced = "";
-      const matching = presentation.relevant.filter((item) => item.matchingSideKeys?.includes(side));
-      if (!matching.length) standingsHost.append(emptyRow("Division standings are not available for this team."));
+      const matching = teamStandings.filter((item) => item.matchingSideKeys?.includes(side));
+      if (!matching.length) standingsHost.append(emptyRow("Contextual standings are not available for this team."));
       for (const item of matching) standingsHost.append(createStandingsGroup(item, presentation.selectedTeamIds));
       cards.get(side).append(standingsHost);
     }
   }
+}
+
+function formatAdvancedTeamFact(fact) {
+  if (fact.format === "pct") return formatRate(fact.value, 3) || "—";
+  if (fact.format === "rank") return typedRank(fact.value);
+  if (fact.format === "gamesBack" || fact.format === "optionalGamesBack") return exposedGamesBack(fact.value) ?? "—";
+  if (fact.format === "record") return fact.value?.display || (fact.value?.wins != null && fact.value?.losses != null ? `${fact.value.wins}-${fact.value.losses}` : "—");
+  if (fact.format === "signed") return Number.isFinite(Number(fact.value)) ? `${Number(fact.value) > 0 ? "+" : ""}${Number(fact.value)}` : "—";
+  return fact.value ?? "—";
 }
 
 function exposedGamesBack(value) {
@@ -1920,12 +2154,140 @@ function exposedGamesBack(value) {
   return value === null || value === undefined || value === "" ? null : typedGamesBack(value);
 }
 
-function gameDayFact(label, value, minimum = "standard") {
-  return `<div class="gameday-fact" data-gameday-min-level="${minimum}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
+function gameDayFact(label, value, minimum = "standard", emphasized = false) {
+  return `<div class="gameday-fact${emphasized ? " gameday-selected-team-fact" : ""}" data-gameday-min-level="${minimum}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
 }
 
 function gameDayStat(label, value, minimum = "standard") {
   return `<div class="gameday-stat" data-gameday-min-level="${minimum}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value ?? "—"))}</strong></div>`;
+}
+
+function playerIdentityNameMarkup(player = {}) {
+  const identity = playerIdentityPresentation(player);
+  const name = escapeHtml(identity.displayedName);
+  if (!identity.hasDetails) return `<strong>${name}</strong>`;
+  return `<button type="button" class="gameday-player-identity-trigger" aria-expanded="false" data-player-formal-name="${escapeHtml(identity.formalName || "")}" data-player-pronunciation="${escapeHtml(identity.pronunciation || "")}" aria-label="Identity details for ${name}"><strong>${name}</strong></button>`;
+}
+
+function wirePlayerIdentityPopovers() {
+  if (playerIdentityPopover) return;
+  playerIdentityPopover = document.createElement("div");
+  playerIdentityPopover.id = "gameday-player-identity-popover";
+  playerIdentityPopover.className = "gameday-player-identity-popover";
+  playerIdentityPopover.setAttribute("role", "tooltip");
+  playerIdentityPopover.hidden = true;
+  document.body.append(playerIdentityPopover);
+
+  document.addEventListener("pointerover", (event) => {
+    const trigger = event.target?.closest?.(".gameday-player-identity-trigger");
+    if (!trigger || trigger.contains(event.relatedTarget) || event.pointerType === "touch") return;
+    playerIdentityPointerTrigger = trigger;
+    if (!playerIdentityPinned) openPlayerIdentityPopover(trigger);
+  });
+  document.addEventListener("pointerout", (event) => {
+    const trigger = event.target?.closest?.(".gameday-player-identity-trigger");
+    if (!trigger || trigger.contains(event.relatedTarget)) return;
+    if (playerIdentityPointerTrigger === trigger) playerIdentityPointerTrigger = null;
+    if (!playerIdentityPinned && playerIdentityFocusTrigger !== trigger) closePlayerIdentityPopover();
+  });
+  document.addEventListener("focusin", (event) => {
+    const trigger = event.target?.closest?.(".gameday-player-identity-trigger");
+    if (!trigger) return;
+    playerIdentityFocusTrigger = trigger;
+    if (!playerIdentityPinned) openPlayerIdentityPopover(trigger);
+  });
+  document.addEventListener("focusout", (event) => {
+    const trigger = event.target?.closest?.(".gameday-player-identity-trigger");
+    if (!trigger || trigger.contains(event.relatedTarget)) return;
+    if (playerIdentityFocusTrigger === trigger) playerIdentityFocusTrigger = null;
+    if (!playerIdentityPinned && playerIdentityPointerTrigger !== trigger) closePlayerIdentityPopover();
+  });
+  document.addEventListener("pointerdown", (event) => {
+    const trigger = event.target?.closest?.(".gameday-player-identity-trigger");
+    if (!trigger || event.pointerType !== "touch") return;
+    playerIdentityTouchStart = { trigger, x: event.clientX, y: event.clientY };
+    suppressPlayerIdentityClick = false;
+  });
+  document.addEventListener("pointermove", (event) => {
+    if (!playerIdentityTouchStart || event.pointerType !== "touch") return;
+    if (Math.hypot(event.clientX - playerIdentityTouchStart.x, event.clientY - playerIdentityTouchStart.y) > 8) suppressPlayerIdentityClick = true;
+  });
+  document.addEventListener("pointerup", (event) => {
+    if (event.pointerType !== "touch") return;
+    playerIdentityTouchStart = null;
+    if (suppressPlayerIdentityClick) window.setTimeout(() => { suppressPlayerIdentityClick = false; }, 400);
+  });
+  document.addEventListener("pointercancel", () => {
+    playerIdentityTouchStart = null;
+    suppressPlayerIdentityClick = false;
+  });
+  document.addEventListener("click", (event) => {
+    const trigger = event.target?.closest?.(".gameday-player-identity-trigger");
+    if (trigger) {
+      if (suppressPlayerIdentityClick) { event.preventDefault(); return; }
+      event.preventDefault();
+      if (playerIdentityPinned && activePlayerIdentityTrigger === trigger) closePlayerIdentityPopover();
+      else {
+        playerIdentityPinned = true;
+        openPlayerIdentityPopover(trigger);
+      }
+      return;
+    }
+    if (!event.target?.closest?.("#gameday-player-identity-popover")) closePlayerIdentityPopover();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !activePlayerIdentityTrigger) return;
+    event.preventDefault();
+    closePlayerIdentityPopover();
+  });
+  window.addEventListener("resize", () => {
+    if (activePlayerIdentityTrigger) positionPlayerIdentityPopover(activePlayerIdentityTrigger);
+  });
+  document.addEventListener("scroll", () => {
+    if (activePlayerIdentityTrigger) positionPlayerIdentityPopover(activePlayerIdentityTrigger);
+  }, true);
+}
+
+function openPlayerIdentityPopover(trigger) {
+  if (!playerIdentityPopover || !trigger?.isConnected) return;
+  if (activePlayerIdentityTrigger && activePlayerIdentityTrigger !== trigger) {
+    activePlayerIdentityTrigger.setAttribute("aria-expanded", "false");
+    activePlayerIdentityTrigger.removeAttribute("aria-describedby");
+  }
+  activePlayerIdentityTrigger = trigger;
+  const formalName = trigger.dataset.playerFormalName || "";
+  const pronunciation = trigger.dataset.playerPronunciation || "";
+  playerIdentityPopover.innerHTML = `${formalName ? `<div><span>Full name</span><strong>${escapeHtml(formalName)}</strong></div>` : ""}${pronunciation ? `<div><span>Pronunciation</span><strong>${escapeHtml(pronunciation)}</strong></div>` : ""}`;
+  playerIdentityPopover.hidden = false;
+  trigger.setAttribute("aria-expanded", "true");
+  trigger.setAttribute("aria-describedby", playerIdentityPopover.id);
+  positionPlayerIdentityPopover(trigger);
+}
+
+function positionPlayerIdentityPopover(trigger) {
+  if (!playerIdentityPopover || playerIdentityPopover.hidden || !trigger?.isConnected) return closePlayerIdentityPopover();
+  const margin = 8;
+  const gap = 6;
+  const triggerRect = trigger.getBoundingClientRect();
+  const popoverRect = playerIdentityPopover.getBoundingClientRect();
+  const left = Math.min(Math.max(triggerRect.left, margin), Math.max(margin, window.innerWidth - popoverRect.width - margin));
+  const below = triggerRect.bottom + gap;
+  const above = triggerRect.top - popoverRect.height - gap;
+  const top = below + popoverRect.height <= window.innerHeight - margin ? below : Math.max(margin, above);
+  playerIdentityPopover.style.left = `${Math.round(left)}px`;
+  playerIdentityPopover.style.top = `${Math.round(top)}px`;
+}
+
+function closePlayerIdentityPopover() {
+  if (activePlayerIdentityTrigger) {
+    activePlayerIdentityTrigger.setAttribute("aria-expanded", "false");
+    activePlayerIdentityTrigger.removeAttribute("aria-describedby");
+  }
+  if (playerIdentityPopover) playerIdentityPopover.hidden = true;
+  activePlayerIdentityTrigger = null;
+  playerIdentityPointerTrigger = null;
+  playerIdentityFocusTrigger = null;
+  playerIdentityPinned = false;
 }
 
 function renderGameDayLineup(tbody, slots) {
@@ -1938,7 +2300,7 @@ function renderGameDayLineup(tbody, slots) {
     if (!slot?.player?.name) return;
     const stats = slot.stats?.hitting?.totals || slot.stats || {};
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${slot.battingOrder || index + 1}</td><td><strong>${escapeHtml(slot.player.name)}</strong><span class="gameday-number">${slot.player.number ? `#${escapeHtml(slot.player.number)}` : ""}</span></td><td>${escapeHtml(slot.position?.abbreviation || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(slot.player.bats || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPlayed ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.plateAppearances ?? "—"))}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.rbi ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.stolenBases ?? "—"))}</td>`;
+    tr.innerHTML = `<td>${slot.battingOrder || index + 1}</td><td>${playerIdentityNameMarkup(slot.player)}<span class="gameday-number">${slot.player.number ? `#${escapeHtml(slot.player.number)}` : ""}</span></td><td>${escapeHtml(slot.position?.abbreviation || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(slot.player.bats || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPlayed ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.plateAppearances ?? "—"))}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.rbi ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.stolenBases ?? "—"))}</td>`;
     tbody.append(tr);
   });
 }
@@ -1992,7 +2354,7 @@ function gameDayPitcherTable(players, emptyMessage) {
     const record = stats.wins != null && stats.losses != null ? `${stats.wins}-${stats.losses}` : "—";
     const tr = document.createElement("tr");
     const throwingHand = item?.player?.throws ? `${item.player.throws}HP` : "—";
-    tr.innerHTML = `<td>${escapeHtml(throwingHand)}</td><td><strong>${escapeHtml(item?.player?.name || "Player")}</strong></td><td>${item?.player?.number ? `#${escapeHtml(item.player.number)}` : "—"}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPitched ?? stats.gamesPlayed ?? "—"))}</td><td>${escapeHtml(record)}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.gamesStarted ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.inningsPitched ?? "—"))}</td><td>${escapeHtml(formatRate(stats.era, 2) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.whip, 2) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.strikeOuts ?? stats.strikeouts ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.baseOnBalls ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.saves ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.holds ?? "—"))}</td>`;
+    tr.innerHTML = `<td>${escapeHtml(throwingHand)}</td><td>${playerIdentityNameMarkup(item?.player || {})}</td><td>${item?.player?.number ? `#${escapeHtml(item.player.number)}` : "—"}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPitched ?? stats.gamesPlayed ?? "—"))}</td><td>${escapeHtml(record)}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.gamesStarted ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.inningsPitched ?? "—"))}</td><td>${escapeHtml(formatRate(stats.era, 2) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(formatRate(stats.whip, 2) || "—")}</td><td data-gameday-min-level="standard">${escapeHtml(String(stats.strikeOuts ?? stats.strikeouts ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.baseOnBalls ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.saves ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.holds ?? "—"))}</td>`;
     body.append(tr);
   });
   table.append(body); wrap.append(table); return wrap;
@@ -2009,7 +2371,7 @@ function renderGameDayBench(container, players) {
   known.forEach((item) => {
     const stats = item.stats?.hitting?.totals || item.stats || {};
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${item.player.number ? `#${escapeHtml(item.player.number)}` : "—"}</td><td><strong>${escapeHtml(item.player.name)}</strong></td><td>${escapeHtml(item.position?.abbreviation || item.player.primaryPosition?.abbreviation || "—")}</td><td>${escapeHtml(item.player.bats || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPlayed ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.plateAppearances ?? "—"))}</td><td>${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.stolenBases ?? "—"))}</td>`;
+    row.innerHTML = `<td>${item.player.number ? `#${escapeHtml(item.player.number)}` : "—"}</td><td>${playerIdentityNameMarkup(item.player)}</td><td>${escapeHtml(item.position?.abbreviation || item.player.primaryPosition?.abbreviation || "—")}</td><td>${escapeHtml(item.player.bats || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.gamesPlayed ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.plateAppearances ?? "—"))}</td><td>${escapeHtml(formatRate(stats.avg, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.obp, 3) || "—")}</td><td data-gameday-min-level="advanced">${escapeHtml(formatRate(stats.slg, 3) || "—")}</td><td>${escapeHtml(formatRate(stats.ops, 3) || "—")}</td><td>${escapeHtml(String(stats.homeRuns ?? "—"))}</td><td>${escapeHtml(String(stats.rbi ?? "—"))}</td><td data-gameday-min-level="advanced">${escapeHtml(String(stats.stolenBases ?? "—"))}</td>`;
     body.append(row);
   });
   table.append(body); wrap.append(table); container.append(wrap);
@@ -2040,41 +2402,75 @@ function renderGameDayStaff(container, side) {
 function renderGameDayStandings(model) {
   const presentation = standingsPresentation(model);
   elements.gameDayStandings.replaceChildren();
+  const wildCardGroups = presentation.other.filter((item) => item.group?.standingsType === "wildCard");
+  if (wildCardGroups.length) {
+    const cutoff = (model?.meta?.sourceResults || []).find((source) => source?.scope?.standingsType === "wildCardWithLeaders")?.effective?.cutoffDate;
+    const note = document.createElement("p");
+    note.className = "subtle gameday-wild-card-note";
+    note.textContent = `MLB Wild Card standings${cutoff ? ` through ${cutoff}` : " through the available pregame cutoff"}.`;
+    elements.gameDayStandings.append(note);
+  }
   if (!presentation.other.length) elements.gameDayStandings.append(emptyRow("No additional standings groups were returned for this level."));
   renderStandingsGroups(elements.gameDayStandings, presentation.other, presentation.selectedTeamIds);
 }
 
 function renderStandingsGroups(container, items, selectedTeamIds) {
-  for (const item of items) container.append(createStandingsGroup(item, selectedTeamIds));
+  const awayItems = items.filter((item) => item.leagueSideKey === "away");
+  const homeItems = items.filter((item) => item.leagueSideKey === "home");
+  const remainingItems = items.filter((item) => !["away", "home"].includes(item.leagueSideKey));
+  if (awayItems.length || homeItems.length) {
+    const columns = document.createElement("div");
+    columns.className = "gameday-standings-columns";
+    const awayColumn = document.createElement("div");
+    awayColumn.className = "gameday-standings-column gameday-standings-column-away";
+    const homeColumn = document.createElement("div");
+    homeColumn.className = "gameday-standings-column gameday-standings-column-home";
+    for (const item of awayItems) awayColumn.append(createStandingsGroup(item, selectedTeamIds));
+    for (const item of homeItems) homeColumn.append(createStandingsGroup(item, selectedTeamIds));
+    columns.append(awayColumn, homeColumn);
+    container.append(columns);
+  }
+  if (remainingItems.length) {
+    const balancedColumns = document.createElement("div");
+    balancedColumns.className = "gameday-standings-columns gameday-standings-columns-balanced";
+    for (const item of remainingItems) balancedColumns.append(createStandingsGroup(item, selectedTeamIds));
+    container.append(balancedColumns);
+  }
 }
 
 function createStandingsGroup(item, selectedTeamIds) {
   const group = item.group;
+  const isWildCard = group?.standingsType === "wildCard";
   const section = document.createElement("section");
   section.className = "gameday-standings-group";
-  if (item.matchingSideKeys?.includes("away") && item.matchingSideKeys?.includes("home")) section.classList.add("gameday-standings-shared");
-  else if (item.matchingSideKeys?.includes("away")) section.classList.add("gameday-standings-away");
-  else if (item.matchingSideKeys?.includes("home")) section.classList.add("gameday-standings-home");
+  if (item.leagueSideKey === "shared" || (item.matchingSideKeys?.includes("away") && item.matchingSideKeys?.includes("home"))) section.classList.add("gameday-standings-shared");
+  else if (item.leagueSideKey === "away" || item.matchingSideKeys?.includes("away")) section.classList.add("gameday-standings-away");
+  else if (item.leagueSideKey === "home" || item.matchingSideKeys?.includes("home")) section.classList.add("gameday-standings-home");
   section.innerHTML = `<h4>${escapeHtml(item.title)}</h4>`;
   const wrap = document.createElement("div");
   wrap.className = "gameday-table-wrap";
   const table = document.createElement("table");
   table.className = "gameday-table gameday-standings-table";
-  table.innerHTML = "<thead><tr><th>Rank</th><th>Team</th><th>W-L</th><th>PCT</th><th>GB</th><th>Streak</th><th>Last 10</th></tr></thead>";
+  table.innerHTML = `<thead><tr><th>${isWildCard ? "WC Rank" : "Rank"}</th><th>Team</th><th>W-L</th><th>PCT</th><th>${isWildCard ? "WCGB" : "GB"}</th><th>Streak</th><th>Last 10</th>${isWildCard ? "<th>Status</th>" : ""}</tr></thead>`;
   const body = document.createElement("tbody");
   for (const item of group.rows || []) {
     const row = document.createElement("tr");
     if (selectedTeamIds.has(Number(item.team?.id))) row.className = "gameday-selected-team-row";
     const record = item.record || {};
-    row.innerHTML = `<td>${escapeHtml(String(typedRank(item.rank)))}</td><td><strong>${escapeHtml(item.team?.name || "Team")}</strong></td><td>${record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—"}</td><td>${escapeHtml(formatRate(record.pct, 3) || "—")}</td><td>${escapeHtml(String(typedGamesBack(item.gamesBack)))}</td><td>${escapeHtml(item.streak || "—")}</td><td>${item.lastTen?.wins != null ? `${item.lastTen.wins}-${item.lastTen.losses}` : "—"}</td>`;
+    row.innerHTML = `<td>${escapeHtml(String(typedRank(item.rank)))}</td><td><strong>${escapeHtml(item.team?.name || "Team")}</strong></td><td>${record.wins != null && record.losses != null ? `${record.wins}-${record.losses}` : "—"}</td><td>${escapeHtml(formatRate(record.pct, 3) || "—")}</td><td>${escapeHtml(String(typedGamesBack(item.gamesBack)))}</td><td>${escapeHtml(item.streak || "—")}</td><td>${item.lastTen?.wins != null ? `${item.lastTen.wins}-${item.lastTen.losses}` : "—"}</td>${isWildCard ? `<td>${escapeHtml(standingsStatus(item))}</td>` : ""}`;
     body.append(row);
   }
   table.append(body); wrap.append(table); section.append(wrap); return section;
 }
 
-function renderGameDayResearch(model) {
-  const sources = gameDaySourceSummary(model);
-  elements.gameDaySourceSummary.innerHTML = `<h4>Source Freshness</h4><div class="gameday-source-list">${sources.map((source) => `<div><span>${escapeHtml(source.adapter)}</span><strong class="source-outcome-${escapeHtml(source.outcome)}">${escapeHtml(source.outcome)}</strong><small>${escapeHtml(source.effective)}</small></div>`).join("") || '<p class="subtle">No source metadata available.</p>'}</div>`;
+function standingsStatus(item) {
+  const clinch = item?.clinch?.state;
+  if (clinch === "wildCard") return "Clinched WC";
+  if (["postseason", "division", "bestRecord"].includes(clinch)) return "Clinched";
+  if (item?.elimination?.state === "eliminated") return "Eliminated";
+  if (item?.elimination?.state === "notEliminated") return "—";
+  if (item?.elimination?.raw != null) return `E${item.elimination.raw}`;
+  return "—";
 }
 
 function renderGameDayUmpires(umpires) {

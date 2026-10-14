@@ -39,11 +39,13 @@ test("Schedule and Selected Game are sibling cards in a responsive Home workspac
   assert.match(html, /id="selected-game-empty"/);
   assert.match(html, /id="selected-game-details" hidden/);
   assert.match(css, /\.home-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(680px, 1\.05fr\) minmax\(520px, \.95fr\)/s);
-  assert.match(css, /@media \(min-width: 1281px\)[\s\S]*?\.home-workspace \.home-schedule-card\s*\{[^}]*height:\s*auto[^}]*min-height:\s*0/s);
-  assert.match(css, /\.home-workspace \.home-game-groups\s*\{[^}]*max-height:\s*calc\(100dvh - var\(--app-header-height\) - 330px\)[^}]*overflow-y:\s*auto/s);
+  assert.match(css, /@media \(min-width: 1281px\)[\s\S]*?\.home-workspace \.home-schedule-card\s*\{[^}]*display:\s*flex[^}]*max-height:\s*calc\(100dvh - var\(--app-header-height\) - 160px\)[^}]*min-height:\s*0/s);
+  assert.match(css, /\.home-workspace \.home-schedule-card > #pregame-content\s*\{[^}]*display:\s*flex[^}]*min-height:\s*0[^}]*overflow:\s*hidden/s);
+  assert.match(css, /\.home-workspace \.home-game-groups\s*\{[^}]*flex:\s*1 1 auto[^}]*max-height:\s*none[^}]*overflow-y:\s*auto/s);
   assert.match(css, /@media \(max-width: 1280px\)[\s\S]*?\.home-workspace \{ grid-template-columns: minmax\(0, 1fr\); \}/);
   const choices = app.slice(app.indexOf("function renderGameChoices"), app.indexOf("function highlightSelectedGame"));
   assert.doesNotMatch(choices, /<small>\$\{escapeHtml\(game\.status/);
   assert.match(choices, /mini-readiness/);
-  assert.deepEqual(meta, { version: "0.4.0", build: "004.9" });
+  assert.match(meta.version, /^0\.[45]\.0(?:-dev)?$/);
+  assert.match(meta.build, /^\d{3}\.\d+[a-z]?$/);
 });

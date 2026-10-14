@@ -166,6 +166,56 @@ test("ordinary Schedule data produces a complete schema-v2 skeleton with provena
   assert.equal(validateNormalizedSnapshot(snapshot).valid, true);
 });
 
+test("postseason Schedule series metadata remains available to presentation policy", () => {
+  const game = rawGame({
+    gameType: "L",
+    seriesDescription: "American League Championship Series",
+    seriesGameNumber: 2,
+    gamesInSeries: 7
+  });
+  const snapshot = normalizeScheduleSnapshot(payloadFor(game), selection(), execution({ snapshotId: "postseason-series" }));
+  assert.deepEqual(snapshot.game.series, {
+    description: "American League Championship Series",
+    gameNumber: 2,
+    gamesInSeries: 7
+  });
+  assert.equal(validateNormalizedSnapshot(snapshot).valid, true);
+});
+
+test("completed postseason Schedule records are restored to the pregame cutoff only when they include the selected result", () => {
+  const mlbFinal = rawGame({
+    gameType: "L",
+    seriesDescription: "American League Championship Series",
+    seriesGameNumber: 2,
+    gamesInSeries: 7,
+    status: { abstractGameState: "Final", codedGameState: "F", detailedState: "Final", statusCode: "F" }
+  });
+  mlbFinal.teams.away.leagueRecord = { wins: 1, losses: 1, ties: 0, pct: ".500" };
+  mlbFinal.teams.home.leagueRecord = { wins: 1, losses: 1, ties: 0, pct: ".500" };
+  mlbFinal.teams.away.isWinner = false;
+  mlbFinal.teams.home.isWinner = true;
+  const mlb = normalizeScheduleSnapshot(payloadFor(mlbFinal), selection(), execution());
+  assert.deepEqual(mlb.away.team.record, { gamesPlayed: 1, wins: 1, losses: 0, pct: 1 });
+  assert.deepEqual(mlb.home.team.record, { gamesPlayed: 1, wins: 0, losses: 1, pct: 0 });
+  assert.deepEqual(findEffectiveLineage(mlb.meta.lineage, "/away/team/record").transformations, ["remove-selected-final-game-result"]);
+
+  const milbPregame = rawGame({
+    gameType: "F",
+    seriesDescription: "SOU Championship Series",
+    seriesGameNumber: 3,
+    gamesInSeries: 3,
+    status: { abstractGameState: "Final", codedGameState: "F", detailedState: "Final", statusCode: "F" }
+  });
+  milbPregame.teams.away.leagueRecord = { wins: 1, losses: 1, ties: 0, pct: ".500" };
+  milbPregame.teams.home.leagueRecord = { wins: 1, losses: 1, ties: 0, pct: ".500" };
+  milbPregame.teams.away.isWinner = true;
+  milbPregame.teams.home.isWinner = false;
+  const milb = normalizeScheduleSnapshot(payloadFor(milbPregame), selection(), execution());
+  assert.deepEqual(milb.away.team.record, { gamesPlayed: 2, wins: 1, losses: 1, pct: 0.5 });
+  assert.deepEqual(milb.home.team.record, { gamesPlayed: 2, wins: 1, losses: 1, pct: 0.5 });
+  assert.deepEqual(findEffectiveLineage(milb.meta.lineage, "/away/team/record").transformations, []);
+});
+
 test("missing and explicitly empty lineups remain distinct and are never roster-derived", () => {
   const absentGame = rawGame();
   delete absentGame.lineups;

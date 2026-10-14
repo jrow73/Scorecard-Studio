@@ -5,9 +5,9 @@
  * app bootstrap; consumers explicitly pass a normalized snapshot and selector.
  */
 
-import { findEffectiveLineage, resolveJsonPointer } from "./v030-contract.js?v=040";
-import { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS } from "./v030-compatibility-definitions.js?v=040";
-import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupRows } from "./v040-pitcher-groups.js?v=040";
+import { findEffectiveLineage, resolveJsonPointer } from "./v030-contract.js?v=050b0052";
+import { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS } from "./v030-compatibility-definitions.js?v=050b0052";
+import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupRows } from "./v040-pitcher-groups.js?v=050b0052";
 
 export { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS };
 
