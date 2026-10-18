@@ -55,6 +55,13 @@ Scorecard Studio v1.0.0 is the current stable release. Development history,
 accepted decisions, and future roadmap items are maintained separately from
 this runtime distribution.
 
+## Development
+
+Maintainers and AI-assisted contributors should begin with
+[AGENTS.md](AGENTS.md) and the detailed [v1 development handoff](docs/AI.md).
+Those files belong in the source repository and are intentionally omitted from
+the runtime-only deployment archive.
+
 ---
 
 ## License
