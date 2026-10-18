@@ -5,9 +5,9 @@
  * app bootstrap; consumers explicitly pass a normalized snapshot and selector.
  */
 
-import { findEffectiveLineage, resolveJsonPointer } from "./v030-contract.js?v=050b0052";
-import { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS } from "./v030-compatibility-definitions.js?v=050b0052";
-import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupRows } from "./v040-pitcher-groups.js?v=050b0052";
+import { findEffectiveLineage, resolveJsonPointer } from "./v030-contract.js?v=100r002";
+import { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS } from "./v030-compatibility-definitions.js?v=100r002";
+import { PITCHER_GROUP_MODES, isBullpenCollection, normalizePitcherGroup, pitcherGroupRows } from "./v040-pitcher-groups.js?v=100r002";
 
 export { COMPATIBILITY_ALIASES, COMPATIBILITY_FIELDS, V030_COMPATIBILITY_DEFINITIONS };
 
@@ -289,6 +289,14 @@ function fixedTwo(value) {
   return Number.isFinite(number) ? number.toFixed(2) : String(value);
 }
 
+function dimensionsSummary(dimensions) {
+  if (!dimensions || typeof dimensions !== "object" || Array.isArray(dimensions)) return null;
+  const parts = Object.entries(dimensions)
+    .filter(([, value]) => availableValue(value))
+    .map(([key, value]) => `${key.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (letter) => letter.toUpperCase())}: ${value}`);
+  return parts.length ? parts.join(" • ") : null;
+}
+
 function resolveDerived(snapshot, definition, requestedFieldId, selector) {
   if (definition.v1.cardinality === "repeated") return resolveRepeated(snapshot, definition, requestedFieldId, selector);
   const values = definition.v2.dependencies.map((path) => dependency(snapshot, path));
@@ -315,6 +323,14 @@ function resolveDerived(snapshot, definition, requestedFieldId, selector) {
       value = parts.length ? parts.join(" • ") : null;
       break;
     }
+    case "series-format-v1": {
+      const games = Number(values[0]);
+      value = Number.isInteger(games) && games > 0 ? `Best of ${games}` : null;
+      break;
+    }
+    case "venue-dimensions-summary-v1":
+      value = dimensionsSummary(values[0]);
+      break;
   }
   const state = availableValue(value) ? (aggregate.state === "available" ? "available" : "partial") : aggregate.state;
   return result(definition, requestedFieldId, value, state, { availability: aggregate.availability, lineage: aggregate.lineage, reason: value == null ? "Required source values are not available." : state === "partial" ? "Composite value is partial." : "" });

@@ -9,7 +9,7 @@ import {
   getCompatibilityCollectionRows,
   getCompatibilityDefinition,
   resolveCompatibilityField
-} from "./v030-compatibility-resolver.js?v=050b0052";
+} from "./v030-compatibility-resolver.js?v=100r002";
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
 
@@ -29,6 +29,11 @@ const gameFields = [
   standard(field("game.startTime", "Scheduled Start", "Game", "instant", "atomic", "game.startTime", ["gamePack"])),
   custom(field("game.dayNight", "Day / Night", "Game", "text", "atomic", "game.dayNight", ["gamePack"])),
   custom(field("game.number", "Game Number (Day)", "Game", "integer", "atomic", "game.number", ["gamePack"])),
+  custom(field("game.series.description", "Series Name", "Game / Series", "text", "atomic", "game.series.description", ["gamePack"])),
+  custom(field("game.series.gameNumber", "Series Game Number", "Game / Series", "integer", "atomic", "game.series.gameNumber", ["gamePack"])),
+  custom(field("game.series.gamesInSeries", "Series Length", "Game / Series", "integer", "atomic", "game.series.gamesInSeries", ["gamePack"])),
+  custom(composite("game.series.format", "Series Format", "Game / Series", "seriesFormat", ["game.series.gamesInSeries"], ["gamePack"])),
+  custom(field("game.series.status", "Series Status", "Game / Series", "text", "atomic", "game.series.status", ["gamePack"])),
   standard(field("game.venue.name", "Venue Name", "Game / Venue", "text", "atomic", "game.venue.name", ["gamePack"])),
   custom(field("game.venue.city", "Venue City", "Game / Venue", "text", "atomic", "game.venue.city", ["gamePack"])),
   custom(field("game.venue.state", "Venue State / Province", "Game / Venue", "text", "atomic", "game.venue.state", ["gamePack"])),
@@ -36,6 +41,7 @@ const gameFields = [
   custom(field("game.venue.capacity", "Venue Capacity", "Game / Venue", "integer", "atomic", "game.venue.capacity", ["gamePack"])),
   custom(field("game.venue.turfType", "Turf Type", "Game / Venue", "text", "atomic", "game.venue.turfType", ["gamePack"])),
   custom(field("game.venue.roofType", "Roof Type", "Game / Venue", "text", "atomic", "game.venue.roofType", ["gamePack"])),
+  custom(composite("game.venue.dimensions.summary", "Field Dimensions", "Game / Venue", "dimensionsSummary", ["game.venue.fieldInfo.dimensions"], ["gamePack"])),
   custom(field("game.weather.temperature", "Temperature", "Game / Weather", "decimal", "atomic", "game.weather.temperature", ["gamePack"])),
   custom(field("game.weather.condition", "Conditions", "Game / Weather", "text", "atomic", "game.weather.condition", ["gamePack"])),
   custom(field("game.weather.wind", "Wind", "Game / Weather", "text", "atomic", "game.weather.wind", ["gamePack"])),
@@ -58,7 +64,7 @@ const sideFields = ["away", "home"].flatMap((side) => {
     standard(field(`${side}.team.abbreviation`, `${label} Team — Abbreviation`, `${label} / Team`, "text", "atomic", `${side}.team.abbreviation`, ["gamePack"])),
     custom(field(`${side}.team.league.name`, `${label} Team — League`, `${label} / Team`, "text", "atomic", `${side}.team.league.name`, ["gamePack"])),
     custom(field(`${side}.team.division.name`, `${label} Team — Division`, `${label} / Team`, "text", "atomic", `${side}.team.division.name`, ["gamePack"])),
-    standard(field(`${side}.team.record.gamesPlayed`, `${label} Team — Games Played`, `${label} / Record`, "integer", "atomic", `${side}.team.record.gamesPlayed`, ["gamePack"])),
+    custom(field(`${side}.team.record.gamesPlayed`, `${label} Team — Games Played`, `${label} / Record`, "integer", "atomic", `${side}.team.record.gamesPlayed`, ["gamePack"])),
     standard(field(`${side}.team.gameNumber`, `${label} Team — Game Number`, `${label} / Record`, "integer", "atomic", `${side}.team.gameNumber`, ["gamePack"])),
     custom(field(`${side}.team.record.wins`, `${label} Team — Wins`, `${label} / Record`, "integer", "atomic", `${side}.team.record.wins`, ["gamePack"])),
     custom(field(`${side}.team.record.losses`, `${label} Team — Losses`, `${label} / Record`, "integer", "atomic", `${side}.team.record.losses`, ["gamePack"])),
@@ -70,6 +76,13 @@ const sideFields = ["away", "home"].flatMap((side) => {
     custom(field(`${side}.team.standings.leagueRank`, `${label} Team — League Rank`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.leagueRank`, ["standings"])),
     custom(field(`${side}.team.standings.wildCardRank`, `${label} Team — Wild Card Rank`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.wildCardRank`, ["standings"])),
     custom(field(`${side}.team.standings.divisionGamesBack`, `${label} Team — Division Games Back`, `${label} / Standings`, "text", "atomic", `${side}.team.standings.divisionGamesBack`, ["standings"])),
+    custom(field(`${side}.team.standings.leagueGamesBack`, `${label} Team — League Games Back`, `${label} / Standings`, "text", "atomic", `${side}.team.standings.leagueGamesBack`, ["standings"])),
+    custom(field(`${side}.team.standings.wildCardGamesBack`, `${label} Team — Wild Card Games Back`, `${label} / Standings`, "text", "atomic", `${side}.team.standings.wildCardGamesBack`, ["standings"])),
+    custom(field(`${side}.team.standings.runsScored`, `${label} Team — Runs Scored`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.runsScored`, ["standings"])),
+    custom(field(`${side}.team.standings.runsAllowed`, `${label} Team — Runs Allowed`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.runsAllowed`, ["standings"])),
+    custom(field(`${side}.team.standings.runDifferential`, `${label} Team — Run Differential`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.runDifferential`, ["standings"], { signed: true })),
+    custom(field(`${side}.team.standings.homeRecord.display`, `${label} Team — Home Record`, `${label} / Standings`, "text", "atomic", `${side}.team.standings.homeRecord.display`, ["standings"])),
+    custom(field(`${side}.team.standings.awayRecord.display`, `${label} Team — Away Record`, `${label} / Standings`, "text", "atomic", `${side}.team.standings.awayRecord.display`, ["standings"])),
     custom(field(`${side}.team.standings.streak`, `${label} Team — Streak`, `${label} / Standings`, "text", "atomic", `${side}.team.standings.streak`, ["standings"])),
     custom(field(`${side}.team.standings.last10.wins`, `${label} Team — Last 10 Wins`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.last10.wins`, ["standings"])),
     custom(field(`${side}.team.standings.last10.losses`, `${label} Team — Last 10 Losses`, `${label} / Standings`, "integer", "atomic", `${side}.team.standings.last10.losses`, ["standings"])),
@@ -97,10 +110,11 @@ const bullpenFields = ["away", "home"].flatMap((side) => {
     custom(repeatedField(`${side}.bullpen[].stats.gamesStarted`, `${label} Bullpen — Games Started`, category, "integer", collection, "stats.gamesStarted")),
     custom(repeatedField(`${side}.bullpen[].stats.wins`, `${label} Bullpen — Wins`, category, "integer", collection, "stats.wins")),
     custom(repeatedField(`${side}.bullpen[].stats.losses`, `${label} Bullpen — Losses`, category, "integer", collection, "stats.losses")),
-    compatibility(repeatedField(`${side}.bullpen[].stats.inningsPitched`, `${label} Bullpen — IP`, category, "text", collection, "stats.inningsPitched")),
-    compatibility(repeatedField(`${side}.bullpen[].stats.strikeouts`, `${label} Bullpen — SO`, category, "integer", collection, "stats.strikeouts")),
-    compatibility(repeatedField(`${side}.bullpen[].stats.saves`, `${label} Bullpen — Saves`, category, "integer", collection, "stats.saves")),
-    compatibility(repeatedField(`${side}.bullpen[].stats.holds`, `${label} Bullpen — Holds`, category, "integer", collection, "stats.holds"))
+    custom(repeatedField(`${side}.bullpen[].stats.inningsPitched`, `${label} Bullpen — IP`, category, "text", collection, "stats.inningsPitched")),
+    custom(repeatedField(`${side}.bullpen[].stats.strikeouts`, `${label} Bullpen — SO`, category, "integer", collection, "stats.strikeouts")),
+    custom(repeatedField(`${side}.bullpen[].stats.walks`, `${label} Bullpen — Walks`, category, "integer", collection, "stats.walks")),
+    custom(repeatedField(`${side}.bullpen[].stats.saves`, `${label} Bullpen — Saves`, category, "integer", collection, "stats.saves")),
+    custom(repeatedField(`${side}.bullpen[].stats.holds`, `${label} Bullpen — Holds`, category, "integer", collection, "stats.holds"))
   ];
 });
 
@@ -201,6 +215,8 @@ export function resolveField(model, fieldId, selector = null) {
   if (definition.resolver === "record") return resolveRecord(model, definition);
   if (definition.resolver === "pitchingCompact") return resolvePitchingCompact(model, definition);
   if (definition.resolver === "weatherSummary") return resolveWeather(model, definition);
+  if (definition.resolver === "seriesFormat") return resolveSeriesFormat(model, definition);
+  if (definition.resolver === "dimensionsSummary") return resolveDimensionsSummary(model, definition);
   return { value: null, state: "unsupported", reason: "Resolver is not implemented.", fieldId: canonicalId };
 }
 
@@ -264,6 +280,29 @@ function resolveWeather(model, definition) {
   return { value: parts.join(" • "), state: partial ? "partial" : "available", reason: partial ? "Weather summary is partial." : "", fieldId: definition.id };
 }
 
+function resolveSeriesFormat(model, definition) {
+  const games = Number(readPath(model, definition.dependencies[0]));
+  return Number.isInteger(games) && games > 0
+    ? { value: `Best of ${games}`, state: "available", reason: "", fieldId: definition.id }
+    : { value: null, state: "missing", reason: "Series length is not available.", fieldId: definition.id };
+}
+
+function resolveDimensionsSummary(model, definition) {
+  const dimensions = readPath(model, definition.dependencies[0]);
+  const value = formatDimensions(dimensions);
+  return value
+    ? { value, state: "available", reason: "", fieldId: definition.id }
+    : { value: null, state: "missing", reason: "Field dimensions are not available.", fieldId: definition.id };
+}
+
+function formatDimensions(dimensions) {
+  if (!dimensions || typeof dimensions !== "object" || Array.isArray(dimensions)) return null;
+  const parts = Object.entries(dimensions)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
+    .map(([key, value]) => `${key.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (letter) => letter.toUpperCase())}: ${value}`);
+  return parts.length ? parts.join(" • ") : null;
+}
+
 function repeatedRowRole(collection, row) {
   if (collection === "game.umpires.crew") return row?.role ?? null;
   if (collection === "away.lineup" || collection === "home.lineup") return row?.position?.abbreviation ?? null;
@@ -291,6 +330,11 @@ function fieldCatalogMetadata(entry) {
     "game.startTime": ["Scheduled first-pitch time.", "7:10 PM"],
     "game.dayNight": ["Whether the game is designated as a day or night game.", "Night"],
     "game.number": ["Game number within the day, such as Game 2 of a doubleheader.", "2"],
+    "game.series.description": ["Published name or description of the series.", "NL Championship Series"],
+    "game.series.gameNumber": ["Selected game's number within the series.", "3"],
+    "game.series.gamesInSeries": ["Maximum number of games scheduled for the series.", "7"],
+    "game.series.format": ["Series length expressed in familiar postseason language.", "Best of 7"],
+    "game.series.status": ["Pregame series standing after completed games.", "Dodgers lead series, 2–0"],
     "game.venue.name": ["Ballpark or venue name.", "Harbor Field at Crescent Bay"],
     "game.venue.city": ["City where the venue is located.", "Grand Valley"],
     "game.venue.state": ["State or province where the venue is located.", "WA"],
@@ -298,6 +342,7 @@ function fieldCatalogMetadata(entry) {
     "game.venue.capacity": ["Published seating capacity of the venue.", "47,929"],
     "game.venue.turfType": ["Playing-surface type reported for the venue.", "Grass"],
     "game.venue.roofType": ["Roof configuration reported for the venue.", "Retractable"],
+    "game.venue.dimensions.summary": ["Published field dimensions combined into one line.", "Left Line: 332 • Center: 404 • Right Line: 326"],
     "game.weather.temperature": ["Pregame temperature at the venue.", "68"],
     "game.weather.condition": ["Pregame weather conditions.", "Partly Cloudy"],
     "game.weather.wind": ["Pregame wind speed and direction.", "7 mph, L to R"],
@@ -330,6 +375,13 @@ function fieldCatalogMetadata(entry) {
     "team.standings.leagueRank": ["Current rank within the team's league.", "2"],
     "team.standings.wildCardRank": ["Current Wild Card rank, when applicable.", "1"],
     "team.standings.divisionGamesBack": ["Games behind the division leader.", "2.5"],
+    "team.standings.leagueGamesBack": ["Games behind the league leader.", "4.0"],
+    "team.standings.wildCardGamesBack": ["Games behind the final Wild Card position.", "1.5"],
+    "team.standings.runsScored": ["Runs scored by the team in the selected statistical period.", "683"],
+    "team.standings.runsAllowed": ["Runs allowed by the team in the selected statistical period.", "506"],
+    "team.standings.runDifferential": ["Runs scored minus runs allowed in the selected statistical period.", "+177"],
+    "team.standings.homeRecord.display": ["Team win-loss record in home games.", "47-25"],
+    "team.standings.awayRecord.display": ["Team win-loss record in away games.", "38-27"],
     "team.standings.streak": ["Current winning or losing streak.", "W3"],
     "team.standings.last10.wins": ["Wins in the team's last 10 games.", "7"],
     "team.standings.last10.losses": ["Losses in the team's last 10 games.", "3"],
@@ -349,7 +401,11 @@ function fieldCatalogMetadata(entry) {
     "stats.losses": ["Pitcher's season losses.", "7"],
     "stats.record": ["Pitcher's season win-loss record.", "14-7"],
     "stats.era": ["Earned Run Average: earned runs allowed per nine innings.", "3.11"],
-    "stats.whip": ["WHIP: walks plus hits allowed per inning pitched.", "1.04"]
+    "stats.whip": ["WHIP: walks plus hits allowed per inning pitched.", "1.04"],
+    "stats.gamesPitched": ["Season games pitched.", "29"],
+    "stats.inningsPitched": ["Season innings pitched.", "168.2"],
+    "stats.strikeouts": ["Season strikeouts recorded by the pitcher.", "171"],
+    "stats.walks": ["Season walks allowed by the pitcher.", "39"]
   };
   if (sideId.startsWith("startingPitcher.") && starter[starterId]) return metadataPair(starter[starterId]);
 
@@ -369,7 +425,12 @@ function fieldCatalogMetadata(entry) {
         "stats.whip": ["WHIP: walks plus hits allowed per inning pitched.", "0.95"],
         "stats.gamesStarted": ["Season games started by the pitcher.", "0"],
         "stats.wins": ["Pitcher's season wins.", "4"],
-        "stats.losses": ["Pitcher's season losses.", "2"]
+        "stats.losses": ["Pitcher's season losses.", "2"],
+        "stats.inningsPitched": ["Season innings pitched.", "54.1"],
+        "stats.strikeouts": ["Season strikeouts recorded by the pitcher.", "61"],
+        "stats.walks": ["Season walks allowed by the pitcher.", "18"],
+        "stats.saves": ["Season saves recorded by the pitcher.", "24"],
+        "stats.holds": ["Season holds recorded by the pitcher.", "7"]
       };
       if (bullpen[leaf]) return metadataPair(bullpen[leaf]);
     } else {
@@ -463,20 +524,20 @@ function startingPitcherFields(side, label) {
     standard(field(`${root}.player.number`, `${label} Starting Pitcher — Jersey #`, category, "text", "atomic", `${root}.player.number`, ["gamePack"])),
     standard(field(`${root}.player.throws`, `${label} Starting Pitcher — Throws`, category, "text", "atomic", `${root}.player.throws`, ["gamePack"])),
     compatibility(field(`${root}.stats.gamesPlayed`, `${label} Starting Pitcher — Games`, category, "integer", "atomic", `${root}.stats.gamesPlayed`, ["gamePack"])),
-    compatibility(field(`${root}.stats.gamesPitched`, `${label} Starting Pitcher — Games Pitched`, category, "integer", "atomic", `${root}.stats.gamesPitched`, ["gamePack"])),
+    custom(field(`${root}.stats.gamesPitched`, `${label} Starting Pitcher — Games Pitched`, category, "integer", "atomic", `${root}.stats.gamesPitched`, ["gamePack"])),
     standard(field(`${root}.stats.gamesStarted`, `${label} Starting Pitcher — Games Started`, category, "integer", "atomic", `${root}.stats.gamesStarted`, ["gamePack"])),
     custom(field(`${root}.stats.wins`, `${label} Starting Pitcher — Wins`, category, "integer", "atomic", `${root}.stats.wins`, ["gamePack"])),
     custom(field(`${root}.stats.losses`, `${label} Starting Pitcher — Losses`, category, "integer", "atomic", `${root}.stats.losses`, ["gamePack"])),
     standard(composite(`${root}.stats.record`, `${label} Starting Pitcher — W-L`, category, "record", [`${root}.stats.wins`, `${root}.stats.losses`], ["gamePack"])),
     standard(field(`${root}.stats.era`, `${label} Starting Pitcher — ERA`, category, "decimal", "atomic", `${root}.stats.era`, ["gamePack"], { precision: 2 })),
     custom(field(`${root}.stats.whip`, `${label} Starting Pitcher — WHIP`, category, "decimal", "atomic", `${root}.stats.whip`, ["gamePack"], { precision: 2 })),
-    compatibility(field(`${root}.stats.inningsPitched`, `${label} Starting Pitcher — IP`, category, "text", "atomic", `${root}.stats.inningsPitched`, ["gamePack"])),
+    custom(field(`${root}.stats.inningsPitched`, `${label} Starting Pitcher — IP`, category, "text", "atomic", `${root}.stats.inningsPitched`, ["gamePack"])),
     compatibility(field(`${root}.stats.hits`, `${label} Starting Pitcher — Hits`, category, "integer", "atomic", `${root}.stats.hits`, ["gamePack"])),
     compatibility(field(`${root}.stats.runs`, `${label} Starting Pitcher — Runs`, category, "integer", "atomic", `${root}.stats.runs`, ["gamePack"])),
     compatibility(field(`${root}.stats.earnedRuns`, `${label} Starting Pitcher — Earned Runs`, category, "integer", "atomic", `${root}.stats.earnedRuns`, ["gamePack"])),
     compatibility(field(`${root}.stats.homeRuns`, `${label} Starting Pitcher — Home Runs`, category, "integer", "atomic", `${root}.stats.homeRuns`, ["gamePack"])),
-    compatibility(field(`${root}.stats.walks`, `${label} Starting Pitcher — Walks`, category, "integer", "atomic", `${root}.stats.walks`, ["gamePack"])),
-    compatibility(field(`${root}.stats.strikeouts`, `${label} Starting Pitcher — Strikeouts`, category, "integer", "atomic", `${root}.stats.strikeouts`, ["gamePack"])),
+    custom(field(`${root}.stats.walks`, `${label} Starting Pitcher — Walks`, category, "integer", "atomic", `${root}.stats.walks`, ["gamePack"])),
+    custom(field(`${root}.stats.strikeouts`, `${label} Starting Pitcher — Strikeouts`, category, "integer", "atomic", `${root}.stats.strikeouts`, ["gamePack"])),
     compatibility(field(`${root}.stats.saves`, `${label} Starting Pitcher — Saves`, category, "integer", "atomic", `${root}.stats.saves`, ["gamePack"])),
     compatibility(field(`${root}.stats.saveOpportunities`, `${label} Starting Pitcher — Save Opportunities`, category, "integer", "atomic", `${root}.stats.saveOpportunities`, ["gamePack"])),
     compatibility(field(`${root}.stats.holds`, `${label} Starting Pitcher — Holds`, category, "integer", "atomic", `${root}.stats.holds`, ["gamePack"])),

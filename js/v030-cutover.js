@@ -4,18 +4,18 @@
  * three deterministic schema-v2 normalization stages.
  */
 
-import { assertValidNormalizedSnapshot } from "./v030-contract.js?v=050b0052";
-import { normalizeScheduleSnapshot } from "./v030-schedule-normalizer.js?v=050b0052";
-import { normalizeRosterPeopleStaffSnapshot } from "./v030-roster-people-normalizer.js?v=050b0052";
-import { normalizeContextOverlaySnapshot } from "./v030-context-overlay-normalizer.js?v=050b0052";
+import { assertValidNormalizedSnapshot } from "./v030-contract.js?v=100r002";
+import { normalizeScheduleSnapshot } from "./v030-schedule-normalizer.js?v=100r002";
+import { normalizeRosterPeopleStaffSnapshot } from "./v030-roster-people-normalizer.js?v=100r002";
+import { normalizeContextOverlaySnapshot } from "./v030-context-overlay-normalizer.js?v=100r002";
 
 export const V030_RUNTIME_MODE = "schema-v2";
 
 function phaseExecution(execution, phase) {
   const now = execution?.createdAtUtc ?? new Date().toISOString();
   return {
-    applicationVersion: execution?.applicationVersion ?? "0.3.0",
-    build: execution?.build ?? "005.2",
+    applicationVersion: execution?.applicationVersion ?? "1.0.0",
+    build: execution?.build ?? "002",
     createdAtUtc: now,
     retrievedAtUtc: execution?.retrievedAtUtc ?? now,
     requestedAtUtc: execution?.requestedAtUtc ?? null,

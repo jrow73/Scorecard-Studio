@@ -11,6 +11,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Scorecard Studio - browser-based pregame baseball scorecard preparation." />
+  <meta name="theme-color" content="#07121d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Scorecard Studio" />
+  <link rel="icon" href="./assets/icons/favicon.ico?v=100r002" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png?v=100r002" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16x16.png?v=100r002" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png?v=100r002" />
+  <link rel="manifest" href="./manifest.webmanifest?v=100r002" />
   <title>Scorecard Studio</title>
   <script>
     (() => {
@@ -28,7 +37,7 @@
       document.documentElement.style.colorScheme = theme;
     })();
   </script>
-  <link rel="stylesheet" href="./css/styles.css?v=050b0052" />
+  <link rel="stylesheet" href="./css/styles.css?v=100r002" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -47,6 +56,7 @@
         <button class="nav-item" id="nav-gameday" type="button"><span class="nav-icon" aria-hidden="true">⚾</span><span class="nav-label">Game Day</span></button>
         <button class="nav-item" id="nav-layouts" type="button"><span class="nav-icon" aria-hidden="true">▣</span><span class="nav-label">Layouts</span></button>
         <button class="nav-item" id="nav-settings" type="button"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-label">Settings</span></button>
+        <button class="nav-item" id="nav-help" type="button" aria-haspopup="dialog"><span class="nav-icon" aria-hidden="true">?</span><span class="nav-label">Help</span></button>
       </nav>
 
       <div class="app-header-status" aria-label="Application status">
@@ -75,6 +85,7 @@
             <p class="subtle" id="today-date">Loading date…</p>
             <span class="sr-only" id="lineup-status" role="status" aria-live="polite">Checking schedule…</span>
           </div>
+          <button class="context-help-button" type="button" data-help-topic="games" aria-label="Help with finding and selecting games" title="Help with finding and selecting games">?</button>
         </div>
 
         <div class="home-browser-controls" aria-label="Game browser">
@@ -134,10 +145,23 @@
           <div class="home-selected-actions">
             <button class="secondary-button" id="open-selected-gameday-btn" type="button">Open Game Day</button>
             <div class="live-pdf-actions" aria-label="Scorecard generation">
+              <button class="context-help-button" type="button" data-help-topic="generate" aria-label="Help with scorecard generation" title="Help with scorecard generation">?</button>
+              <fieldset class="live-pdf-stat-scope-switch" id="live-pdf-stat-scope" hidden>
+                <legend>PDF Stats</legend>
+                <div>
+                  <label><input type="radio" name="live-pdf-stat-scope" value="regularSeason" /><span>Regular Season</span></label>
+                  <label><input type="radio" name="live-pdf-stat-scope" value="postseason" /><span>Postseason</span></label>
+                  <label><input type="radio" name="live-pdf-stat-scope" value="firstHalf" /><span>First Half</span></label>
+                  <label><input type="radio" name="live-pdf-stat-scope" value="secondHalf" /><span>Second Half</span></label>
+                </div>
+              </fieldset>
               <label for="live-pdf-layout-select">Layout
                 <select id="live-pdf-layout-select"></select>
               </label>
-              <button class="primary-button" id="live-pdf-generate-btn" type="button">Generate Scorecard</button>
+              <span class="disabled-control-explanation" id="live-pdf-generate-control" tabindex="-1">
+                <button class="primary-button" id="live-pdf-generate-btn" type="button">Generate Scorecard</button>
+                <span class="disabled-control-tooltip" id="live-pdf-disabled-reason" role="tooltip"></span>
+              </span>
             </div>
           </div>
           <div id="live-pdf-message" class="designer-live-status live-pdf-message" role="status" aria-live="polite"></div>
@@ -153,7 +177,7 @@
           <section class="card settings-card" aria-labelledby="favorite-heading">
           <p class="section-label">Startup Schedule</p>
           <h3 id="favorite-heading">Favorite Team</h3>
-          <p class="subtle">Choose the competition level first, then select a team. Home will use this competition when loading today's schedule.</p>
+          <p class="subtle">Home will use this team when loading today's schedule.</p>
           <form class="favorite-form settings-favorite-form" id="favorite-team-form">
             <label for="favorite-level-select">Level
               <select id="favorite-level-select" name="favoriteLevel">
@@ -200,8 +224,7 @@
         </div>
 
         <section class="card settings-card backup-settings-card" aria-labelledby="backup-heading">
-          <p class="section-label">Portable App Data</p>
-          <h3 id="backup-heading">Backup &amp; Restore</h3>
+          <div class="help-heading-row"><div><p class="section-label">Portable App Data</p><h3 id="backup-heading">Backup &amp; Restore</h3></div><button class="context-help-button" type="button" data-help-topic="data" aria-label="Help with backups and restore" title="Help with backups and restore">?</button></div>
           <p class="subtle backup-intro">Download a portable copy of your settings and layouts, or safely check and restore a backup from another browser. Game data and temporary caches are not included.</p>
 
           <div class="backup-workflow-grid">
@@ -230,7 +253,6 @@
                 <span class="backup-step" aria-hidden="true">2</span>
                 <div><p class="section-label">Bring Data In</p><h4 id="backup-restore-heading">Restore a Backup</h4></div>
               </div>
-              <p class="subtle">Use one guided window to choose, check, review, and restore a Scorecard Studio backup. Nothing is written until the final confirmation.</p>
               <button class="secondary-button backup-open-restore-button" id="backup-open-restore-btn" type="button">Import Backup…</button>
               <ol class="backup-restore-steps" aria-label="Restore steps">
                 <li><strong>Choose</strong><span>Select a Scorecard Studio JSON backup.</span></li>
@@ -240,6 +262,16 @@
             </section>
           </div>
           <div class="backup-status backup-export-status" id="backup-export-status" role="status" aria-live="polite" aria-atomic="true"></div>
+        </section>
+
+        <section class="card settings-card local-data-reset-card" aria-labelledby="local-data-reset-heading">
+          <div class="help-heading-row"><div><p class="section-label">Local App Data</p><h3 id="local-data-reset-heading">Reset Scorecard Studio</h3></div><button class="context-help-button" type="button" data-help-topic="data" aria-label="Help with local app data" title="Help with local app data">?</button></div>
+          <p class="subtle">Permanently remove saved layouts, uploaded PDF templates, settings, and cached game data from this browser. Downloaded backups and generated PDFs are not affected.</p>
+          <div class="local-data-reset-actions">
+            <button class="secondary-button" id="local-data-backup-btn" type="button">Download Backup First</button>
+            <button class="danger-button" id="local-data-reset-open-btn" type="button">Reset Local Data…</button>
+          </div>
+          <div class="backup-status local-data-reset-card-status" id="local-data-reset-card-status" role="status" aria-live="polite" aria-atomic="true"></div>
         </section>
       </section>
 
@@ -253,6 +285,7 @@
 
         <div id="gameday-selected-workspace" hidden>
           <div class="gameday-toolbar">
+            <button class="context-help-button" type="button" data-help-topic="game-day" aria-label="Help with Game Day" title="Help with Game Day">?</button>
             <fieldset class="gameday-detail-switch" id="gameday-detail-level">
               <legend>Detail level</legend>
               <label><input type="radio" name="gameday-detail" value="compact" /><span>Compact</span></label>
@@ -260,6 +293,13 @@
               <label><input type="radio" name="gameday-detail" value="advanced" /><span>Advanced</span></label>
             </fieldset>
             <span class="pill neutral" id="gameday-season-context">Season unavailable</span>
+            <div class="gameday-cutoff-disclosure" id="gameday-cutoff-disclosure" hidden>
+              <button class="secondary-button compact-button gameday-cutoff-button" id="gameday-cutoff-button" type="button" aria-describedby="gameday-cutoff-tooltip" aria-expanded="false">ⓘ Game 2 data</button>
+              <div class="gameday-cutoff-tooltip" id="gameday-cutoff-tooltip" role="tooltip">
+                <strong id="gameday-cutoff-heading">Game 2 pregame cutoff</strong>
+                <span id="gameday-cutoff-description"></span>
+              </div>
+            </div>
             <button class="secondary-button compact-button" id="refresh-gameday-btn" type="button">Refresh</button>
           </div>
           <p class="sr-only" id="gameday-detail-description">Traditional pregame reference.</p>
@@ -329,11 +369,16 @@
             </div>
             <div class="layout-library-header-actions">
               <span class="pill neutral" id="layout-count">0 layouts</span>
+              <button class="secondary-button" id="install-starter-layout-header-btn" type="button" hidden>Install Starter Layout</button>
               <button class="primary-button" id="open-create-layout-btn" type="button">Create Layout</button>
             </div>
           </div>
+          <section class="starter-layout-empty" id="starter-layout-empty" aria-labelledby="starter-layout-empty-heading" hidden>
+            <div><p class="section-label">Ready-to-use example</p><h4 id="starter-layout-empty-heading">Start with a complete scorecard layout</h4><p>Install the Scorecard Studio Starter Layout to generate a scorecard immediately or explore a finished example in the Designer.</p></div>
+            <button class="primary-button" id="install-starter-layout-empty-btn" type="button">Install Starter Layout</button>
+          </section>
           <div class="layout-list" id="layout-list"></div>
-          <div class="message-panel layout-library-message" id="layout-message" role="status" aria-live="polite">Loading saved layouts…</div>
+          <div class="designer-live-status layout-library-message" id="layout-message" role="status" aria-live="polite">Loading saved layouts…</div>
           <span class="sr-only" id="layout-storage-status" role="status" aria-live="polite">Loading layouts…</span>
         </section>
 
@@ -341,37 +386,27 @@
           <div class="card-header-row">
             <div>
               <p class="section-label">New PDF Template</p>
-              <h3 id="layout-create-heading">Create a Layout</h3>
-              <p class="subtle">Name the layout, choose its starting field palette, and attach the scorecard PDF.</p>
+              <div class="help-heading-inline"><h3 id="layout-create-heading">Create a Layout</h3><button class="context-help-button" type="button" data-help-topic="layouts" aria-label="Help with creating layouts" title="Help with creating layouts">?</button></div>
+              <p class="subtle">Name the layout and attach the scorecard PDF. You can customize its fields later in Layout Settings.</p>
             </div>
             <button class="secondary-button" id="close-create-layout-btn" type="button">Back to Library</button>
           </div>
           <div class="layout-form-grid">
             <label>Layout name
-              <input id="layout-name-input" type="text" maxlength="80" placeholder="Custom 11x17 B&W" />
+              <input id="layout-name-input" type="text" maxlength="80" placeholder="Give your layout a name" />
             </label>
             <label>Description
               <input id="layout-description-input" type="text" maxlength="240" placeholder="Optional description" />
             </label>
           </div>
 
-          <fieldset class="layout-field-mode-create" id="layout-field-mode-create">
-            <legend>Field Palette</legend>
-            <label class="layout-choice-card"><input type="radio" name="layout-field-mode" value="standard" checked /><span><strong>Standard Fields</strong><small>A focused baseball scorecard palette using the recommended core fields.</small></span></label>
-            <label class="layout-choice-card"><input type="radio" name="layout-field-mode" value="custom" /><span><strong>Custom Fields</strong><small>Start with the Standard fields selected, then choose exactly which additional fields appear.</small></span></label>
-          </fieldset>
-          <div class="layout-create-custom-fields" id="layout-create-custom-fields" hidden>
-            <label class="layout-custom-search">Choose Custom Fields<input id="layout-create-field-search" type="search" placeholder="Search fields, categories, or examples…" /></label>
-            <div class="layout-custom-field-list compact" id="layout-create-field-list"></div>
-          </div>
-
           <div class="layout-upload-row">
             <label class="file-button" for="layout-pdf-input">Choose PDF</label>
             <input id="layout-pdf-input" type="file" accept="application/pdf,.pdf" />
             <span class="pdf-file-summary" id="layout-pdf-summary">No PDF selected.</span>
-            <button class="primary-button" id="create-layout-btn" type="button">Create Layout</button>
+            <button class="primary-button" id="create-layout-btn" type="button" disabled>Create Layout</button>
           </div>
-          <div class="message-panel" id="layout-create-message" role="status" aria-live="polite">Nothing is saved until you choose Create Layout.</div>
+          <div class="designer-live-status" id="layout-create-message" role="status" aria-live="polite"></div>
         </section>
       </section>
 
@@ -384,6 +419,7 @@
             </div>
             <div class="designer-header-actions">
               <span class="designer-generate-hint" id="designer-generate-hint" role="status"></span>
+              <button class="secondary-button designer-toolbar-icon" id="designer-help-btn" type="button" data-help-topic="designer" aria-label="Designer Help" title="Designer Help">?</button>
               <button class="secondary-button" id="designer-generate-btn" type="button">Generate Test PDF</button>
               <button class="secondary-button" id="designer-back-btn" type="button">Close Layout Designer</button>
             </div>
@@ -420,6 +456,7 @@
                 <strong id="designer-page-label">Page 1 of 1</strong>
                 <button class="secondary-button designer-toolbar-icon" id="designer-next-btn" type="button" aria-label="Next PDF page" title="Next PDF page">→</button>
                 <span class="designer-toolbar-actions" aria-label="Designer actions">
+                  <button class="secondary-button compact-button designer-multi-select-toggle" id="designer-multi-select-toggle" type="button" aria-pressed="false" aria-controls="designer-stage" title="Select multiple placed items">Select multiple</button>
                   <button class="secondary-button designer-toolbar-icon" id="designer-undo-btn" type="button" disabled title="Undo (Ctrl/Cmd+Z)" aria-label="Undo">↶</button>
                   <button class="secondary-button designer-toolbar-icon" id="designer-redo-btn" type="button" disabled title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" aria-label="Redo">↷</button>
                   <button class="secondary-button designer-toolbar-icon" id="designer-copy-btn" type="button" disabled title="Copy (Ctrl/Cmd+C)" aria-label="Copy">⧉</button>
@@ -633,6 +670,14 @@
                   </select>
                   <small id="designer-pitcher-group-note" class="subtle">Stored on this repeated layout only.</small>
                 </label>
+                <label id="designer-pitcher-hand-filter-wrap" for="designer-pitcher-hand-filter" hidden>Filter
+                  <select id="designer-pitcher-hand-filter">
+                    <option value="all">None</option>
+                    <option value="left">LHP</option>
+                    <option value="right">RHP</option>
+                  </select>
+                  <small class="subtle">Stored on this repeated layout only.</small>
+                </label>
                 <label for="designer-block-arrangement">Arrangement
                   <select id="designer-block-arrangement">
                     <option value="vertical">Vertical list</option>
@@ -766,7 +811,7 @@
   <dialog id="layout-formatting-dialog" class="formatting-dialog layout-settings-dialog" aria-labelledby="layout-formatting-dialog-title">
     <form class="formatting-dialog-card layout-settings-card layout-settings-shell">
       <div class="layout-settings-shell-header">
-        <div class="layout-settings-shell-heading"><p class="section-label">Layout Settings</p><h3 id="layout-formatting-dialog-title" tabindex="-1">Layout Settings</h3><p class="subtle" id="layout-settings-dialog-description">Review this layout, then choose what to change.</p></div>
+        <div class="layout-settings-shell-heading"><p class="section-label">Layout Settings</p><div class="help-heading-inline"><h3 id="layout-formatting-dialog-title" tabindex="-1">Layout Settings</h3><button class="context-help-button" type="button" data-help-topic="layout-settings" aria-label="Help with Layout Settings and fields" title="Help with Layout Settings and fields">?</button></div><p class="subtle" id="layout-settings-dialog-description">Review this layout, then choose what to change.</p></div>
         <button class="icon-button layout-settings-shell-close" id="layout-settings-close" type="button" aria-label="Close Layout Settings" title="Close">×</button>
       </div>
       <div class="layout-settings-shell-body">
@@ -803,7 +848,7 @@
 
         <section id="layout-details-dialog" class="layout-settings-internal-view" hidden>
         <div class="layout-details-grid">
-          <label>Layout Name<input id="layout-settings-name" type="text" /></label>
+          <label>Layout Name<input id="layout-settings-name" type="text" maxlength="80" /></label>
           <label class="layout-details-description">Description<textarea id="layout-settings-description" rows="3"></textarea></label>
         </div>
         <div class="layout-pdf-replace-row"><div><strong>Scorecard PDF</strong><small id="layout-settings-pdf-summary"></small></div><label class="secondary-button compact-button">Replace PDF<input id="layout-settings-pdf-input" type="file" accept="application/pdf,.pdf" hidden /></label></div>
@@ -848,6 +893,194 @@
       <h3 id="layout-custom-discard-dialog-title">Discard Unsaved Changes?</h3>
       <p id="layout-settings-discard-message">Closing now will discard your unsaved changes.</p>
       <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="secondary-button" value="cancel">Cancel</button><button class="danger-button" id="layout-custom-discard-confirm" type="button">Discard Changes</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="lineup-warning-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog" aria-labelledby="lineup-warning-dialog-title">
+    <form method="dialog" class="formatting-dialog-card compact-message-card">
+      <p class="section-label">Generate Scorecard</p>
+      <h3 id="lineup-warning-dialog-title">Lineups Are Not Complete</h3>
+      <p id="lineup-warning-message"></p>
+      <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="secondary-button" value="cancel" autofocus>Cancel</button><button class="primary-button" value="proceed">Generate Anyway</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="pdf-stat-scope-warning-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog" aria-labelledby="pdf-stat-scope-warning-dialog-title">
+    <form method="dialog" class="formatting-dialog-card compact-message-card">
+      <p class="section-label">Generate Scorecard</p>
+      <h3 id="pdf-stat-scope-warning-dialog-title">Selected Statistics Are Unavailable</h3>
+      <p id="pdf-stat-scope-warning-message"></p>
+      <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="secondary-button" value="cancel" autofocus>Cancel</button><button class="primary-button" value="proceed">Generate Anyway</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="help-dialog" class="formatting-dialog help-dialog dark-message-dialog" aria-labelledby="help-dialog-title">
+    <div class="formatting-dialog-card help-dialog-card">
+      <header class="help-dialog-header">
+        <div><p class="section-label">Reference Guide</p><h3 id="help-dialog-title" tabindex="-1">Scorecard Studio Help</h3><p class="subtle">Choose a topic or read straight through.</p></div>
+        <div class="help-dialog-header-actions">
+          <button class="secondary-button" id="help-whats-new-btn" type="button">What’s New</button>
+          <button class="icon-button" id="help-close-btn" type="button" aria-label="Close Help" title="Close Help">×</button>
+        </div>
+      </header>
+      <label class="help-topic-picker" for="help-topic-select">Jump to a topic
+        <select id="help-topic-select">
+          <option value="getting-started">Getting Started</option>
+          <option value="games">Find and Select a Game</option>
+          <option value="game-day">Use Game Day</option>
+          <option value="layouts">Create and Manage Layouts</option>
+          <option value="designer">Use the Designer</option>
+          <option value="layout-settings">Layout Settings</option>
+          <option value="generate">Generate a Scorecard</option>
+          <option value="data">Settings, Backups, and Local Data</option>
+          <option value="troubleshooting">Troubleshooting and Limits</option>
+        </select>
+      </label>
+      <div class="help-dialog-layout">
+        <nav class="help-toc" id="help-toc" aria-label="Help topics">
+          <button type="button" data-help-target="getting-started">Getting Started</button>
+          <button type="button" data-help-target="games">Find and Select a Game</button>
+          <button type="button" data-help-target="game-day">Use Game Day</button>
+          <button type="button" data-help-target="layouts">Create and Manage Layouts</button>
+          <button type="button" data-help-target="designer">Use the Designer</button>
+          <button type="button" data-help-target="layout-settings">Layout Settings</button>
+          <button type="button" data-help-target="generate">Generate a Scorecard</button>
+          <button type="button" data-help-target="data">Settings, Backups, and Local Data</button>
+          <button type="button" data-help-target="troubleshooting">Troubleshooting and Limits</button>
+        </nav>
+        <article class="help-article" id="help-article">
+          <section class="help-topic" id="help-getting-started" data-help-section="getting-started">
+            <p class="section-label">Getting Started</p>
+            <h4 tabindex="-1">Your scorecard. Game ready.</h4>
+            <p>Scorecard Studio fills your own blank baseball scorecard PDF with game-day information. Choose a game, create a reusable layout, place the fields you want, and generate a printable scorecard.</p>
+            <div class="help-callout"><strong>Your work stays in this browser.</strong><p>No account is required. Layouts and uploaded PDF templates are stored locally, while schedules, lineups, statistics, and other baseball data are requested from the MLB Stats API.</p></div>
+            <p>Because there is no Scorecard Studio cloud sync, download a complete backup before clearing your browser data or importing to another device.</p>
+            <button class="primary-button" id="help-start-tour-btn" type="button">Start the Highlights Tour</button>
+          </section>
+
+          <section class="help-topic" id="help-games" data-help-section="games">
+            <p class="section-label">Home</p><h4 tabindex="-1">Find and Select a Game</h4>
+            <p>Home loads the current schedule for your saved favorite team. Change the date or competition level to browse other games, and use Find a Game to filter the day's schedule.</p>
+            <ul><li><strong>Refresh Schedule</strong> requests the latest schedule details, including newly posted lineups and probable pitchers.</li><li>Select a matchup before opening Game Day or generating a scorecard.</li><li>The readiness badge describes whether lineups are complete; it does not block research.</li></ul>
+          </section>
+
+          <section class="help-topic" id="help-game-day" data-help-section="game-day">
+            <p class="section-label">Research Companion</p><h4 tabindex="-1">Use Game Day</h4>
+            <p>Game Day is a spoiler-safe pregame research view for the selected matchup. Compact shows quick orientation, Standard adds traditional pregame detail, and Advanced adds deeper team, player, staff, and standings context.</p>
+            <ul><li><strong>Refresh</strong> retrieves the latest information for the selected game.</li><li>Postseason and verified MiLB split-season games may offer a team/player statistics switch.</li><li>For Game 2 of a doubleheader, the cutoff notice explains which earlier same-day results are included.</li></ul>
+          </section>
+
+          <section class="help-topic" id="help-layouts" data-help-section="layouts">
+            <p class="section-label">Layout Library</p><h4 tabindex="-1">Create and Manage Layouts</h4>
+            <p>A layout combines one blank scorecard PDF with saved field placements and formatting. New layouts begin with Standard Fields; use Layout Settings to add custom fields later.</p>
+            <ul><li>A layout needs a name and a valid PDF. Names are limited to 80 characters.</li><li>Layout Settings controls details, the Field Palette, default formatting, and replacement PDFs.</li><li>Duplicate a layout before experimenting with a substantially different design.</li><li>A replacement PDF must keep the same page count so existing placements remain meaningful.</li></ul>
+          </section>
+
+          <section class="help-topic" id="help-designer" data-help-section="designer">
+            <p class="section-label">Field Mapping</p><h4 tabindex="-1">Designer Overview</h4>
+            <p>The Designer lets you place game information onto your scorecard PDF. Select an item from the Field Palette on the left, configure it in the Inspector on the right, and place it on the page. After placement, you can adjust its position, formatting, and other settings at any time.</p>
+            <ul><li>All items in the Designer use fictitious teams, places, and player names. Actual MLB game information will be used when generating scorecards.</li><li>Use Text Templates to combine free text and data fields; use repeated blocks for lineups, benches, and pitching groups.</li><li>Drag and drop items to move them, or use keyboard arrows to nudge them slightly.</li><li>Mouse users can Ctrl/Cmd-click or lasso multiple items. Touch users can turn on Select multiple and draw a lasso.</li><li>Mouse users can use Ctrl/Cmd + mouse wheel to zoom in or out. Touch users can use the Zoom menu item on the toolbar.</li></ul>
+            <p><strong>Designer tips and tricks:</strong></p>
+            <ul><li>Use Layout Settings &gt; Field Palette to manage what MLB data you want printed on your scorecard. Add or remove data items to keep the Palette menu tidy.</li><li>Use Undo/Redo when making adjustments.</li><li>Use Copy/Paste to duplicate items. Copy a configured Away Lineup and paste it as a Home Lineup to quickly mirror the home and away sides of the scorecard.</li><li>Generate a Test PDF to verify the final appearance and placement of your fields. The generated PDF may differ slightly from the Designer preview and represents what an actual live-data scorecard will look like.</li></ul>
+          </section>
+
+          <section class="help-topic" id="help-layout-settings" data-help-section="layout-settings">
+            <p class="section-label">Field Mapping</p><h4 tabindex="-1">Layout Settings</h4>
+            <p>Layout Settings lets you manage each layout's PDF, available data fields, and default formatting.</p>
+            <ul><li><strong>Layout Details</strong> - control the name of the layout, its description, and its PDF file.</li><li><strong>Field Palette</strong> - choose which fields are available in the Designer palette. Over 200 MLB data fields are available, with more than 60 selected by default.</li><li><strong>Default Formatting Options</strong> - Lineups, Team Information, and Game Day Information can each have individual default formats, with optional conditional formatting for batter and pitcher handedness. Each item can also be formatted individually after placement.</li></ul>
+          </section>
+
+          <section class="help-topic" id="help-generate" data-help-section="generate">
+            <p class="section-label">Live PDF</p><h4 tabindex="-1">Generate a Scorecard</h4>
+            <p>After selecting a game, choose a saved layout and select Generate Scorecard. The PDF uses the current game identity, lineup, venue, officials, and other mapped data.</p>
+            <ul><li>If mapped lineup fields are incomplete, review the warning before choosing Cancel or Generate Anyway.</li><li>For supported postseason or MiLB split contexts, <strong>PDF Stats</strong> chooses the statistical period used by mapped team and player fields.</li><li>If a requested statistical source is unavailable, Generate Anyway leaves affected values blank instead of mixing periods.</li><li>Generated filenames use the game date, team abbreviations, and a safe version of the layout name.</li></ul>
+          </section>
+
+          <section class="help-topic" id="help-data" data-help-section="data">
+            <p class="section-label">Settings</p><h4 tabindex="-1">Settings, Backups, and Local Data</h4>
+            <p>Settings controls your favorite team and appearance. Backup &amp; Restore is the supported way to protect or move layouts and settings to other devices.</p>
+            <ul><li>A complete backup includes all app settings, layouts, and PDF templates. A single-layout backup includes only the chosen layout and its PDF.</li><li>Share individual layouts with others by downloading a single layout.</li><li>Import layouts others have shared with you by importing their backup.</li></ul>
+            <p><strong>Reset Local Data</strong> permanently deletes all layouts and settings on this browser. If you previously downloaded a complete or individual-layout backup, you can import it to restore the saved information.</p>
+          </section>
+
+          <section class="help-topic" id="help-troubleshooting" data-help-section="troubleshooting">
+            <p class="section-label">Reference</p><h4 tabindex="-1">Troubleshooting and Limits</h4>
+            <ul><li>If newly posted game information is missing, use Game Day Refresh or Refresh Schedule and try again.</li><li>Some values remain blank when the MLB Stats API has not returned them. Scorecard Studio avoids inventing unavailable data.</li><li>If layouts disappear after browser data is cleared, restore a previously downloaded backup.</li><li>Scorecard Studio does not provide cloud sync, user accounts, or live-score tracking.</li><li>Use a current desktop or iPad browser. If the interface becomes stale after an update, perform a normal browser reload.</li></ul>
+          </section>
+        </article>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="whats-new-dialog" class="formatting-dialog dark-message-dialog whats-new-dialog" aria-labelledby="whats-new-dialog-title" aria-describedby="whats-new-intro">
+    <div class="formatting-dialog-card whats-new-dialog-card">
+      <header class="whats-new-dialog-header">
+        <div><p class="section-label">Release Notes</p><h3 id="whats-new-dialog-title" tabindex="-1">What’s New</h3></div>
+        <button class="icon-button" id="whats-new-close-btn" type="button" aria-label="Close What’s New" title="Close">×</button>
+      </header>
+      <p class="subtle" id="whats-new-intro">Review the release history for Scorecard Studio.</p>
+      <div class="whats-new-entries" id="whats-new-entries"></div>
+      <div class="formatting-dialog-actions"><span class="dialog-spacer"></span><button class="primary-button" id="whats-new-done-btn" type="button">Close</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="onboarding-dialog" class="formatting-dialog dark-message-dialog onboarding-dialog" aria-labelledby="onboarding-dialog-title">
+    <div class="formatting-dialog-card onboarding-dialog-card">
+      <section id="onboarding-welcome-stage" class="onboarding-stage" aria-labelledby="onboarding-dialog-title">
+        <p class="section-label">Welcome to Scorecard Studio</p>
+        <h3 id="onboarding-dialog-title" tabindex="-1">Your scorecard. Game ready.</h3>
+        <p>Upload your favorite baseball scorecard and print it with game-day information already filled in. Scorecard Studio is a local-browser workspace. No account is required.</p>
+        <div class="onboarding-privacy-points">
+          <div><strong>Layouts stay in this browser</strong><span>Your layouts and uploaded PDF templates are not uploaded to a Scorecard Studio data service.</span></div>
+          <div><strong>Baseball data comes from MLB</strong><span>The app requests schedules, lineups, statistics, and other game information from the MLB Stats API.</span></div>
+          <div><strong>Backups are your portable copy</strong><span>Download a backup when you want to protect or move your layouts and settings.</span></div>
+        </div>
+        <p class="subtle onboarding-hosting-note">The normal site host still serves the application files needed to open Scorecard Studio.</p>
+        <div class="formatting-dialog-actions onboarding-dialog-actions">
+          <button class="secondary-button" id="onboarding-welcome-skip-btn" type="button">Skip Tour</button>
+          <span class="dialog-spacer"></span>
+          <button class="primary-button" id="onboarding-begin-btn" type="button">Show Me Around</button>
+        </div>
+      </section>
+
+      <section id="onboarding-tour-stage" class="onboarding-stage" aria-labelledby="onboarding-tour-title" hidden>
+        <p class="section-label" id="onboarding-step-eyebrow">Home</p>
+        <p class="onboarding-step-status" id="onboarding-step-status" role="status" aria-live="polite">Step 1 of 5</p>
+        <h3 id="onboarding-tour-title" tabindex="-1">Find a Game</h3>
+        <p id="onboarding-step-description"></p>
+        <ul class="onboarding-step-highlights" id="onboarding-step-highlights"></ul>
+        <div class="onboarding-progress" id="onboarding-progress" aria-hidden="true"></div>
+        <div class="formatting-dialog-actions onboarding-dialog-actions">
+          <button class="secondary-button" id="onboarding-tour-skip-btn" type="button">Skip</button>
+          <span class="dialog-spacer"></span>
+          <button class="secondary-button" id="onboarding-back-btn" type="button">Back</button>
+          <button class="primary-button" id="onboarding-next-btn" type="button">Next</button>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="local-data-reset-dialog" class="formatting-dialog compact-message-dialog dark-message-dialog local-data-reset-dialog" aria-labelledby="local-data-reset-dialog-title">
+    <form method="dialog" class="formatting-dialog-card compact-message-card local-data-reset-dialog-card">
+      <p class="section-label">Local App Data</p>
+      <h3 id="local-data-reset-dialog-title" tabindex="-1">Delete All Local App Data?</h3>
+      <p>This permanently removes Scorecard Studio data stored by this browser:</p>
+      <ul class="local-data-reset-scope">
+        <li>Saved layouts and uploaded PDF templates</li>
+        <li>Favorite team, appearance, and other app settings</li>
+        <li>Cached game snapshots and API results</li>
+      </ul>
+      <p class="subtle">This cannot be undone. Downloaded backups and generated PDFs remain on your device.</p>
+      <label class="local-data-reset-confirmation" for="local-data-reset-confirm-checkbox">
+        <input id="local-data-reset-confirm-checkbox" type="checkbox" />
+        <span>I understand that this permanently deletes the app's local data.</span>
+      </label>
+      <div class="backup-status local-data-reset-dialog-status" id="local-data-reset-dialog-status" role="status" aria-live="assertive" aria-atomic="true"></div>
+      <div class="formatting-dialog-actions">
+        <button class="secondary-button" id="local-data-reset-cancel-btn" value="cancel" autofocus>Cancel</button>
+        <span class="dialog-spacer"></span>
+        <button class="danger-button" id="local-data-reset-confirm-btn" type="button" disabled>Delete Everything</button>
+      </div>
     </form>
   </dialog>
 
@@ -904,6 +1137,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=050b0052"></script>
+  <script type="module" src="./js/app.js?v=100r002"></script>
 </body>
 </html>

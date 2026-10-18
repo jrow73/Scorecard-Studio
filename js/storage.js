@@ -7,6 +7,7 @@
 const DB_NAME = "scorecard-studio";
 const DB_VERSION = 4;
 export const STORAGE_DATABASE_VERSION = DB_VERSION;
+export const APPLICATION_DATABASE_NAME = DB_NAME;
 const SETTINGS_STORE = "settings";
 const PDF_STORE = "pdfTemplates";
 const LAYOUT_STORE = "layouts";
@@ -23,6 +24,48 @@ export async function initializeStorage() {
     console.error("Unable to initialize browser storage:", error);
     throw new Error("Browser storage could not be initialized.");
   }
+}
+
+export async function deleteApplicationStorage(options = {}) {
+  const databaseFactory = options.indexedDBFactory ?? globalThis.indexedDB;
+  const localStorage = options.localStorage ?? globalThis.localStorage;
+  const localStorageKeys = [...new Set((options.localStorageKeys || []).map((key) => String(key || "").trim()).filter(Boolean))];
+  const onBlocked = typeof options.onBlocked === "function" ? options.onBlocked : () => {};
+
+  if (!databaseFactory?.deleteDatabase) throw new Error("Browser storage deletion is unavailable.");
+
+  try {
+    const database = await databasePromise;
+    database?.close();
+  } catch {}
+  databasePromise = null;
+
+  await new Promise((resolve, reject) => {
+    let request;
+    try { request = databaseFactory.deleteDatabase(DB_NAME); }
+    catch (error) { reject(error); return; }
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error ?? new Error("Scorecard Studio browser storage could not be deleted."));
+    request.onblocked = () => onBlocked();
+  });
+
+  const removedLocalStorageKeys = [];
+  const failedLocalStorageKeys = [];
+  for (const key of localStorageKeys) {
+    try {
+      localStorage?.removeItem?.(key);
+      removedLocalStorageKeys.push(key);
+    } catch {
+      failedLocalStorageKeys.push(key);
+    }
+  }
+
+  return Object.freeze({
+    databaseName: DB_NAME,
+    databaseDeleted: true,
+    removedLocalStorageKeys: Object.freeze(removedLocalStorageKeys),
+    failedLocalStorageKeys: Object.freeze(failedLocalStorageKeys)
+  });
 }
 
 export async function getSetting(key, fallbackValue = null) {
@@ -259,7 +302,11 @@ function openDatabase() {
 
     request.onsuccess = () => {
       const database = request.result;
-      database.onversionchange = () => { database.close(); databasePromise = null; };
+      database.onversionchange = () => {
+        database.close();
+        databasePromise = null;
+        try { globalThis.dispatchEvent?.(new CustomEvent("scorecardstudio:storage-invalidated")); } catch {}
+      };
       resolve(database);
     };
     request.onerror = () => { databasePromise = null; reject(request.error ?? new Error("IndexedDB failed to open.")); };

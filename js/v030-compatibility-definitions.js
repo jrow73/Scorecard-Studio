@@ -17,8 +17,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
   "contractRevision": "0.3.0-draft.1",
   "sourceModel": {
     "schemaVersion": 1,
-    "fieldCount": 223,
-    "catalogCount": 171
+    "fieldCount": 245,
+    "catalogCount": 209
   },
   "targetModel": {
     "schemaVersion": 2
@@ -156,6 +156,143 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
         "rowPath": null,
         "dependencies": [],
         "projection": "renamed-path",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "game.series.description",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "game.series.description",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "game.series.description",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "game.series.gameNumber",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "game.series.gameNumber",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "game.series.gameNumber",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "game.series.gamesInSeries",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "game.series.gamesInSeries",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "game.series.gamesInSeries",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "game.series.format",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "composite",
+        "cardinality": "single",
+        "path": null,
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "derived",
+        "path": null,
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [
+          "game.series.gamesInSeries"
+        ],
+        "projection": "series-format-v1",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "game.series.status",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "game.series.status",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "game.series.status",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
         "capabilityRequirements": [
           "corePregame"
         ],
@@ -345,6 +482,35 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
         "rowPath": null,
         "dependencies": [],
         "projection": "renamed-path",
+        "capabilityRequirements": [
+          "extendedVenue"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "game.venue.dimensions.summary",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "composite",
+        "cardinality": "single",
+        "path": null,
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "derived",
+        "path": null,
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [
+          "game.venue.fieldInfo.dimensions"
+        ],
+        "projection": "venue-dimensions-summary-v1",
         "capabilityRequirements": [
           "extendedVenue"
         ],
@@ -772,7 +938,7 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
       "fieldId": "away.team.record.gamesPlayed",
       "v1": {
         "catalog": true,
-        "visibilityTier": "standard",
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "away.team.record.gamesPlayed",
@@ -1035,6 +1201,195 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
         "rowPath": null,
         "dependencies": [],
         "projection": "games-back-raw",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.leagueGamesBack",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.leagueGamesBack",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "projected",
+        "path": "away.team.standings.leagueGamesBack.raw",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": "games-back-raw",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.wildCardGamesBack",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.wildCardGamesBack",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "projected",
+        "path": "away.team.standings.wildCardGamesBack.raw",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": "games-back-raw",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.runsScored",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.runsScored",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "away.team.standings.runsScored",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.runsAllowed",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.runsAllowed",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "away.team.standings.runsAllowed",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.runDifferential",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.runDifferential",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "away.team.standings.runDifferential",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.homeRecord.display",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.homeRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "away.team.standings.homeRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.team.standings.awayRecord.display",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "away.team.standings.awayRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "away.team.standings.awayRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
         "capabilityRequirements": [
           "corePregame"
         ],
@@ -1317,8 +1672,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.startingPitcher.stats.gamesPitched",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "away.startingPitcher.stats.gamesPitched",
@@ -1509,8 +1864,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.startingPitcher.stats.inningsPitched",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "away.startingPitcher.stats.inningsPitched",
@@ -1644,8 +1999,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.startingPitcher.stats.walks",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "away.startingPitcher.stats.walks",
@@ -1657,7 +2012,7 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
       },
       "v2": {
         "disposition": "projected",
-        "path": "away.startingPitcher.stats.pitching.totals.walks",
+        "path": "away.startingPitcher.stats.pitching.totals.baseOnBalls",
         "collection": null,
         "rowPath": null,
         "dependencies": [],
@@ -1671,8 +2026,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.startingPitcher.stats.strikeouts",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "away.startingPitcher.stats.strikeouts",
@@ -1684,7 +2039,7 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
       },
       "v2": {
         "disposition": "projected",
-        "path": "away.startingPitcher.stats.pitching.totals.strikeouts",
+        "path": "away.startingPitcher.stats.pitching.totals.strikeOuts",
         "collection": null,
         "rowPath": null,
         "dependencies": [],
@@ -2216,7 +2571,7 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
       "fieldId": "home.team.record.gamesPlayed",
       "v1": {
         "catalog": true,
-        "visibilityTier": "standard",
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "home.team.record.gamesPlayed",
@@ -2479,6 +2834,195 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
         "rowPath": null,
         "dependencies": [],
         "projection": "games-back-raw",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.leagueGamesBack",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.leagueGamesBack",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "projected",
+        "path": "home.team.standings.leagueGamesBack.raw",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": "games-back-raw",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.wildCardGamesBack",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.wildCardGamesBack",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "projected",
+        "path": "home.team.standings.wildCardGamesBack.raw",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": "games-back-raw",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.runsScored",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.runsScored",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "home.team.standings.runsScored",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.runsAllowed",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.runsAllowed",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "home.team.standings.runsAllowed",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.runDifferential",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.runDifferential",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "home.team.standings.runDifferential",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.homeRecord.display",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.homeRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "home.team.standings.homeRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.team.standings.awayRecord.display",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "single",
+        "path": "home.team.standings.awayRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "sourceRequirements": [
+          "standings"
+        ]
+      },
+      "v2": {
+        "disposition": "direct",
+        "path": "home.team.standings.awayRecord.display",
+        "collection": null,
+        "rowPath": null,
+        "dependencies": [],
+        "projection": null,
         "capabilityRequirements": [
           "corePregame"
         ],
@@ -2761,8 +3305,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.startingPitcher.stats.gamesPitched",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "home.startingPitcher.stats.gamesPitched",
@@ -2953,8 +3497,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.startingPitcher.stats.inningsPitched",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "home.startingPitcher.stats.inningsPitched",
@@ -3088,8 +3632,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.startingPitcher.stats.walks",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "home.startingPitcher.stats.walks",
@@ -3101,7 +3645,7 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
       },
       "v2": {
         "disposition": "projected",
-        "path": "home.startingPitcher.stats.pitching.totals.walks",
+        "path": "home.startingPitcher.stats.pitching.totals.baseOnBalls",
         "collection": null,
         "rowPath": null,
         "dependencies": [],
@@ -3115,8 +3659,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.startingPitcher.stats.strikeouts",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "single",
         "path": "home.startingPitcher.stats.strikeouts",
@@ -3128,7 +3672,7 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
       },
       "v2": {
         "disposition": "projected",
-        "path": "home.startingPitcher.stats.pitching.totals.strikeouts",
+        "path": "home.startingPitcher.stats.pitching.totals.strikeOuts",
         "collection": null,
         "rowPath": null,
         "dependencies": [],
@@ -5648,8 +6192,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.bullpen[].stats.inningsPitched",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -5678,8 +6222,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.bullpen[].stats.strikeouts",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -5693,7 +6237,37 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
         "disposition": "projected",
         "path": null,
         "collection": null,
-        "rowPath": "stats.pitching.totals.strikeouts",
+        "rowPath": "stats.pitching.totals.strikeOuts",
+        "dependencies": [
+          "away.bullpen",
+          "away.additionalStarters"
+        ],
+        "projection": "legacy-bullpen-pitching-stat-v1",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "away.bullpen[].stats.walks",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "repeated",
+        "path": null,
+        "collection": "away.bullpen",
+        "rowPath": "stats.walks",
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "projected",
+        "path": null,
+        "collection": null,
+        "rowPath": "stats.pitching.totals.baseOnBalls",
         "dependencies": [
           "away.bullpen",
           "away.additionalStarters"
@@ -5708,8 +6282,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.bullpen[].stats.saves",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -5738,8 +6312,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "away.bullpen[].stats.holds",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -6040,8 +6614,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.bullpen[].stats.inningsPitched",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -6070,8 +6644,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.bullpen[].stats.strikeouts",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -6085,7 +6659,37 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
         "disposition": "projected",
         "path": null,
         "collection": null,
-        "rowPath": "stats.pitching.totals.strikeouts",
+        "rowPath": "stats.pitching.totals.strikeOuts",
+        "dependencies": [
+          "home.bullpen",
+          "home.additionalStarters"
+        ],
+        "projection": "legacy-bullpen-pitching-stat-v1",
+        "capabilityRequirements": [
+          "corePregame"
+        ],
+        "unavailableBehavior": "blank-with-availability-state"
+      }
+    },
+    {
+      "fieldId": "home.bullpen[].stats.walks",
+      "v1": {
+        "catalog": true,
+        "visibilityTier": "custom",
+        "kind": "atomic",
+        "cardinality": "repeated",
+        "path": null,
+        "collection": "home.bullpen",
+        "rowPath": "stats.walks",
+        "sourceRequirements": [
+          "gamePack"
+        ]
+      },
+      "v2": {
+        "disposition": "projected",
+        "path": null,
+        "collection": null,
+        "rowPath": "stats.pitching.totals.baseOnBalls",
         "dependencies": [
           "home.bullpen",
           "home.additionalStarters"
@@ -6100,8 +6704,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.bullpen[].stats.saves",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,
@@ -6130,8 +6734,8 @@ export const V030_COMPATIBILITY_DEFINITIONS = deepFreeze({
     {
       "fieldId": "home.bullpen[].stats.holds",
       "v1": {
-        "catalog": false,
-        "visibilityTier": "compatibility-only",
+        "catalog": true,
+        "visibilityTier": "custom",
         "kind": "atomic",
         "cardinality": "repeated",
         "path": null,

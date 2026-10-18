@@ -10,8 +10,8 @@ import {
   createLineageRecord,
   createNormalizedSnapshot,
   createSourceResult
-} from "./v030-contract.js?v=050b0052";
-import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=050b0052";
+} from "./v030-contract.js?v=100r002";
+import { buildSemanticRequestKey, materializeAdapterInput } from "./v030-adapters.js?v=100r002";
 
 const own = (value, key) => Object.prototype.hasOwnProperty.call(Object(value), key);
 
@@ -65,6 +65,14 @@ function normalizeDayNight(value) {
   const normalized = String(value ?? "").toLowerCase();
   if (normalized === "day" || normalized === "night") return normalized;
   return value == null ? null : "unknown";
+}
+
+function normalizeDayGameNumber(game) {
+  const gameNumber = integerOrNull(game?.gameNumber);
+  if (gameNumber === null) return null;
+  const doubleHeader = String(game?.doubleHeader ?? "").trim().toUpperCase();
+  if (gameNumber > 1 || (doubleHeader && doubleHeader !== "N")) return gameNumber;
+  return null;
 }
 
 function normalizeDates(game, canonicalStatus) {
@@ -142,6 +150,27 @@ function applyPregameSeriesRecordCutoff(game, canonicalStatus, away, home) {
   away.recordRolledBack = true;
   home.recordRolledBack = true;
   return true;
+}
+
+function isPostseasonGameType(gameType) {
+  return ["F", "D", "L", "W", "C", "P"].includes(String(gameType || "").toUpperCase());
+}
+
+function seriesStatus(gameType, away, home, gamesInSeries) {
+  if (!isPostseasonGameType(gameType)) return null;
+  const awayWins = numberOrNull(away?.value?.team?.record?.wins);
+  const awayLosses = numberOrNull(away?.value?.team?.record?.losses);
+  const homeWins = numberOrNull(home?.value?.team?.record?.wins);
+  const homeLosses = numberOrNull(home?.value?.team?.record?.losses);
+  if ([awayWins, awayLosses, homeWins, homeLosses].some((value) => value === null)) return null;
+  if (awayWins === homeWins) return `Series tied, ${awayWins}–${homeWins}`;
+  const awayLeads = awayWins > homeWins;
+  const leader = awayLeads ? away?.value?.team : home?.value?.team;
+  const leaderWins = awayLeads ? awayWins : homeWins;
+  const trailerWins = awayLeads ? homeWins : awayWins;
+  const winsNeeded = Number.isInteger(gamesInSeries) && gamesInSeries > 0 ? Math.floor(gamesInSeries / 2) + 1 : null;
+  const verb = winsNeeded && leaderWins >= winsNeeded ? "win" : "lead";
+  return `${leader?.clubName || leader?.name || "Leader"} ${verb} series, ${leaderWins}–${trailerWins}`;
 }
 
 function normalizeTeam(side, fallbackSport) {
@@ -391,8 +420,10 @@ export function normalizeScheduleSnapshot(payload, suppliedSelection, execution)
   const normalizedSeries = {
     description: stringOrNull(game.seriesDescription),
     gameNumber: integerOrNull(game.seriesGameNumber),
-    gamesInSeries: integerOrNull(game.gamesInSeries)
+    gamesInSeries: integerOrNull(game.gamesInSeries),
+    status: null
   };
+  normalizedSeries.status = seriesStatus(game.gameType, away, home, normalizedSeries.gamesInSeries);
   const normalizedGame = {
     status: {
       canonical: canonicalStatus,
@@ -403,12 +434,14 @@ export function normalizeScheduleSnapshot(payload, suppliedSelection, execution)
     },
     dates: normalizeDates(game, canonicalStatus),
     dayNight: normalizeDayNight(game.dayNight),
-    gameNumber: integerOrNull(game.gameNumber),
+    // MLB supplies gameNumber: 1 for ordinary single games. Expose the value
+    // only when it carries real within-day doubleheader meaning.
+    gameNumber: normalizeDayGameNumber(game),
     venue: normalizeVenue(game.venue),
     weather: normalizeWeather(game.weather),
     umpires: { crew: [] }
   };
-  if (Object.values(normalizedSeries).some((value) => value !== null)) normalizedGame.series = normalizedSeries;
+  if (isPostseasonGameType(game.gameType) && Object.values(normalizedSeries).some((value) => value !== null)) normalizedGame.series = normalizedSeries;
 
   const lineage = [
     lineageRecord({ id: "context", target: "/context", state: "available", sourceResult, sourcePath: sourceBase, transformations: ["select-schedule-view", "normalize-competition-segment"] }),

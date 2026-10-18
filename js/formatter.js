@@ -24,7 +24,8 @@ export function formatFieldValue(definition, resolution, model, format = {}) {
 
   switch (definition.valueType) {
     case "integer":
-      return Number.isFinite(Number(value)) ? String(Math.trunc(Number(value))) : String(value);
+      if (!Number.isFinite(Number(value))) return String(value);
+      return `${definition.defaultFormat?.signed && Number(value) > 0 ? "+" : ""}${Math.trunc(Number(value))}`;
     case "decimal":
       return formatDecimal(value, definition.defaultFormat?.precision);
     case "date":

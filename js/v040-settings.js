@@ -7,6 +7,15 @@ export const FAVORITE_COMPETITION_SETTING_KEY = "favoriteCompetition";
 export const LEGACY_FAVORITE_TEAM_SETTING_KEY = "favoriteTeam";
 export const APP_PREFERENCES_SETTING_KEY = "appPreferencesV1";
 export const APPEARANCE_STARTUP_STORAGE_KEY = "scorecardStudio.appearance";
+export const LOCAL_DATA_RESET_SIGNAL_STORAGE_KEY = "scorecardStudio.localDataReset";
+export const ONBOARDING_STORAGE_KEY = "scorecardStudio.onboarding";
+export const WHATS_NEW_STORAGE_KEY = "scorecardStudio.whatsNew";
+export const APP_OWNED_LOCAL_STORAGE_KEYS = Object.freeze([
+  APPEARANCE_STARTUP_STORAGE_KEY,
+  LOCAL_DATA_RESET_SIGNAL_STORAGE_KEY,
+  ONBOARDING_STORAGE_KEY,
+  WHATS_NEW_STORAGE_KEY
+]);
 
 export const SUPPORTED_COMPETITION_LEVELS = Object.freeze([
   Object.freeze({ levelKey: "mlb", sportId: 1, label: "MLB" }),

@@ -168,6 +168,7 @@ function sampleBullpen(names, throws) {
         whip: .95 + index / 100,
         inningsPitched: `${42 + index}.1`,
         strikeouts: 82 - index * 4,
+        walks: 18 + index,
         saves: index === 0 ? 31 : 0,
         holds: index === 0 ? 2 : 6 + index
       }
@@ -312,11 +313,24 @@ function scopedStats(totals) {
   return { scope: { ...SAMPLE_SCOPE, gameTypes: [...SAMPLE_SCOPE.gameTypes], aggregate: { ...SAMPLE_SCOPE.aggregate } }, totals: { ...totals } };
 }
 
+function canonicalPitchingTotals(totals) {
+  const result = { ...totals };
+  if (Object.hasOwn(result, "strikeouts")) {
+    result.strikeOuts = result.strikeouts;
+    delete result.strikeouts;
+  }
+  if (Object.hasOwn(result, "walks")) {
+    result.baseOnBalls = result.walks;
+    delete result.walks;
+  }
+  return result;
+}
+
 function v2Role(role, idOffset, group, roleLabel = null) {
   return {
     player: v2Person(role.player, idOffset),
     position: v2Position(role.position, roleLabel),
-    stats: group === "hitting" ? { hitting: scopedStats(role.stats) } : { pitching: scopedStats(role.stats) }
+    stats: group === "hitting" ? { hitting: scopedStats(role.stats) } : { pitching: scopedStats(canonicalPitchingTotals(role.stats)) }
   };
 }
 
@@ -332,7 +346,10 @@ function typedGamesBack(value) {
   return { raw, state: Number.isFinite(games) ? "behind" : "unknown", games: Number.isFinite(games) ? games : null };
 }
 
-function typedStandings(value) {
+function typedStandings(value, side) {
+  const performance = side === "away"
+    ? { runsScored: 683, runsAllowed: 506, home: [47, 25], away: [38, 27] }
+    : { runsScored: 641, runsAllowed: 572, home: [44, 29], away: [34, 34] };
   return {
     divisionRank: typedRank(value.divisionRank),
     leagueRank: typedRank(value.leagueRank),
@@ -340,6 +357,11 @@ function typedStandings(value) {
     divisionGamesBack: typedGamesBack(value.divisionGamesBack),
     leagueGamesBack: typedGamesBack(value.divisionGamesBack),
     wildCardGamesBack: typedGamesBack(value.wildCardRank === 0 ? "-" : "2.5"),
+    runsScored: performance.runsScored,
+    runsAllowed: performance.runsAllowed,
+    runDifferential: performance.runsScored - performance.runsAllowed,
+    homeRecord: { wins: performance.home[0], losses: performance.home[1], display: `${performance.home[0]}-${performance.home[1]}` },
+    awayRecord: { wins: performance.away[0], losses: performance.away[1], display: `${performance.away[0]}-${performance.away[1]}` },
     streak: value.streak,
     lastTen: { wins: value.last10.wins, losses: value.last10.losses },
     elimination: { raw: "-", state: "notEliminated", value: null },
@@ -382,7 +404,7 @@ function v2Side(legacy, side) {
       division: { id: divisionId, name: legacy.team.division.name },
       record: { ...legacy.team.record },
       gameNumber: legacy.team.gameNumber,
-      standings: typedStandings(legacy.team.standings),
+      standings: typedStandings(legacy.team.standings, side),
       logo: { url: null, brandScope: null }
     },
     manager: { state: "available", candidates: [{ person: manager, job: "Manager", title: "Manager", jobId: "MNGR" }], selected: manager },
@@ -478,6 +500,7 @@ function createV2DesignerSample(legacy) {
       status: { canonical: "pregame", raw: { abstractGameState: "Preview", codedGameState: "P", detailedState: "Pre-Game", statusCode: "P" }, reason: null, startTimeTBD: false, teamsTBD: false },
       dates: { scheduledStart: game.startTime, originalScheduledStart: game.startTime, officialDate: game.date, rescheduledStart: null, rescheduledDate: null, resumeStart: null, resumeDate: null },
       dayNight: "night", gameNumber: game.number,
+      series: { description: "NL Championship Series", gameNumber: 3, gamesInSeries: 7, status: "Copperheads lead series, 2–0" },
       venue: { id: 990, name: game.venue.name, location: { city: game.venue.city, state: game.venue.state, country: game.venue.country }, timeZone: { iana: game.venue.timeZone }, fieldInfo: { capacity: game.venue.capacity, turfType: game.venue.turfType, roofType: game.venue.roofType, dimensions: { leftLine: 332, center: 404, rightLine: 326 } } },
       weather: { ...game.weather },
       umpires: { crew: game.umpires.crew.map((official) => ({ ...official })) }

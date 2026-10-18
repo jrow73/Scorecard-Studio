@@ -58,6 +58,30 @@ export async function fetchSportScheduleBundle(date, sportId) {
   }
 }
 
+export async function fetchGameScheduleBundle(gamePk, sportId = 1) {
+  const key = String(gamePk || "").trim();
+  if (!key) throw new Error("A selected game is required.");
+  const numericSportId = Number(sportId) || 1;
+  try {
+    const params = new URLSearchParams({
+      gamePk: key,
+      sportId: String(numericSportId),
+      hydrate: "lineups,weather,venue,team,probablePitcher"
+    });
+    const response = await fetch(`${STATS_API_V1}/schedule?${params.toString()}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store"
+    });
+    if (!response.ok) throw new Error(`Stats API returned HTTP ${response.status}.`);
+    const payload = await response.json();
+    return { games: normalizeSchedule(payload, numericSportId), payload };
+  } catch (error) {
+    console.error("Unable to refresh the selected game schedule:", error);
+    throw new Error(error instanceof Error ? error.message : "Unable to refresh the selected game.");
+  }
+}
+
 export async function fetchTeamsForSport(sportId, season = new Date().getFullYear()) {
   const numericSportId = Number(sportId);
   if (!Number.isInteger(numericSportId) || numericSportId <= 0) throw new Error("A valid competition level is required.");
@@ -75,7 +99,8 @@ export async function fetchTeamsForSport(sportId, season = new Date().getFullYea
       name: String(team?.name || "").trim(),
       sportId: Number(team?.sport?.id ?? numericSportId) || numericSportId,
       leagueId: Number(team?.league?.id) || null,
-      leagueName: String(team?.league?.name || "").trim() || null
+      leagueName: String(team?.league?.name || "").trim() || null,
+      ...(String(team?.abbreviation || "").trim() ? { abbreviation: String(team.abbreviation).trim() } : {})
     }))
     .filter((team) => Number.isInteger(team.id) && team.id > 0 && team.name)
     .sort((left, right) => left.name.localeCompare(right.name));
