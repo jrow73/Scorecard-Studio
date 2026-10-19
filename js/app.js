@@ -4,44 +4,46 @@
  * Version: 0.2.0
  */
 
-import { fetchFavoriteTeamScheduleBundle, fetchSportScheduleBundle, fetchGameScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails, fetchTeamsForSport, fetchTeamSeasonSchedule } from "./api.js?v=100r002";
-import { canonicalFieldId, capabilityRequirementsForFields, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=100r002";
-import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=100r002";
-import { createV030PersistenceController } from "./v030-persistence.js?v=100r002";
-import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=100r002";
-import { formatDualZoneInstant, formatFieldValue, normalizeTimeZoneId, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=100r002";
-import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=100r002";
-import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=100r002";
-import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=100r002";
+import { fetchFavoriteTeamScheduleBundle, fetchSportScheduleBundle, fetchGameScheduleBundle, fetchGameFeed, fetchGameBoxscore, fetchTeamRoster, fetchPeoplePregameStats, fetchTeamCoaches, fetchLeagueStandings, fetchTeamDepthChart, fetchVenueDetails, fetchTeamsForSport, fetchTeamSeasonSchedule } from "./api.js?v=110r004";
+import { canonicalFieldId, capabilityRequirementsForFields, getCollectionRows, getFieldDefinition, getFieldLabel, getCatalogFields, getSupportedFields, resolveField } from "./field-registry.js?v=110r004";
+import { loadCompatibleLayout, prepareCompatibleLayoutForExplicitSave } from "./v030-layout-compatibility.js?v=110r004";
+import { createV030PersistenceController } from "./v030-persistence.js?v=110r004";
+import { normalizeV030Pregame, summarizeV030Availability, V030_RUNTIME_MODE } from "./v030-cutover.js?v=110r004";
+import { formatDualZoneInstant, formatFieldValue, normalizeTimeZoneId, PLAYER_NAME_FORMATS, DEFAULT_DATE_FORMAT, isValidDateFormatPattern } from "./formatter.js?v=110r004";
+import { DESIGNER_SAMPLE_MODEL } from "./sample-data.js?v=110r004";
+import { fieldsForRecordContext, resolveSlotContent, slotContentFieldIds, templateTokenForContextField } from "./slot-content.js?v=110r004";
+import { FORMAT_GROUPS, FONT_FACES, COLOR_SWATCHES, appFormattingDefaults, appConditionalFormattingDefaults, ensureLayoutFormattingDefaults, ensureLayoutConditionalFormatting, conditionalFormattingEnabled, mergeFormat, normalizeColor, colorDisplayName, hexToRgb01, formattingGroupForFieldId, formattingGroupForContext, handednessGroup } from "./formatting.js?v=110r004";
 import {
   STORAGE_DATABASE_VERSION, createV030StorageBackend, deleteApplicationStorage, deleteLayout, deletePdfTemplate, getPdfTemplate, getSetting, initializeStorage,
   listLayouts, readBackupStorageSnapshot, saveLayout as persistRawLayout, savePdfTemplate, setSetting
-} from "./storage.js?v=100r002";
+} from "./storage.js?v=110r004";
 import {
   APP_OWNED_LOCAL_STORAGE_KEYS, APP_PREFERENCES_SETTING_KEY, DEFAULT_APP_PREFERENCES, FAVORITE_COMPETITION_SETTING_KEY,
   LEGACY_FAVORITE_TEAM_SETTING_KEY, LOCAL_DATA_RESET_SIGNAL_STORAGE_KEY, competitionLevelByKey, migrateFavoriteCompetition,
   normalizeAppPreferences, normalizeGameDayDetailLevel, resolveAppearanceTheme, writeAppearanceStartupPreference
-} from "./v040-settings.js?v=100r002";
-import { gameMatchesSearch, groupScheduleGames, probablePitcherMatchup, scheduleReadiness } from "./v040-home.js?v=100r002";
-import { buildHomeAwayFieldPairs, fieldPairCoverage, restoreStandardFieldSelection, updateMirroredFieldSelection } from "./v040-field-palette.js?v=100r002";
-import { DEFAULT_STANDINGS_TABLE_CONFIG, STANDINGS_TABLE_CELL_INSET_POINTS, STANDINGS_TABLE_COLUMNS, STANDINGS_TABLE_COVERAGE, STANDINGS_TABLE_PANEL_GAP_POINTS, createRepresentativeStandingsFixture, normalizeStandingsTableConfig, resolveDivisionStandingsGroups, standingsColumnLayout, standingsGroupTitle, standingsRowCells, standingsSelectedTeamIds, standingsTableGeometry, standingsTeamMetadataMap } from "./v070-standings-table.js?v=100r002";
-import { GAME_DAY_SECTION_LEVELS, managerPresentation, pitcherGroupPresentation, researchScope, standingsPresentation, visibleGameDaySections } from "./v040-gameday.js?v=100r002";
-import { advancedTeamPresentation, classifyCompetitionPhase, competitionContextForModel, postseasonSeriesPresentation, selectActiveSplitStandingsConfig, standardTeamPresentation } from "./v050-competition-context.js?v=100r002";
-import { normalizePlayerStatScopeSelection, playerStatScopeToggleVisible } from "./v050-player-stat-scope.js?v=100r002";
-import { playerIdentityPresentation } from "./v050-player-identity.js?v=100r002";
-import { PITCHER_GROUP_MODES, PITCHER_HAND_FILTERS, isBullpenCollection, normalizePitcherGroup, normalizePitcherHandFilter, pitcherGroupLabel, pitcherHandFilterLabel, pitcherHandFilteredSlots } from "./v040-pitcher-groups.js?v=100r002";
-import { BACKUP_SCOPES, createBackupExport } from "./v040-backup-export.js?v=100r002";
-import { BACKUP_IMPORT_LIMITS, preflightBackupImport } from "./v040-backup-import.js?v=100r002";
-import { RESTORE_POLICIES, commitBackupRestore, createRestoreCommitPlan } from "./v040-backup-restore.js?v=100r002";
-import { designerDragHasStarted, designerPointerIsTouchLike } from "./v040-designer-interaction.js?v=100r002";
-import { game2CutoffPresentation } from "./v060-game2-cutoff.js?v=100r002";
-import { assessLineupGeneration, lineupWarningMessage, replaceMatchingScheduleGame } from "./v061-generation-safeguards.js?v=100r002";
-import { buildScorecardPdfFilename, duplicateLayoutName, safeFilenamePart, validateLayoutName } from "./v061-layout-identity.js?v=100r002";
-import { ONBOARDING_SETTING_KEY, ONBOARDING_TOUR_STEPS, createOnboardingRecord, onboardingStartupDecision, readOnboardingRecord, writeOnboardingRecord } from "./v070-onboarding.js?v=100r002";
-import { classifyPdfStatScopeFields, pdfStatScopeSourceStatus, pdfStatScopeWarningMessage, preserveScopedTeamGameNumbers } from "./v070-pdf-stat-scope.js?v=100r002";
-import { HELP_TOPICS, helpTopicByKey, normalizeHelpTopicKey } from "./v070-help.js?v=100r002";
-import { CHANGELOG_ENTRIES, changelogEntriesThrough, whatsNewStartupDecision, writeWhatsNewRecord } from "./v100-whats-new.js?v=100r002";
-import { STARTER_LAYOUT_ASSET_URL, STARTER_LAYOUT_ID, prepareStarterLayoutInstall, starterLayoutInstalled } from "./v100-starter-layout.js?v=100r002";
+} from "./v040-settings.js?v=110r004";
+import { gameMatchesSearch, groupScheduleGames, probablePitcherMatchup, scheduleReadiness } from "./v040-home.js?v=110r004";
+import { buildHomeAwayFieldPairs, fieldPairCoverage, restoreStandardFieldSelection, updateMirroredFieldSelection } from "./v040-field-palette.js?v=110r004";
+import { DEFAULT_STANDINGS_TABLE_CONFIG, STANDINGS_TABLE_CELL_INSET_POINTS, STANDINGS_TABLE_COLUMNS, STANDINGS_TABLE_COVERAGE, STANDINGS_TABLE_PANEL_GAP_POINTS, createRepresentativeStandingsFixture, normalizeStandingsTableConfig, resolveDivisionStandingsGroups, standingsColumnLayout, standingsGroupTitle, standingsRowCells, standingsSelectedTeamIds, standingsTableGeometry, standingsTeamMetadataMap } from "./v070-standings-table.js?v=110r004";
+import { GAME_DAY_SECTION_LEVELS, managerPresentation, pitcherGroupPresentation, researchScope, standingsPresentation, visibleGameDaySections } from "./v040-gameday.js?v=110r004";
+import { advancedTeamPresentation, classifyCompetitionPhase, competitionContextForModel, postseasonSeriesPresentation, selectActiveSplitStandingsConfig, standardTeamPresentation } from "./v050-competition-context.js?v=110r004";
+import { normalizePlayerStatScopeSelection, playerStatScopeToggleVisible } from "./v050-player-stat-scope.js?v=110r004";
+import { playerIdentityPresentation } from "./v050-player-identity.js?v=110r004";
+import { PITCHER_GROUP_MODES, PITCHER_HAND_FILTERS, isBullpenCollection, normalizePitcherGroup, normalizePitcherHandFilter, pitcherGroupLabel, pitcherHandFilterLabel, pitcherHandFilteredSlots } from "./v040-pitcher-groups.js?v=110r004";
+import { BACKUP_SCOPES, createBackupExport } from "./v040-backup-export.js?v=110r004";
+import { BACKUP_IMPORT_LIMITS, preflightBackupImport } from "./v040-backup-import.js?v=110r004";
+import { RESTORE_POLICIES, commitBackupRestore, createRestoreCommitPlan } from "./v040-backup-restore.js?v=110r004";
+import { designerDragHasStarted, designerPointerIsTouchLike } from "./v040-designer-interaction.js?v=110r004";
+import { game2CutoffPresentation } from "./v060-game2-cutoff.js?v=110r004";
+import { assessLineupGeneration, lineupWarningMessage, replaceMatchingScheduleGame } from "./v061-generation-safeguards.js?v=110r004";
+import { buildScorecardPdfFilename, duplicateLayoutName, safeFilenamePart, validateLayoutName } from "./v061-layout-identity.js?v=110r004";
+import { ONBOARDING_SETTING_KEY, ONBOARDING_TOUR_STEPS, createOnboardingRecord, onboardingStartupDecision, readOnboardingRecord, writeOnboardingRecord } from "./v070-onboarding.js?v=110r004";
+import { classifyPdfStatScopeFields, pdfStatScopeSourceStatus, pdfStatScopeWarningMessage, preserveScopedTeamGameNumbers } from "./v070-pdf-stat-scope.js?v=110r004";
+import { HELP_TOPICS, designerHelpTopicForItem, helpTopicByKey, normalizeHelpTopicKey } from "./v070-help.js?v=110r004";
+import { createHelpSearchController } from "./v110-help-search.js?v=110r004";
+import { createHelpContentLoader, validateHelpContent } from "./v110-help-content.js?v=110r004";
+import { CHANGELOG_ENTRIES, changelogEntriesThrough, whatsNewStartupDecision, writeWhatsNewRecord } from "./v100-whats-new.js?v=110r004";
+import { STARTER_LAYOUT_ASSET_URL, STARTER_LAYOUT_ID, prepareStarterLayoutInstall, starterLayoutInstalled } from "./v100-starter-layout.js?v=110r004";
 
 const systemDarkMode = window.matchMedia?.("(prefers-color-scheme: dark)") || null;
 const reducedMotionMode = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
@@ -155,6 +157,8 @@ const state = {
   onboardingActive: false,
   onboardingResolutionRecorded: false,
   onboardingReturnFocus: null,
+  helpContentLoaded: false,
+  helpOpenRequest: 0,
   helpReturnFocus: null,
   helpActiveTopic: HELP_TOPICS[0].key,
   helpTourPending: false,
@@ -181,7 +185,11 @@ const elements = {
   helpToc: document.querySelector("#help-toc"),
   helpTopicSelect: document.querySelector("#help-topic-select"),
   helpArticle: document.querySelector("#help-article"),
-  helpStartTourButton: document.querySelector("#help-start-tour-btn"),
+  helpSearchInput: document.querySelector("#help-search-input"),
+  helpSearchClearButton: document.querySelector("#help-search-clear-btn"),
+  helpSearchBackButton: document.querySelector("#help-search-back-btn"),
+  helpSearchStatus: document.querySelector("#help-search-status"),
+  helpSearchResults: document.querySelector("#help-search-results"),
   helpWhatsNewButton: document.querySelector("#help-whats-new-btn"),
   whatsNewDialog: document.querySelector("#whats-new-dialog"),
   whatsNewDialogTitle: document.querySelector("#whats-new-dialog-title"),
@@ -460,6 +468,7 @@ const elements = {
   designerPlacedCount: document.querySelector("#designer-placed-count"),
   designerUnplacedList: document.querySelector("#designer-unplaced-list"),
   designerPlacedList: document.querySelector("#designer-placed-list"),
+  designerObjectHelpButton: document.querySelector("#designer-object-help-btn"),
   designerSelectionTitle: document.querySelector("#designer-selection-title"),
   designerSelectionControls: document.querySelector("#designer-selection-controls"),
   designerSelectionClearButton: document.querySelector("#designer-selection-clear-btn"),
@@ -606,7 +615,7 @@ async function initialize() {
   elements.helpCloseButton?.addEventListener("click", () => elements.helpDialog?.close("close"));
   elements.helpToc?.addEventListener("click", handleHelpTopicClick);
   elements.helpTopicSelect?.addEventListener("change", () => showHelpTopic(elements.helpTopicSelect.value));
-  elements.helpStartTourButton?.addEventListener("click", startTourFromHelp);
+  elements.helpArticle?.addEventListener("click", handleHelpArticleClick);
   elements.helpWhatsNewButton?.addEventListener("click", startWhatsNewFromHelp);
   elements.helpDialog?.addEventListener("close", handleHelpClosed);
   elements.whatsNewCloseButton?.addEventListener("click", () => elements.whatsNewDialog?.close("close"));
@@ -1074,22 +1083,37 @@ function openManualOnboardingTour(returnFocus = elements.navHelp) {
   startOnboardingTour();
 }
 
+const loadHelpContent = createHelpContentLoader({ validate: validateHelpContent });
+const helpSearch = createHelpSearchController({
+  elements: {
+    input: elements.helpSearchInput, clearButton: elements.helpSearchClearButton,
+    backButton: elements.helpSearchBackButton, status: elements.helpSearchStatus,
+    results: elements.helpSearchResults, article: elements.helpArticle
+  },
+  topics: HELP_TOPICS,
+  onSelectTopic: topic => showHelpTopic(topic)
+});
+
 function openHelp(topicKey = "getting-started", { trigger = null } = {}) {
   const topic = normalizeHelpTopicKey(topicKey);
   if (!elements.helpDialog?.showModal) return false;
+  const request = ++state.helpOpenRequest;
   if (elements.helpDialog.open) {
-    showHelpTopic(topic);
+    showHelpTopic(topic, { focusHeading: state.helpContentLoaded });
+    void loadHelpTopic(request);
     return true;
   }
+  helpSearch.reset();
   state.helpReturnFocus = trigger || document.activeElement || elements.navHelp;
   state.helpTourPending = false;
   document.body.classList.add("help-dialog-open");
   try {
     elements.helpDialog.showModal();
+    showHelpTopic(topic, { focusHeading: false });
     window.requestAnimationFrame(() => {
-      elements.helpDialogTitle?.focus({ preventScroll: true });
-      showHelpTopic(topic, { focusHeading: topic !== "getting-started" });
+      if (elements.helpDialog.open && request === state.helpOpenRequest) elements.helpDialogTitle?.focus({ preventScroll: true });
     });
+    void loadHelpTopic(request);
     return true;
   } catch {
     document.body.classList.remove("help-dialog-open");
@@ -1098,10 +1122,46 @@ function openHelp(topicKey = "getting-started", { trigger = null } = {}) {
   }
 }
 
+async function loadHelpTopic(request) {
+  if (!state.helpContentLoaded) {
+    elements.helpArticle.setAttribute("aria-busy", "true");
+    elements.helpArticle.innerHTML = '<p class="help-load-status" role="status">Loading help…</p>';
+    try {
+      const html = await loadHelpContent();
+      if (!state.helpContentLoaded) {
+        elements.helpArticle.innerHTML = html;
+        state.helpContentLoaded = true;
+        helpSearch.setContent();
+      }
+      elements.helpArticle.removeAttribute("aria-busy");
+    } catch {
+      if (request === state.helpOpenRequest && elements.helpDialog.open) {
+        elements.helpArticle.removeAttribute("aria-busy");
+        elements.helpArticle.innerHTML = '<p class="help-load-status" role="alert">Help could not be loaded. Please try again.</p><button class="secondary-button" type="button" data-help-retry>Retry Help</button>';
+      }
+      return;
+    }
+  }
+  window.requestAnimationFrame(() => {
+    if (elements.helpDialog.open && request === state.helpOpenRequest) {
+      showHelpTopic(state.helpActiveTopic, { focusHeading: state.helpActiveTopic !== "getting-started" });
+    }
+  });
+}
+
+function handleHelpArticleClick(event) {
+  if (event.target?.closest?.("#help-start-tour-btn")) startTourFromHelp();
+  else if (event.target?.closest?.("[data-help-retry]")) {
+    elements.helpDialogTitle?.focus({ preventScroll: true });
+    void loadHelpTopic(++state.helpOpenRequest);
+  }
+}
+
 function showHelpTopic(topicKey, { focusHeading = true } = {}) {
   const topic = helpTopicByKey(topicKey);
   if (!topic) return;
   state.helpActiveTopic = topic.key;
+  helpSearch.showTopic();
   if (elements.helpTopicSelect) elements.helpTopicSelect.value = topic.key;
   for (const button of elements.helpToc?.querySelectorAll("[data-help-target]") || []) {
     if (button.dataset.helpTarget === topic.key) button.setAttribute("aria-current", "true");
@@ -1111,7 +1171,9 @@ function showHelpTopic(topicKey, { focusHeading = true } = {}) {
   if (!section || !elements.helpArticle) return;
   const behavior = reducedMotionMode?.matches === true ? "auto" : "smooth";
   section.scrollIntoView({ behavior, block: "start" });
-  if (focusHeading) window.requestAnimationFrame(() => section.querySelector("h4")?.focus({ preventScroll: true }));
+  if (focusHeading) window.requestAnimationFrame(() => {
+    if (elements.helpDialog.open && state.helpActiveTopic === topic.key) section.querySelector("h4")?.focus({ preventScroll: true });
+  });
 }
 
 function handleHelpTopicClick(event) {
@@ -1140,6 +1202,7 @@ function startWhatsNewFromHelp() {
 }
 
 function handleHelpClosed() {
+  state.helpOpenRequest += 1;
   document.body.classList.remove("help-dialog-open");
   const returnFocus = state.helpReturnFocus || elements.navHelp;
   const startTour = state.helpTourPending;
@@ -1482,7 +1545,7 @@ async function downloadBackup(scope, options = {}) {
     const result = await createBackupExport(snapshot, {
       scope,
       ...(isSingleLayout ? { layoutId } : {}),
-      source: { applicationVersion: "1.0.0", build: "002", storageDatabaseVersion: STORAGE_DATABASE_VERSION },
+      source: { applicationVersion: "1.1.0", build: "004", storageDatabaseVersion: STORAGE_DATABASE_VERSION },
       createdAtUtc
     });
     const layout = isSingleLayout ? state.layouts.find((item) => item.id === layoutId) : null;
@@ -2445,7 +2508,7 @@ function buildV030Model(game, supplemental, { updateAvailability = true } = {}) 
       }
     } : null
   };
-  const snapshot = normalizeV030Pregame(input, { applicationVersion: "1.0.0", build: "002", createdAtUtc: new Date().toISOString() });
+  const snapshot = normalizeV030Pregame(input, { applicationVersion: "1.1.0", build: "004", createdAtUtc: new Date().toISOString() });
   if (updateAvailability) state.v030Availability = summarizeV030Availability(snapshot);
   return snapshot;
 }
@@ -7256,6 +7319,21 @@ function renderDesignerSelectionInspector() {
   const active = Boolean(selection && object);
 
   resetDesignerInspectorSurfaces();
+  const helpItem = active ? paletteItemForSelection(selection) : pending;
+  const helpTarget = selection?.kind === "repeatedColumn" ? object?.column : object;
+  const helpTopic = designerMultiSelectionActive() ? null : designerHelpTopicForItem(helpItem, {
+    template: active ? helpTarget?.content?.type === "template" : pendingMode === "template",
+    mode: active ? (["individual", "individualWorkspace"].includes(selection.kind) ? "individual" : null) : pendingMode
+  });
+  if (elements.designerObjectHelpButton) {
+    const button = elements.designerObjectHelpButton;
+    button.hidden = !(active || pending) || !helpTopic;
+    if (helpTopic) button.dataset.helpTopic = helpTopic;
+    else delete button.dataset.helpTopic;
+    const label = helpTopic ? `Help with ${helpTopicByKey(helpTopic).label}` : "Object Help";
+    button.setAttribute("aria-label", label);
+    button.title = label;
+  }
   if (designerMultiSelectionActive()) { renderDesignerMultiSelectionInspector(); return; }
   elements.designerSelectionClearButton.disabled = !(active || pending);
   elements.designerSelectionClearButton.hidden = !(active || pending);
@@ -9105,6 +9183,7 @@ function endDesignerDrag(event) { finishDesignerDrag(event); }
 function cancelDesignerDrag(event) { finishDesignerDrag(event, { save: false }); }
 
 function handleDesignerKeyboard(event) {
+  if (document.querySelector("dialog[open]")) return;
   const designer = document.querySelector('[data-view="designer"]');
   if (!designer || designer.hidden) return;
   const tag = document.activeElement?.tagName;

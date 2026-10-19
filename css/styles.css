@@ -4747,3 +4747,36 @@ body:has(.layout-settings-dialog[open]) {
 .standings-compact-preset { grid-column: 1 / -1; justify-self: start; }
 .designer-standings-resize-handle { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; background: #1675b8; box-shadow: 0 1px 3px rgb(0 0 0 / 35%); cursor: ew-resize; touch-action: none; }
 @media (max-width: 720px) { .standings-table-editor-grid { grid-template-columns: 1fr; } }
+
+/* v1.1 Designer help and community entry points */
+.home-community-link { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .35rem 1rem; align-items: baseline; padding: .35rem .25rem; font-size: .9rem; }
+.home-community-link span { color: var(--muted); }
+.home-community-link a { color: var(--accent); }
+.home-community-link a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.help-nav-group { margin: .75rem .7rem .25rem; }
+.help-topic ol { padding-left: 1.4rem; color: var(--muted); line-height: 1.55; }
+.help-topic ol li + li { margin-top: .6rem; }
+#designer-live-inspector .help-heading-inline { align-items: center; }
+#designer-live-inspector .help-heading-inline h4 { margin-bottom: 0; }
+.context-help-button[hidden] { display: none !important; }
+
+/* v1.1 Build 003 — Help search */
+.help-search-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .75rem 1.1rem .35rem; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+.help-search-bar input { flex: 1 1 220px; min-width: 0; width: 100%; }
+.help-search-status { flex: 0 0 100%; margin: 0; color: var(--muted); font-size: .85rem; min-height: 1.2em; }
+.help-reading-pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.help-reading-pane > .help-article { flex: 1 1 auto; }
+.help-search-results { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 1rem 1.25rem; }
+.help-search-results h4 { margin: 0 0 .75rem; }
+.help-search-result-list { display: grid; gap: .65rem; list-style: none; padding: 0; margin: 0; }
+.help-search-result-list button { display: grid; gap: .35rem; width: 100%; padding: .8rem; border: 1px solid var(--line); border-radius: 8px; text-align: left; white-space: normal; overflow-wrap: anywhere; color: var(--text); background: var(--surface-subtle); cursor: pointer; }
+.help-search-result-list button:hover { background: var(--surface-hover); }
+.help-search-result-list button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.help-search-result-list span { color: var(--muted); line-height: 1.45; }
+.help-dialog mark[data-help-search-mark] { color: #17202a; background: #ffe38a; border-radius: 2px; }
+.help-search-results[hidden], .help-reading-pane > .help-article[hidden], .help-search-bar button[hidden] { display: none !important; }
+@media (max-width: 760px) {
+  .help-reading-pane { height: 100%; }
+  .help-search-bar { padding-inline: .85rem; }
+  .help-search-results { padding-inline: 1rem; }
+}

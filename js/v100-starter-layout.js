@@ -3,14 +3,14 @@
  * v1 bundled starter-layout validation and install planning
  */
 
-import { BACKUP_SCOPES } from "./v040-backup-export.js?v=100r002";
-import { preflightBackupImport } from "./v040-backup-import.js?v=100r002";
-import { RESTORE_POLICIES, createRestoreCommitPlan } from "./v040-backup-restore.js?v=100r002";
+import { BACKUP_SCOPES } from "./v040-backup-export.js?v=110r004";
+import { preflightBackupImport } from "./v040-backup-import.js?v=110r004";
+import { RESTORE_POLICIES, createRestoreCommitPlan } from "./v040-backup-restore.js?v=110r004";
 
 export const STARTER_LAYOUT_ID = "ca4bbef0-5e0e-4aca-bc5b-6961469c537f";
 export const STARTER_PDF_TEMPLATE_ID = "ca4bbef0-5e0e-4aca-bc5b-6961469c537f";
 export const STARTER_LAYOUT_NAME = "Scorecard Studio Starter Layout";
-export const STARTER_LAYOUT_ASSET_URL = "./assets/starter-layout/Scorecard-Studio-Starter-Layout.json?v=100r002";
+export const STARTER_LAYOUT_ASSET_URL = "./assets/starter-layout/Scorecard-Studio-Starter-Layout.json?v=110r004";
 
 export function starterLayoutInstalled(layouts = []) {
   return layouts.some((layout) => String(layout?.id || "") === STARTER_LAYOUT_ID);

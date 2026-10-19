@@ -12,8 +12,8 @@ import {
   NORMALIZED_SCHEMA_VERSION,
   ContractRuntimeError,
   validateNormalizedSnapshot
-} from "./v030-contract.js?v=100r002";
-import { V030_ADAPTER_REGISTRY, getAdapterDefinition } from "./v030-adapters.js?v=100r002";
+} from "./v030-contract.js?v=110r004";
+import { V030_ADAPTER_REGISTRY, getAdapterDefinition } from "./v030-adapters.js?v=110r004";
 
 export const V030_PERSISTENCE_STORES = Object.freeze({
   normalizedSnapshots: "normalizedSnapshotsV2",

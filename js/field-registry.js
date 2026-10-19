@@ -9,7 +9,7 @@ import {
   getCompatibilityCollectionRows,
   getCompatibilityDefinition,
   resolveCompatibilityField
-} from "./v030-compatibility-resolver.js?v=100r002";
+} from "./v030-compatibility-resolver.js?v=110r004";
 
 const SIDE_LABEL = { away: "Away", home: "Home" };
 

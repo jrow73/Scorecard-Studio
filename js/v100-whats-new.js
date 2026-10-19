@@ -3,12 +3,18 @@
  * v1 version-aware changelog contract
  */
 
-import { WHATS_NEW_STORAGE_KEY } from "./v040-settings.js?v=100r002";
+import { WHATS_NEW_STORAGE_KEY } from "./v040-settings.js?v=110r004";
 
 export const WHATS_NEW_RECORD_VERSION = 1;
 export const WHATS_NEW_BASELINE_VERSION = "1.0.0";
 
 export const CHANGELOG_ENTRIES = Object.freeze([
+  Object.freeze({
+    version: "1.1.0",
+    label: "v1.1",
+    title: "Searchable help and community",
+    summary: "Search all Help topics with matching excerpts and highlighted words. Open relevant Designer guidance from object-level help buttons, and join Discord for additional help and layout sharing."
+  }),
   Object.freeze({
     version: "1.0.0",
     label: "v1",

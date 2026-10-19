@@ -3,7 +3,7 @@
  * v0.7 first-visit welcome and highlights-tour contract
  */
 
-import { ONBOARDING_STORAGE_KEY } from "./v040-settings.js?v=100r002";
+import { ONBOARDING_STORAGE_KEY } from "./v040-settings.js?v=110r004";
 
 export const ONBOARDING_CONTENT_VERSION = 1;
 export const ONBOARDING_SETTING_KEY = "onboardingV1";

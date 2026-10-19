@@ -1,10 +1,10 @@
 <!doctype html>
 <!--
   Scorecard Studio
-  Layout Management
-  Version: 0.2.0
+  Designer Help and Community
+  Version: 1.1.0
   Build metadata: app-meta.json
-  Previous accepted baseline: Build 024 Final
+  Baseline: v1.0.0 Build 002 development archive
 -->
 <html lang="en">
 <head>
@@ -15,11 +15,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Scorecard Studio" />
-  <link rel="icon" href="./assets/icons/favicon.ico?v=100r002" sizes="any" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png?v=100r002" />
-  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16x16.png?v=100r002" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png?v=100r002" />
-  <link rel="manifest" href="./manifest.webmanifest?v=100r002" />
+  <link rel="icon" href="./assets/icons/favicon.ico?v=110r004" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png?v=110r004" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16x16.png?v=110r004" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icons/apple-touch-icon.png?v=110r004" />
+  <link rel="manifest" href="./manifest.webmanifest?v=110r004" />
   <title>Scorecard Studio</title>
   <script>
     (() => {
@@ -37,7 +37,7 @@
       document.documentElement.style.colorScheme = theme;
     })();
   </script>
-  <link rel="stylesheet" href="./css/styles.css?v=100r002" />
+  <link rel="stylesheet" href="./css/styles.css?v=110r004" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -167,6 +167,10 @@
           <div id="live-pdf-message" class="designer-live-status live-pdf-message" role="status" aria-live="polite"></div>
         </div>
       </section>
+        <aside class="home-community-link" aria-label="Community help">
+          <a href="https://discord.gg/8MsCvTCQa" target="_blank" rel="noopener noreferrer">Join the Scorecard Studio Discord <span class="sr-only">(opens in a new tab)</span></a>
+          <span>Get help, share layouts, and suggest ideas.</span>
+        </aside>
       </section>
 
       <section class="settings-view" data-view="settings" hidden aria-labelledby="settings-heading">
@@ -476,7 +480,7 @@
             <aside class="designer-controls" aria-label="Mapping controls">
               <section class="designer-live-inspector" id="designer-live-inspector">
                 <div class="designer-panel-heading">
-                  <div><p class="section-label">Selected Object</p><h4 id="designer-selection-title">Nothing selected</h4></div>
+                  <div><p class="section-label">Selected Object</p><div class="help-heading-inline"><h4 id="designer-selection-title">Nothing selected</h4><button class="context-help-button" id="designer-object-help-btn" type="button" data-help-topic="designer" aria-label="Help with this object" title="Help with this object" hidden>?</button></div></div>
                   <div class="designer-object-actions">
                     <button class="secondary-button compact-button" id="designer-selection-clear-btn" type="button">Deselect</button>
                     <button class="secondary-button compact-button" id="designer-selection-new-instance-btn" type="button" hidden>New Instance</button>
@@ -648,7 +652,7 @@
                 <summary id="designer-block-tool-title">Repeated Layout</summary>
                 <div class="designer-tool-body designer-repeat-panel">
                 <div id="designer-block-layout-controls">
-                <div class="designer-repeat-heading"><strong>Layout blocks</strong><span class="pill neutral" id="designer-block-count">0</span></div>
+                <div class="designer-repeat-heading"><strong>Layout blocks</strong><button class="context-help-button" type="button" data-help-topic="repeating-rows" aria-label="Help with repeating rows" title="Help with repeating rows">?</button><span class="pill neutral" id="designer-block-count">0</span></div>
                 <label for="designer-lineup-side">Data source
                   <select id="designer-lineup-side">
                     <option value="away.lineup">Away starting lineup</option>
@@ -917,22 +921,39 @@
   <dialog id="help-dialog" class="formatting-dialog help-dialog dark-message-dialog" aria-labelledby="help-dialog-title">
     <div class="formatting-dialog-card help-dialog-card">
       <header class="help-dialog-header">
-        <div><p class="section-label">Reference Guide</p><h3 id="help-dialog-title" tabindex="-1">Scorecard Studio Help</h3><p class="subtle">Choose a topic or read straight through.</p></div>
+        <div><p class="section-label">Reference Guide</p><h3 id="help-dialog-title" tabindex="-1">Scorecard Studio Help</h3><p class="subtle">Search the guide, choose a topic, or read straight through.</p></div>
         <div class="help-dialog-header-actions">
           <button class="secondary-button" id="help-whats-new-btn" type="button">What’s New</button>
           <button class="icon-button" id="help-close-btn" type="button" aria-label="Close Help" title="Close Help">×</button>
         </div>
       </header>
+      <div class="help-search-bar" role="search" aria-label="Search Help">
+        <label class="sr-only" for="help-search-input">Search help</label>
+        <input id="help-search-input" type="search" placeholder="Search help…" autocomplete="off" aria-controls="help-search-results" aria-describedby="help-search-status" disabled />
+        <button class="secondary-button compact-button" id="help-search-clear-btn" type="button" hidden>Clear search</button>
+        <button class="secondary-button compact-button" id="help-search-back-btn" type="button" hidden>Back to results</button>
+        <p class="help-search-status" id="help-search-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      </div>
       <label class="help-topic-picker" for="help-topic-select">Jump to a topic
         <select id="help-topic-select">
           <option value="getting-started">Getting Started</option>
           <option value="games">Find and Select a Game</option>
           <option value="game-day">Use Game Day</option>
           <option value="layouts">Create and Manage Layouts</option>
-          <option value="designer">Use the Designer</option>
+          <optgroup label="Designer Help">
+          <option value="designer">Designer Overview</option>
+          <option value="repeating-rows">Player Records and Repeating Rows</option>
+          <option value="lineup">Starting Lineup</option>
+          <option value="bench">Bench</option>
+          <option value="starting-pitcher">Starting Pitcher</option>
+          <option value="bullpen">Bullpen</option>
+          <option value="standings">Configuring the Standings Table</option>
+          <option value="text-templates">Text Templates</option>
+          </optgroup>
           <option value="layout-settings">Layout Settings</option>
           <option value="generate">Generate a Scorecard</option>
           <option value="data">Settings, Backups, and Local Data</option>
+          <option value="community">Community Help and Layout Sharing</option>
           <option value="troubleshooting">Troubleshooting and Limits</option>
         </select>
       </label>
@@ -942,72 +963,27 @@
           <button type="button" data-help-target="games">Find and Select a Game</button>
           <button type="button" data-help-target="game-day">Use Game Day</button>
           <button type="button" data-help-target="layouts">Create and Manage Layouts</button>
-          <button type="button" data-help-target="designer">Use the Designer</button>
+<p class="section-label help-nav-group">Designer Help</p>
+          <button type="button" data-help-target="designer">Designer Overview</button>
+          <button type="button" data-help-target="repeating-rows">Player Records and Repeating Rows</button>
+          <button type="button" data-help-target="lineup">Starting Lineup</button>
+          <button type="button" data-help-target="bench">Bench</button>
+          <button type="button" data-help-target="starting-pitcher">Starting Pitcher</button>
+          <button type="button" data-help-target="bullpen">Bullpen</button>
+          <button type="button" data-help-target="standings">Configuring the Standings Table</button>
+          <button type="button" data-help-target="text-templates">Text Templates</button>
           <button type="button" data-help-target="layout-settings">Layout Settings</button>
           <button type="button" data-help-target="generate">Generate a Scorecard</button>
           <button type="button" data-help-target="data">Settings, Backups, and Local Data</button>
+          <button type="button" data-help-target="community">Community Help and Layout Sharing</button>
           <button type="button" data-help-target="troubleshooting">Troubleshooting and Limits</button>
         </nav>
+        <div class="help-reading-pane">
+        <section class="help-search-results" id="help-search-results" aria-label="Help search results" hidden></section>
         <article class="help-article" id="help-article">
-          <section class="help-topic" id="help-getting-started" data-help-section="getting-started">
-            <p class="section-label">Getting Started</p>
-            <h4 tabindex="-1">Your scorecard. Game ready.</h4>
-            <p>Scorecard Studio fills your own blank baseball scorecard PDF with game-day information. Choose a game, create a reusable layout, place the fields you want, and generate a printable scorecard.</p>
-            <div class="help-callout"><strong>Your work stays in this browser.</strong><p>No account is required. Layouts and uploaded PDF templates are stored locally, while schedules, lineups, statistics, and other baseball data are requested from the MLB Stats API.</p></div>
-            <p>Because there is no Scorecard Studio cloud sync, download a complete backup before clearing your browser data or importing to another device.</p>
-            <button class="primary-button" id="help-start-tour-btn" type="button">Start the Highlights Tour</button>
-          </section>
-
-          <section class="help-topic" id="help-games" data-help-section="games">
-            <p class="section-label">Home</p><h4 tabindex="-1">Find and Select a Game</h4>
-            <p>Home loads the current schedule for your saved favorite team. Change the date or competition level to browse other games, and use Find a Game to filter the day's schedule.</p>
-            <ul><li><strong>Refresh Schedule</strong> requests the latest schedule details, including newly posted lineups and probable pitchers.</li><li>Select a matchup before opening Game Day or generating a scorecard.</li><li>The readiness badge describes whether lineups are complete; it does not block research.</li></ul>
-          </section>
-
-          <section class="help-topic" id="help-game-day" data-help-section="game-day">
-            <p class="section-label">Research Companion</p><h4 tabindex="-1">Use Game Day</h4>
-            <p>Game Day is a spoiler-safe pregame research view for the selected matchup. Compact shows quick orientation, Standard adds traditional pregame detail, and Advanced adds deeper team, player, staff, and standings context.</p>
-            <ul><li><strong>Refresh</strong> retrieves the latest information for the selected game.</li><li>Postseason and verified MiLB split-season games may offer a team/player statistics switch.</li><li>For Game 2 of a doubleheader, the cutoff notice explains which earlier same-day results are included.</li></ul>
-          </section>
-
-          <section class="help-topic" id="help-layouts" data-help-section="layouts">
-            <p class="section-label">Layout Library</p><h4 tabindex="-1">Create and Manage Layouts</h4>
-            <p>A layout combines one blank scorecard PDF with saved field placements and formatting. New layouts begin with Standard Fields; use Layout Settings to add custom fields later.</p>
-            <ul><li>A layout needs a name and a valid PDF. Names are limited to 80 characters.</li><li>Layout Settings controls details, the Field Palette, default formatting, and replacement PDFs.</li><li>Duplicate a layout before experimenting with a substantially different design.</li><li>A replacement PDF must keep the same page count so existing placements remain meaningful.</li></ul>
-          </section>
-
-          <section class="help-topic" id="help-designer" data-help-section="designer">
-            <p class="section-label">Field Mapping</p><h4 tabindex="-1">Designer Overview</h4>
-            <p>The Designer lets you place game information onto your scorecard PDF. Select an item from the Field Palette on the left, configure it in the Inspector on the right, and place it on the page. After placement, you can adjust its position, formatting, and other settings at any time.</p>
-            <ul><li>All items in the Designer use fictitious teams, places, and player names. Actual MLB game information will be used when generating scorecards.</li><li>Use Text Templates to combine free text and data fields; use repeated blocks for lineups, benches, and pitching groups.</li><li>Drag and drop items to move them, or use keyboard arrows to nudge them slightly.</li><li>Mouse users can Ctrl/Cmd-click or lasso multiple items. Touch users can turn on Select multiple and draw a lasso.</li><li>Mouse users can use Ctrl/Cmd + mouse wheel to zoom in or out. Touch users can use the Zoom menu item on the toolbar.</li></ul>
-            <p><strong>Designer tips and tricks:</strong></p>
-            <ul><li>Use Layout Settings &gt; Field Palette to manage what MLB data you want printed on your scorecard. Add or remove data items to keep the Palette menu tidy.</li><li>Use Undo/Redo when making adjustments.</li><li>Use Copy/Paste to duplicate items. Copy a configured Away Lineup and paste it as a Home Lineup to quickly mirror the home and away sides of the scorecard.</li><li>Generate a Test PDF to verify the final appearance and placement of your fields. The generated PDF may differ slightly from the Designer preview and represents what an actual live-data scorecard will look like.</li></ul>
-          </section>
-
-          <section class="help-topic" id="help-layout-settings" data-help-section="layout-settings">
-            <p class="section-label">Field Mapping</p><h4 tabindex="-1">Layout Settings</h4>
-            <p>Layout Settings lets you manage each layout's PDF, available data fields, and default formatting.</p>
-            <ul><li><strong>Layout Details</strong> - control the name of the layout, its description, and its PDF file.</li><li><strong>Field Palette</strong> - choose which fields are available in the Designer palette. Over 200 MLB data fields are available, with more than 60 selected by default.</li><li><strong>Default Formatting Options</strong> - Lineups, Team Information, and Game Day Information can each have individual default formats, with optional conditional formatting for batter and pitcher handedness. Each item can also be formatted individually after placement.</li></ul>
-          </section>
-
-          <section class="help-topic" id="help-generate" data-help-section="generate">
-            <p class="section-label">Live PDF</p><h4 tabindex="-1">Generate a Scorecard</h4>
-            <p>After selecting a game, choose a saved layout and select Generate Scorecard. The PDF uses the current game identity, lineup, venue, officials, and other mapped data.</p>
-            <ul><li>If mapped lineup fields are incomplete, review the warning before choosing Cancel or Generate Anyway.</li><li>For supported postseason or MiLB split contexts, <strong>PDF Stats</strong> chooses the statistical period used by mapped team and player fields.</li><li>If a requested statistical source is unavailable, Generate Anyway leaves affected values blank instead of mixing periods.</li><li>Generated filenames use the game date, team abbreviations, and a safe version of the layout name.</li></ul>
-          </section>
-
-          <section class="help-topic" id="help-data" data-help-section="data">
-            <p class="section-label">Settings</p><h4 tabindex="-1">Settings, Backups, and Local Data</h4>
-            <p>Settings controls your favorite team and appearance. Backup &amp; Restore is the supported way to protect or move layouts and settings to other devices.</p>
-            <ul><li>A complete backup includes all app settings, layouts, and PDF templates. A single-layout backup includes only the chosen layout and its PDF.</li><li>Share individual layouts with others by downloading a single layout.</li><li>Import layouts others have shared with you by importing their backup.</li></ul>
-            <p><strong>Reset Local Data</strong> permanently deletes all layouts and settings on this browser. If you previously downloaded a complete or individual-layout backup, you can import it to restore the saved information.</p>
-          </section>
-
-          <section class="help-topic" id="help-troubleshooting" data-help-section="troubleshooting">
-            <p class="section-label">Reference</p><h4 tabindex="-1">Troubleshooting and Limits</h4>
-            <ul><li>If newly posted game information is missing, use Game Day Refresh or Refresh Schedule and try again.</li><li>Some values remain blank when the MLB Stats API has not returned them. Scorecard Studio avoids inventing unavailable data.</li><li>If layouts disappear after browser data is cleared, restore a previously downloaded backup.</li><li>Scorecard Studio does not provide cloud sync, user accounts, or live-score tracking.</li><li>Use a current desktop or iPad browser. If the interface becomes stale after an update, perform a normal browser reload.</li></ul>
-          </section>
+          <p class="help-load-status" role="status">Choose a topic to load the guide.</p>
         </article>
+        </div>
       </div>
     </div>
   </dialog>
@@ -1137,6 +1113,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script type="module" src="./js/app.js?v=100r002"></script>
+  <script type="module" src="./js/app.js?v=110r004"></script>
 </body>
 </html>

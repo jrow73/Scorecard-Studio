@@ -2,7 +2,7 @@
 
 An interactive, browser-based web application that allows baseball fans, scorekeepers, and broadcasters to upload custom PDF scorecard templates, visually map customizable data fields to specific coordinates across multi-page scorecards, and instantly generate pre-filled scorecards for any scheduled or historical game for which MLB API data is available.
 
-![Project Status](https://img.shields.io/badge/Release-v1.0.0-blue)
+![Project Status](https://img.shields.io/badge/Release-v1.1.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Hosting](https://img.shields.io/badge/Hosting-GitHub_Pages-orange)
 
@@ -24,6 +24,8 @@ An interactive, browser-based web application that allows baseball fans, scoreke
 - **One-Click Generation:** Easily generate today's scorecard based on a selected game and saved layout.
 - **Backup & Portability:** Export and import saved layout profiles and PDF templates via `.json` backup files. This prevents needing to start over after clearing browser storage and makes it easy to move configurations to another browser or device. Because data is not stored in the cloud, each browser and device maintains its own scorecard data and settings.
 - **Game Day Research Companion:** View expanded team and player statistics and other pregame details that do not fit on a typical scorecard. Game Day remains spoiler-safe—even for historical games—and adapts responsively to desktop, tablet, and phone screens.
+- **Searchable Help:** Search topic titles and instructions, read matching excerpts, and open a topic with highlighted matches. Relevant Designer objects link directly to their help topics.
+- **Community Help & Layout Sharing:** Join the [Scorecard Studio Discord](https://discord.gg/8MsCvTCQa) to ask questions, report issues, suggest features, and exchange single-layout backups.
 - **Touch-Friendly Designer:** On touch devices, use the explicit **Select multiple** mode to tap-toggle fields or draw a one-finger lasso, then move the selected group with its drag handle.
 
 ---
@@ -49,18 +51,15 @@ Thereafter, open the app a few hours before game time to generate a pre-filled P
 
 ---
 
-## Release
+## Roadmap
 
-Scorecard Studio v1.0.0 is the current stable release. Development history,
-accepted decisions, and future roadmap items are maintained separately from
-this runtime distribution.
+Scorecard Studio **v1.1.0** adds searchable and contextual help, an editable
+Help file, and community links. See the [v1.1 release notes](docs/Release_v1.1.0.md)
+for details and [installation instructions](docs/V110_INSTALLATION.md) for deployment
+and rollback. Future capabilities remain subject to separate planning.
 
-## Development
-
-Maintainers and AI-assisted contributors should begin with
-[AGENTS.md](AGENTS.md) and the detailed [v1 development handoff](docs/AI.md).
-Those files belong in the source repository and are intentionally omitted from
-the runtime-only deployment archive.
+For routine Help wording changes, edit the root-level `help.html` and follow
+[the Help editing guide](docs/HELP_AUTHORING.md).
 
 ---
 
