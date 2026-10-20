@@ -9,118 +9,231 @@
 <section class="help-topic" id="help-getting-started" data-help-section="getting-started">
   <p class="section-label">Getting Started</p>
   <h4 tabindex="-1">Your scorecard. Game ready.</h4>
-  <p>Scorecard Studio fills your own blank baseball scorecard PDF with game-day information. Choose a game, create a reusable layout, place the fields you want, and generate a printable scorecard.</p>
-  <div class="help-callout"><strong>Your work stays in this browser.</strong><p>No account is required. Layouts and uploaded PDF templates are stored locally, while schedules, lineups, statistics, and other baseball data are requested from the MLB Stats API.</p></div>
-  <p>Because there is no Scorecard Studio cloud sync, download a complete backup before clearing your browser data or importing to another device.</p>
+  <p>Scorecard Studio fills your own blank baseball scorecard PDF with game-day information. Choose a game, create a reusable layout, place the fields you want, and generate a printable scorecard. Once you have designed your scorecard layout, generating a printable scorecard for your favorite team is just one click per game.</p>
+  <div class="help-callout">
+    <strong>Your work stays in this browser.</strong>
+    <p>No account is required (or possible). Layouts and  PDF files are stored locally in the browser's app database, while schedules, lineups, statistics, and other baseball data are requested from the MLB Stats API.</p>
+  </div>
+  <p>Because there is no Scorecard Studio servers or cloud sync, download a complete backup before clearing your browser data or importing to another device.</p>
   <button class="primary-button" id="help-start-tour-btn" type="button">Start the Highlights Tour</button>
 </section>
 
 <section class="help-topic" id="help-games" data-help-section="games">
-  <p class="section-label">Home</p><h4 tabindex="-1">Find and Select a Game</h4>
+  <p class="section-label">Home</p>
+  <h4 tabindex="-1">Find and Select a Game</h4>
   <p>Home loads the current schedule for your saved favorite team. Change the date or competition level to browse other games, and use Find a Game to filter the day's schedule.</p>
-  <ul><li><strong>Refresh Schedule</strong> requests the latest schedule details, including newly posted lineups and probable pitchers.</li><li>Select a matchup before opening Game Day or generating a scorecard.</li><li>The readiness badge describes whether lineups are complete; it does not block research.</li></ul>
+  <ul>
+    <li><strong>Refresh Schedule</strong> requests the latest schedule details, including newly posted lineups and probable pitchers.</li>
+    <li>Select a matchup before opening Game Day or generating a scorecard.</li>
+    <li>The readiness badge describes whether lineups are complete; it does not block research.</li>
+  </ul>
 </section>
 
 <section class="help-topic" id="help-game-day" data-help-section="game-day">
-  <p class="section-label">Research Companion</p><h4 tabindex="-1">Use Game Day</h4>
-  <p>Game Day is a spoiler-safe pregame research view for the selected matchup. Compact shows quick orientation, Standard adds traditional pregame detail, and Advanced adds deeper team, player, staff, and standings context.</p>
-  <ul><li><strong>Refresh</strong> retrieves the latest information for the selected game.</li><li>Postseason and verified MiLB split-season games may offer a team/player statistics switch.</li><li>For Game 2 of a doubleheader, the cutoff notice explains which earlier same-day results are included.</li></ul>
+  <p class="section-label">Research Companion</p>
+  <h4 tabindex="-1">Game Day</h4>
+  <p>Game Day is a pregame research view for the selected matchup. It remains spoiler-free when viewing historical games. <strong>Compact</strong> shows quick orientation, <strong>Standard</strong> adds traditional pregame detail, and <strong>Advanced</strong> adds deeper team, player, staff, and standings context. The Game Day screen can also be used for all the inforamtion needed to hand-fill any scorecardd.</p>
+  <ul>
+    <li><strong>Refresh</strong> retrieves the latest information for the selected game. Use this if lineups or other information may have changed.</li>
+    <li>Switch between viewing Postseason and Regular Season, or MiLB split-season, team and player stats.</li>
+    <li>For Game 2 of a doubleheader, some stats cannot be verified between Game 1 and Game 2, so will be displayed as of pre-Game 1. Things such as games back or wildcard standings require the completion of other ongoing games, not available at Game 2 pre-game.</li>
+  </ul>
 </section>
 
 <section class="help-topic" id="help-layouts" data-help-section="layouts">
-  <p class="section-label">Layout Library</p><h4 tabindex="-1">Create and Manage Layouts</h4>
-  <p>A layout combines one blank scorecard PDF with saved field placements and formatting. New layouts begin with Standard Fields; use Layout Settings to add custom fields later.</p>
-  <ul><li>A layout needs a name and a valid PDF. Names are limited to 80 characters.</li><li>Layout Settings controls details, the Field Palette, default formatting, and replacement PDFs.</li><li>Duplicate a layout before experimenting with a substantially different design.</li><li>A replacement PDF must keep the same page count so existing placements remain meaningful.</li></ul>
+  <p class="section-label">Layout Library</p>
+  <h4 tabindex="-1">Create and Manage Layouts</h4>
+  <p>A layout combines one blank scorecard PDF with saved field placements and formatting. New layouts begin with Standard Fields; use Layout Settings to add over 200 custom fields later.</p>
+  <ul>
+    <li>A layout needs a name and a valid PDF (which you supply). Names are limited to 80 characters.</li>
+    <li>Layout Settings controls details, the Field Palette, default formatting, and replacement PDFs.</li>
+    <li>Duplicate a layout before experimenting with a substantially different design.</li>
+    <li>A replacement PDF must keep the same page count so existing placements remain meaningful.</li>
+  </ul>
 </section>
 
 <section class="help-topic" id="help-designer" data-help-section="designer">
-  <p class="section-label">Field Mapping</p><h4 tabindex="-1">Designer Overview</h4>
+  <p class="section-label">Layout Designer</p>
+  <h4 tabindex="-1">Designer Overview</h4>
   <p>The Designer lets you place game information onto your scorecard PDF. Select an item from the Field Palette on the left, configure it in the Inspector on the right, and place it on the page. After placement, you can adjust its position, formatting, and other settings at any time.</p>
-  <ul><li>All items in the Designer use fictitious teams, places, and player names. Actual MLB game information will be used when generating scorecards.</li><li>Use Text Templates to combine free text and data fields; use repeated blocks for lineups, benches, and pitching groups.</li><li>Drag and drop items to move them, or use keyboard arrows to nudge them slightly.</li><li>Mouse users can Ctrl/Cmd-click or lasso multiple items. Touch users can turn on Select multiple and draw a lasso.</li><li>Mouse users can use Ctrl/Cmd + mouse wheel to zoom in or out. Touch users can use the Zoom menu item on the toolbar.</li></ul>
+  <ul>
+    <li>All items in the Designer use fictitious teams, places, and player names. Actual MLB game information will be used when generating scorecards.</li>
+    <li>Any field placed with the designer, which has no pre-game data, will simply be ignored in the final scorecard. Example: you can place all 6 umpires slots, but if only 4 are assigned to the game (MLB Regular Season), they will not appear in the final scorecard. Generating an MLB Post Season scorecard will display all 6 umpires.</li>
+    <li><strong>Text Templates</strong> allow you to combine your own free text and data fields; start with a Text Template, or select Text Template when configuring an item. Example: make your own labels, or place a "F" after the temperature. </li>
+    <li>Drag and drop items to move them, or use keyboard arrows to nudge them slightly.</li>
+    <li>Mouse users can Ctrl/Cmd-click or lasso multiple items. Touch users can turn on Select multiple and draw a lasso. Selecting multiple items allows you to move or configure them simultaneously.</li>
+    <li>Mouse users can use Ctrl/Cmd + mouse wheel to zoom in or out. Touch users can use the Zoom menu item on the toolbar.</li>
+  </ul>
   <p><strong>Designer tips and tricks:</strong></p>
-  <ul><li>Use Layout Settings &gt; Field Palette to manage what MLB data you want printed on your scorecard. Add or remove data items to keep the Palette menu tidy.</li><li>Use Undo/Redo when making adjustments.</li><li>Use Copy/Paste to duplicate items. Copy a configured Away Lineup and paste it as a Home Lineup to quickly mirror the home and away sides of the scorecard.</li><li>Generate a Test PDF to verify the final appearance and placement of your fields. The generated PDF may differ slightly from the Designer preview and represents what an actual live-data scorecard will look like.</li></ul>
+  <ul>
+    <li>Use Layout Settings &gt; Field Palette to manage what MLB data you want printed on your scorecard. Add or remove data items to keep the Palette menu tidy.</li>
+    <li>Most standard keyboard and mouse shortcuts are available in the Designer.</li>
+    <li>Use Undo/Redo when making adjustments.</li>
+    <li>Use Copy/Paste to duplicate items. Copy a configured Away Lineup and paste it as a Home Lineup to quickly mirror the home and away sides of the scorecard.</li>
+    <li>Customize the date format by using the M, D, Y placeholders as follows:
+      <ul><li>Month: M for 1 or 2 month digits (1, 10), MM for double digits with leading zero if needed (01, 10), MMM for abbreviated month name, MMMM for full month name</li>
+      <li>Day: D for 1 or 2 day digits (1, 10), DD for double digits with leading zero if needed (01, 10)</</li>
+      <li>Year: YY for 2-digit year, YYYY for 4-digit year</li>
+      <LI>Use standard date punctuations of - , / as desired</LI>
+    </ul>
+    <li>Generate a Test PDF to verify the final appearance and placement of your fields. The generated PDF may differ slightly from the Designer preview and represents what an actual live-data scorecard will look like.</li>
+  </ul>
 </section>
 
 <section class="help-topic" id="help-repeating-rows" data-help-section="repeating-rows">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Player Records and Repeating Rows</h4>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Player Records and Repeating Rows</h4>
   <p>A repeated object uses the same fields and formatting for every player or record. Configure one position, and the Designer repeats its items throughout the object. A Record Layout, such as Starting Pitcher, contains one record.</p>
-<ol><li>Select the object in the Field Palette. For a repeated layout, choose a vertical list, horizontal list, or grid, then set the number of positions. Allow enough positions for the players you want printed.</li><li>Select <strong>Set Placement</strong> and follow the banner above the scorecard. For a vertical list, click the top and bottom row positions; for a horizontal list, click the leftmost and rightmost positions; for a grid, click the top-left and bottom-right positions. The Designer distributes the positions evenly between those points.</li><li>Choose a <strong>Field</strong> or <strong>Text Template</strong>, configure it, and select <strong>Place Item on Scorecard</strong>. Click within the first position. The item repeats in the other positions.</li><li>Select an existing item to edit its formatting or content. Use <strong>Create New Item</strong> to add another field or template to the same object.</li><li>Use the parent card's <strong>Edit Layout</strong> to change the arrangement or capacity, and <strong>Change Placement</strong> to redefine its placement points. Use <strong>New Instance</strong> for a separate copy of the object.</li></ol>
-<p><strong>Example:</strong> For nine lineup rows, set a vertical list of nine, click the first and ninth row positions, then place a player name in the first row. Add jersey number and position as separate items wherever they belong within that first row.</p>
-<p>Repeated placement needs at least two positions to determine spacing. Grids support up to 30 positions in total. Capacity limits how many records can print; it does not create additional players. Generate a Test PDF to check spacing and long names. Text Fit controls an item's text width; it does not add rows.</p>
+  <ol>
+    <li>Select the object in the Field Palette. For a repeated layout, choose a vertical list, horizontal list, or grid, then set the number of positions. Allow enough positions for the players you want printed. <br />NOTE: If you place more positions than available data, the extra positions will be ignored. If you place less positions than available data, the remaining positions will be ignored. Example: If you place 4 Bench positions, but there are 5 Bench players, only the first 4 will be printed.</li>
+    <li>Select <strong>Set Placement</strong> and follow the banner above the scorecard. For a vertical list, click the top and bottom row positions; for a horizontal list, click the leftmost and rightmost positions; for a grid, click the top-left and bottom-right positions. The Designer distributes the positions evenly between those points.</li>
+    <li>Choose a <strong>Field</strong> or <strong>Text Template</strong>, configure it, and select <strong>Place Item on Scorecard</strong>. Click within the first position. The item repeats in all the other positions. Example: Place a Jersey# field on the first lineup row, and it will repeat in the subsequent rows at the same position.</li>
+    <li>Select an existing item to edit its formatting or content. Use <strong>Create New Item</strong> to add another field or template to the same row or grid cell.</li>
+    <li>Use the parent card's <strong>Edit Layout</strong> to change the arrangement or capacity, and <strong>Change Placement</strong> to redefine its placement points. Use <strong>New Instance</strong> for a separate copy of the object.</li>
+  </ol>
+  <p>Repeated placement needs at least two positions to determine spacing. Grids support up to 30 positions in total. Capacity limits how many records can print; it does not create additional players. Generate a Test PDF to check spacing and long names. Text Fit controls an item's text width; it does not add rows.</p>
 </section>
 
 <section class="help-topic" id="help-lineup" data-help-section="lineup">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Starting Lineup</h4>
-  <p>Choose the Away or Home Starting Lineup to build a repeating player layout. Start with nine positions for a conventional batting order, then add the player fields your scorecard needs.</p>
-<ul><li>Place a player name, jersey number, defensive position, and any statistics as separate items, or combine them in a Text Template.</li><li>The lineup follows batting order. Sorting is unavailable for this object.</li><li>Use the player name's <strong>Name format</strong> option, or choose a name format when inserting that field into a template.</li><li>Defensive Alignment is a separate individual-placement object. Use it when players belong at specific defensive locations rather than in batting-order rows.</li><li>The Designer uses fictional players. A generated game scorecard uses the available pregame lineup; review incomplete-lineup warnings before printing.</li></ul>
-<button class="secondary-button compact-button" type="button" data-help-topic="repeating-rows">Help with repeating rows</button>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Starting Lineup</h4>
+  <p>Choose the Away or Home Starting Lineup to build a repeating player layout. Start with nine positions for a conventional batting order, then add whichever player fields your scorecard has spots for.<br /><strong>TIP:</strong> once you have fully configured an away Lineup, use the copy / Paste Home-Away functionality to quickly create the corresponding home Lineup.</p>
+  <ul>
+    <li>Place a player name, jersey number, defensive position, and any statistics as separate items, or combine them in a Text Template. Using spearate items will result in each item lining up in its own column on every lineup row. Using a Text Template will put single space gaps between each field, so each row will have different spacing, depedning on the length of the player name, etc.</li>
+    <li>The lineup follows batting order as provided by the MLB API. Sorting is unavailable.</li>
+    <li>Use the player name's <strong>Name format</strong> option, to select full name, F. Lastname, lastname only, etc. Player's "full names" use their preferred name, as supplied by MLB, whereas "first name" is a player's formal name, when different. Boxscore Name is typically just a player's last name, sometimes with an ititial or other distinguishing factor.</li>
+    <li>Defensive Alignment is a separate individual-placement object. Use it to place player names at specific defensive locations, typcially overlayed on a field diagram.</li>
+    <li>The Designer uses fictional players. A generated game scorecard uses the available pregame lineup; review incomplete-lineup warnings before printing.</li>
+  </ul>
+  <button class="secondary-button compact-button" type="button" data-help-topic="repeating-rows">Help with repeating rows</button>
 </section>
 
 <section class="help-topic" id="help-bench" data-help-section="bench">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Bench</h4>
-  <p>The Bench object repeats your chosen player fields for the selected team's bench. Choose a vertical list, horizontal list, or grid to match the space on your scorecard.</p>
-<ul><li>Set enough positions for the number of bench players you want to accommodate. The available players may differ by game.</li><li>Add name, jersey number, position, or statistics in the first position; each item repeats for the other bench players.</li><li>Use <strong>Sort</strong> to choose an available field, then select ascending or descending order. Choose <strong>Sort: None</strong> to retain the source order.</li><li>Use <strong>New Instance</strong> if you need a second independently configured bench object.</li></ul>
-<button class="secondary-button compact-button" type="button" data-help-topic="repeating-rows">Help with repeating rows</button>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Bench</h4>
+  <p>The Bench object repeats your chosen player fields for the selected team's bench. Choose a vertical list, horizontal list, or grid to match the space on your scorecard.<br /><strong>TIP:</strong> once you have fully configured an away Bench, use the copy / Paste Home-Away functionality to quickly create the corresponding home Bench.</p>
+  <ul>
+    <li>Set enough positions for the number of bench players you want to accommodate. The available players may differ by game. Extra spots in the designer will be ignored</li>
+    <li>Add name, jersey number, position, or statistics in the first position; each item repeats for the other bench players.</li>
+    <li>Use <strong>Sort</strong> to choose an available field, then select ascending or descending order. Choose <strong>Sort: None</strong> to retain the order supplied by the MLB API.</li>
+    <li>Use <strong>New Instance</strong> if you need a second independently configured bench object.</li>
+  </ul>
+  <button class="secondary-button compact-button" type="button" data-help-topic="repeating-rows">Help with repeating rows</button>
 </section>
 
 <section class="help-topic" id="help-starting-pitcher" data-help-section="starting-pitcher">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Starting Pitcher</h4>
-  <p>Starting Pitcher describes one player. Use its <strong>Record Layout</strong> to arrange multiple items for that pitcher. Within the record, use fields or Text Templates to show the values you need.</p>
-<ol><li>Choose the Away or Home Starting Pitcher in the Field Palette to open its Record Layout controls.</li><li>Select <strong>Place Record Layout</strong> and click its location once. Add fields or templates within that record.</li><li>Place the pitcher's name, throwing arm, record, ERA, or other available fields where they belong on your scorecard. Select a name format when configuring the name field or inserting it into a template.</li></ol>
-<p>There is no row count or sorting for a single starting-pitcher record. Use <strong>New Instance</strong> if you want another independently formatted use of the same pitcher. If the game has no announced starter, some generated values may be blank.</p>
-<button class="secondary-button compact-button" type="button" data-help-topic="text-templates">Help with Text Templates</button>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Starting Pitcher</h4>
+  <p>Starting Pitcher describes one player. Use its <strong>Record Layout</strong> to arrange multiple items for that pitcher on a single row. Within the record, use fields or Text Templates to show the values you need. Place items individually (not the SP Record Layout), such as ERA, WHIP, or Win/Loss record if your scorecard has space for them somewhere other than the same row.</p>
+  <ol>
+    <li>Choose the Away or Home Starting Pitcher in the Field Palette to open its Record Layout controls.</li>
+    <li>Select <strong>Place Record Layout</strong> and click its location once, anywhere on the row intended for the SP items. Add fields or templates within that record.</li>
+    <li>Place the pitcher's name, throwing arm, record, ERA, or other available fields where they belong on your scorecard. Select a name format when configuring the name field or inserting it into a template.</li>
+  </ol>
+  <p>There is no row count or sorting for a single starting-pitcher record. Use <strong>New Instance</strong> if you want another independently formatted use of the same pitcher. If the game has no announced starter, some generated values may be blank.</p>
+  <button class="secondary-button compact-button" type="button" data-help-topic="text-templates">Help with Text Templates</button>
 </section>
 
 <section class="help-topic" id="help-bullpen" data-help-section="bullpen">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Bullpen</h4>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Bullpen</h4>
   <p>The Bullpen object repeats pitcher information in a vertical list, horizontal list, or grid. Configure the pitcher group and filter for each instance.</p>
-<ul><li><strong>Pitcher group:</strong> Core Bullpen uses the bullpen list; Additional Starting Pitchers uses the other starters; Combined Pitchers combines both lists without duplicate players.</li><li><strong>Filter:</strong> None keeps all pitchers from that group; LHP or RHP limits it by throwing arm. For separate left- and right-handed lists, create two instances and apply a different filter to each.</li><li><strong>Sort:</strong> select an available field and ascending or descending order, or retain the source order with Sort: None.</li><li>Choose enough positions for the group. Filters can reduce the number of players shown; extra positions do not create player records.</li><li>Add fields or Text Templates to the first position, then generate a Test PDF to check names, statistics, and spacing.</li></ul>
-<button class="secondary-button compact-button" type="button" data-help-topic="repeating-rows">Help with repeating rows</button>
+  <ul>
+    <li><strong>Pitcher group:</strong> Core Bullpen uses the bullpen list as provided by MLB (not always provided); Additional Starting Pitchers uses the other starters as provided by MLB (not always provided); Combined Pitchers combines both lists without duplicate players. <br /><strong>NOTE:</strong> When Starter or Reliever roles are not available (common for Minor League games), the system will use all available pitchers (except the listed SP) in the Core Bullpen item.</li>
+    <li><strong>Filter:</strong> None keeps all pitchers from that group; LHP or RHP limits it by throwing arm. For separate left- and right-handed lists, create two instances and apply a different filter to each.</li>
+    <li><strong>Sort:</strong> select an available field and ascending or descending order, or retain the sorting order provided by MLB with Sort: None.</li>
+    <li>Choose enough positions for the group. Filters can reduce the number of players shown; extra positions on the Designer do not create player records on the printed scorecard.</li>
+    <li>Add fields or Text Templates to the first position, then generate a Test PDF to check names, statistics, and spacing.</li>
+  </ul>
+  <button class="secondary-button compact-button" type="button" data-help-topic="repeating-rows">Help with repeating rows</button>
 </section>
 
 <section class="help-topic" id="help-standings" data-help-section="standings">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Configuring the Standings Table</h4>
-  <p>The Division Standings Table places one or more division panels as a single object. Enable it under <strong>Layout Settings &gt; Field Palette</strong> if it is missing from the palette.</p>
-<ol><li>Choose <strong>Division coverage</strong>: the away division, home division, both team divisions, or the divisions in one or both leagues. When both teams share a division, that division appears once.</li><li>Choose a <strong>Stat period</strong>. Current game context selects the appropriate available period. Choose an explicit period only when you want that period; unavailable standings are not replaced with a different period.</li><li>Choose <strong>Tables per row</strong> to arrange division panels side by side. <strong>Table width</strong> controls the overall object's width, so more panels per row leaves less width for each division.</li><li>Choose Team Name or Team Abbreviation, text size, and <strong>Maximum teams</strong> per division. A low maximum can omit lower-ranked teams, including the selected team.</li><li>Select the columns to print. Team is required. The up and down arrows move a column left or right in the printed table. <strong>Use compact preset</strong> selects Team, W-L, and GB; it does not change the other sizing options.</li><li>Choose whether to show division titles and column headings, and whether to highlight the away and home teams. Select <strong>Place Standings Table</strong>, then click its top-left location on the scorecard.</li></ol>
-<p>To revise a placed table, select it, edit the options, and select <strong>Apply Table Options</strong>. Drag the table to move it or use its resize handle to adjust width. For tight spaces, try abbreviations, fewer columns, fewer tables per row, or a wider table before reducing text size. Check the right and bottom edges in a Test PDF.</p>
-<p>The Designer shows fictional standings. Generated tables use the selected game's available standings and division information.</p>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Configuring the Standings Table</h4>
+  <p>The Division Standings Table places one or more division groups as a single object. Enable it under <strong>Layout Settings &gt; Field Palette</strong> if it is missing from the palette.</p>
+  <ol>
+    <li>Choose <strong>Division coverage</strong>: the away division, home division, both team divisions, or the divisions in one or both leagues. When both teams share a division, that division appears once.</li>
+    <li>Choose a <strong>Stat period</strong>. Current game context selects the appropriate available period. Choose an explicit period only when you want that period, regarless of the scorecard you will be printing; If standings are unavailable, that area of the scorecard will remaing blank. </li>
+    <li>Choose <strong>Tables per row</strong> to arrange division panels side by side. Each division panel is its own Table, in this context.<strong>Table width</strong> controls the overall object's width, so more panels per row leaves less width for each division.</li>
+    <li>Choose Team Name or Team Abbreviation, text size, and <strong>Maximum teams</strong> per division. A low maximum can omit lower-ranked teams, including the selected team. But choosing a high number, like 10, will not show any blank rows if there are only 5 teams in the division.</li>
+    <li>Select the columns to print. Team is required. The up and down arrows move a column left or right in the printed table. <strong>Use compact preset</strong> selects Team, W-L, and GB; it does not change the other sizing options.</li>
+    <li>Choose whether to show division titles and column headings, and whether to highlight the away and home teams. If you highlight the away and home teams, they will be printed in bold. Select <strong>Place Standings Table</strong>, then click its top-left location on the scorecard.</li>
+  </ol>
+  <p>To revise a placed table, select it, edit the options, and select <strong>Apply Table Options</strong>. Drag the table to move it or use its resize handle to adjust width. You cannot adjust height, but chaning font sises will make the table taller or shorter. For tight spaces, try abbreviations, fewer columns, fewer tables per row, or a wider table before reducing text size. Check the right and bottom edges in a Test PDF.</p>
+  <p>The Designer shows fictional standings. Generated tables use the selected game's available standings and division information.</p>
 </section>
 
 <section class="help-topic" id="help-text-templates" data-help-section="text-templates">
-  <p class="section-label">Designer Help</p><h4 tabindex="-1">Text Templates</h4>
-  <p>A Text Template combines fixed text and inserted data fields in one item. Use it for a compact player record, a label followed by a value, or a line of related statistics.</p>
-<ol><li>Choose Text Template for the object or item you are configuring.</li><li>Type your fixed text in the editor. Choose a data field, choose a name format if offered, and select <strong>Insert into editor</strong>. Use the insertion controls to create valid field tokens.</li><li>Check the preview, choose alignment, and place the item on the scorecard.</li><li>To revise a placed template, select it and edit its content in the Inspector. Use Text Fit when you need to constrain its width.</li></ol>
-<p>Within a repeated object, each inserted field resolves for that position's player. Templates share formatting within a single item; use separate items when values need different formatting or independent placement. Missing game data can leave inserted values blank, while fixed labels and punctuation remain.</p>
+  <p class="section-label">Designer Help</p>
+  <h4 tabindex="-1">Text Templates</h4>
+  <p>A Text Template combines any free text you want to display with inserted data fields, all in one item. Use it for a compact player record, a label followed by a value, or a line of related statistics. You can use line breaks within the editor, and the resuling items on the scorecard will reflect those breaks.</p>
+  <ol>
+    <li>Choose Text Template for the object or item you are configuring.</li>
+    <li>Type your fixed text in the editor. Choose a data field, choose a name format if offered, and select <strong>Insert into editor</strong>. Use the insertion controls to create valid field tokens.</li>
+    <li>Check the preview box, choose alignment, and place the item on the scorecard.</li>
+    <li>To revise a placed template, select it and edit its content in the Inspector. Use Text Fit when you need to constrain its width.</li>
+  </ol>
+  <p>Within a repeated object, each inserted field resolves for that position's player. Templates share formatting within a single item; use separate items when values need different formatting or independent placement. <br /><strong>NOTE:</strong> If all inserted data fields are missing game data, the entire Text Tempalte field will be ignored. However, if some fields are available, and others aren't, they can leave inserted values blank, while fixed labels and punctuation will remain.</p>
+  <p>Example: The game's weather summary shows all Temperature, sky conditions, and winds all on one line. You can use the Text Template to create a compact display of this information by inserting just the temperature and conditions items individually on one line, pressing enter, and inserting the wind field on the next line. You can even add your own label, such as "Winds:" prior to the MLB API Wind data for that game.</p>
 </section>
 
 <section class="help-topic" id="help-layout-settings" data-help-section="layout-settings">
-  <p class="section-label">Field Mapping</p><h4 tabindex="-1">Layout Settings</h4>
+  <p class="section-label">Layout Designer</p>
+  <h4 tabindex="-1">Layout Settings</h4>
   <p>Layout Settings lets you manage each layout's PDF, available data fields, and default formatting.</p>
-  <ul><li><strong>Layout Details</strong> - control the name of the layout, its description, and its PDF file.</li><li><strong>Field Palette</strong> - choose which fields are available in the Designer palette. Over 200 MLB data fields are available, with more than 60 selected by default.</li><li><strong>Default Formatting Options</strong> - Lineups, Team Information, and Game Day Information can each have individual default formats, with optional conditional formatting for batter and pitcher handedness. Each item can also be formatted individually after placement.</li></ul>
+  <ul>
+    <li><strong>Layout Details</strong> - control the name of the layout, its description, and its PDF file.</li>
+    <li><strong>Field Palette</strong> - choose which fields are available in the Designer palette. Over 200 MLB data fields are available, with more than 60 selected by default.</li>
+    <li><strong>Default Formatting Options</strong> - Lineups, Team Information, and Game Day Information can each have individual default formats, with optional conditional formatting for batter and pitcher handedness. Each item can also be formatted individually after placement.</li>
+  </ul>
 </section>
 
 <section class="help-topic" id="help-generate" data-help-section="generate">
-  <p class="section-label">Live PDF</p><h4 tabindex="-1">Generate a Scorecard</h4>
+  <p class="section-label">Live PDF</p>
+  <h4 tabindex="-1">Generate a Scorecard</h4>
   <p>After selecting a game, choose a saved layout and select Generate Scorecard. The PDF uses the current game identity, lineup, venue, officials, and other mapped data.</p>
-  <ul><li>If mapped lineup fields are incomplete, review the warning before choosing Cancel or Generate Anyway.</li><li>For supported postseason or MiLB split contexts, <strong>PDF Stats</strong> chooses the statistical period used by mapped team and player fields.</li><li>If a requested statistical source is unavailable, Generate Anyway leaves affected values blank instead of mixing periods.</li><li>Generated filenames use the game date, team abbreviations, and a safe version of the layout name.</li></ul>
+  <ul>
+    <li>If mapped lineup fields are incomplete, review the warning before choosing Cancel or Generate Anyway.</li>
+    <li>For supported postseason or MiLB split contexts, <strong>PDF Stats</strong> chooses the statistical period used by mapped team and player fields.</li>
+    <li>If a requested statistical source is unavailable, Generate Anyway leaves affected values blank instead of mixing periods.</li>
+    <li>Generated filenames use the game date, team abbreviations, and a safe version of the layout name.</li>
+  </ul>
 </section>
 
 <section class="help-topic" id="help-data" data-help-section="data">
-  <p class="section-label">Settings</p><h4 tabindex="-1">Settings, Backups, and Local Data</h4>
+  <p class="section-label">Settings</p>
+  <h4 tabindex="-1">Settings, Backups, and Local Data</h4>
   <p>Settings controls your favorite team and appearance. Backup &amp; Restore is the supported way to protect or move layouts and settings to other devices.</p>
-  <ul><li>A complete backup includes all app settings, layouts, and PDF templates. A single-layout backup includes only the chosen layout and its PDF.</li><li>Share individual layouts with others by downloading a single layout.</li><li>Import layouts others have shared with you by importing their backup.</li></ul>
+  <ul>
+    <li>A complete backup includes all app settings, layouts, and PDF templates. A single-layout backup includes only the chosen layout and its PDF.</li>
+    <li>Share individual layouts with others by downloading a single layout.</li>
+    <li>Import layouts others have shared with you by importing their backup.</li>
+  </ul>
   <p><strong>Reset Local Data</strong> permanently deletes all layouts and settings on this browser. If you previously downloaded a complete or individual-layout backup, you can import it to restore the saved information.</p>
 </section>
 
 <section class="help-topic" id="help-community" data-help-section="community">
-  <p class="section-label">Community</p><h4 tabindex="-1">Community Help and Layout Sharing</h4>
+  <p class="section-label">Community</p>
+  <h4 tabindex="-1">Community Help and Layout Sharing</h4>
   <p>Join the Scorecard Studio Discord to ask questions, report problems, suggest features, and share layouts with other users.</p>
-<p><a class="secondary-button" href="https://discord.gg/8MsCvTCQa" target="_blank" rel="noopener noreferrer">Join the Scorecard Studio Discord (opens in a new tab)</a></p>
-<ol><li>To share a layout, download a single-layout backup from <strong>Settings &gt; Backup &amp; Restore</strong>. It includes that layout and its PDF template.</li><li>Post the downloaded file in Discord, along with a short description or a sample of the finished scorecard.</li><li>To use a shared layout, download its backup file and import it through Backup &amp; Restore. Review the import summary and any conflicts before confirming.</li></ol>
-<p>Joining Discord does not synchronize layouts or connect your browser's saved data. Export and import layout files when sharing between users or devices.</p>
+  <p><a class="secondary-button" href="https://discord.gg/8MsCvTCQa" target="_blank" rel="noopener noreferrer">Join the Scorecard Studio Discord (opens in a new tab)</a></p>
+  <ol>
+    <li>To share a layout, download a single-layout backup from <strong>Settings &gt; Backup &amp; Restore</strong>. It includes that layout and its PDF template.</li>
+    <li>Post the downloaded file in Discord, along with a short description or a sample of the finished scorecard.</li>
+    <li>To use a shared layout, download its backup file and import it through Backup &amp; Restore. Review the import summary and any conflicts before confirming.</li>
+  </ol>
+  <p>Joining Discord does not synchronize layouts or connect your browser's saved data. Export and import layout files when sharing between users or devices.</p>
 </section>
 
 <section class="help-topic" id="help-troubleshooting" data-help-section="troubleshooting">
-  <p class="section-label">Reference</p><h4 tabindex="-1">Troubleshooting and Limits</h4>
-  <ul><li>If newly posted game information is missing, use Game Day Refresh or Refresh Schedule and try again.</li><li>Some values remain blank when the MLB Stats API has not returned them. Scorecard Studio avoids inventing unavailable data.</li><li>If layouts disappear after browser data is cleared, restore a previously downloaded backup.</li><li>Scorecard Studio does not provide cloud sync, user accounts, or live-score tracking.</li><li>Use a current desktop or iPad browser. If the interface becomes stale after an update, perform a normal browser reload.</li></ul>
+  <p class="section-label">Reference</p>
+  <h4 tabindex="-1">Troubleshooting and Limits</h4>
+  <ul>
+    <li>If newly posted game information is missing, use Game Day Refresh or Refresh Schedule and try again.</li>
+    <li>Some values remain blank when the MLB Stats API has not returned them. Scorecard Studio avoids inventing unavailable data.</li>
+    <li>If layouts disappear after browser data is cleared, restore a previously downloaded backup.</li>
+    <li>Scorecard Studio does not provide cloud sync, user accounts, or live-score tracking.</li>
+    <li>Use a current desktop or iPad browser. If the interface becomes stale after an update, perform a normal browser reload.</li>
+  </ul>
 </section>
